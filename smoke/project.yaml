@@ -1,0 +1,61 @@
+# smoke/project.yaml — the smallest project that drives every generic hw-from-spec script (schema: references/project-yaml.md).
+project:
+  name: smoke
+  description: one sheet, five parts, a two-piece printed case — the automated dry run of the skill
+ids: {owner_prefix: D, agent_prefix: CC, blocker_prefix: B}
+markers:
+  release_regex: 'clear[ -]to[ -]build'
+  unverified: [UNVERIFIED, TBD-DRAWING]
+  nod_regex: '\(!\)|owner nod'
+paths:
+  decisions: docs/DECISIONS.md
+  blockers: docs/BLOCKERS.md
+  gates: docs/GATES.md
+  status: docs/STATUS.md
+  known_issues: docs/KNOWN_ISSUES.md
+  test_plan: docs/TEST_PLAN.md
+  traceability_yaml: design/traceability.yaml
+  traceability_out: docs/TRACEABILITY.md
+  board: kicad/smoke/smoke.kicad_pcb          # here a stub; a real project points at the generated board
+  netlist: out/smoke.xml
+  fab_dir: out/fab                            # <date>_<md5-8>/board_id.txt names the board of record
+  release_dir: docs/release
+  collateral_dir: docs/release/collateral
+  case_yaml: design/case.yaml
+tools:
+  python: .venv/bin/python                    # the scripts' interpreter (pyyaml); the smoke run symlinks the skill venv here
+  kicad_cli: kicad-cli                        # not called by the smoke run
+  kicad_python: python3
+dfm:
+  thresholds: design/dfm_thresholds.json      # copied from the fab's viewer with source + date
+  items: out/dfm_items.json                   # written by the project's measurer (here: a hand-written fixture)
+  accept: design/board.yaml                   # key dfm_accepted
+  report: out/dfm.json
+renders:
+  - {name: panel_top, kind: copy, src: "out/fab/*_{MD5_8}/panel_top.png"}
+  - {name: case_iso, kind: copy, src: "out/case/{CASE_VERSION}/iso.png", sub: case}
+reports:
+  - name: PCB_DESIGN_REPORT
+    title: smoke PCB design report
+    sections: [banner, identity, decisions, known_issues, package, traceability, dfm, renders, inventory]
+    extra_sources: [design/board.yaml, design/parts.yaml]
+  - name: CASE_DESIGN_REPORT
+    title: smoke case design report
+    sections: [banner, identity, decisions, renders, inventory]
+    extra_sources: [design/case.yaml]
+gates:
+  quiet_regex: 'Fontconfig|wxApp'
+  adopt:                                      # selftests first, then the pure --check gates; exit 1 on the first failure
+    - "$PY scripts/known_issues.py --selftest"
+    - "$PY scripts/traceability.py --selftest"
+    - "$PY scripts/release_report.py --selftest"
+    - "$PY scripts/known_issues.py --check"
+    - "$PY scripts/traceability.py --check"
+    - "$PY scripts/dfm_check.py"
+    - "$PY scripts/release_report.py --check"
+  clone:                                      # run on `git archive HEAD` — what a fresh clone sees
+    - "$PY scripts/known_issues.py --check"
+    - "$PY scripts/release_report.py --check"
+  regen:                                      # `clone_gate.sh --regen`: rewrite the reports from HEAD inputs only
+    - "$PY scripts/release_report.py"
+  regen_copy_back: [docs/release/PCB_DESIGN_REPORT.md, docs/release/CASE_DESIGN_REPORT.md]

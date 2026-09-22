@@ -1,0 +1,9 @@
+case:
+  version: v0.1-smoke
+  pieces: [tray, hood]
+  wall: 1.6
+  clearance_board: 0.3
+  preset_default: fdm
+  presets:
+    fdm: {min_wall: 0.85, colour_bands: top_only}
+    jlc: {min_wall: 1.2, process: MJF, material: PA12}

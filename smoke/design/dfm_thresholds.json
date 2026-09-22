@@ -1,0 +1,5 @@
+{"source": "FIXTURE for the smoke project — replace with the fab viewer's numbers (cite URL + date)",
+ "grading": "value <= danger -> Danger; danger < value <= warning -> Warning (equal IS Warning); value > warning -> Good",
+ "checks": {"Trace spacing": {"danger": 0.10, "warning": 0.15}, "Trace width": {"danger": 0.10, "warning": 0.13},
+            "Pad to board edge": {"danger": 0.13, "warning": 0.20}, "Fiducial": {"danger": null, "warning": null}},
+ "project_min": {"Annular ring": 0.16, "Silkscreen line width": 0.16}}

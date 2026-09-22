@@ -1,0 +1,8 @@
+[OWNER: choose] — no licence has been chosen for this repository yet.
+
+Candidates noted in the source project's plan (each VERIFY against the licence text before choosing):
+- hardware process documentation and templates: CC-BY-4.0
+- scripts and workflows: MIT or Apache-2.0
+- CERN-OHL v2 (P/S/W) applies to hardware designs, not to this process repository.
+
+Until the owner replaces this file, all rights reserved.

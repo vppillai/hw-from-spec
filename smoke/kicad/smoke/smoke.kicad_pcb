@@ -1,0 +1,5 @@
+(kicad_pcb (version 20260206) (generator "smoke-stub")
+  (general (thickness 1.6))
+  (net 0 "") (net 1 "GND") (net 2 "+3V3") (net 3 "VBUS")
+  (segment (start 10 10) (end 20 10) (width 0.2) (layer "F.Cu") (net 2))
+)

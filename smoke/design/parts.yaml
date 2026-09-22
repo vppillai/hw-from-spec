@@ -1,0 +1,7 @@
+# five parts; every fitted part carries a verified fab code (tag V) or is footprint-only (mpn null). Numbers here are FIXTURES, not verified parts.
+parts:
+  - {ref: U1, mpn: LDO-3V3-SOT23, manufacturer: Example, lcsc: C000001, confidence: V, package: SOT-23-5}
+  - {ref: C1, value: 1uF, mpn: CL10A105KB8NNNC, manufacturer: Example, lcsc: C000002, confidence: V, package: 0603}
+  - {ref: C2, value: 1uF, mpn: CL10A105KB8NNNC, manufacturer: Example, lcsc: C000002, confidence: V, package: 0603}
+  - {ref: J1, mpn: USB-C-16P, manufacturer: Example, lcsc: C000003, confidence: V, package: SMD}
+  - {ref: TP1, mpn: null, footprint: TestPoint_Pad_D1.0mm}

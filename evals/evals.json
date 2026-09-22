@@ -1,0 +1,50 @@
+{
+  "skill_name": "hw-from-spec",
+  "evals": [
+    {
+      "id": 1,
+      "name": "start-new-board-project-from-spec",
+      "prompt": "I have a written spec (SPEC.md in this empty git repo) for a small USB-powered sensor board with a two-piece 3D-printed case, to be built at JLCPCB with KiCad. Set the project up so agents can work on it safely and get it to schematic-ready. Do not draw anything yet.",
+      "expected_output": "Copies the templates (CLAUDE.md with numbered rules, DECISIONS/STATUS/GATES/KNOWN_ISSUES/LEARNINGS_LOG/BLOCKERS/PARTS_VERIFICATION), writes project.yaml, records the environment in docs/ENV.md, installs the scripts and runs every --selftest and the smoke run, then STOPS before CAD and asks the owner for the G0 line after a blind review round; refuses to invent any LCSC number; every changed spec value is a CC row marked OPEN.",
+      "files": [],
+      "assertions": [
+        "docs/GATES.md exists with empty owner approval cells and the agent did not write an approval line",
+        "project.yaml exists and names paths.decisions, paths.gates, paths.board, markers.release_regex",
+        "CLAUDE.md contains a numbered rule forbidding invented fab part numbers and a rule that agents never write gate lines",
+        "scripts/*.py --selftest and smoke/run_smoke.sh were run and their result reported",
+        "no KiCad schematic or board file was created",
+        "the response asks the owner for the G0 gate line (or states it is waiting for it) rather than proceeding to CAD"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "run-blind-review-round",
+      "prompt": "The layout of our board (kicad/ct1/ct1.kicad_pcb, package under out/fab/) is done. Run a blind review round before I approve G2. We have the Cursor agent CLI available for external models.",
+      "expected_output": "Commits and checks the tree is clean, creates a detached frozen worktree, generates the hand-off header with scripts/handoff_header.py (HEAD md5 MATCH, clean tree), writes the hand-off with a waiver paragraph, instantiates workflows/blind-deep-review.js with placeholders filled (roles, models, fallback), runs in-session + external reviewers who never see each other's output, adversarial verifiers on BLOCKER/MAJOR, merges into REQUIRED / OWNER / DOCUMENT / ACCEPT with a verdict, commits the review files with explicit paths, and does NOT write the G2 line.",
+      "files": [],
+      "assertions": [
+        "a frozen detached worktree is created and named as the reviewers' only read location",
+        "scripts/handoff_header.py output (or an equivalent generated header with HEAD md5 MATCH and clean-tree status) appears in the hand-off",
+        "the review prompt forbids reading other reviewers' reports and earlier merged reviews",
+        "BLOCKER/MAJOR findings go through an adversarial verifier defaulting to REFUTED",
+        "the merged report classifies items as REQUIRED / OWNER / DOCUMENT / ACCEPT and states an explicit verdict",
+        "docs/GATES.md G2 approval cell is still empty after the round"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "cut-a-release",
+      "prompt": "Everything is green on the board (DRC 0, DFM 0, reviews merged). Cut the release: reports, collateral, notes, tag. I have not signed anything yet.",
+      "expected_output": "Runs the collateral chain in order (drawing/FEA -> collect_renders -> commit -> clone_gate.sh --regen -> commit), produces DRAFT reports (never RELEASED, since the owner has not written the release line), release notes with a source next to every number, an annotated tag that records the board md5 and package path, and lists the owner-only actions (gate lines, the release line, the order) instead of doing them; every --check passes on git archive HEAD.",
+      "files": [],
+      "assertions": [
+        "the release reports carry a DRAFT banner and the agent did not write the release line into docs/GATES.md",
+        "scripts/release_report.py --check and scripts/clone_gate.sh (or an equivalent fresh-checkout check) were run and pass",
+        "collect_renders output is keyed on the board md5 and indexed with md5 + grade",
+        "release notes name a source file next to every number",
+        "an annotated tag was created (or its exact command proposed) with the board md5 and package path in the message",
+        "the owner-only actions (approval cells, release line, placing the order) are listed, not performed"
+      ]
+    }
+  ]
+}

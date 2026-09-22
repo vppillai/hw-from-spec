@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<export version="E">
+  <components>
+    <comp ref="U1"><value>LDO-3V3-SOT23</value><property name="LCSC" value="C000001"/></comp>
+    <comp ref="C1"><value>1uF</value><property name="LCSC" value="C000002"/></comp>
+    <comp ref="C2"><value>1uF</value><property name="LCSC" value="C000002"/></comp>
+    <comp ref="J1"><value>USB-C-16P</value><property name="LCSC" value="C000003"/></comp>
+    <comp ref="TP1"><value>TP</value></comp>
+  </components>
+  <nets>
+    <net code="1" name="GND"><node ref="U1" pin="2"/><node ref="C1" pin="2"/><node ref="C2" pin="2"/><node ref="J1" pin="A1"/></net>
+    <net code="2" name="+3V3"><node ref="U1" pin="5"/><node ref="C2" pin="1"/><node ref="TP1" pin="1"/></net>
+    <net code="3" name="VBUS"><node ref="U1" pin="1"/><node ref="C1" pin="1"/><node ref="J1" pin="A4"/></net>
+  </nets>
+</export>

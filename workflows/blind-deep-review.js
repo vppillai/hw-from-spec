@@ -1,0 +1,67 @@
+// workflows/blind-deep-review.js — TEMPLATE: extensive double-blind review, N specialties × (1 in-session + 2 external models) → adversarial
+// verifiers → merge. Replace every {{PLACEHOLDER}} (workflows/README.md lists them); delete roles you do not need. Generalised from the source
+// project's mini-final-deep-review-r6k-delta.js (five audits, 8 roles × 3 reviewers).
+export const meta = {
+  name: '{{PROJECT}}-deep-review-{{ROUND}}',
+  description: '{{PROJECT}} {{ROUND}} double-blind review: each specialty reviewed by one in-session reviewer and two external models, briefed only with the hand-off in a frozen worktree; every BLOCKER/MAJOR adversarially verified; merged disposition with owner rows and a generator fix list',
+  phases: [{ title: 'Review' }, { title: 'Verify' }, { title: 'Merge' }],
+}
+const FINDINGS = { type: 'object', properties: { report_path: { type: 'string' }, model: { type: 'string' }, findings: { type: 'array', items: { type: 'object', properties: { id: { type: 'string' }, area: { type: 'string' }, severity: { type: 'string', enum: ['BLOCKER', 'MAJOR', 'MINOR', 'NOTE'] }, finding: { type: 'string' }, evidence: { type: 'string' }, proposed_change: { type: 'string' } }, required: ['id', 'area', 'severity', 'finding', 'evidence', 'proposed_change'] } }, files_read: { type: 'integer' }, summary: { type: 'string' } }, required: ['report_path', 'model', 'findings', 'files_read', 'summary'] }
+const VERDICT = { type: 'object', properties: { verdicts: { type: 'array', items: { type: 'object', properties: { id: { type: 'string' }, verdict: { type: 'string', enum: ['CONFIRMED', 'REFUTED', 'PARTLY', 'UNVERIFIABLE'] }, evidence: { type: 'string' }, corrected_finding: { type: 'string' }, severity: { type: 'string', enum: ['BLOCKER', 'MAJOR', 'MINOR', 'NOTE'] } }, required: ['id', 'verdict', 'evidence', 'corrected_finding', 'severity'] } }, report_path: { type: 'string' } }, required: ['verdicts', 'report_path'] }
+const MERGE = { type: 'object', properties: { report_path: { type: 'string' }, blockers: { type: 'integer' }, majors: { type: 'integer' }, minors: { type: 'integer' }, notes: { type: 'integer' }, corroborated: { type: 'integer' }, owner_decisions: { type: 'array', items: { type: 'string' } }, required_changes: { type: 'array', items: { type: 'string' } }, verdict: { type: 'string' }, summary: { type: 'string' } }, required: ['report_path', 'blockers', 'majors', 'minors', 'notes', 'corroborated', 'owner_decisions', 'required_changes', 'verdict', 'summary'] }
+
+const WT = '{{FROZEN_WORKTREE}}'        // detached `git worktree add` at the reviewed commit; read-only for reviewers
+const MAIN = '{{REPO_ROOT}}'            // live repo: reports are written to docs/reviews/ here
+const HANDOFF = '{{HANDOFF_DOC}}'       // e.g. docs/REVIEW_HANDOFF.md — the ONLY briefing (header from scripts/handoff_header.py)
+const TAG = '{{REVIEW_TAG}}'            // report file prefix, e.g. R7REVIEW
+const MERGED = '{{MERGED_REPORT}}'      // e.g. docs/reviews/final_review_r7_merged.md
+const PREVIOUS = '{{PREVIOUS_MERGED_REPORTS}}'   // comma-separated earlier merged reports to compare against ('' for the first round)
+const TODAY = '{{DATE}}'
+const KPY = '{{CAD_PYTHON}}'            // the CAD's Python for parsing board/schematic files (or 'grep')
+
+// One entry per specialty: key (file-name safe), title, brief (what to look at — files, nets, decisions; numbers come from the hand-off, not from here).
+const ROLES = [
+  { key: 'power', title: 'Power & analog', brief: '{{BRIEF_POWER}}' },
+  { key: 'digital', title: 'Digital, interfaces, firmware-facing pins', brief: '{{BRIEF_DIGITAL}}' },
+  { key: 'layout', title: 'Layout, signal integrity and fab DFM', brief: '{{BRIEF_LAYOUT}}' },
+  { key: 'fab', title: 'Fab package, BOM/CPL and the order', brief: '{{BRIEF_FAB}}' },
+  { key: 'mech', title: 'Mechanical, thermal and the case', brief: '{{BRIEF_MECH}}' },
+  { key: 'silk', title: 'Silkscreen, UX and operator documentation', brief: '{{BRIEF_SILK}}' },
+  { key: 'software', title: 'Software, bring-up and test plan', brief: '{{BRIEF_SOFTWARE}}' },
+  { key: 'coherence', title: 'Requirements, decisions and traceability coherence', brief: '{{BRIEF_COHERENCE}}' },
+  { key: 'gates', title: 'Gates, generators and release tooling', brief: '{{BRIEF_GATES}}' },
+]
+
+// external models available to the Cursor agent CLI (`agent --list-models`); two per role, rotated so every role gets two vendors
+const MODELS = [{{EXTERNAL_MODELS}}]           // e.g. 'gpt-5.3-codex-xhigh', 'claude-opus-5-thinking-high', 'gemini-3.7-flash-high'
+const FALLBACK = '{{FALLBACK_MODEL}}'
+
+const COMMON = `Today is ${TODAY}. {{ROUND_CONTEXT}} BLINDNESS: your ONLY briefing is ${WT}/${HANDOFF} (self-contained) plus read access to the frozen worktree ${WT} (a detached checkout; never write there). Do NOT read any file named docs/reviews/${TAG}_* or any earlier merged review (other reviewers' output), and do not read the live repo ${MAIN} except to WRITE your report. Every finding must cite file + line/coordinate/refdes/net from the worktree and say how you checked it (grep, a number you computed, an image you read). Severity: BLOCKER = would make the board not work or not build; MAJOR = a real functional/robustness/DFM risk to fix before ordering; MINOR = worth fixing, not blocking; NOTE = observation. Be exhaustive within your specialty; prefer many concrete findings over prose; do not repeat what the hand-off lists as known/open unless you disagree with its disposition (say so and why). Finish with a 'files_read' count and a 10-line summary.`
+
+const inSession = (r) => agent(`${COMMON}
+You are the IN-SESSION blind reviewer for the specialty **${r.title}**. Scope: ${r.brief}
+Read the hand-off first (all of it), then the files it points to for your specialty in ${WT} (CAD files can be parsed with ${KPY} or grep; images with the Read tool). Write your report to ${MAIN}/docs/reviews/${TAG}_${r.key}_claude.md (markdown: header with role/model/date/files read, then one table row per finding: id ${r.key.toUpperCase()}-Cnn | severity | finding | evidence | proposed change). Return the findings in the schema (model = 'claude-in-session').`, { label: `review:${r.key}:claude`, phase: 'Review', schema: FINDINGS, effort: 'high' })
+
+const external = (r, model, n) => agent(`${COMMON}
+You are the WRAPPER for an EXTERNAL blind reviewer: model **${model}** via the Cursor agent CLI. Run from the frozen worktree so the model can only see the snapshot:
+  cd ${WT} && agent -p --mode ask --model ${model} --output-format text "<PROMPT>" > ${MAIN}/docs/reviews/${TAG}_${r.key}_${n}_${model}.md 2> ${MAIN}/docs/reviews/${TAG}_${r.key}_${n}_${model}.stderr.log
+where <PROMPT> (under 30 kB; do NOT paste the hand-off, the model reads it) is: 'You are a senior hardware reviewer doing a BLIND review of {{PROJECT_ONE_LINE}}. Read ${HANDOFF} in this directory completely first — it is your only briefing — then open the files it points to for the specialty "${r.title}": ${r.brief} You may read any file in this directory; you may not write anything. Report ONLY a markdown table with columns ID | Severity (BLOCKER/MAJOR/MINOR/NOTE) | Area | Finding | Evidence (file + line/coordinate/refdes/net and how you checked) | Proposed change, ids ${r.key.toUpperCase()}-E${n}-nn, at least 15 rows if you can find them and as many as are real, followed by "Files read: N" and a 10-line summary. Do not invent facts; if you cannot open a file say so.'
+macOS has no timeout command: launch the CLI in the background with an ampersand, record the PID, poll with until-loops (≤ 8 min per Bash call, up to 75 minutes total). When it exits: 'test -s' the report — an EMPTY or error-only report is a failure: retry once with --model ${FALLBACK} (note the substitution in the report header); if that is empty too, write the failure (exit code, stderr tail) into the report and return zero findings. Do NOT judge the design yourself and do not add findings of your own. Parse the model's table into the schema (model = the model that actually produced the report; files_read from its text or 0).`, { label: `review:${r.key}:${model}`, phase: 'Review', schema: FINDINGS, effort: 'medium' })
+
+const verify = (r, reviews) => {
+  const all = reviews.filter(Boolean).flatMap(v => v.findings.map(f => ({ ...f, model: v.model })))
+  const toVerify = all.filter(f => f.severity === 'BLOCKER' || f.severity === 'MAJOR')
+  log(`${r.key}: ${all.length} findings from ${reviews.filter(Boolean).length} reviewers; verifying ${toVerify.length} BLOCKER/MAJOR`)
+  if (!toVerify.length) return Promise.resolve({ role: r.key, all, verdicts: [] })
+  return agent(`Today is ${TODAY}. Adversarial VERIFIER for the specialty **${r.title}**. Default to REFUTED unless the evidence in the frozen worktree ${WT} supports the claim: for each finding below, open the cited files (parse CAD files with ${KPY} or grep, read images with Read, compute the number — a number about copper carries the script that produced it; convert coordinate frames before calling a site missing), state exactly what you found, and return CONFIRMED / REFUTED / PARTLY / UNVERIFIABLE with a corrected finding text and your severity (downgrade freely; upgrade only with evidence). Mark duplicates across reviewers (same defect) by giving them the same corrected_finding text. Write ${MAIN}/docs/reviews/${TAG}_${r.key}_verify.md with one row per finding. Findings: ${JSON.stringify(toVerify).slice(0, 60000)}`, { label: `verify:${r.key}`, phase: 'Verify', schema: VERDICT, effort: 'high' }).then(v => ({ role: r.key, all, verdicts: v ? v.verdicts : [] }))
+}
+
+const results = await pipeline(
+  ROLES.map((r, i) => ({ r, m1: MODELS[i % MODELS.length], m2: MODELS[(i + 3) % MODELS.length] })),
+  ({ r, m1, m2 }) => parallel([() => inSession(r), () => external(r, m1, 1), () => external(r, m2, 2)]).then(rs => ({ r, rs })),
+  ({ r, rs }) => verify(r, rs),
+)
+
+phase('Merge')
+const merged = await agent(`Today is ${TODAY}. MERGE the {{PROJECT}} {{ROUND}} double-blind review into ${MAIN}/${MERGED}. ${PREVIOUS ? `Compare FIRST with the earlier merged reports (${PREVIOUS}): state per earlier REQUIRED / OWNER item CLOSED / STILL OPEN / NEW with the verifier evidence.` : ''} Inputs: the per-role reviews and verifier verdicts (read every ${MAIN}/docs/reviews/${TAG}_*.md; structured data: ${JSON.stringify(results.filter(Boolean).map(x => ({ role: x.role, n: x.all.length, verdicts: x.verdicts }))).slice(0, 80000)}). Method: (1) apply the verifier verdicts — REFUTED findings go to a 'rejected' table with the reason, PARTLY/CONFIRMED keep the corrected text and severity; MINOR/NOTE findings are kept as reported but deduped; (2) dedupe across roles and models by defect (same file/net/refdes/mechanism) and record the corroboration count and which models found it — a corroboration matrix (finding × model); (3) classify each surviving item: REQUIRED generator/YAML change before ordering (file + exact change), OWNER decision (write the proposed decision-log row text, numbered from the next free agent ID — grep the log first — one bundle row if many), DOCUMENT (test plan / docs), ACCEPT (with reason); (4) an explicit VERDICT: '{{VERDICT_OPTIONS}}' — with the three strongest reasons; (5) reviewer quality: findings per model, refuted rate per model, empty/failed runs; (6) counts. Do not change any design file. Commit with 'cd ${MAIN} && git add -- docs/reviews/${TAG}_*.md docs/reviews/${TAG}_*.stderr.log ${MERGED} && git commit -m "{{ROUND}} double-blind review: ${ROLES.length} specialties x 3 reviewers, verified and merged" -- docs/reviews/${TAG}_*.md docs/reviews/${TAG}_*.stderr.log ${MERGED}' (explicit paths only). Return the schema.`, { label: 'merge', phase: 'Merge', schema: MERGE, effort: 'high' })
+return { results: results.filter(Boolean).map(x => ({ role: x.role, findings: x.all.length, verified: x.verdicts.length })), merged }
