@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """scripts/collect_renders.py — renderings are release data: collect them under collateral/<board-md5-8>/renders/ with an md5 + grade index.
 
-  python scripts/collect_renders.py [--project project.yaml] [--dry]
+  python scripts/collect_renders.py [--project project.yaml]
+  python scripts/collect_renders.py --check          # (alias --dry) exit 1 when any rule would be redone or a source is missing; writes nothing
   python scripts/collect_renders.py --selftest
 
 project.yaml:
@@ -29,13 +30,15 @@ def file_md5(p):
 def run(P, dry=False, runner=None):
     board = P.path("board")
     md5 = file_md5(board) if board and os.path.exists(board) else None
+    if md5 is None:
+        print(f"MISSING: board {P.get('paths.board')} — renders are keyed on the board md5; nothing collected"); return 1
     case = P.path("case_yaml")
     case_v = ((yaml.safe_load(open(case)) or {}).get("case") or {}).get("version") if case and os.path.exists(case) else None
-    out_dir = os.path.join(P.path("collateral_dir"), (md5 or "nomd5")[:8], "renders")
+    out_dir = os.path.join(P.path("collateral_dir"), md5[:8], "renders")
     os.makedirs(out_dir, exist_ok=True)
     idx_path = os.path.join(out_dir, "renders.json")
     idx = json.load(open(idx_path)) if os.path.exists(idx_path) else {}
-    sub = lambda s: (s.replace("{MD5_8}", (md5 or "")[:8]).replace("{CASE_VERSION}", str(case_v)).replace("{BOARD}", board or "")
+    sub = lambda s: (s.replace("{MD5_8}", md5[:8]).replace("{CASE_VERSION}", str(case_v)).replace("{BOARD}", board or "")
                      .replace("{KICAD_CLI}", P.tool("kicad_cli") or "kicad-cli").replace("{ROOT}", P.root))
     produced, log = set(), []
     for r in P.get("renders", []) or []:
@@ -86,7 +89,8 @@ def run(P, dry=False, runner=None):
         open(os.path.join(out_dir, "RENDERS.md"), "w").write("\n".join(L))
     print("\n".join(log) or "no renders configured")
     print(f"{out_dir}: {len(idx)} files indexed, orphans {orphans or 'none'}")
-    return 1 if any(l.startswith(("FAILED", "MISSING")) for l in log) else 0
+    bad = ("FAILED", "MISSING") + (("would redo",) if dry else ())
+    return 1 if any(l.startswith(bad) for l in log) else 0
 
 
 def selftest():
@@ -116,17 +120,21 @@ renders:
     assert run(P, runner=fake) == 0 and len(calls) == 1, "idempotent: nothing redone"
     open(f"{d}/project.yaml", "a").write("")
     P.cfg["renders"][0]["args"] = ["--side", "bottom"]
+    assert run(P, dry=True, runner=fake) == 1 and len(calls) == 1, "--check: a rule that would be redone exits 1 and renders nothing"
     assert run(P, runner=fake) == 0 and len(calls) == 2, "a changed camera re-renders"
+    assert run(P, dry=True, runner=fake) == 0, "--check green when nothing would be redone"
     open(f"{out}/stale.png", "wb").write(b"z")
     run(P, runner=fake)
     assert "| `case/case_iso.png` |" in open(f"{out}/RENDERS.md").read() and "`stale.png`" in open(f"{out}/RENDERS.md").read().split("Orphans")[1]
     P.cfg["renders"].append({"name": "gone", "kind": "copy", "src": "nowhere/*.png"})
     assert run(P, runner=fake) == 1, "a missing source is reported and exits 1"
+    P.cfg["paths"]["board"] = "kicad/none.kicad_pcb"
+    assert run(P, runner=fake) == 1 and not os.path.exists(f"{d}/docs/release/collateral/nomd5"), "no board: MISSING, no nomd5 folder"
     print("selftest OK")
     return 0
 
 
 if __name__ == "__main__":
-    ap = argparse.ArgumentParser(); ap.add_argument("--project"); ap.add_argument("--dry", action="store_true"); ap.add_argument("--selftest", action="store_true")
+    ap = argparse.ArgumentParser(); ap.add_argument("--project"); ap.add_argument("--dry", "--check", action="store_true"); ap.add_argument("--selftest", action="store_true")
     a = ap.parse_args()
     sys.exit(selftest() if a.selftest else run(Project.find(arg=a.project), a.dry))

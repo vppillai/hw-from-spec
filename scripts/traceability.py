@@ -199,7 +199,10 @@ def md(s):
 
 
 def build(P, ctx, only=None):
-    spec = yaml.safe_load(open(P.path("traceability_yaml")))
+    ty = P.path("traceability_yaml")
+    if not os.path.exists(ty):
+        sys.exit(f"MISSING: {ty} — seed it from the skill's templates/design/traceability.yaml (one entry per decision row)")
+    spec = yaml.safe_load(open(ty))
     entries = spec.get("entries", [])
     if only:
         entries = [e for e in entries if only in e["id"] or only in str(e.get("source", ""))]
@@ -227,6 +230,8 @@ def build(P, ctx, only=None):
             detail = "; ".join(r[1] for r in checks)
         elif e.get("pending"):
             res, detail = f"PENDING({e['pending']})", "; ".join(r[1] for r in checks if not r[0])
+        elif all(r[1].startswith("command SKIPPED") for r in checks if not r[0]):
+            res, detail = "PENDING(--no-commands)", "; ".join(r[1] for r in checks if not r[0])
         else:
             res, detail = "FAILED", "; ".join(r[1] for r in checks if not r[0])
         key = res.split("(")[0].split(" ")[0]
@@ -308,8 +313,14 @@ entries:
     assert "CC-002.1 | CC-002 | q | — | schematic | **FAILED** | stale reason" in text, "a NOT-INCLUDED reason starting OPEN on a decided row must FAIL"
     assert "**VERIFIED** | cmd ✓ `echo` rc=0 «2»" in text
     assert unmapped == ["CC-003"] and failed == 1, (unmapped, failed)
-    t2, *_ = build(P, Ctx(P, tempfile.mkdtemp(), False))
-    assert "PENDING(placement)" not in t2 and "SKIPPED" in t2 and "PENDING" in t2, "--no-commands must not FAIL a command row"
+    t2, failed2, *_ = build(P, Ctx(P, tempfile.mkdtemp(), False))
+    assert "| CC-002.2 | CC-002 | cmd | — | placement | **PENDING(--no-commands)** | command SKIPPED (--no-commands) |" in t2, t2
+    assert failed2 == 1, "--no-commands must not FAIL a command row (the one FAILED is the stale-reason row)"
+    P2 = Project(f"{d}/project.yaml"); P2.cfg["paths"]["traceability_yaml"] = "design/none.yaml"
+    try:
+        build(P2, Ctx(P2, tempfile.mkdtemp(), False)); raise AssertionError("missing yaml must exit with MISSING")
+    except SystemExit as e:
+        assert "MISSING" in str(e)
     print("selftest OK")
     return 0
 

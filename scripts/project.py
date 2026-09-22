@@ -8,6 +8,7 @@ CLI (for shell scripts):
   scripts/project.py get gates.adopt          # prints the value; a list prints one item per line
   scripts/project.py path decisions           # absolute path of paths.<key>
   scripts/project.py root
+  scripts/project.py --selftest
 """
 import os, re, sys
 
@@ -86,7 +87,24 @@ def split_row(line):
     return [c.strip() for c in re.split(r"(?<!\\)\|", line.strip())[1:-1]]
 
 
+def selftest():
+    import tempfile
+    d = tempfile.mkdtemp(prefix="hwfs_pr_")
+    open(f"{d}/project.yaml", "w").write("project: {name: t}\nids: {agent_prefix: AG}\npaths: {decisions: d/D.md}\ntools: {python: .venv/bin/python, kicad_cli: kicad-cli}\n")
+    P = Project.find(start=d)
+    assert P.get("ids.agent_prefix") == "AG" and P.get("ids.owner_prefix") == "D", "explicit key wins, missing key falls back to DEFAULTS"
+    assert P.get("markers.release_regex") and P.get("nope.x", 7) == 7
+    assert P.path("decisions") == f"{d}/d/D.md" and P.path("gates") == f"{d}/docs/GATES.md" and P.path("zz") is None
+    assert P.tool("python") == f"{d}/.venv/bin/python" and P.tool("kicad_cli") == "kicad-cli"
+    assert P.id_re().findall("D-01 AG-002 B-03 CC-004") == ["D-01", "AG-002", "B-03"] and P.decision_re().findall("D-2a AG-002 B-03") == ["D-2a", "AG-002"]
+    assert split_row("| a | b \\| c | d |") == ["a", "b \\| c", "d"], "an escaped pipe is content"
+    print("selftest OK")
+    return 0
+
+
 def main(argv):
+    if len(argv) > 1 and argv[1] == "--selftest":
+        sys.exit(selftest())
     if len(argv) < 2 or argv[1] not in ("get", "path", "root"):
         sys.exit(__doc__)
     P = Project.find()

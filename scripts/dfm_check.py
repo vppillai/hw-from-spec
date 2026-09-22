@@ -1,15 +1,20 @@
 #!/usr/bin/env python3
 """scripts/dfm_check.py — the fab-DFM mirror: grading engine, threshold file, acceptance list, report (references/fab-dfm.md).
 
-  python scripts/dfm_check.py --items out/dfm_items.json [--thresholds design/dfm_thresholds.json] [--accept design/board.yaml] [--json out/dfm.json]
+  python scripts/dfm_check.py [--items out/dfm_items.json] [--thresholds design/dfm_thresholds.json] [--accept design/board.yaml] [--json out/dfm.json]
+  python scripts/dfm_check.py --check      # exit 1 when the on-disk report (dfm.report) differs from the regenerated one, or items are open
   python scripts/dfm_check.py --selftest
 
+Defaults come from project.yaml `dfm:` (thresholds, items, accept, report); the JSON report is written to dfm.report on every plain run
+(release_report reads it), so the gate list can carry the bare command.
+
 Split of work: MEASURING is CAD-specific (a KiCad SWIG measurer lives in the project and emits items); GRADING is generic and lives here,
-so the grading rule is written once and tested once. Items JSON: [{"check": "Trace spacing", "value": 0.15, "refs": ["R1", "C2"],
-"layer": "F.Cu", "xy": [12.3, 45.6]}]; `value` null = a presence-only check (graded Warning when the fab lists it without a threshold).
+so the grading rule is written once and tested once. Items JSON (schema table: references/fab-dfm.md §2): [{"check": "Trace spacing", "value": 0.15, "refs": ["R1", "C2"],
+"layer": "F.Cu", "xy": [12.3, 45.6]}]; one item = one violation; `check` must equal a thresholds key byte for byte (unknown names grade INFO
+and are listed as a warning); `value` null = a presence-only check (graded Warning when the fab lists it without a threshold).
 
 Thresholds JSON (design/dfm_thresholds.json — copy the fab's numbers, cite the source and date):
-  {"source": "...", "checks": {"Trace spacing": {"danger": 0.10, "warning": 0.15, "fab_counts": [d, w, g]}, "Fiducial": {"danger": null, "warning": null}},
+  {"source": "...", "checks": {"Trace spacing": {"danger": 0.10, "warning": 0.15}, "Fiducial": {"danger": null, "warning": null}},
    "project_min": {"Trace width": 0.16}}
 Grading (the rule every fab's viewer was observed to use): value <= danger -> Danger; danger < value <= warning -> Warning (EQUAL to the warning
 threshold is STILL Warning — design to strictly greater); value > warning -> Good. Values are rounded to 2 decimals before grading (viewers work at
@@ -55,33 +60,34 @@ def grade(check, value, thresholds):
 
 
 def accepted(item, acc):
+    """The first acceptance entry that covers EVERY refdes of the item (list or dict form), else None."""
     refs = item.get("refs") or []
     if not refs:
-        return False
+        return None
     for a in acc:
         if a.get("check") != item["check"]:
             continue
         lst = a.get("refs") or {}
         names = set(lst) if isinstance(lst, (list, dict)) else set()
         if all(r in names for r in refs):
-            return True
-    return False
+            return a
+    return None
 
 
 def run(items, thresholds, acc, top=10):
     graded, counts = [], collections.Counter()
     by_ref_used = collections.Counter()
+    known = set((thresholds.get("checks") or {})) | set((thresholds.get("project_min") or {}))
     for it in items:
         g, lim = grade(it["check"], it.get("value"), thresholds)
         ok = g in ("Good", "INFO")
-        acc_hit = (not ok) and accepted(it, acc)
-        if acc_hit:   # dict form: per-ref budget
-            for a in acc:
-                if a.get("check") == it["check"] and isinstance(a.get("refs"), dict):
-                    for r in it.get("refs") or []:
-                        by_ref_used[(it["check"], r)] += 1
-                        if by_ref_used[(it["check"], r)] > a["refs"].get(r, 0):
-                            acc_hit = False
+        a = None if ok else accepted(it, acc)
+        acc_hit = a is not None
+        if acc_hit and isinstance(a.get("refs"), dict):   # dict form: per-ref budget, applied to the MATCHING entry only
+            for r in it.get("refs") or []:
+                by_ref_used[(id(a), r)] += 1
+                if by_ref_used[(id(a), r)] > a["refs"].get(r, 0):
+                    acc_hit = False
         graded.append({**it, "grade": g, "limit": lim, "accepted": acc_hit})
         counts[g] += 1
         if acc_hit:
@@ -92,6 +98,9 @@ def run(items, thresholds, acc, top=10):
         c = collections.Counter(g["grade"] for g in graded if g["check"] == chk)
         a = sum(1 for g in graded if g["check"] == chk and g["accepted"])
         L.append(f"| {chk} | {c['Danger']} | {c['Warning']} | {c['project-FAIL']} | {c['Good']} | {a} |")
+    unknown = sorted({g["check"] for g in graded} - known)
+    if unknown:
+        L += ["", f"WARNING: {len(unknown)} check name(s) match no thresholds key (graded INFO): {unknown} — spell them as the fab does"]
     L += ["", f"Open (not accepted) Danger/Warning/project failures: **{len(open_bad)}**"]
     for g in sorted(open_bad, key=lambda g: (g["grade"] != "Danger", g.get("value") if g.get("value") is not None else 0))[:top]:
         L.append(f"- {g['grade']} {g['check']} value {g.get('value')} (limit {g['limit']}) refs {g.get('refs')} layer {g.get('layer')} at {g.get('xy')}")
@@ -108,21 +117,29 @@ def load_accept(path):
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--items"); ap.add_argument("--thresholds"); ap.add_argument("--accept"); ap.add_argument("--json"); ap.add_argument("--top", type=int, default=10)
-    ap.add_argument("--project"); ap.add_argument("--selftest", action="store_true")
+    ap.add_argument("--project"); ap.add_argument("--check", action="store_true"); ap.add_argument("--selftest", action="store_true")
     a = ap.parse_args()
     if a.selftest:
         return selftest()
     P = Project.find(arg=a.project)
-    th_path = a.thresholds or P.path("dfm_thresholds") or os.path.join(P.root, P.get("dfm.thresholds", "design/dfm_thresholds.json"))
+    th_path = a.thresholds or os.path.join(P.root, P.get("dfm.thresholds", "design/dfm_thresholds.json"))
     items_path = a.items or os.path.join(P.root, P.get("dfm.items", "out/dfm_items.json"))
     acc_path = a.accept or (os.path.join(P.root, P.get("dfm.accept")) if P.get("dfm.accept") else None)
+    rep_path = a.json or (os.path.join(P.root, P.get("dfm.report")) if P.get("dfm.report") else None)
     if not os.path.exists(items_path):
         print(f"MISSING: {items_path} — run the project's measurer first (references/fab-dfm.md §3)"); return 1
     thresholds = json.load(open(th_path)) if os.path.exists(th_path) else {"checks": {}}
     graded, open_bad, report = run(json.load(open(items_path)), thresholds, load_accept(acc_path), a.top)
     print(report)
-    if a.json:
-        json.dump({"items": graded, "open": len(open_bad), "thresholds": os.path.relpath(th_path, P.root)}, open(a.json, "w"), indent=1)
+    doc = {"items": graded, "open": len(open_bad), "thresholds": os.path.relpath(th_path, P.root)}
+    if rep_path and a.check:
+        old = json.load(open(rep_path)) if os.path.exists(rep_path) else None
+        if old != doc:
+            print(f"STALE: {rep_path} differs from the regenerated report — run scripts/dfm_check.py"); return 1
+        print(f"OK: {rep_path} up to date")
+    elif rep_path:
+        os.makedirs(os.path.dirname(rep_path) or ".", exist_ok=True)
+        json.dump(doc, open(rep_path, "w"), indent=1)
     return 1 if open_bad else 0
 
 
@@ -143,11 +160,25 @@ def selftest():
     assert not graded[1]["accepted"], "an item without refs cannot be accepted"
     assert graded[2]["accepted"] and not graded[3]["accepted"], "dict form: the per-ref count is a budget"
     assert len(open_bad) == 3 and "Open (not accepted) Danger/Warning/project failures: **3**" in rep, rep
+    # mixed forms for ONE check: a list-form acceptance must not be un-accepted by a dict-form entry for other refs
+    mixed = [{"check": "Trace spacing", "value": 0.12, "refs": ["R1"]}, {"check": "Trace spacing", "value": 0.12, "refs": ["R1"]}, {"check": "Trace spacing", "value": 0.12, "refs": ["R2"]}]
+    g2, ob2, rep2 = run(mixed, th, [{"check": "Trace spacing", "refs": ["R1"], "reason": "list form, unlimited"}, {"check": "Trace spacing", "refs": {"R2": 1}, "reason": "budget"}])
+    assert [x["accepted"] for x in g2] == [True, True, True] and not ob2, ("mixed-form acceptances: list entry unlimited, dict entry budgeted", g2)
+    assert "WARNING" not in rep2 and "WARNING: 1 check name" in run([{"check": "trace spacing", "value": 0.1, "refs": ["R1"]}], th, [])[2], "unknown check names are warned about"
     d = tempfile.mkdtemp()
     json.dump(items, open(f"{d}/i.json", "w")); json.dump(th, open(f"{d}/t.json", "w"))
-    open(f"{d}/project.yaml", "w").write("dfm: {thresholds: t.json, items: i.json}\n")
+    open(f"{d}/project.yaml", "w").write("dfm: {thresholds: t.json, items: i.json, report: out/dfm.json}\n")
     sys.argv = ["x", "--project", f"{d}/project.yaml"]
-    assert main() == 1
+    assert main() == 1 and json.load(open(f"{d}/out/dfm.json"))["open"] == 4, "the report is written to dfm.report by default"
+    sys.argv = ["x", "--project", f"{d}/project.yaml", "--check"]
+    assert main() == 1, "--check with open items still exits 1"
+    json.dump(items[:1], open(f"{d}/i.json", "w"))
+    out = tempfile.TemporaryFile("w+"); real = sys.stdout; sys.stdout = out
+    try:
+        main()
+    finally:
+        sys.stdout = real
+    out.seek(0); assert "STALE:" in out.read(), "--check must notice a changed input"
     print("selftest OK")
     return 0
 

@@ -90,13 +90,13 @@ def scalars(d, prefix=""):
 
 
 def board_md5(ctx, P):
-    t = ctx.read(P.get("paths.board"))
-    return hashlib.md5(t.encode("utf-8", "replace")).hexdigest() if t is not None else None
+    rel = P.get("paths.board")
+    return ctx.seen[rel][0] if rel and ctx.read(rel) is not None else None   # md5 of the raw bytes (no text round trip)
 
 
-def pkg_for_board(ctx, P):
-    """The fab package whose board_id.txt md5 EQUALS the current board's md5 — never the newest by mtime."""
-    md5 = board_md5(ctx, P)
+def pkg_for_board(ctx, P, md5=None):
+    """The fab package whose board_id.txt md5 EQUALS the board's md5 (default: the working-tree board) — never the newest by mtime."""
+    md5 = md5 or board_md5(ctx, P)
     hits = []
     for bid in sorted(glob.glob(ctx.p(f"{P.get('paths.fab_dir')}/*/board_id.txt"))):
         rel = os.path.relpath(bid, ctx.root)
@@ -112,8 +112,8 @@ def pkg_for_board(ctx, P):
 def section_banner(ctx, P, rep):
     gates = ctx.read(P.get("paths.gates")) or ""
     released = re.search(P.get("markers.release_regex"), gates, re.I)
-    return [f"**STATUS: {'RELEASED (owner clear-to-build line found in ' + P.get('paths.gates') + ')' if released else 'DRAFT'}** — {rep.get('title', rep['name'])}. "
-            f"The banner turns RELEASED only when the owner writes a clear-to-build line into `{P.get('paths.gates')}` (regex `{P.get('markers.release_regex')}`); agents never write it.", ""]
+    return [f"**STATUS: {'RELEASED (the owner release line is present in ' + P.get('paths.gates') + ')' if released else 'DRAFT'}** — {rep.get('title', rep['name'])}. "
+            f"The banner turns RELEASED only when the owner writes the release line into `{P.get('paths.gates')}` (regex `{P.get('markers.release_regex')}`); agents never write it.", ""]
 
 
 def section_identity(ctx, P, rep):
@@ -228,8 +228,8 @@ def selftest():
     for sub in ("docs", "kicad/b", "out/fab/2026-01-01_x", "design"):
         os.makedirs(f"{d}/{sub}")
     open(f"{d}/project.yaml", "w").write("project: {name: t}\npaths: {board: kicad/b/b.kicad_pcb}\nreports:\n  - {name: R, title: test report, sections: [banner, identity, decisions, known_issues, package, traceability, dfm, renders, inventory], extra_sources: [design/case.yaml]}\n")
-    open(f"{d}/kicad/b/b.kicad_pcb", "w").write("(kicad_pcb)\n")
-    md5 = hashlib.md5(b"(kicad_pcb)\n").hexdigest()
+    open(f"{d}/kicad/b/b.kicad_pcb", "wb").write(b"(kicad_pcb)\n\xe9\r\n")   # a non-UTF-8 byte and a CRLF: the md5 is of the raw bytes
+    md5 = hashlib.md5(b"(kicad_pcb)\n\xe9\r\n").hexdigest()
     open(f"{d}/out/fab/2026-01-01_x/board_id.txt", "w").write(f"board kicad/b/b.kicad_pcb\nmd5 {md5}\ncommit abc\n")
     open(f"{d}/docs/DECISIONS.md", "w").write("| ID | Date | Status | Topic | P | R |\n|---|---|---|---|---|---|\n| **D-01 (owner)** | d | **APPROVED** | t | p | r |\n| CC-001 | d | OPEN q | t2 | p | r |\n")
     open(f"{d}/docs/GATES.md", "w").write("| G0 | _not yet approved_ |\n")

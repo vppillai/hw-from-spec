@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """scripts/handoff_header.py — the generated header block of the review hand-off (blind-review protocol, references/agent-ops.md).
 
-  python scripts/handoff_header.py [PKG_DIR]     # default: the fab package whose board_id.txt md5 == md5 of the board at HEAD
+  python scripts/handoff_header.py [PKG_DIR]     # default: the fab package whose board_id.txt md5 == md5 of the board at HEAD (content match, release_report.pkg_for_board)
   python scripts/handoff_header.py --selftest
 
 Prints a markdown table read from the package's board_id.txt (keys: board, md5, commit, built, plus any counts), the committed case
@@ -15,21 +15,24 @@ import yaml
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from project import Project  # noqa: E402
+from release_report import Ctx as RCtx, pkg_for_board  # noqa: E402
 
 
 def git(root, *a):
-    return subprocess.run(["git", *a], cwd=root, capture_output=True, text=True).stdout
+    return subprocess.run(["git", *a], cwd=root, capture_output=True).stdout   # bytes: CRLF and non-UTF-8 boards hash as committed
 
 
 def header(P, pkg=None):
-    head = git(P.root, "rev-parse", "--short", "HEAD").strip()
-    dirty = [l for l in git(P.root, "status", "--short", "--untracked-files=no").splitlines() if l.strip()]
+    head = git(P.root, "rev-parse", "--short", "HEAD").decode().strip()
+    dirty = [l for l in git(P.root, "status", "--short", "--untracked-files=no").decode("utf-8", "replace").splitlines() if l.strip()]
     board = P.get("paths.board")
-    head_blob = git(P.root, "show", f"HEAD:{board}")
-    head_md5 = hashlib.md5(head_blob.encode()).hexdigest() if head_blob else "(board not in HEAD)"
-    fab = P.path("fab_dir")
-    pkgs = sorted(p for p in (os.path.join(fab, x) for x in os.listdir(fab)) if os.path.isdir(p)) if os.path.isdir(fab) else []
-    pkg = os.path.join(P.root, pkg) if pkg else next((p for p in reversed(pkgs) if p.endswith(head_md5[:8])), pkgs[-1] if pkgs else None)
+    head_blob = git(P.root, "show", f"HEAD:{board}") if board else b""
+    head_md5 = hashlib.md5(head_blob).hexdigest() if head_blob else None
+    if pkg:
+        pkg = os.path.join(P.root, pkg)
+    elif head_md5:
+        rel, _ = pkg_for_board(RCtx(P.root), P, md5=head_md5)   # content match on the HEAD board, never a folder-name suffix
+        pkg = os.path.join(P.root, rel) if rel else None
     rows = []
     if pkg and os.path.exists(os.path.join(pkg, "board_id.txt")):
         bid = dict(l.split(None, 1) for l in open(os.path.join(pkg, "board_id.txt")).read().splitlines() if l.strip())
@@ -39,14 +42,15 @@ def header(P, pkg=None):
                      f"**MISMATCH — HEAD carries another board; freeze the review worktree at a commit whose board is `{str(bid.get('md5'))[:8]}` (`git log --format=%h -- {board}`) or stop and tell the coordinator**")))
         rows.append(("Fab package", f"`{os.path.relpath(pkg, P.root)}/`"))
     else:
-        rows.append(("Board of record", f"**MISSING** — no package under `{P.get('paths.fab_dir')}` carries board_id.txt for HEAD board `{head_md5[:8]}`"))
+        rows.append(("Board of record", f"**MISSING** — no package under `{P.get('paths.fab_dir')}` carries board_id.txt for the HEAD board `{head_md5[:8]}`" if head_md5
+                     else f"**MISSING** — no board in HEAD (`{board}`); expected before G1 (spec review: the briefing is SPEC.md, see references/schematic-phase.md)"))
     cy = P.get("paths.case_yaml")
     if cy:
-        case = yaml.safe_load(git(P.root, "show", f"HEAD:{cy}") or "{}") or {}
+        case = yaml.safe_load(git(P.root, "show", f"HEAD:{cy}").decode("utf-8", "replace") or "{}") or {}
         rows.append(("Case", f"`case.version: {(case.get('case') or {}).get('version', 'MISSING')}` (committed {cy})"))
     mp = P.get("paths.mesh_provenance")
     if mp:
-        t = git(P.root, "show", f"HEAD:{mp}")
+        t = git(P.root, "show", f"HEAD:{mp}").decode("utf-8", "replace")
         if t:
             prov = json.loads(t)
             rows.append(("Board mesh provenance", f"board md5 `{prov.get('board_md5', '?')[:8]}` @ {prov.get('board_commit')}, mesh md5 `{prov.get('mesh_md5', '?')[:8]}`, {prov.get('facets')} facets"))
@@ -62,21 +66,27 @@ def selftest():
     d = tempfile.mkdtemp(prefix="hwfs_ho_")
     os.makedirs(f"{d}/kicad/b"); os.makedirs(f"{d}/design")
     open(f"{d}/project.yaml", "w").write("paths: {board: kicad/b/b.kicad_pcb, fab_dir: out/fab, case_yaml: design/case.yaml}\n")
-    open(f"{d}/kicad/b/b.kicad_pcb", "w").write("(kicad_pcb (version 1))\n")
+    open(f"{d}/kicad/b/b.kicad_pcb", "wb").write(b"(kicad_pcb (version 1))\r\n\xe9\n")   # CRLF + a non-UTF-8 byte: hashed as bytes
     open(f"{d}/design/case.yaml", "w").write("case: {version: v1.0-test}\n")
     md5 = hashlib.md5(open(f"{d}/kicad/b/b.kicad_pcb", "rb").read()).hexdigest()
     pkg = f"{d}/out/fab/2026-01-01_{md5[:8]}"; os.makedirs(pkg)
     open(f"{pkg}/board_id.txt", "w").write(f"board kicad/b/b.kicad_pcb\nmd5 {md5}\ncommit abc1234\nbuilt 2026-01-01\nsegments 12\n")
     run = lambda *a: subprocess.run(["git", *a], cwd=d, capture_output=True, text=True, check=True)
     run("init", "-q"); run("add", "-A"); run("-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "init")
+    other = f"{d}/out/fab/2026-01-02_zzzzzzzz"; os.makedirs(other)   # a NEWER package for another board: must not be picked
+    open(f"{other}/board_id.txt", "w").write("board kicad/b/b.kicad_pcb\nmd5 0000\ncommit ffff\nbuilt 2026-01-02\n")
+    run("add", "-A"); run("-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "pkg2")
     P = Project(f"{d}/project.yaml")
     h = header(P)
-    assert "**MATCH**" in h and "segments 12" in h and "v1.0-test" in h and "**clean**" in h, h
+    assert "**MATCH**" in h and "segments 12" in h and "v1.0-test" in h and "**clean**" in h and f"2026-01-01_{md5[:8]}" in h and "zzzzzzzz" not in h, h
     open(f"{d}/kicad/b/b.kicad_pcb", "a").write(";edit\n")
     h = header(P)
     assert "DIRTY" in h and "**MATCH**" in h, "a working-copy edit is DIRTY but HEAD still matches the package"
     run("-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qam", "edit")
-    assert "MISMATCH" in header(P), "HEAD now carries another board than the package"
+    h = header(P)
+    assert "MISSING" in h and "no package" in h, ("HEAD now carries a board no package records", h)
+    P.cfg["paths"]["board"] = "kicad/none.kicad_pcb"
+    assert "no board in HEAD" in header(P), "a project before G1 has no board: say so, no slicing of a message"
     print("selftest OK")
 
 
