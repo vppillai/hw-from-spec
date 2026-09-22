@@ -1,13 +1,15 @@
 # project.yaml — the one file the generic scripts read
 
 Every script does `Project.find()` (walk up from cwd, or `$HWFS_PROJECT`, or `--project`) and takes paths, id prefixes, markers, tools and gate
-lists from here. Missing keys fall back to the defaults in `scripts/project.py` `DEFAULTS`. Paths are root-relative. A filled example is
-`smoke/project.yaml`; the schema:
+lists from here. Missing keys fall back to the defaults in `scripts/project.py` `DEFAULTS`. Paths are root-relative. **The file sits at the git
+top level** — the shell gates (`adopt_gates.sh`, `clone_gate.sh`) archive HEAD from there and refuse otherwise. Start from `templates/project.yaml`
+(day-1 gate lists); a filled example is `smoke/project.yaml`; the schema:
 
 ```yaml
 project:
   name: <short name>                      # used in generated headers
   description: <one line>
+skill: {repo: <url>, commit: <sha>}       # the hw-from-spec commit the project follows (informational; README "Use in a new project")
 ids:
   owner_prefix: D                         # owner decision rows  D-nn
   agent_prefix: CC                        # agent rows           CC-nnn (three digits)
@@ -43,7 +45,7 @@ dfm:
   thresholds: design/dfm_thresholds.json  # the fab's numbers, with source URL + date (references/fab-dfm.md)
   items: out/dfm_items.json               # written by the project's measurer
   accept: design/board.yaml               # yaml with key dfm_accepted: [{check, refs: [..] | {REF: n}, reason}]
-  report: out/dfm.json                    # written by scripts/dfm_check.py --json; read by release_report section dfm
+  report: out/dfm.json                    # written by every plain scripts/dfm_check.py run (--check compares); read by release_report section dfm
 renders:                                  # scripts/collect_renders.py rules; {MD5_8} {CASE_VERSION} {BOARD} {KICAD_CLI} {OUT} expand
   - {name: pcb_top, kind: kicad_render, args: ["--side", "top", "--quality", "high", "--background", "opaque"]}
   - {name: pcb_iso, kind: kicad_render, args: ["--side", "top", "--perspective", "--rotate", "-45,0,135"]}
@@ -60,7 +62,8 @@ gates:
     - "$PY scripts/known_issues.py --selftest"
     - "$PY scripts/known_issues.py --check"
     - "$PY scripts/traceability.py --check"
-    - "$PY scripts/dfm_check.py"
+    - "$PY scripts/dfm_check.py --check"   # G2+: needs the measurer's items; day 1 uses the shorter list of templates/project.yaml
+    - "$PY scripts/collect_renders.py --check"
     - "$PY scripts/release_report.py --check"
   clone:                                  # scripts/clone_gate.sh: run inside `git archive HEAD`
     - "$PY scripts/release_report.py --check"
@@ -76,7 +79,10 @@ gates:
 - The decisions table's third cell is the status; text after `(was:` is history and ignored.
 - `traceability.yaml`: `stages:` is an ordered mapping (`requires:` + `reached:` checks); `entries:` carry `id, source, requirement, lands_in,
   stage, checks` and optionally `status: not_included` + `reason`, `pending: <text>`. Every decision row must be cited by some entry's `source`.
-- Shell gate commands run with cwd = repo root (or the archive) and `$PY` set; write them root-relative.
+- Shell gate commands run with cwd = repo root (or the archive) and `$PY` set; write them root-relative. `$PY` is the first interpreter that
+  imports `yaml` among `$PYTHON`, the project `.venv`, the skill's `.venv`, `python3` (printed at the top of every run).
+- Which scripts are generators and which are graders: `known_issues`, `traceability`, `release_report`, `collect_renders`, `dfm_check` have
+  `--check`; `handoff_header.py` prints a header (nothing to check); `project.py` is the reader.
 
 ## Adding a project-specific script
 

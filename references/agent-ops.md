@@ -27,8 +27,9 @@
 - Rows that describe a marker (the nod marker, the release phrase) re-trigger the generator that keys on it: describe indirectly.
 
 ## 4. Blind reviews (the protocol; templates in `workflows/`)
-- Freeze: clean tree (`git status --short --untracked-files=no` empty), detached `git worktree add`, reviewers read only there and write only their
-  own report file in the live repo.
+- Freeze: clean tree (`git status --short --untracked-files=no` empty), `git worktree add --detach <frozen> HEAD`, then
+  `git -C <frozen> submodule update --init` (the skill submodule is empty in a fresh worktree and the `scripts` link dangles until then);
+  reviewers read only there and write only their own report file in the live repo.
 - Hand-off document v-n: generated header (`scripts/handoff_header.py`: board of record, HEAD md5 MATCH, package, case version, clean tree), the
   scope per specialty, the known/open list with dispositions, the claims of the round (for a delta audit) — the ONLY briefing. Plus the one-paragraph
   waiver list without reasoning so verifiers spend their budget on new defects.

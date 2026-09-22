@@ -1,4 +1,4 @@
-# hw-from-spec
+# hw-from-spec — v0.2.0
 
 A Claude Code skill + generic scripts + workflow templates for running a hardware project (PCB + printed/CNC enclosure, contract fab such as
 JLCPCB) from a written specification to a production cut: owner-gated phases, generated-only artefacts, live part verification, a fab-DFM mirror,
@@ -14,16 +14,17 @@ references/       detail per topic, loaded on demand: project-yaml, part-verific
 scripts/          generic generators driven by a project.yaml — known_issues, traceability, handoff_header, dfm_check (grading engine),
                   release_report (skeleton), collect_renders, clone_gate.sh, adopt_gates.sh; each has --selftest
 workflows/        four blind-review workflow templates ({{PLACEHOLDERS}}) + README on instantiating them
-templates/        CLAUDE.md rules, DECISIONS / STATUS / GATES / KNOWN_ISSUES / LEARNINGS_LOG / BLOCKERS / PARTS_VERIFICATION seeds,
-                  hand-off and release-notes skeletons, production_cut.yaml; templates/ci/ = CI workflow templates
+templates/        CLAUDE.md rules, project.yaml (day-1 gate lists), .gitignore, DECISIONS / STATUS / GATES / KNOWN_ISSUES / LEARNINGS_LOG /
+                  BLOCKERS / PARTS_VERIFICATION / ENV / TEST_PLAN / ERC_WAIVERS seeds, datasheet_notes/, design/traceability.yaml seed,
+                  hand-off and release-notes skeletons, production_cut.yaml; templates/ci/ = CI workflow templates (fill with the sed recipe there)
 smoke/            the automated dry run: a five-part one-sheet project with a two-piece case; run_smoke.sh drives every script to a DRAFT report
 evals/            skill-creator eval prompts (start a project / run a blind review / cut a release)
 ```
 
 ## Install
 
-Requirements: Python ≥ 3.11 with `pyyaml`, git, zsh (macOS default). Nothing else for the generic scripts; the CAD, OpenSCAD, FEA and browser
-tooling belong to the project that uses the skill and are recorded in its `docs/ENV.md`.
+Requirements: Python ≥ 3.11 with `pyyaml`, git, bash ≥ 3.2 (macOS `/bin/bash` and any Linux). Nothing else for the generic scripts; the CAD,
+OpenSCAD, FEA and browser tooling belong to the project that uses the skill and are recorded in its `docs/ENV.md`.
 
 ```sh
 git clone <this repo> ~/.claude/skills/hw-from-spec        # 1. as a Claude Code skill (personal); or
@@ -36,14 +37,22 @@ As a plugin: point a Claude Code plugin manifest at this directory (the skill is
 
 ## Use in a new project
 
+One canonical layout — the skill under `vendor/hw-from-spec`, a RELATIVE symlink `scripts` (or a copy of `scripts/`), `project.yaml` at the git
+top level. This is the layout the smoke run and `clone_gate.sh --selftest` exercise (`git archive HEAD` carries the symlink but no submodule
+content; the clone gate links the working tree's scripts and venv into the archive).
+
 ```sh
-cd <new project repo>
-git submodule add <this repo> vendor/hw-from-spec && ln -s vendor/hw-from-spec/scripts scripts   # or copy scripts/ and pin the skill commit in project.yaml
-cp vendor/hw-from-spec/templates/{CLAUDE.md,DECISIONS.md,STATUS.md,GATES.md,KNOWN_ISSUES.md,LEARNINGS_LOG.md,BLOCKERS.md,PARTS_VERIFICATION.md} .   # then move docs to docs/
-cp vendor/hw-from-spec/smoke/project.yaml project.yaml       # edit paths / ids / tools / gates (references/project-yaml.md)
+cd <new project repo>                                        # git init done, project.yaml will sit here (top level)
+git submodule add <this repo> vendor/hw-from-spec && ln -s vendor/hw-from-spec/scripts scripts      # or: cp -R vendor/hw-from-spec/scripts scripts
+(cd vendor/hw-from-spec && uv venv .venv && uv pip install --python .venv/bin/python pyyaml)      # the skill's venv (gitignored, does not ship)
+T=vendor/hw-from-spec/templates; mkdir -p docs design
+cp $T/CLAUDE.md $T/.gitignore $T/project.yaml . && cp $T/{DECISIONS,STATUS,GATES,KNOWN_ISSUES,LEARNINGS_LOG,BLOCKERS,PARTS_VERIFICATION,ENV,TEST_PLAN,ERC_WAIVERS}.md docs/
+cp -R $T/datasheet_notes docs/ && cp $T/design/traceability.yaml design/
+grep -rn '{{' CLAUDE.md project.yaml docs design                  # fill every slot until this prints nothing
 ```
-Then follow `SKILL.md` §0 (day-1 setup). The scripts find `project.yaml` by walking up from the cwd (or `HWFS_PROJECT=…`); shell gates use the
-project's `.venv` if it has pyyaml, else the skill's.
+Then follow `SKILL.md` §0 (day-1 setup: venv, selftests, smoke, first records, adopt gates). The scripts find `project.yaml` by walking up from the
+cwd (or `HWFS_PROJECT=…`); the shell gates use the first interpreter that imports `yaml` among `$PYTHON`, the project `.venv`, the skill's `.venv`,
+`python3`, and print which. Pin the skill commit in `project.yaml skill: {repo, commit}`. Never put the submodule AT `scripts/`.
 
 Project-specific generators (schematic builder, placement, routing, export, fab package, panel, silk, case, drawings, FEA measurer) stay in the
 project's `gen/`; they read constants through `scripts/project.py` and are added to `gates.adopt` with their `--selftest` and `--check`.
@@ -58,4 +67,4 @@ source project, its board hashes (only in `references/pitfalls.md` as labelled e
 Feedback loop: every project appends to its `docs/LEARNINGS_LOG.md`; at its production cut the entries are folded into `references/pitfalls.md`
 here (one generalised line + evidence pointer), and the skill is re-reviewed blind.
 
-Licence: see `LICENSE` (owner's choice pending).
+Licence: `LICENSE` is a placeholder until the owner chooses one — the repo is not yet redistributable. Changes: `CHANGELOG.md`.

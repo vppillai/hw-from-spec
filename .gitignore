@@ -2,5 +2,3 @@
 __pycache__/
 *.pyc
 .DS_Store
-hw-from-spec-workspace/
-/tmp/

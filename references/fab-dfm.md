@@ -12,8 +12,19 @@ first quote and make it part of the adopt rule.
    project's own rule for checks the fab reported clean.
 2. **Measurer** (project-specific, CAD-bound): re-measure each check from the board file — tracks, vias, pads as effective polygons, STORED zone fills
    (no refill), silk as glyph/stroke polygons, the true outline polygon — and emit `out/dfm_items.json` items `{check, value, refs, layer, xy}`.
-   Keep it in the project's `gen/`; the source project's `gen/dfm_check.py` (26 checks, pure-python capsule/polygon distances on a 1 mm grid over
-   KiCad SWIG shapes) is the worked example.
+   Keep it in the project's `gen/`; the source project's measurer (26 checks, pure-python capsule/polygon distances on a 1 mm grid over
+   KiCad SWIG shapes) is the worked example. The items contract:
+
+   | Field | Type | Rule |
+   |---|---|---|
+   | `check` | string | **byte-equal to a key of `thresholds.checks` or `project_min`** (the fab's spelling); an unknown name grades INFO and the grader prints a WARNING listing it |
+   | `value` | number or null | the measured quantity in the fab's unit (mm unless the check is a count/percentage); `null` = presence-only item (graded Warning when the fab lists the check without numbers) |
+   | `refs` | list of refdes | every part involved (a pair item names both); empty = bare track/via/zone item that cannot be accepted, only fixed |
+   | `layer` | string, optional | CAD layer name, for the report line |
+   | `xy` | [x, y] mm, optional | where, in the board frame, for the report line |
+
+   One item = one violation site (the viewer counts sites, not nets). An acceptance (`dfm_accepted`) matches an item only when its `check` is equal
+   and every refdes of the item is listed; the dict form `{REF: n}` is a per-ref budget applied to that acceptance entry only.
 3. **Grader** `scripts/dfm_check.py`: value ≤ danger → Danger; danger < value ≤ warning → Warning; else Good; 2-decimal half-up rounding before
    grading (viewers work at 2 decimals); project rule at full precision with a 5e-4 tolerance. Exit 1 on any open item.
 4. **Acceptances** by refdes with a reason (`dfm_accepted` in the board yaml): a pair item needs BOTH refs listed; dict form `{REF: n}` is a budget;
