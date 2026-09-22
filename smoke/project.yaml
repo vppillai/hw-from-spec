@@ -30,7 +30,7 @@ dfm:
   thresholds: design/dfm_thresholds.json      # copied from the fab's viewer with source + date
   items: out/dfm_items.json                   # written by the project's measurer (here: a hand-written fixture)
   accept: design/board.yaml                   # key dfm_accepted
-  report: out/dfm.json
+  report: out/dfm.json                        # written on every plain run; `dfm_check.py --check` compares
 renders:
   - {name: panel_top, kind: copy, src: "out/fab/*_{MD5_8}/panel_top.png"}
   - {name: case_iso, kind: copy, src: "out/case/{CASE_VERSION}/iso.png", sub: case}
@@ -46,12 +46,15 @@ reports:
 gates:
   quiet_regex: 'Fontconfig|wxApp'
   adopt:                                      # selftests first, then the pure --check gates; exit 1 on the first failure
+    - "$PY scripts/project.py --selftest"
     - "$PY scripts/known_issues.py --selftest"
     - "$PY scripts/traceability.py --selftest"
+    - "$PY scripts/dfm_check.py --selftest"
     - "$PY scripts/release_report.py --selftest"
     - "$PY scripts/known_issues.py --check"
     - "$PY scripts/traceability.py --check"
-    - "$PY scripts/dfm_check.py"
+    - "$PY scripts/dfm_check.py --check"
+    - "$PY scripts/collect_renders.py --check"
     - "$PY scripts/release_report.py --check"
   clone:                                      # run on `git archive HEAD` — what a fresh clone sees
     - "$PY scripts/known_issues.py --check"
