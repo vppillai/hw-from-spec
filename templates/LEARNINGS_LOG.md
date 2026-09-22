@@ -5,4 +5,4 @@ documentation, agents, tooling, software. Every agent appends before its final c
 generalise the mechanism, keep the project number as the example.
 
 ## {{DATE}}
-- {{DATE}} [process] Project created from hw-from-spec {{SKILL_VERSION}}; smoke run and selftests green before the first design file — this file.
+- {{DATE}} [process] Project created from hw-from-spec commit {{SKILL_COMMIT}}; smoke run and selftests green before the first design file — this file.
