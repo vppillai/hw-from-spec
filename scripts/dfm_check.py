@@ -79,6 +79,10 @@ def run(items, thresholds, acc, top=10):
     by_ref_used = collections.Counter()
     known = set((thresholds.get("checks") or {})) | set((thresholds.get("project_min") or {}))
     for it in items:
+        if "check" not in it:                              # a measurer bug must be a graded finding, not a crash (review SHOULD-14)
+            graded.append({"check": "<missing check field>", "grade": "INVALID-ITEM", "value": it.get("value"), "refs": it.get("refs") or [], "note": f"item without 'check': {sorted(it)}"})
+            counts["INVALID-ITEM"] += 1
+            continue
         g, lim = grade(it["check"], it.get("value"), thresholds)
         ok = g in ("Good", "INFO")
         a = None if ok else accepted(it, acc)

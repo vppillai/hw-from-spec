@@ -1,6 +1,6 @@
 ---
 name: hw-from-spec
-version: 0.2.0
+version: 0.2.1
 description: Run a hardware project (PCB + printed or CNC enclosure, contract fab such as JLCPCB) from a written specification to a production cut with an owner-gated, generated-only, blind-reviewed workflow. Use this whenever someone starts a board or enclosure project from a spec, asks to set up gates, a decision log, generators, part verification, a fab DFM mirror, a case pipeline, FEA, blind reviews, a release report or a production cut for one, or resumes such a project — even if they only say "new KiCad board", "order this at JLC", "review the layout" or "cut the release".
 ---
 

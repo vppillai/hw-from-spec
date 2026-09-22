@@ -1,3 +1,6 @@
+## 0.2.1 — 2026-09-22
+- MUST-5 ci fill check greps `{{PROJECT_` only; SHOULD-14 dfm_check INVALID-ITEM instead of KeyError; gate_status.py deferred.
+
 # CHANGELOG — hw-from-spec
 
 ## 0.2.0 — 2026-09-22 — blind-review fix round

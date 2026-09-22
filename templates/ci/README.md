@@ -14,7 +14,7 @@ for f in pr-check nightly release; do
       -e 's|{{PROJECT_ARTEFACT_GLOBS}}|out/*/erc.json|g' -e 's|{{PROJECT_NIGHTLY_ARTEFACT_GLOBS}}|out/*/mechanical/case/*/stl/*.stl|g' $S/$f.yml > .github/workflows/$f.yml
 done
 printf 'PROJECT_VENDOR_EXCLUDE=lib/vendor/\n' > scripts/ci/project.env
-grep -n '{{' .github/workflows/*.yml && echo "unfilled placeholders" || echo "ci templates filled"
+grep -n '{{PROJECT_' .github/workflows/*.yml && echo "unfilled placeholders" || echo "ci templates filled"   # '{{PROJECT_' only: GitHub's own ${{ github.ref }} expressions must stay
 ```
 
 | Placeholder | Meaning | Example |

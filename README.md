@@ -1,4 +1,4 @@
-# hw-from-spec — v0.2.0
+# hw-from-spec — v0.2.1
 
 A Claude Code skill + generic scripts + workflow templates for running a hardware project (PCB + printed/CNC enclosure, contract fab such as
 JLCPCB) from a written specification to a production cut: owner-gated phases, generated-only artefacts, live part verification, a fab-DFM mirror,
