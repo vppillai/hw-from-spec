@@ -1,0 +1,35 @@
+# nightly.yml — bounded long checks for {{PROJECT_NAME}} (case chain, FEA selftests, cut --check). Full FEA solves and render packs are release
+# records, not CI output. STATUS: <has this run on a Linux runner yet? say so>.
+name: nightly
+on:
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  nightly:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    container:
+      image: {{PROJECT_KICAD_IMAGE}}
+      options: --user root
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Project constants
+        run: cat scripts/ci/project.env >> "$GITHUB_ENV"
+      - name: Bootstrap (with the mechanical / FEA stack)
+        run: {{PROJECT_SETUP_CMD}} NIGHTLY=1
+      - name: Nightly checks
+        run: {{PROJECT_NIGHTLY_CMD}}
+      - name: Upload outputs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-${{ github.run_id }}
+          path: |
+            {{PROJECT_NIGHTLY_ARTEFACT_GLOBS}}
+          if-no-files-found: ignore
+          retention-days: 14

@@ -1,0 +1,37 @@
+# release.yml — on tags `{{PROJECT_TAG_PATTERN}}`: package check + fresh-checkout clone gate, then stage the package of record + release docs.
+# The stage step refuses any file under {{PROJECT_VENDOR_EXCLUDE}} (licensed vendor models never leave the repo); a second independent check follows.
+# No GitHub Release object, no `contents: write`, no secrets. STATUS: <has this run on a Linux runner yet? say so>.
+name: release
+on:
+  push:
+    tags: ['{{PROJECT_TAG_PATTERN}}']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  package:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    container:
+      image: {{PROJECT_KICAD_IMAGE}}
+      options: --user root
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Project constants
+        run: cat scripts/ci/project.env >> "$GITHUB_ENV"
+      - name: Bootstrap
+        run: {{PROJECT_SETUP_CMD}}
+      - name: Package check + clone gate
+        run: make clone-gate
+      - name: Stage artefacts (refuses licensed vendor files)
+        run: {{PROJECT_RELEASE_CMD}}
+      - name: Independent vendor check
+        run: test "$(find out/release_artefacts -path "*${PROJECT_VENDOR_EXCLUDE}*" | wc -l)" -eq 0 && echo "no vendor files staged"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ github.ref_name }}
+          path: out/release_artefacts
+          if-no-files-found: error
+          retention-days: 90

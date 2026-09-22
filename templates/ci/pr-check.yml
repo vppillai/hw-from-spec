@@ -1,0 +1,40 @@
+# pr-check.yml — PR gate for {{PROJECT_NAME}}: runs `{{PROJECT_CHECK_CMD}}` inside the pinned KiCad CLI container.
+# The gate list is the project's Makefile / scripts/ci/pr_check.sh (same command, same exit codes locally). Constants: scripts/ci/project.env.
+# Never in CI: routing, blind reviews, live stock checks, display renders, ordering. STATUS: <has this run on a Linux runner yet? say so>.
+name: pr-check
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+concurrency:
+  group: pr-check-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    container:
+      image: {{PROJECT_KICAD_IMAGE}}
+      options: --user root
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Project constants
+        run: cat scripts/ci/project.env >> "$GITHUB_ENV"
+      - name: Bootstrap
+        run: {{PROJECT_SETUP_CMD}}
+      - name: Check
+        run: {{PROJECT_CHECK_CMD}}
+      - name: Upload check outputs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr-check-${{ github.sha }}
+          path: |
+            {{PROJECT_ARTEFACT_GLOBS}}
+          if-no-files-found: ignore
+          retention-days: 14
