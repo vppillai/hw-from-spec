@@ -53,3 +53,6 @@ selftests leave `mkdtemp` dirs · plugin manifest example · prompt numbers in `
 
 ## 0.1.0 — 2026-09-22 — first cut (`eadc965`, ci templates `83da1ad`)
 SKILL.md, references, project.yaml-driven generic scripts with selftests, workflow templates, record templates, smoke dry run, evals.
+
+## Next (0.3.0 candidates)
+- Adopt the D-70 folder layout of the source project as the skill's default `project.yaml` paths: `docs/governance/` (DECISIONS, STATUS, GATES, BLOCKERS, KNOWN_ISSUES, LEARNINGS_LOG, ERC_WAIVERS, TRACEABILITY, ENV), `docs/design/`, `docs/parts/`, `docs/production/`, `docs/release/`, `docs/quotes/`, `docs/reviews/(archive)`, `docs/datasheet_notes/`, `docs/archive/`; ship `scripts/reorg_paths.py` (mapping table + `--check` for dangling references + zero-loss inventory proof) generalised from the source project's `gen/reorg_paths.py`. The 62 `docs/<FILE>.md` literals in SKILL.md / references / templates are the skill's own generic layout, not references to the source project.
