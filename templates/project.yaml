@@ -1,0 +1,65 @@
+# project.yaml — the one file the hw-from-spec scripts read (schema: references/project-yaml.md; filled example: smoke/project.yaml).
+# Day-1 version: the gate lists hold only what exists before a board. Uncomment the G1/G2 blocks as the artefacts appear.
+project:
+  name: {{PROJECT}}
+  description: {{ONE_LINE_DESCRIPTION}}
+skill: {repo: {{SKILL_REPO_URL}}, commit: {{SKILL_COMMIT}}}   # the hw-from-spec commit this project follows (README "Use in a new project")
+ids: {owner_prefix: D, agent_prefix: CC, blocker_prefix: B}
+markers:
+  release_regex: 'clear[ -]to[ -]build'       # the owner's release line in paths.gates — never quote the phrase in prose
+  unverified: [UNVERIFIED, TBD-DRAWING]
+  nod_regex: '\(!\)|owner nod'
+paths:
+  decisions: docs/DECISIONS.md
+  blockers: docs/BLOCKERS.md
+  gates: docs/GATES.md
+  status: docs/STATUS.md
+  known_issues: docs/KNOWN_ISSUES.md
+  test_plan: docs/TEST_PLAN.md
+  traceability_yaml: design/traceability.yaml
+  traceability_out: docs/TRACEABILITY.md
+  board: kicad/{{BOARD}}/{{BOARD}}.kicad_pcb  # the board of record once it exists (G1+); until then handoff_header says "no board in HEAD"
+  netlist: out/{{BOARD}}.xml
+  fab_dir: out/fab
+  release_dir: docs/release
+  collateral_dir: docs/release/collateral
+  case_yaml: design/case.yaml                 # optional; delete the line if the project has no enclosure
+tools:
+  python: .venv/bin/python
+  kicad_cli: {{CAD_CLI_PATH}}
+  kicad_python: {{CAD_PYTHON_PATH}}
+dfm:
+  thresholds: design/dfm_thresholds.json
+  items: out/dfm_items.json                   # written by the project's measurer (G2)
+  accept: design/{{BOARD}}_board.yaml         # key dfm_accepted
+  report: out/dfm.json
+renders: []                                   # G2+: see references/project-yaml.md `renders:`
+reports:
+  - name: PCB_DESIGN_REPORT
+    title: {{PROJECT}} PCB design report
+    sections: [banner, identity, decisions, known_issues, package, traceability, dfm, renders, inventory]
+    extra_sources: []
+gates:
+  quiet_regex: 'Fontconfig|wxApp'
+  adopt:                                      # day 1 (G0): selftests + the records that exist; exit 1 on the first failure
+    - "$PY scripts/project.py --selftest"
+    - "$PY scripts/known_issues.py --selftest"
+    - "$PY scripts/traceability.py --selftest"
+    - "$PY scripts/release_report.py --selftest"
+    - "$PY scripts/known_issues.py --check"
+    - "$PY scripts/traceability.py --check"
+    - "$PY scripts/release_report.py --check"
+    # G1 (schematic exists): add the project's generators and the ERC gate (references/schematic-phase.md §2)
+    # - "$PY gen/build_sch.py --selftest"
+    # - "$PY gen/build_sch.py --check"
+    # - "$PY gen/check_maps.py --check"
+    # G2 (routed board): DRC / parity / route quality / DFM mirror / renders (SKILL §6)
+    # - "$PY gen/drc_gate.py --check"
+    # - "$PY scripts/dfm_check.py --check"
+    # - "$PY scripts/collect_renders.py --check"
+  clone:                                      # run inside `git archive HEAD`
+    - "$PY scripts/known_issues.py --check"
+    - "$PY scripts/release_report.py --check"
+  regen:
+    - "$PY scripts/release_report.py"
+  regen_copy_back: [docs/release/PCB_DESIGN_REPORT.md]

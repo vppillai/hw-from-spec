@@ -9,18 +9,23 @@ assembly at {{FAB}}. Humans review at gates. Read `SPEC.md`, `docs/STATUS.md`, `
    Record every check in `docs/PARTS_VERIFICATION.md` (date, URL, stock, class). Tags: [V] verified, [K] known-unverified, [S] select-by-parameter.
 2. **Never change a specified value, part, topology or pin assignment silently.** Write the proposal to `docs/DECISIONS.md` with the reason, mark it
    OPEN, ask the owner. Apply only after approval (or when the spec delegates the choice); an operating gate may ship as an optional flag that warns.
-3. **Every VERIFY item is closed by reading the primary datasheet** (page/section cited in `docs/datasheet_notes/<part>.md`) before the part is drawn.
-4. **Stop at gates.** G0 = SPEC approved (after two blind reviews). G1 = schematic approved. G2 = layout approved. Do not start the next phase's CAD
-   before the owner writes the gate line into `docs/GATES.md`. The release line in that file is the owner's too; never quote its phrase in prose.
+3. **Every VERIFY item is closed by reading the primary datasheet** before the part is drawn. A VERIFY item is a spec value or claim that rests
+   on a datasheet or standard nobody has read yet (definition: skill `SKILL.md` §4); they are listed in SPEC.md (tag `VERIFY`) or `docs/VERIFY.md`,
+   and closed by a `docs/datasheet_notes/<part>.md` row (page/section) or a `docs/BLOCKERS.md` row.
+4. **Stop at gates.** G0 = SPEC approved (after a blind review round). G1 = schematic approved. G2 = layout approved. Do not start the next phase's
+   CAD before the owner writes the approval into `docs/GATES.md`. **Agents never write approval cells or the release line** — they ask (skill
+   `SKILL.md` §1.1) and wait; a chat approval is quoted verbatim under the table, the cell stays the owner's. Never quote the release phrase in prose.
 5. **Everything is generated, nothing is hand-edited.** CAD files, reports and indexes come from `gen/` scripts reading `design/*.yaml`. A review
    finding changes the YAML or the generator, then regenerates. Every generator has `--check` and `--selftest`. Exceptions are logged decision rows
    with a chain-of-record table. Commit after every meaningful step with a descriptive message and explicit paths.
 6. **{{SHEET_AND_REFDES_CONVENTION}}** (e.g. one generated sheet file per instance; refdes = sheet × 100 + n).
-7. **Validate after every generation:** ERC/DRC via the CAD CLI with all severities, zero errors; warnings fixed or justified in `docs/ERC_WAIVERS.md`.
+7. **Validate after every generation:** ERC/DRC via the CAD CLI with all severities, zero errors (`references/schematic-phase.md` §2 has the
+   command); warnings fixed or justified in `docs/ERC_WAIVERS.md`.
 8. **Blind reviews are really blind.** Reviewers get the frozen worktree and the hand-off only — never each other's output, never the author's
    reasoning. Verify BLOCKER/MAJOR adversarially, merge in `docs/reviews/`.
-9. **Fab constraints are hard:** {{FAB_CONSTRAINTS}} (sides, minimum package, link parts, no BGA, parts on the verified list, fab code field on every
-   fitted part, DNP marked and excluded from BOM/CPL). Mirror the fab's DFM checker in-repo (`design/dfm_thresholds.json`, `scripts/dfm_check.py`).
+9. **Fab constraints are hard:** {{FAB_CONSTRAINTS}} (state them: assembly sides, minimum package, link parts, excluded package families, parts on
+   the verified list, fab code field on every fitted part, DNP marked and excluded from BOM/CPL). Mirror the fab's DFM checker in-repo
+   (`design/dfm_thresholds.json`, `scripts/dfm_check.py`).
 10. **Say what you don't know.** If a datasheet, drawing or page cannot be fetched, mark the item BLOCKED in `docs/BLOCKERS.md` and continue elsewhere.
 11. **Capture learnings.** Before your final commit, append every non-obvious learning as a dated, domain-tagged line to `docs/LEARNINGS_LOG.md`.
 
@@ -30,13 +35,13 @@ assembly at {{FAB}}. Humans review at gates. Read `SPEC.md`, `docs/STATUS.md`, `
 
 ## Repository layout
 ```
-CLAUDE.md  SPEC.md  project.yaml  parts_seed.csv
-design/        <board>.yaml parts.yaml <board>_board.yaml placement.csv case.yaml traceability.yaml dfm_thresholds.json
-gen/           project generators (build_sch, place_pcb, export, fab_package, case, fea, drawings, …) — each with --check / --selftest
-scripts/       hw-from-spec generic scripts (submodule or copy)
+CLAUDE.md  SPEC.md  project.yaml  .gitignore   (parts_seed.csv: the spec's part list, if the owner supplies one)
+design/        <board>.yaml parts.yaml <board>_board.yaml placement.csv case.yaml traceability.yaml dfm_thresholds.json   (references/schematic-phase.md §1)
+gen/           project generators (build_sch, check_maps, place_pcb, export, fab_package, case, fea, drawings, …) — each with --check / --selftest
+vendor/hw-from-spec/  the skill (submodule);  scripts -> vendor/hw-from-spec/scripts  (relative symlink; or a copy of scripts/)
 lib/           fetched symbols/footprints/3D (vendor-licensed data never leaves the repo)
-kicad/<board>/ generated project      out/           generated packages, renders, checks
-docs/          ENV DECISIONS BLOCKERS GATES STATUS KNOWN_ISSUES TRACEABILITY LEARNINGS_LOG PARTS_VERIFICATION datasheet_notes/ reviews/ release/
+<cad>/<board>/ generated CAD project (e.g. kicad/<board>/)      out/   generated packages, renders, checks, G1/ and G2/ review packs
+docs/          ENV DECISIONS BLOCKERS GATES STATUS KNOWN_ISSUES TRACEABILITY TEST_PLAN ERC_WAIVERS LEARNINGS_LOG PARTS_VERIFICATION datasheet_notes/ reviews/ release/
 ```
 
 ## Conventions

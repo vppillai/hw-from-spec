@@ -5,6 +5,7 @@ Reviewers read the frozen worktree `{{FROZEN_WORKTREE}}` only; they never read `
 
 ## 0. Identity (generated — paste `scripts/handoff_header.py` output verbatim)
 {{HANDOFF_HEADER_TABLE}}
+_(G0 round: board, package and case rows read MISSING by design — the artefact is SPEC.md, listed with its md5 in §2.)_
 
 ## 1. What the design is
 {{THREE_PARAGRAPHS: purpose, architecture, what changed since the previous hand-off}}
@@ -12,7 +13,8 @@ Reviewers read the frozen worktree `{{FROZEN_WORKTREE}}` only; they never read `
 ## 2. Files of record (path → what it is → md5)
 | Path | What | md5 |
 |---|---|---|
-| `design/<board>.yaml` | schematic source | `{{md5}}` |
+| `SPEC.md` | the specification (revision {{SPEC_REV}}) — the artefact at G0 | `{{md5}}` |
+| `design/<board>.yaml` | schematic source (G1+) | `{{md5}}` |
 | `kicad/<board>/<board>.kicad_pcb` | board of record | `{{md5}}` |
 | `out/fab/<date>_<md5-8>/` | fab package of record | `{{md5 of MANIFEST}}` |
 | `design/case.yaml` / `out/.../case/<preset>/stl/*.stl` | case of record | `{{version}}` |

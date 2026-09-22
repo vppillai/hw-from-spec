@@ -1,0 +1,16 @@
+# design/traceability.yaml — one entry per traceable item; the matrix docs/TRACEABILITY.md is generated (scripts/traceability.py).
+# Every D-/CC- row of docs/DECISIONS.md must be cited by some entry's `source` (the census lists unmapped rows). Stages in yaml order.
+stages:
+  spec:
+    reached: [{type: exists, path: SPEC.md}]
+  schematic:
+    requires: [spec]
+    reached: [{type: exists, path: design/{{BOARD}}.yaml}]     # the schematic yaml exists once G0 is approved
+  layout:
+    requires: [schematic]
+    reached: [{type: exists, path: kicad/{{BOARD}}/{{BOARD}}.kicad_pcb}]
+entries:
+  - {id: D-01.1, source: D-01, requirement: the project follows SPEC {{SPEC_REV}}, lands_in: SPEC.md, stage: spec,
+     checks: [{type: exists, path: SPEC.md}]}
+  - {id: CC-001.1, source: CC-001, requirement: process = hw-from-spec (project.yaml, templates, scripts, gates), lands_in: project.yaml, stage: spec,
+     checks: [{type: yaml_key, path: project.yaml, key: project.name}, {type: exists, path: docs/GATES.md}, {type: exists, path: scripts/known_issues.py}]}

@@ -24,7 +24,7 @@ jobs:
       - name: Bootstrap
         run: {{PROJECT_SETUP_CMD}}
       - name: Package check + clone gate
-        run: make clone-gate
+        run: {{PROJECT_CLONE_GATE_CMD}}
       - name: Stage artefacts (refuses licensed vendor files)
         run: {{PROJECT_RELEASE_CMD}}
       - name: Independent vendor check
