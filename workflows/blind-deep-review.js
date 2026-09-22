@@ -1,6 +1,7 @@
 // workflows/blind-deep-review.js — TEMPLATE: extensive double-blind review, N specialties × (1 in-session + 2 external models) → adversarial
-// verifiers → merge. Replace every {{PLACEHOLDER}} (workflows/README.md lists them); delete roles you do not need. Generalised from the source
-// project's mini-final-deep-review-r6k-delta.js (five audits, 8 roles × 3 reviewers).
+// verifiers → merge. Replace every double-brace placeholder (workflows/README.md lists them); delete roles you do not need. ROLE_SET 'spec'
+// is the G0 round (the briefing is SPEC.md; header rows for board/package/case read MISSING by design), 'board' every later round.
+// Generalised from the source project's final deep review (five audits, 8 roles × 3 reviewers).
 export const meta = {
   name: '{{PROJECT}}-deep-review-{{ROUND}}',
   description: '{{PROJECT}} {{ROUND}} double-blind review: each specialty reviewed by one in-session reviewer and two external models, briefed only with the hand-off in a frozen worktree; every BLOCKER/MAJOR adversarially verified; merged disposition with owner rows and a generator fix list',
@@ -20,7 +21,14 @@ const TODAY = '{{DATE}}'
 const KPY = '{{CAD_PYTHON}}'            // the CAD's Python for parsing board/schematic files (or 'grep')
 
 // One entry per specialty: key (file-name safe), title, brief (what to look at — files, nets, decisions; numbers come from the hand-off, not from here).
-const ROLES = [
+const ROLE_SET = '{{ROLE_SET}}'          // 'spec' at G0 (SPEC.md is the artefact), 'board' at G1 / G2 / order
+const SPEC_ROLES = [
+  { key: 'spec', title: 'Spec coherence: requirements, interfaces, numbers that must agree, VERIFY items', brief: '{{BRIEF_SPEC}}' },
+  { key: 'parts', title: 'Parts and sourcing: every named part fetchable, tags, alternates, stock for the run', brief: '{{BRIEF_PARTS}}' },
+  { key: 'mech', title: 'Mechanical intent: envelope, connectors, case concept, thermal', brief: '{{BRIEF_MECH}}' },
+  { key: 'test', title: 'Test plan and bring-up: every requirement has a check, criteria measurable', brief: '{{BRIEF_TEST}}' },
+]
+const BOARD_ROLES = [
   { key: 'power', title: 'Power & analog', brief: '{{BRIEF_POWER}}' },
   { key: 'digital', title: 'Digital, interfaces, firmware-facing pins', brief: '{{BRIEF_DIGITAL}}' },
   { key: 'layout', title: 'Layout, signal integrity and fab DFM', brief: '{{BRIEF_LAYOUT}}' },
@@ -31,12 +39,16 @@ const ROLES = [
   { key: 'coherence', title: 'Requirements, decisions and traceability coherence', brief: '{{BRIEF_COHERENCE}}' },
   { key: 'gates', title: 'Gates, generators and release tooling', brief: '{{BRIEF_GATES}}' },
 ]
+const ROLES = ROLE_SET === 'spec' ? SPEC_ROLES : BOARD_ROLES
 
-// external models available to the Cursor agent CLI (`agent --list-models`); two per role, rotated so every role gets two vendors
+// external models available to the Cursor agent CLI (`agent --list-models`): AT LEAST TWO distinct entries; role i gets MODELS[i] and MODELS[i+1]
+// (cyclic), so every role sees two different models whatever the list length
 const MODELS = [{{EXTERNAL_MODELS}}]           // e.g. 'gpt-5.3-codex-xhigh', 'claude-opus-5-thinking-high', 'gemini-3.7-flash-high'
 const FALLBACK = '{{FALLBACK_MODEL}}'
+if (new Set(MODELS).size < 2) throw new Error(`EXTERNAL_MODELS needs at least two distinct models (got ${JSON.stringify(MODELS)}) — two vendors per role`)
+const pair = (i) => { const n = MODELS.length, m1 = MODELS[i % n], m2 = MODELS[(i + 1) % n]; if (m1 === m2) throw new Error(`role ${i}: both models are ${m1}`); return { m1, m2 } }
 
-const COMMON = `Today is ${TODAY}. {{ROUND_CONTEXT}} BLINDNESS: your ONLY briefing is ${WT}/${HANDOFF} (self-contained) plus read access to the frozen worktree ${WT} (a detached checkout; never write there). Do NOT read any file named docs/reviews/${TAG}_* or any earlier merged review (other reviewers' output), and do not read the live repo ${MAIN} except to WRITE your report. Every finding must cite file + line/coordinate/refdes/net from the worktree and say how you checked it (grep, a number you computed, an image you read). Severity: BLOCKER = would make the board not work or not build; MAJOR = a real functional/robustness/DFM risk to fix before ordering; MINOR = worth fixing, not blocking; NOTE = observation. Be exhaustive within your specialty; prefer many concrete findings over prose; do not repeat what the hand-off lists as known/open unless you disagree with its disposition (say so and why). Finish with a 'files_read' count and a 10-line summary.`
+const COMMON = `Today is ${TODAY}. {{ROUND_CONTEXT}} ${ROLE_SET === 'spec' ? 'This is the G0 SPEC review: the artefact is SPEC.md (plus docs/PARTS_VERIFICATION.md, the test plan, the case concept); there is no board, no package and no case yet — the identity header says MISSING for those by design. Judge whether the spec is complete, coherent and buildable, and list every VERIFY item (a value or claim resting on a datasheet or standard not yet read).' : ''} BLINDNESS: your ONLY briefing is ${WT}/${HANDOFF} (self-contained) plus read access to the frozen worktree ${WT} (a detached checkout; never write there). Do NOT read any file named docs/reviews/${TAG}_* or any earlier merged review (other reviewers' output), and do not read the live repo ${MAIN} except to WRITE your report. Every finding must cite file + line/coordinate/refdes/net from the worktree and say how you checked it (grep, a number you computed, an image you read). Severity: BLOCKER = would make the board not work or not build; MAJOR = a real functional/robustness/DFM risk to fix before ordering; MINOR = worth fixing, not blocking; NOTE = observation. Be exhaustive within your specialty; prefer many concrete findings over prose; do not repeat what the hand-off lists as known/open unless you disagree with its disposition (say so and why). Finish with a 'files_read' count and a 10-line summary.`
 
 const inSession = (r) => agent(`${COMMON}
 You are the IN-SESSION blind reviewer for the specialty **${r.title}**. Scope: ${r.brief}
@@ -57,7 +69,7 @@ const verify = (r, reviews) => {
 }
 
 const results = await pipeline(
-  ROLES.map((r, i) => ({ r, m1: MODELS[i % MODELS.length], m2: MODELS[(i + 3) % MODELS.length] })),
+  ROLES.map((r, i) => ({ r, ...pair(i) })),
   ({ r, m1, m2 }) => parallel([() => inSession(r), () => external(r, m1, 1), () => external(r, m2, 2)]).then(rs => ({ r, rs })),
   ({ r, rs }) => verify(r, rs),
 )

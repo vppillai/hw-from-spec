@@ -26,7 +26,9 @@ const ALL_ROLES = [
   { key: 'docs', title: 'Document set: manuals, SOPs, compliance statements', brief: '{{BRIEF_DOCS}}' },
 ]
 const ROLES = ALL_ROLES.filter(r => [{{DELTA_ROLE_KEYS}}].includes(r.key))   // e.g. 'layout', 'fab', 'gates'
-const MODELS = [{{EXTERNAL_MODELS}}], FALLBACK = '{{FALLBACK_MODEL}}'
+const MODELS = [{{EXTERNAL_MODELS}}], FALLBACK = '{{FALLBACK_MODEL}}'   // at least two distinct models; role i gets MODELS[i], MODELS[i+1] (cyclic)
+if (new Set(MODELS).size < 2) throw new Error(`EXTERNAL_MODELS needs at least two distinct models (got ${JSON.stringify(MODELS)}) — two vendors per role`)
+const pair = (i) => { const n = MODELS.length, m1 = MODELS[i % n], m2 = MODELS[(i + 1) % n]; if (m1 === m2) throw new Error(`role ${i}: both models are ${m1}`); return { m1, m2 } }
 
 const COMMON = `Today is ${TODAY}. DELTA AUDIT {{ROUND}}: since the previous audit (${PREVIOUS}) the following changed — ${CLAIMS}. Concentrate on VERIFYING these claims against the frozen worktree (the hand-off lists each claim with its commit and evidence path), on the items applied ahead of the owner's nod (hand-off nod section), and on the rebuilt package/order chain; do not re-litigate earlier findings that are unchanged unless the change made them worse. BLINDNESS: your ONLY briefing is ${WT}/${HANDOFF} plus read access to ${WT} (detached checkout; never write there). Do NOT read docs/reviews/${TAG}_* or any merged review newer than ${PREVIOUS}; do not read the live repo ${MAIN} except to WRITE your report. Every finding cites file + line/coordinate/refdes/net and how you checked it. Severity: BLOCKER / MAJOR / MINOR / NOTE as in the hand-off. Finish with 'files_read' and a 10-line summary that states per claim CONFIRMED / NOT CONFIRMED / PARTLY.`
 
@@ -48,7 +50,7 @@ const verify = (r, reviews) => {
 }
 
 const results = await pipeline(
-  ROLES.map((r, i) => ({ r, m1: MODELS[i % MODELS.length], m2: MODELS[(i + 3) % MODELS.length] })),
+  ROLES.map((r, i) => ({ r, ...pair(i) })),
   ({ r, m1, m2 }) => parallel([() => inSession(r), () => external(r, m1, 1), () => external(r, m2, 2)]).then(rs => ({ r, rs })),
   ({ r, rs }) => verify(r, rs),
 )
