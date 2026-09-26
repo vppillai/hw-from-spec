@@ -27,11 +27,14 @@ jobs:
         run: cat scripts/ci/project.env >> "$GITHUB_ENV"
       - name: Bootstrap
         run: {{PROJECT_SETUP_CMD}}
+      - name: Snapshot the tree           # after Bootstrap: whatever setup leaves behind is the baseline, not a finding
+        run: git config --global --add safe.directory "$PWD" && git status --porcelain > /tmp/tree0
       - name: Check
         run: {{PROJECT_CHECK_CMD}}
       - name: Tree unchanged by the checks   # a checker that writes into the tree is a write, not a check (it once replaced the ERC of record)
         run: |
-          if [ -n "$(git status --porcelain)" ]; then echo "checkers wrote to the tree:"; git status --porcelain; exit 1; fi
+          git status --porcelain > /tmp/tree1 || exit 1
+          diff /tmp/tree0 /tmp/tree1 || { echo "checkers wrote to the tree"; exit 1; }
       - name: Upload check outputs
         if: always()
         uses: actions/upload-artifact@v4

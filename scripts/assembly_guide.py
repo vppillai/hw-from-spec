@@ -9,7 +9,8 @@ use / check (references/release-and-cut.md §8). Generated-only: authored SHORT 
 project.yaml `assembly_guide:` (references/project-yaml.md): yaml (authored pages), steps_md (optional generated step source with
 `### Step N - title (T s)` headings + a paragraph: the first two sentences become the caption), scad (the geometry of record; its md5 keys every
 render), render_cmd (shell template: {OUT} {CAMERA} {DEFS} {SIZE}; {DEFS} expands to `-Dk=v` pairs), out_dir ({MD5_8} = board md5, {CASE_VERSION}),
-doc_name, size. Authored yaml: doc{doc_id,title,revision,date,companions,how_to_read}, parts[], tools[], defaults{defs}, pages[] (position
+doc_name, size. `render_cmd` is a str.format template: any other literal brace is written `{{ }}`; yaml booleans in defs are lowered
+to `true` / `false`; the scad key covers the ONE file named (a flattened scad, or accept that `include <…>` edits do not move the key). Authored yaml: doc{doc_id,title,revision,date,companions,how_to_read}, parts[], tools[], defaults{defs}, pages[] (position
 before|after, heading, defs, camera, lines[], parts[], tools[], check), step_defaults{camera, defs}, steps{n: {camera, parts, tools, check,
 title?, lines?}} — title/lines only when there is no steps_md. Numbers stay in the SOP / manufacturing spec (one source); this guide points at them.
 Renders are keyed on (scad md5, defs, camera, size): a geometry bump re-renders every page, a text edit renders nothing.
@@ -80,12 +81,17 @@ def run(P, check=False):
     steps = {}
     if A.get("steps_md"):
         sp = os.path.join(P.root, A["steps_md"]); steps = parse_steps(open(sp).read()); k["steps"] = md5(sp)
-        assert steps, f"no '### Step N - title' headings parsed from {A['steps_md']}"
+        steps or sys.exit(f"no '### Step N - title' headings parsed from {A['steps_md']}")
     board = P.path("board"); k["board"] = md5(board) if board and os.path.exists(board) else "MISSING"
     cy = P.path("case_yaml"); k["case"] = str(yaml.safe_load(open(cy)).get("case", {}).get("version", "MISSING")) if cy and os.path.exists(cy) else "MISSING"
     od = os.path.join(P.root, A["out_dir"].replace("{MD5_8}", k["board"]).replace("{CASE_VERSION}", k["case"])); gd = os.path.join(od, "guide")
     side_p = os.path.join(gd, "guide.json"); side = json.load(open(side_p)) if os.path.exists(side_p) else {"renders": {}}
     pgs = pages(cfg, steps); stale = []
+    orphans = sorted(set(side["renders"]) - {p[0] for p in pgs})
+    if orphans and check:
+        stale += [f"guide/{s}.png (orphan: no page)" for s in orphans]
+    for s_ in orphans if not check else []:
+        side["renders"].pop(s_, None); f_ = os.path.join(gd, s_ + ".png"); os.path.exists(f_) and os.remove(f_); print(f"removed orphan guide/{s_}.png")
     for stem, defs, cam, *_ in pgs:
         rk = hashlib.md5(json.dumps([k["scad"], defs, cam, size], sort_keys=True).encode()).hexdigest()[:10]
         f = os.path.join(gd, stem + ".png")
@@ -93,7 +99,8 @@ def run(P, check=False):
             if check:
                 stale.append(f"guide/{stem}.png"); continue
             os.makedirs(gd, exist_ok=True)
-            cmd = A["render_cmd"].format(OUT=shlex.quote(f), CAMERA=shlex.quote(str(cam)), SIZE=size, DEFS=" ".join(shlex.quote(f"-D{a}={v}") for a, v in defs.items()))
+            lower = lambda v: str(v).lower() if isinstance(v, bool) else v
+            cmd = A["render_cmd"].format(OUT=shlex.quote(f), CAMERA=shlex.quote(str(cam)), SIZE=shlex.quote(size), DEFS=" ".join(shlex.quote(f"-D{a}={lower(v)}") for a, v in defs.items()))
             r = subprocess.run(cmd, shell=True, cwd=P.root, capture_output=True, text=True)
             if r.returncode or not os.path.exists(f):
                 sys.exit(f"assembly_guide: render failed for {stem}: {cmd}\n{(r.stderr or r.stdout)[-600:]}")
@@ -118,7 +125,7 @@ def selftest():
     w = lambda p, t: (os.makedirs(os.path.dirname(f"{d}/{p}"), exist_ok=True), open(f"{d}/{p}", "w").write(t))
     w("project.yaml", "project: {name: t}\npaths: {case_yaml: design/case.yaml}\nassembly_guide:\n  yaml: design/assembly_guide.yaml\n  steps_md: out/ASSEMBLY.md\n"
       "  scad: out/case.scad\n  out_dir: docs/production/{MD5_8}\n  doc_name: VISUAL_ASSEMBLY_GUIDE.md\n  size: '640,480'\n"
-      "  render_cmd: \"printf 'PNG %s %s' {CAMERA} {DEFS} > {OUT}\"\n")
+      "  render_cmd: \"printf 'PNG %s %s %s' {CAMERA} {DEFS} {SIZE} > {OUT}\"\n")
     w("design/case.yaml", "case: {version: v0.1-test}\n"); w("out/case.scad", "cube(1);\n"); w("out/ASSEMBLY.md", fx)
     w("design/assembly_guide.yaml", "doc: {doc_id: VG-001, title: Illustrated assembly guide, revision: r1, date: 2026-01-01, companions: SOP-001}\nparts: [tray, board]\ntools: [driver]\n"
       "defaults: {defs: {show_text: 'true'}}\npages:\n  - {id: P_pressfit, position: before, heading: 'P — Press-fit', defs: {part: '\"fixture\"'}, camera: '0,0,0,55,0,25,300', lines: [Press once.], parts: [fixture], tools: [press], check: 'flush'}\n"
@@ -130,14 +137,21 @@ def selftest():
     od = f"{d}/docs/production/MISSING"; md = open(f"{od}/VISUAL_ASSEMBLY_GUIDE.md").read()
     assert [p[0] for p in pages(yaml.safe_load(open(f"{d}/design/assembly_guide.yaml")), s)] == ["page_P_pressfit", "step_02", "step_07", "page_X_exploded"]
     assert "## Step 2 — Board into the tray (10 s)" in md and "![Step 2" in md and "| board | strap | seated |" in md and "case `v0.1-test`" in md, md
-    png = open(f"{od}/guide/step_02.png").read(); assert "0,0,0,55,0,215,400" in png and "-Dstep=2" in png and "-Dpart=\"step\"" in png, png
+    png = open(f"{od}/guide/step_02.png").read(); assert "0,0,0,55,0,215,400" in png and "-Dstep=2" in png and "-Dpart=\"step\"" in png and "640,480" in png, png
     assert run(P, check=True) == 0, "fresh build must pass --check"
     side = json.load(open(f"{od}/guide/guide.json")); k2 = dict(side["renders"])
     w("design/assembly_guide.yaml", open(f"{d}/design/assembly_guide.yaml").read().replace("Press once.", "Press once, firmly."))
     assert run(P, check=True) == 1 and run(P) == 0 and json.load(open(f"{od}/guide/guide.json"))["renders"] == k2, "a text edit re-renders nothing"
     w("out/case.scad", "cube(2);\n")
-    assert run(P, check=True) == 1, "a geometry change must stale every render"
-    print("selftest OK (step parsing, page order, markdown, keyed renders: text edit renders nothing, geometry bump stales all)"); return 0
+    import io, contextlib
+    with contextlib.redirect_stdout(io.StringIO()) as buf:
+        assert run(P, check=True) == 1
+    assert all(f"guide/{s}.png" in buf.getvalue() for s in ("page_P_pressfit", "step_02", "step_07", "page_X_exploded")), buf.getvalue()   # every render stale
+    w("design/assembly_guide.yaml", open(f"{d}/design/assembly_guide.yaml").read().replace("  - {id: X_exploded", "  # - {id: X_exploded"))
+    with contextlib.redirect_stdout(io.StringIO()) as buf:
+        assert run(P, check=True) == 1 and "orphan" in buf.getvalue(), buf.getvalue()
+    assert run(P) == 0 and not os.path.exists(f"{od}/guide/page_X_exploded.png") and "page_X_exploded" not in json.load(open(f"{od}/guide/guide.json"))["renders"], "orphan render pruned"
+    print("selftest OK (step parsing, page order, markdown, {SIZE} quoted, keyed renders: text edit renders nothing, geometry bump stales every page, removed page = orphan pruned)"); return 0
 
 
 if __name__ == "__main__":

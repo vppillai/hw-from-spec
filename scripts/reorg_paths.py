@@ -17,8 +17,10 @@ same table answers "where did docs/X go?" for every dated record that still spel
 Rewrite rule: the literal `<old>` (longest first; not preceded by a word char, `-` or `<word>/`, so `./docs/X`, `{ROOT}/docs/X`, `HEAD:docs/X`
 match and `other-repo/docs/X` does not; not followed by a word char) -> `<new>`; plus the join forms `"docs" / "X"` and `"docs", "X"` for a
 one-level old path. Frozen dirs (uploaded packages, archived records) and this script's own files are never touched; binaries never.
-Learned the hard way (source project D-70/D-73): exempt the rewriter's OWN files from the rewrite, not only from the check; generated text under
-out/ embeds docs paths too; a literal rewrite moves the md5 of files other generators stamp — regenerate the chain, do not hand-edit.
+Learned the hard way (references/pitfalls.md, process): exempt the rewriter's OWN files from the rewrite, not only from the check; generated text
+under out/ embeds docs paths too; a literal rewrite moves the md5 of files other generators stamp — regenerate the chain, do not hand-edit.
+Not rewritten: URLs into the repo (`…/blob/main/docs/X.md` — the `<word>/` guard excludes them; grep `blob/.*/<old>` by hand) and binaries.
+Paths with non-ASCII characters: run the `git ls-files -s` dumps with `git -c core.quotepath=off`.
 """
 import argparse, hashlib, os, re, subprocess, sys, tempfile
 
@@ -46,7 +48,7 @@ class Reorg:
         joins = [(o.split("/", 1)) for o in olds if o.count("/") == 1]
         self.join_rx = re.compile(r'"(' + "|".join(sorted({d for d, _ in joins})) + r')"(\s*[/,]\s*)"(' + "|".join(re.escape(b) for _, b in joins) + r')"') if joins else None
         tops = sorted({n.split("/")[0] for n in self.moves.values()} | {o.split("/")[0] for o in olds})
-        self.lit_rx = re.compile(r"(?<![\w-])(?<!\w/)((?:" + "|".join(map(re.escape, tops)) + r")/[A-Za-z0-9_][A-Za-z0-9_./+-]*\.[A-Za-z0-9]{1,10})(?![\w…])") if tops else None
+        self.lit_rx = re.compile(r"(?<![\w-])(?<!\w/)((?:" + "|".join(map(re.escape, tops)) + r")/[A-Za-z0-9_][A-Za-z0-9_./+-]*\.[A-Za-z0-9]{1,10})(?![\w…/])") if tops else None   # `docs/v1.2/x` is a directory segment, not a file
 
     def sub(self, text):
         if self.old_rx:
@@ -129,7 +131,7 @@ class Reorg:
             for n, line in enumerate(t.splitlines(), 1):
                 for m in self.lit_rx.finditer(line):
                     lit = m.group(1).rstrip(".")
-                    if any(c in lit for c in "*{<>$") or any(a.search(lit) for a in self.allow_missing):
+                    if any(a.search(lit) for a in self.allow_missing):
                         continue
                     if not os.path.exists(os.path.join(self.root, lit)):
                         bad.append(f"{p}:{n}: dangling `{lit}`")
@@ -182,7 +184,8 @@ def selftest():
     w("docs/DECISIONS.md", "see docs/STATUS.md and ./docs/GATES.md and other-repo/docs/STATUS.md and docs/STATUS_2026.md and docs/gone.md\n")
     w("docs/STATUS.md", "x\n"); w("docs/GATES.md", "y\n"); w("docs/parts_check.json", "{}\n"); w("docs/STATUS_2026.md", "z\n")
     w("gen/a.py", 'A = (ROOT / "docs" / "parts_check.json")\nB = os.path.join(R, "docs", "DECISIONS.md")\nC = "docs/parts_check.json"\nD = "docs/production/0123abcd/STATUS.md"\n')
-    w("out/fab/old.md", "frozen docs/DECISIONS.md\n"); w("out/old/x.txt", "g\n"); w("out/logs/run.log", "l\n"); w("design/live.yaml", "path: docs/missing_file.md\n")
+    w("out/fab/old.md", "frozen docs/DECISIONS.md\n"); w("out/old/x.txt", "g\n"); w("out/logs/run.log", "l\n")
+    w("design/live.yaml", "path: docs/missing_file.md\nok: docs/production/0123abcd/STATUS.md\nver: docs/v1.2/notes\nurl: https://x/blob/main/docs/STATUS.md\n")
     subprocess.run(["git", "init", "-q", d], check=True)
     g = lambda *a: subprocess.run(["git", "-c", "user.email=a@b", "-c", "user.name=t", *a], cwd=d, check=True, capture_output=True, text=True).stdout
     g("add", "-A"); g("commit", "-qm", "0"); before = g("ls-files", "-s")
@@ -204,14 +207,21 @@ def selftest():
         assert R.check(verbose=True) == 1
     bad_lines = buf.getvalue()
     assert "dangling `docs/missing_file.md`" in bad_lines and "docs/gone.md" not in bad_lines, bad_lines   # DECISIONS is a record (no_existence); live.yaml is structural
+    assert "0123abcd" not in bad_lines and "docs/v1.2" not in bad_lines, bad_lines                          # allow_missing regex; a directory segment is not a file
+    assert "blob/main/docs/STATUS.md" in open(f"{d}/design/live.yaml").read(), "URLs are not rewritten (documented)"
     g("add", "-A"); g("commit", "-qm", "1"); after = g("ls-files", "-s")
     open(f"{d}/B", "w").write(before); open(f"{d}/A", "w").write(after)
     with contextlib.redirect_stdout(io.StringIO()) as buf:
         assert R.proof(f"{d}/B", f"{d}/A", f"{d}/docs/reviews/REORG_REWRITES.txt") == 0, buf.getvalue()
     assert "MISSING: 0" in buf.getvalue() and "moved 4" in buf.getvalue(), buf.getvalue()
+    row = next(l for l in after.splitlines() if l.endswith("design/live.yaml"))                       # a blob-identical file: corrupt its sha in AFTER
+    open(f"{d}/A2", "w").write(after.replace(row, row.replace(row.split()[1], "0" * 40)))              # = changed without being in the rewrite list
+    with contextlib.redirect_stdout(io.StringIO()) as buf:
+        assert R.proof(f"{d}/B", f"{d}/A2", f"{d}/docs/reviews/REORG_REWRITES.txt") == 1
+    assert "not in the rewrite list" in buf.getvalue() or "not in AFTER" in buf.getvalue(), buf.getvalue()
     os.remove(f"{d}/design/live.yaml"); g("rm", "-q", "design/live.yaml")
     assert R.check(verbose=False) == 0, "clean fixture must pass"
-    print("selftest OK (move + rewrite idempotent, frozen untouched, join forms, trim/untrack/gitignore, dangling vs record, zero-loss proof)")
+    print("selftest OK (move + rewrite idempotent, frozen untouched, join forms, URLs untouched, trim/untrack/gitignore, dangling vs record vs allow_missing vs dir segment, zero-loss proof pass + fail)")
     return 0
 
 

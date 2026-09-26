@@ -91,7 +91,7 @@ def selftest():
 
 
 if __name__ == "__main__":
-    if "--selftest" in sys.argv:
-        selftest()
-    else:
-        print(header(Project.find(), *[a for a in sys.argv[1:] if not a.startswith("--")]))
+    import argparse
+    ap = argparse.ArgumentParser(description=__doc__.split("\n")[0]); ap.add_argument("--selftest", action="store_true"); ap.add_argument("--project"); ap.add_argument("args", nargs="*")
+    a = ap.parse_args()
+    sys.exit(selftest() if a.selftest else print(header(Project.find(arg=a.project), *a.args)))

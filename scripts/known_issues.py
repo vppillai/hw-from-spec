@@ -154,7 +154,7 @@ def selftest():
 
 
 if __name__ == "__main__":
-    if "--selftest" in sys.argv:
-        selftest()
-    else:
-        sys.exit(run(Project.find(), "--check" in sys.argv))
+    import argparse
+    ap = argparse.ArgumentParser(description=__doc__.split("\n")[0]); ap.add_argument("--check", action="store_true"); ap.add_argument("--selftest", action="store_true"); ap.add_argument("--project")
+    a = ap.parse_args()   # an unknown flag or --help exits here: the default write action never runs on a probe
+    sys.exit(selftest() if a.selftest else run(Project.find(arg=a.project), a.check))

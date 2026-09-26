@@ -10,6 +10,7 @@
 #                                    back into the working tree for the next commit; then the checks
 #   scripts/clone_gate.sh --selftest
 set -e -o pipefail
+trap 'echo "clone gate: aborted at line $LINENO (rc $?)" >&2' ERR
 HERE=$(cd "$(dirname "$0")" && pwd -P)
 if [[ "$1" == "--selftest" ]]; then
   T=$(mktemp -d /tmp/hwfs_cg_XXXX); trap 'rm -rf $T' EXIT

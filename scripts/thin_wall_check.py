@@ -11,7 +11,7 @@
   scripts/thin_wall_check.py --pinch-polygon OUTLINE.json [same options]      the outline as [[x, y], ...] (no mesh libraries needed)
   scripts/thin_wall_check.py --selftest                                       pure python: no trimesh / numpy / shapely required
 
-Rules baked in (source project 2026-09-22/23): (1) a ray from a point nudged 1e-3 inside a face hits THAT face at 0.000 for a fraction of samples —
+Rules baked in (references/case-pipeline.md §Point contacts): (1) a ray from a point nudged 1e-3 inside a face hits THAT face at 0.000 for a fraction of samples —
 discard hits closer than --self-hit and take the first beyond it (`multiple_hits=True`), or solid 2 mm chamfers read "0.00 mm walls";
 (2) trimesh `section().to_2D()` RE-ORIGINS the plane — map the outline back through the returned to-3D transform before you place anything;
 (3) bridge a contact with a disc INTERSECTED with the outline's closing, never a bare disc (it bulges into the silhouette); (4) add a census row
@@ -68,7 +68,7 @@ def clusters(points, thick, cell=3.0, red=0.5):
     return rows
 
 
-def pinch_points(coords, close=0.05, path_frac=0.05, merge=3.0):
+def pinch_points(coords, close=0.05, path_frac=0.05, merge=3.0):   # ponytail: O(n²) over the vertices; grid-bucket by `close` if outlines exceed ~5 k vertices
     """Point contacts of a closed outline (list of [x, y], last != first): pairs of vertices closer than `close` whose distance ALONG the boundary
     exceeds `path_frac` of the perimeter (a smoothed tip has close vertices too, but adjacent ones); contacts within `merge` are one.
     Returns [(x, y, gap)] sorted."""
@@ -96,19 +96,37 @@ def pinch_points(coords, close=0.05, path_frac=0.05, merge=3.0):
 
 
 # ---------------------------------------------------------------- mesh-bound wrappers (trimesh / numpy / shapely at run time) -----------------
+def need(*mods):
+    """Import the mesh libraries or say which one is missing (rule 10), exit 2 — never a traceback."""
+    import importlib
+    out = []
+    for name in mods:
+        try:
+            out.append(importlib.import_module(name))
+        except ImportError:
+            sys.exit(f"thin_wall_check: this mode needs {', '.join(mods)} ({name} is not installed): pip install {' '.join(mods)}")
+    return out
+
+
 def section_outline(stl, z=None):
-    """Outline polygon(s) of the piece at height z (default: mid-height), in MODEL coordinates (to_2D's re-origin mapped back)."""
-    import trimesh
+    """Outline polygon(s) of the piece at height z (default: mid-height), in MODEL coordinates (to_2D's re-origin mapped back through the full
+    2-D affine part of its to-3D matrix, rotation included)."""
+    trimesh, = need("trimesh"); need("shapely")
     from shapely.ops import unary_union
     from shapely import affinity
     m = trimesh.load(stl, force="mesh")
     z = (m.bounds[0][2] + m.bounds[1][2]) / 2 if z is None else z
-    path2d, to3d = m.section(plane_origin=[0, 0, z], plane_normal=[0, 0, 1]).to_2D()
-    return affinity.translate(unary_union(path2d.polygons_full), xoff=float(to3d[0, 3]), yoff=float(to3d[1, 3])), m
+    sec = m.section(plane_origin=[0, 0, z], plane_normal=[0, 0, 1])
+    if sec is None:
+        sys.exit(f"{stl}: the plane z={z} misses the mesh (z range {m.bounds[0][2]:.2f}..{m.bounds[1][2]:.2f})")
+    path2d, M = sec.to_2D()
+    poly = affinity.affine_transform(unary_union(path2d.polygons_full), [float(M[0, 0]), float(M[0, 1]), float(M[1, 0]), float(M[1, 1]), float(M[0, 3]), float(M[1, 3])])
+    return poly, m
 
 
 def necks_after_webs(poly, contacts, web, clip):
     """Narrowest chord through each contact once a disc of diameter `web` (clipped to the outline's closing, radius `clip`) is added — the neck the fab measures."""
+    need("shapely")
     from shapely.geometry import Point, LineString
     from shapely.ops import unary_union
     q = poly
@@ -131,7 +149,7 @@ def necks_after_webs(poly, contacts, web, clip):
 
 
 def census(stl, samples, thin, red, self_hit, cell, out_json):
-    import numpy as np, trimesh
+    np, trimesh = need("numpy", "trimesh")
     np.random.seed(0)
     m = trimesh.load(stl, force="mesh")
     print(f"{stl}: faces {len(m.faces)} watertight {m.is_watertight} bbox {np.round(m.bounds, 2).tolist()} volume {m.volume / 1000:.2f} cm3 "
@@ -152,16 +170,33 @@ def census(stl, samples, thin, red, self_hit, cell, out_json):
     return 1 if any(r["n_red"] for r in rows) else 0
 
 
-def pinch(poly, close, path_frac, merge, web, clip):
+def cross_ring_contacts(rings, close, merge):
+    """Near-touches BETWEEN rings (two lobes 0.003 mm apart are two polygons, a hole touching the outer boundary is a ring pair): nearest vertex pairs < close."""
     found = []
-    for g in getattr(poly, "geoms", [poly]):
-        found += pinch_points([list(c) for c in list(g.exterior.coords)[:-1]], close, path_frac, merge)
-    print(f"point contacts (< {close} mm, non-adjacent): {len(found)}")
+    for i in range(len(rings)):
+        for j in range(i + 1, len(rings)):
+            for a in rings[i]:
+                for b in rings[j]:
+                    d = math.dist(a, b)
+                    if d < close:
+                        found.append(((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, d))
+    out = []
+    for q in sorted(found, key=lambda q: q[2]):
+        if not any(math.dist(q[:2], r[:2]) < merge for r in out):
+            out.append(q)
+    return out
+
+
+def pinch(poly, close, path_frac, merge, web, clip):
+    geoms = list(getattr(poly, "geoms", [poly]))
+    rings = [[list(c) for c in list(g.exterior.coords)[:-1]] for g in geoms] + [[list(c) for c in list(i.coords)[:-1]] for g in geoms for i in g.interiors]
+    found = [c for r in rings for c in pinch_points(r, close, path_frac, merge)] + cross_ring_contacts(rings, close, merge)
+    print(f"outline polygons at the section: {len(geoms)} (a mark-shaped body must be 1); point contacts (< {close} mm, non-adjacent, within and between rings): {len(found)}")
     for x, y, gap in found:
         print(f"   at ({x:.3f}, {y:.3f}) gap {gap:.4f} mm")
     if found and web:
         print(f"necks after web discs d={web} clipped to the closing r={clip}: {necks_after_webs(poly, [(x, y) for x, y, _ in found], web, clip)} mm")
-    return 1 if found else 0
+    return 1 if found or len(geoms) > 1 else 0
 
 
 def selftest():
@@ -177,10 +212,12 @@ def selftest():
     c = pinch_points(eight, close=0.05)
     assert len(c) == 1 and abs(c[0][0] - 10) < 0.02 and abs(c[0][1] - 10) < 0.02 and c[0][2] < 0.02, c
     assert len(pinch_points(eight, close=0.05, merge=0.001)) == 4 and len(pinch_points(eight, close=0.001)) == 0, "without merge every vertex pair of the neck is listed; the close threshold is honoured"
+    two = [[[0, 0], [10, 0], [10, 10], [0, 10]], [[10.004, 0], [20, 0], [20, 10], [10.004, 10]]]
+    assert len(cross_ring_contacts(two, 0.05, 3.0)) == 2 and len(cross_ring_contacts(two, 0.05, 20.0)) == 1 and cross_ring_contacts(two, 0.001, 3.0) == [], "two lobes 0.004 mm apart along an edge: both ends listed, merged within the merge radius"
     # adjacent close vertices (a smoothed tip) are not a contact
     tip = [[0, 0], [10, 0], [10, 5], [5.001, 5.0], [5.0, 5.001], [0, 5]]
     assert pinch_points(tip, close=0.05) == [], "adjacent vertices are a tip, not a contact"
-    print("selftest OK (self-hit discard, histogram, clusters, point contacts on a figure-eight / square / tip)")
+    print("selftest OK (pure core: self-hit discard, histogram, clusters, point contacts on a figure-eight / square / tip, cross-ring contacts — the mesh wrappers need trimesh/numpy/shapely and are not covered here)")
     return 0
 
 
@@ -206,7 +243,7 @@ def main(argv):
         found = pinch_points(coords, a.close, a.path_frac, a.merge)
         print(f"point contacts: {len(found)}"); [print(f"   at ({x:.3f}, {y:.3f}) gap {g:.4f} mm") for x, y, g in found]
         if found and a.web:
-            from shapely.geometry import Polygon
+            need("shapely"); from shapely.geometry import Polygon
             print("necks after webs:", necks_after_webs(Polygon(coords), [(x, y) for x, y, _ in found], a.web, a.clip))
         return 1 if found else 0
     ap.print_help(); return 2
