@@ -25,6 +25,10 @@
   to the one shared cause, restore, report the numbers.
 - `--check` gates in the main checkout while others regenerate say nothing about the committed tree: judge on `git archive HEAD` (clone gate).
 - Rows that describe a marker (the nod marker, the release phrase) re-trigger the generator that keys on it: describe indirectly.
+- Every checker is READ-ONLY on the tree: `--check` builds in a temp dir and exports nowhere (a schematic `--check --out /tmp` that still wrote
+  `erc.json` into `out/` replaced the ERC of record with a temp copy's 58 lib-link warnings). `scripts/adopt_gates.sh` fails when
+  `git status --porcelain` differs before/after the gates; the PR-check template ends with the same guard. Probe a script's usage with
+  `sed -n 1,12p` of its docstring, never by running it: a script without argparse runs its default WRITE action on `--help`.
 
 ## 4. Blind reviews (the protocol; templates in `workflows/`)
 - Freeze: clean tree (`git status --short --untracked-files=no` empty), `git worktree add --detach <frozen> HEAD`, then
@@ -47,7 +51,9 @@
 
 ## 5. Background jobs and the machine
 - Task watchers may not wake the agent: block in-process, `until ! kill -0 $pid; do sleep 20; done` (≤ 600 s per call, repeat), continue in the same turn.
-- Redirected Python block-buffers: `python -u` or judge by `kill -0` + output files.
+- Redirected Python block-buffers: `python -u` or judge by `kill -0` + output files. Long chains: `python -u … > log 2>&1; echo EXIT $? >> log`
+  per job, several jobs in parallel when they do not share memory ceilings (never two FEA pools), then one foreground
+  `until grep -q '^EXIT' a.log && grep -q '^EXIT' b.log; do sleep 30; done` per ≤ 600 s call; a non-zero EXIT line stops the chain.
 - Keep the machine awake (`caffeinate -dimsu` in a background shell) while agents run overnight; agents die on sleep and on API 500s — resume by
   message with the MEASURED state (board md5, counts, last commit), never from memory.
 - Parallel router JVMs SIGTERM each other; one JVM at a time, `-mt 1` for determinism.
@@ -58,3 +64,17 @@
 - Report before/after per class, not one number (a repo-wide grep count is not a work estimate).
 - "Already done by <agent>" in the manifest instead of editing twice; re-read each target line before editing on a multi-agent day.
 - Numbers in a record carry the mode they were measured in (check mode vs full run) and the file md5 they refer to.
+
+## 7. Memory, pause points, owner lists
+- **Auto-memory (`MEMORY.md` + topic files)** holds what must survive a session: the project's resume pointer (which files to read first), owner
+  feedback that changes how to work ("verify live, never cached"; "use parallel agents while I sleep"; "read the rendered image, not the geometry"),
+  never project facts that live in the repo (those go to STATUS / DECISIONS). One file per feedback item with the date and the owner's words.
+- **Pause point** (`docs/governance/STATUS.md`, numbered): what happened (rows, commits, tag), what is green, an **owner list** (numbered, each
+  item owner-only: gate cells, payments, replies to the vendor, hardware records) that is struck through with date/time + record path as items
+  close, and a **Resume** line (nothing running / what is running with its log path; read order). Written whenever the owner says they are going
+  offline and at every tag.
+- **Owner list discipline:** an item the agent may not do is listed, never attempted; when the owner delegates one in chat ("do it"), quote the
+  words in the decision row, do exactly the named actions, record clicked / not clicked (`references/vendor-review.md` §1).
+- **Resume by message with the measured state** (§5): board md5, package, case version, last commit, gates green — read from the repo, not
+  remembered; a difference with STATE NOW becomes a STATUS paragraph before any work.
+- **Paths in old records:** after a re-layout, frozen paragraphs spell the old paths; the pause point says "paths older than this: `scripts/reorg_paths.py --map`".

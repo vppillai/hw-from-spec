@@ -20,6 +20,25 @@ Everything downstream is keyed on the board md5, so:
 5. commit the reports. DECISIONS / KNOWN_ISSUES / traceability records are report inputs: write them BEFORE step 4 or the cycle re-opens. Start the
 chain only after the last board-touching workflow of the round (a silk-only merge changes the md5 and orphans everything).
 
+### 3.1 The one-round record chain (production cut) and the fixed-point pass
+Generated records read each other, so the LAST round has an order, not a digest:
+`known_issues` → order sheet / package notes → `collect_renders` (the reports hash its index) → `release_report` → `traceability` → `release_report`
+(the matrix's report rows flip with the reports' freshness and the report quotes the matrix line: dependent writer, matrix, dependent writer again)
+→ `analysis_index` → `render_pdf` (its PDF source md5s) → `production_cut build` LAST (the manifest stamps what render_pdf and collect_renders
+wrote) → commit. Afterwards only the pure `--check`s; a `clone_gate.sh --regen` run AFTER the build makes the cut STALE although the reports are
+content-identical (`production_cut --check` compares md5s, `release_report --check` strips the volatile lines) — a confirming regen copy-back is
+discarded with `git checkout` once its diff is timestamp-only.
+- **Fixed point** = run the round twice and diff; "nothing changed" is judged after stripping the volatile cascade (`Generated` → the document's
+  md5 → every stamp of that md5 → `Tool commit`), not the timestamp lines alone. Count non-volatile lines per artefact (0); discard round two.
+- Registering a NEW deliverable flips a manifest status the analysis index reads: that round is two passes by construction — plan for it.
+- Whoever appends a DECISIONS row runs the round: a records-only commit without the regen chain is an unfinished commit (every report reads
+  the log). The closer's own row is unmapped the moment it lands — write its traceability entry in the same edit.
+- The PDFs are new bytes on every render (CreationDate); key derived PDFs on the SOURCE md5s and expect that churn in the commit.
+- A collector that reuses an up-to-date copy must still recompute its GRADE; a generator that sweeps "everything not in my index" from a shared
+  folder deletes a sibling's output — register foreign files with their own check instead.
+- A generated document can carry a fetch-time stamp a yaml bump does not move (a compliance table's "case version" written at fetch time):
+  every consumer of the version string is re-run in the bump.
+
 ## 4. Collateral (`scripts/collect_renders.py`)
 `collateral/<md5-8>/renders/`: CAD 3-D renders (opaque background, named by what the picture shows, each fixed view checked by eye once), panel
 preview, silk PNGs, case renders, FEA composites, drawing PDFs, fab-viewer captures carrying the md5. Freshness key = source md5 + full argument
@@ -54,3 +73,24 @@ orderable state and does not substitute for the owner's gate cells.
 - Requirement family for the deliverables gets its own prefix after a prefix census of the spec (a collision happened once).
 - Retention: the cut folder, the fab package of record and the records folder are kept; superseded packages are dropped when every consumer selects
   by md5 and the evidence lives outside them.
+- A PLACED order's package is frozen: notes may be re-derived (`--refresh-notes`), fab files / panel / board_id never rebuilt; its stock gate reads
+  the frozen order-day records (`references/fab-dfm.md` §8).
+- After the order the vendor's engineering review may arrive: `references/vendor-review.md` (agents never pay / agree / cart; Replace File only on
+  the owner's word); the case bump it may force costs ≈ 45 min of machine time (`references/case-pipeline.md`).
+
+## 8. Illustrated assembly guide (`scripts/assembly_guide.py`)
+Beside the text SOP, a picture per step: authored SHORT yaml (parts / tools / check / camera per step, fixed pages before and after), generated
+step text (the case generator's `### Step N - title (T s)` + paragraph → the first two sentences), one clean render per page from the geometry of
+record (marketing look: clean scheme, the ordered colours, legends readable → cameras on the side the legend is laid out for), keyed on
+(geometry md5, defs, camera, size) so a text edit renders nothing and a case bump re-renders every page (≈ 1 min). Numbers stay in the SOP /
+manufacturing spec (one source); the guide names where the words are. Registered in `production_cut.yaml` as a deliverable with its `--check`;
+the SOP's companion cell points at it (a pointer, no revision bump). Worked example: the source project's VG-001 (D-76 / CC-199).
+
+## 9. Repo re-layout and deletions at the order (`scripts/reorg_paths.py`)
+When the tree is a mess at the order: phase 1 deletions (superseded generated artefacts; git history + tags keep them), phase 2 re-layout after
+the owner sees the proposed tree. Method: decision row → `reorg:` block → `--plan` → `git ls-files -s` BEFORE → `--apply` → regenerate every
+generated file that embeds paths (never edit them) → `--check` 0 findings → AFTER dump → `--proof BEFORE AFTER REWRITES` (every blob at its mapped
+path with the same sha, or in the rewrite list) → gates → tag. Frozen records keep the old paths (`--map` reads them); an uploaded package's
+generator-owned notes are re-derived, its fab files never rebuilt. Before a deletion: grep basenames AND exact paths, separate live citations
+(gen/, design/, CI, live docs) from record citations (DECISIONS / STATUS / merged reviews) — treating records as blockers freezes the tree; a
+traceability `exists` check on a file that leaves the tree becomes `git show <tag>:<path> | grep -qF '<same string>'`, nothing weakened.

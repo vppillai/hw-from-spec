@@ -72,7 +72,24 @@ first quote and make it part of the adopt rule.
 - CNC: a faceted STL-sewn STEP goes to manual quote; a true B-rep STEP (cadquery) quotes instantly; a finish change drops the mandatory drawing
   upload — re-upload before Save.
 
+- After the order: the print service's engineer review arrives by mail with per-line file ids; the flow, the boundaries and the quote-page
+  mechanics (`getFileAnalyzeResult` → `previewUrl` heat map for a "clean" part; Edit dialog saved = form state; "audit failed" mail = Replace
+  File enabled) are in `references/vendor-review.md`.
+
 ## 7. Worked-example numbers (JLCPCB, 2026-09)
 2 oz outer: track/space 0.16/0.16 (published), via 0.30 drill / 0.62 ring (annular > 0.15 to escape Warning), pad-to-edge warning 0.20, PTH-to-trace
 0.23 (project 0.24), silk line 0.16, silk-to-hole 0.22, mask bridge 0.20, hole-to-hole 0.50, PCBA min side 70 mm, V-cut copper-to-edge 0.40.
 These are the values that were live then; fetch the current capability page before using them.
+
+## 8. Fab package gate: the placed-order stock freeze (project-side generator; contract here)
+The morning after an order is placed the live stock gate turns against its own package: the fab's shelf shows what the order consumed (a part at
+4 → 0), `fab_package --check` re-derives a different PCBA verdict and fails, and its selftest (built on the live records) fails with it.
+- **Rule:** a package whose order is PLACED — an owner row in the decision log matching `markers.placed_regex` AND naming the package folder — is
+  judged on `stock_snapshot.json` inside the package: the stock records of its BOM codes as at the build commit, frozen once by
+  `--freeze-stock` and hashed in the package MANIFEST. `--check` on a placed package without the snapshot says so (run `--freeze-stock`) instead
+  of grading on live data. Live re-checks after the order are still recorded in `PARTS_VERIFICATION.md`; they no longer grade a frozen package.
+- **Selftest fixture:** the selftest never reads the live stock file — it builds a fixture (every record in stock, dated today) and points the
+  checker at it; the package logic is under test, not the market.
+- The frozen package: fab files, panel/, board_id.txt byte-identical forever (a rebuild re-exports the panel and re-stamps the commit — never on
+  a placed order); generator-owned prose (ORDER_PARAMETERS, PACKAGE.md) may be re-derived with a `--refresh-notes` that re-hashes the manifest.
+- Look for a moved records file under both its old and new path when reading the build commit after a re-layout (`scripts/reorg_paths.py --map`).

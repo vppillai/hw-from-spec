@@ -18,6 +18,7 @@ markers:
   release_regex: 'clear[ -]to[ -]build'   # the owner's line in paths.gates that turns reports RELEASED — never quote the phrase in prose
   unverified: [UNVERIFIED, TBD-DRAWING]   # test-plan markers collected into KNOWN_ISSUES §4
   nod_regex: '\(!\)|owner nod'            # status cells "applied ahead of the owner's nod" → KNOWN_ISSUES §2.1
+  placed_regex: '\bPLACED\b'              # an owner row with this word + a package folder name = placed order → judged on frozen stock (fab-dfm §8)
   hand_curated: ["<!-- hand-curated: begin -->", "<!-- hand-curated: end -->"]
 paths:
   decisions: docs/governance/DECISIONS.md            # 6-cell table (ID | Date | Status | Topic | Proposal | Reason)
@@ -28,6 +29,14 @@ paths:
   test_plan: docs/design/TEST_PLAN.md            # optional
   traceability_yaml: design/traceability.yaml
   traceability_out: docs/governance/TRACEABILITY.md  # written by scripts/traceability.py
+  learnings: docs/governance/LEARNINGS_LOG.md  # append-only (CLAUDE.md rule 11)
+  erc_waivers: docs/governance/ERC_WAIVERS.md
+  env: docs/governance/ENV.md
+  parts_verification: docs/parts/PARTS_VERIFICATION.md
+  datasheet_notes: docs/datasheet_notes
+  reviews_dir: docs/reviews                # hand-offs, per-round reports, merged reports
+  quotes_dir: docs/quotes                  # <date>/ fab evidence (quotes, DFM exports, review mails, order screenshots) — never inside a package
+  production_dir: docs/production          # <md5-8>/ the production cut
   board: kicad/<board>/<board>.kicad_pcb  # the board of record; its md5 keys packages, collateral, reports
   netlist: out/<board>.xml                # kicadxml netlist for netlist_net checks (optional)
   fab_dir: out/fab                        # packages <date>_<md5-8>/ each with board_id.txt (keys: board, md5, commit, built, + counts)
@@ -46,6 +55,25 @@ dfm:
   items: out/dfm_items.json               # written by the project's measurer
   accept: design/board.yaml               # yaml with key dfm_accepted: [{check, refs: [..] | {REF: n}, reason}]
   report: out/dfm.json                    # written by every plain scripts/dfm_check.py run (--check compares); read by release_report section dfm
+reorg:                                    # scripts/reorg_paths.py — only when the layout changes (decision row first)
+  moves: {docs/OLD.md: docs/<folder>/OLD.md}   # old -> new, git mv + literal rewrite (word-boundary guarded, longest first, idempotent)
+  trim: [out/old_dir]                     # git rm -r (name the tag that keeps them in the decision row)
+  untrack: ['out/**/logs/*.log']          # git rm --cached, files stay on disk; gitignore: lines appended
+  frozen: [out/fab/]                      # never rewritten, never checked (uploaded packages, archived records)
+  skip: [lib/]                            # never touched
+  allow_old_files: [docs/reviews/REORG_PLAN.md]   # files that legitimately spell the old names (this script and project.yaml are exempt already)
+  no_existence: ['.py', '.js', docs/governance/DECISIONS.md, docs/governance/STATUS.md, docs/governance/LEARNINGS_LOG.md, docs/reviews/]
+                                          # suffixes / prefixes whose literals are old-literal-checked but need not exist (fixture strings, dated records)
+  allow_missing: ['^docs/production/[0-9a-f]{8}/']   # regexes of literals allowed to be dangling (deliverables named before they exist, negative checks)
+  rewrites_record: docs/reviews/REORG_REWRITES.txt   # written by --apply; read by --proof
+assembly_guide:                           # scripts/assembly_guide.py (release-and-cut §8)
+  yaml: design/assembly_guide.yaml        # authored short text: doc, parts, tools, pages (before/after), step_defaults, steps{n: camera/parts/tools/check}
+  steps_md: out/mechanical/case/ASSEMBLY.md   # optional generated step source: '### Step N - title (T s)' + paragraph
+  scad: out/mechanical/case/<preset>/case.scad   # geometry of record; its md5 keys every render
+  out_dir: docs/production/{MD5_8}        # {MD5_8} board md5-8, {CASE_VERSION}
+  doc_name: VISUAL_ASSEMBLY_GUIDE.md
+  size: '1920,1440'
+  render_cmd: "openscad -o {OUT} --camera={CAMERA} --imgsize={SIZE} --colorscheme=Tomorrow {DEFS} out/mechanical/case/<preset>/case.scad"   # {DEFS} = -Dk=v …
 renders:                                  # scripts/collect_renders.py rules; {MD5_8} {CASE_VERSION} {BOARD} {KICAD_CLI} {OUT} expand
   - {name: pcb_top, kind: kicad_render, args: ["--side", "top", "--quality", "high", "--background", "opaque"]}
   - {name: pcb_iso, kind: kicad_render, args: ["--side", "top", "--perspective", "--rotate", "-45,0,135"]}
@@ -65,12 +93,28 @@ gates:
     - "$PY scripts/dfm_check.py --check"   # G2+: needs the measurer's items; day 1 uses the shorter list of templates/project.yaml
     - "$PY scripts/collect_renders.py --check"
     - "$PY scripts/release_report.py --check"
+    - "$PY scripts/reorg_paths.py --check"   # when a reorg: block exists: no old literal, no dangling docs/ path in structural files
+    - "$PY scripts/assembly_guide.py --check"   # production cut
   clone:                                  # scripts/clone_gate.sh: run inside `git archive HEAD`
     - "$PY scripts/release_report.py --check"
   regen:                                  # clone_gate.sh --regen: run inside the archive, then copy regen_copy_back into the tree
     - "$PY scripts/release_report.py"
   regen_copy_back: [docs/release/PCB_DESIGN_REPORT.md]
 ```
+
+## Layout the defaults name
+```
+docs/governance/   DECISIONS STATUS GATES BLOCKERS KNOWN_ISSUES TRACEABILITY LEARNINGS_LOG ERC_WAIVERS ENV   (records the generators read and write)
+docs/design/       TEST_PLAN VERIFY briefs, design notes, mechanical notes                                    (intent)
+docs/parts/        PARTS_VERIFICATION PROCUREMENT parts_check.json compliance json
+docs/reviews/      REVIEW_HANDOFF, <ROUND>_<role>_<model>.md, *_merged.md, REORG_* inventories
+docs/release/      reports, RELEASE_NOTES, collateral/<md5-8>/, marketing/
+docs/quotes/<date>/  fab evidence: quote captures, DFM exports, vendor review mails + images, order screenshots (never inside a package)
+docs/production/<md5-8>/  the production cut (MANIFEST, STATUS, documents, records/, pdf/)
+docs/datasheet_notes/
+```
+The 62 `docs/<FILE>.md` literals in SKILL.md / references / templates ARE this layout. Changing it later is a decision row + a `reorg:` block +
+`scripts/reorg_paths.py` (release-and-cut §9) — never a hand sweep; frozen records keep the old paths and `--map` explains them.
 
 ## Conventions the scripts rely on
 
@@ -81,8 +125,11 @@ gates:
   stage, checks` and optionally `status: not_included` + `reason`, `pending: <text>`. Every decision row must be cited by some entry's `source`.
 - Shell gate commands run with cwd = repo root (or the archive) and `$PY` set; write them root-relative. `$PY` is the first interpreter that
   imports `yaml` among `$PYTHON`, the project `.venv`, the skill's `.venv`, `python3` (printed at the top of every run).
-- Which scripts are generators and which are graders: `known_issues`, `traceability`, `release_report`, `collect_renders`, `dfm_check` have
-  `--check`; `handoff_header.py` prints a header (nothing to check); `project.py` is the reader.
+- Which scripts are generators and which are graders: `known_issues`, `traceability`, `release_report`, `collect_renders`, `dfm_check`,
+  `assembly_guide` have `--check`; `reorg_paths --check` is a grader (no generator side); `thin_wall_check` is a measurer (`--census`, `--pinch`,
+  exit 1 on a finding); `handoff_header.py` prints a header (nothing to check); `project.py` is the reader.
+- Every `--check` is read-only on the tree (`adopt_gates.sh` fails when `git status --porcelain` changes across the gates); every `--selftest`
+  works in a temp dir only.
 
 ## Adding a project-specific script
 

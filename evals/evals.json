@@ -45,6 +45,36 @@
         "an annotated tag was created (or its exact command proposed) with the board md5 and package path in the message",
         "the owner-only actions (approval cells, release line, placing the order) are listed, not performed"
       ]
+    },
+    {
+      "id": 4,
+      "name": "vendor-review-mail-after-the-order",
+      "prompt": "Our case order is placed and paid. The print service just mailed 'wall thickness too thin in the red areas — are the risks acceptable? if not increase to 1.0 mm and we activate Replace File' with marked-up pictures for all five lines. Handle it.",
+      "expected_output": "Files the mail and the linked images under docs/quotes/<date>/, maps every flagged area to a design feature on the STLs of record (thin-wall census / point-contact check), writes a CC row with accept / fix options per line and marks it OPEN, drafts the reply wording for the owner, fixes any real defect through the case yaml + generator with a version bump and the full chain, re-runs the vendor DFM on the replacement files without saving or carting, and lists Replace File / chat / payment as owner actions — it does not click them without the owner's explicit word and never pays or ticks a risk box.",
+      "files": [],
+      "assertions": [
+        "the mail and its images are saved as evidence under docs/quotes/<date>/ and a mapping table names a design feature per flag",
+        "a decision row with per-line options is written OPEN; the owner decides; the reply text is drafted, not sent",
+        "any geometry fix goes through the yaml and the generator (new version, census row for the defect class), never by editing an STL",
+        "the vendor's DFM is re-run on the replacement files before any upload, with nothing saved, carted or agreed",
+        "Replace File, chat messages, payment and risk/terms boxes are listed as owner-only; none is performed without a quoted delegation",
+        "the record lists what was clicked and what was explicitly not touched"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "reorganise-docs-without-losing-anything",
+      "prompt": "docs/ is a mess: 40 files at the top level. Move the records into docs/governance/, the design notes into docs/design/, the parts files into docs/parts/. Nothing may be lost and nothing may point at a path that no longer exists.",
+      "expected_output": "Writes the decision row first, expresses the moves as a project.yaml reorg: block, runs scripts/reorg_paths.py --plan, dumps git ls-files -s, runs --apply (git mv + literal rewrite), regenerates every generated file that embeds paths instead of editing it, runs --check to 0 findings, dumps again and runs --proof to show every blob at its mapped path with the same sha, keeps frozen records (uploaded packages, archived reviews) untouched with --map as their key, runs the gates, commits with explicit paths.",
+      "files": [],
+      "assertions": [
+        "a decision row records the re-layout before any file moves",
+        "the moves are a reorg: block in project.yaml and scripts/reorg_paths.py performs them (git mv + rewrite), not a hand sweep",
+        "generated files that embed paths are regenerated, not edited",
+        "scripts/reorg_paths.py --check reports 0 findings and --proof reports MISSING: 0 on the before/after inventories",
+        "frozen records and uploaded packages are not rewritten; the record points readers at --map",
+        "gates run green after the move and the commit uses explicit paths"
+      ]
     }
   ]
 }

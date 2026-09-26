@@ -1,18 +1,19 @@
-# hw-from-spec — v0.2.1
+# hw-from-spec — v0.3.0
 
 A Claude Code skill + generic scripts + workflow templates for running a hardware project (PCB + printed/CNC enclosure, contract fab such as
 JLCPCB) from a written specification to a production cut: owner-gated phases, generated-only artefacts, live part verification, a fab-DFM mirror,
 blind double reviews with external models, a release report and a production document set. Distilled from one complete project
-(a KiCad 10 QSFP-DD test dongle, 170+ decision rows, five audit rounds, ~155 logged learnings); nothing project-specific ships here except as
+(a KiCad 10 QSFP-DD test dongle, 200+ decision rows, five audit rounds, ~200 logged learnings, one vendor review round after the order); nothing project-specific ships here except as
 labelled worked examples.
 
 ```
 SKILL.md          the procedure (≤ 500 lines): phases/gates, generated-only rule, decision log, parts, blind reviews, adopt rule, DFM mirror,
                   case + FEA, software track, release/production cut, agent operations
-references/       detail per topic, loaded on demand: project-yaml, part-verification, fab-dfm, case-pipeline, fea-stage, software-track,
-                  release-and-cut, agent-ops, pitfalls (every recorded learning, one line each)
+references/       detail per topic, loaded on demand: project-yaml, schematic-phase, part-verification, fab-dfm, case-pipeline, fea-stage,
+                  software-track, release-and-cut, vendor-review, agent-ops, pitfalls (every recorded learning, one line each)
 scripts/          generic generators driven by a project.yaml — known_issues, traceability, handoff_header, dfm_check (grading engine),
-                  release_report (skeleton), collect_renders, clone_gate.sh, adopt_gates.sh; each has --selftest
+                  release_report (skeleton), collect_renders, reorg_paths (layout migration + zero-loss proof), thin_wall_check (census +
+                  point contacts), assembly_guide (illustrated guide), clone_gate.sh, adopt_gates.sh (read-only guard); each has --selftest
 workflows/        four blind-review workflow templates ({{PLACEHOLDERS}}) + README on instantiating them
 templates/        CLAUDE.md rules, project.yaml (day-1 gate lists), .gitignore, DECISIONS / STATUS / GATES / KNOWN_ISSUES / LEARNINGS_LOG /
                   BLOCKERS / PARTS_VERIFICATION / ENV / TEST_PLAN / ERC_WAIVERS seeds, datasheet_notes/, design/traceability.yaml seed,

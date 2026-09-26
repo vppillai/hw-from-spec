@@ -28,6 +28,17 @@ mechanism concrete and are labelled *(worked example)*. Evidence pointers name t
 - Hand-written release notes: every number carries its generated source; re-check every citation the same day; `[FINAL: …]` for numbers a concurrent agent still produces — release notes 2026-09-22.
 - The reports ↔ matrix cycle closes in two rounds if DECISIONS / KNOWN_ISSUES records are written BEFORE the last round (both are report inputs) — CC-121.1.
 - Owner direction "speed up the scripts" → a parallelism/caching plan gated on "reproduce the recorded numbers bit-for-bit or explain the delta" — CC-172.
+- The morning after an order the live stock gate turns against its own package (the shelf shows what the order consumed): a PLACED order is judged on stock records frozen at the build, hashed in the manifest; the selftest runs on a stock fixture, never the live file — D-74 follow-up, `fab-dfm.md` §8.
+- A vendor's post-order review is a review round with a wall: file the mail + images, map every flag on the STLs of record, decide per line in the log, fix through the generator, re-run the vendor's DFM before uploading, Replace File only on the owner's word — D-74/D-75, `vendor-review.md`.
+- "Order Dxxx audit failed — please replace files" is the vendor's wording for *Replace File enabled*; the approvals follow minutes after the upload — ORDER_STATUS 2026-09-24.
+- A one-geometry-change case bump costs ≈ 45 min machine time (every STL md5 moves → every FEA mesh rebuilds): four background jobs, block on EXIT lines — 2026-09-23, `case-pipeline.md`.
+- An 'order prep' hand-over that stops one click before the cart: agent records every field / upload / dialog / price with screenshots; the owner reads deviations; the account never sees an agent-side purchase — 2026-09-22.
+- Re-layout at the order: decision row → `reorg:` table → `git mv` + literal rewrite → regenerate embedders → `--check` 0 → `--proof` on two `git ls-files -s` dumps (blob identity, not presence) — D-70/D-72/D-73, `reorg_paths.py`.
+- A removal census separates LIVE citations (gen/, design/, CI, live docs) from RECORD citations (DECISIONS / STATUS / merged reviews); grep basenames AND exact paths (basenames over-report across generations) — D-70 phase 1: 368 candidates, 4 real.
+- A traceability `exists` check on a file that leaves the tree becomes `git show <tag>:<path> | grep -qF '<same string>'` — nothing weakened — D-73.
+- A DELETE-NOW item deleted once is not gone when a generator re-dumps it: guard in the generator or an ignore line, not `rm` — CC-151 follow-up.
+- The tag commit's hash cannot be written into a file the commit contains: "the commit holding this row" + `git describe --tags` — CC-185/186.
+- Whoever appends a DECISIONS row runs the record round; a records-only commit without the regen chain is unfinished (`adopt_gates` stops at traceability) — 2026-09-22 [process/concurrency].
 
 ## agents / git
 - Agents die when the machine sleeps or on API 500s; resume by message with the MEASURED state; heartbeat monitors ~25 min; time-box every long task; parallel router JVMs SIGTERM each other — STATUS 09-18…21.
@@ -71,12 +82,26 @@ mechanism concrete and are labelled *(worked example)*. Evidence pointers name t
 - A schematic `--check` that regenerates the project file drops the rules a later generator wrote there: check into a scratch `--out`; a generator sharing a file must merge or refuse in place; keep ERC waivers in a repo doc, not only in the project file — tooling/gates 2026-09-22.
 - A python generator with no `__main__` exits 0 silently and writes nothing: check the census header line changed, not the exit code; quote check-mode vs full-run totals with the mode — case/tooling.
 - An export script's `rm -f $O/*.json` swept a cache another `--check` requires (it never writes one): rebuild the cache after every export on a new md5 — export/process.
+- A `--check` that builds in a temp dir but EXPORTS into the tree is a write: it replaced the ERC of record (0/0) with a temp copy's 58 lib-link warnings; every checker must be provably read-only (`git status --porcelain` before/after in `adopt_gates.sh`, last PR-check step) — CC-198.
+- A script without argparse runs its default WRITE action when probed with `--help` (four artefacts + 13 PDFs regenerated mid-task): read the docstring with `sed -n 1,12p`, never run to ask — 2026-09-22 [tooling/cli].
+- The one-round record chain is an ORDER: renders → reports → matrix → reports → analysis index → PDFs → cut build LAST → commit; a regen after the build makes the cut STALE on content-identical reports; judge the fixed point after stripping the volatile cascade (Generated → md5 → every stamp → tool commit) and discard round two — `release-and-cut.md` §3.1.
+- Registering a new deliverable flips a manifest status the analysis index reads: that round is two passes by construction — 2026-09-22 [tooling/manifest].
+- A collector reusing an up-to-date copy must recompute its GRADE (15 captures read OK against a newer case for a day); a generator sweeping "everything not in my index" from a shared folder deletes a sibling's output — register foreign files with their own check — 2026-09-22 [process/generator].
+- `kicad-cli sch export pdf` orders pages by sheet uuid, not sheet number; read the page ↔ sheet map from the PDF outline (nested under the root entry); the PDF carries a CreationDate — key the export on the SOURCE md5s — CC-194.
+- An idempotent per-output key must include the drawing-code version, not only input md5s (slides kept after the layout fix) — 2026-09-22 [process/generator].
+- A one-word fix in generated text reachable only through the whole `--stl` chain rewrites the census, the non-byte-stable exports and the sidecar: keep the target, `git checkout` the rest, say so; the durable fix is a single-artefact flag — 2026-09-22 [tooling/regen].
+- Profile before parallelising: 25.1 of 25.8 s was a selftest SLEEPING in timing tests; `real` vs `user` first — a gap is a sleep or a wait — CC-172.
+- A serial check set carries invisible invariants (two rows writing the same scratch file): grep shared outputs before pooling, lock per output path, validate the pooled result against the serial one on the real data — 2026-09-22 [tooling/pool].
+- A key on the generator's md5 invalidates every cache on a doc-only edit: key OpenSCAD outputs on the generated SCAD text + imported files + argument list — 2026-09-22 [tooling/cache].
+- A `__main__` script also imported by name has TWO module instances: a `global` set in one is invisible in the other — 2026-09-22 [tooling/python].
+- Two agents committing the same generator: commit only your hunk (`git show HEAD:file` + your edit → `hash-object` → `update-index`) — 2026-09-22 [process/concurrency].
 
 ## kicad / drc / swig *(worked examples; the mechanism generalises to any CAD CLI)*
 - `kicad-cli pcb drc` honours ONLY explicit `netclass_assignments`, never `netclass_patterns`, and NO DRC exclusions: emit per-net assignments from the generator, assert a canary rule fires exactly once; accepted residue = a generated RULE (`enclosedByArea`, not `insideArea` which is an intersection test — prove with a negative construction in `--selftest`) — audit #4 G01, CC-148.
 - Enforcing net classes for the first time on a "DRC 0" board showed 202 errors; a class clearance larger than the fill's zone clearance is unenforceable by construction: write the as-built geometry into scoped rules general → specific (later rule wins), log the relaxation — round 6k.
 - `pcbnew.LoadBoard()` reports netclass Default for every net: resolve class patterns yourself and selftest with a Power net carrying one thin segment — audit #3 P02.
 - A standalone schematic regeneration rewrites the `.kicad_pro` to the skeleton (rules, classes gone): restore from HEAD or make the writer leave it alone; "netlist unchanged" = md5 of the `<nets>` block, not the file — kicad/gen.
+- `kicad-cli pcb render`: `--pivot` is in cm from the board centre; the `--floor` shadow survives in the alpha of a transparent render (dark variant = same render on a gradient); an unquoted zsh `$OPTS` passes every flag as ONE argument — marketing pack CC-192.
 - A `.kicad_dru` rule stricter than the net class is invisible to the autorouter and appears as errors afterwards; an unconditional custom clearance rule REPLACES every class clearance — build v2/v3.
 - A malformed `.kicad_dru` (unknown property) is silently ignored: the canary rule — CC-010.
 - DRC on a COPY of the board in another dir reports "footprint library not enabled" (`${KIPRJMOD}` paths): run in place or copy the lib table with absolute paths — v3 notes.
@@ -156,6 +181,14 @@ mechanism concrete and are labelled *(worked example)*. Evidence pointers name t
 - Debug mesh dumps go under `out/**/scratch/` (gitignored), never the repo root; the board mesh is untracked for size, reviewers regenerate it from HEAD and gates assert the provenance sidecar — REPO_CLEANUP K/L.
 - The same 126 MB mesh was tracked twice under two paths: md5 every same-size file before untracking — repo/hygiene.
 - Generated packages keyed by md5 are safe to drop when every consumer selects by md5, gates are globs, evidence lives outside — repo/hygiene.
+- A potrace outline of touching shapes pinches to 0.003–0.03 mm at the contacts: an extruded plate is lobes held by hairlines (fab "B 0.01"); a ridge "thinnest arm" census cannot see it — test the section polygon for non-adjacent vertices < 0.05 mm apart (`thin_wall_check.py --pinch`) before the outline becomes a body or pocket — D-74/CC-196.
+- Bridge a point contact with a disc INTERSECTED with the outline's closing (offset +R, −R; R ≈ 3 × web), never a bare disc (a 0.4 mm nub on the silhouette) — CC-197.
+- trimesh `section().to_2D()` re-origins the plane (a 6.9 / 4.6 mm translation): map the Path2D back through the returned to-3D transform; the `connected components = 1` row caught the 7 mm mis-placed disc — 2026-09-23 [mesh/geometry].
+- Inward ray-cast census: a ray nudged 1e-3 inside a face hits that face at 0.000 for some samples — discard hits < 0.02 mm, take the first beyond (`--self-hit`) or solid chamfers read "0.00 mm" — 2026-09-22 [mesh/dfm].
+- An STL md5 is not a geometry signature (CGAL export order): prove "only piece X changed" by facets / volume / area / bbox per piece — 2026-09-22 [case/stl].
+- Legends on a lid read in ONE direction: every camera that shows the lid sits on that side, or the guide's pictures read upside down — CC-192/CC-199.
+- OpenSCAD 2021.01 PNG export costs the same ≈ 8 s at 3840 × 2880 as at 1600 × 1200 (CGAL bound); colour schemes only move the background; user schemes load only from the config dir — CC-192.
+- The vendor's engineer review mail has no attachments: the marked-up heat maps are `<img>` links fetchable without login; hood-local Z = body Z − split plane; it asks "risk acceptable?" per material (nylon ≥ 1.0, resin ≥ 0.8) and opens Replace File only after a reply — 2026-09-22 [jlc/3dp].
 
 ## fea
 - Gmsh refuses CGAL STLs as volume boundaries; fTetWild meshes them; drop zero-volume slivers or K is singular — CASE_V3_NOTES §18.
@@ -168,9 +201,15 @@ mechanism concrete and are labelled *(worked example)*. Evidence pointers name t
 
 ## software
 - A fixed jig cap makes the WARN level unreachable when THROTTLE = min(alarm − margin, cap): make the interplay explicit and print both levels — software/thermal.
+- Manuals written before the software they describe: the "what you should see" lines go under an explicit banner naming the fake backend that produced them — 2026-09-22 [documentation].
 - Time-driven polls are testable by swapping `time.sleep` for a no-op in `try/finally` and feeding the sensor from an iterator hooked on the exact read shape — software/selftest.
 - Identity fields into the record first, gate second — CC-142.
 
 ## documentation
 - Every mention of a retired string across live docs after a design change: grep, not memory; logs and reviews keep stale words on purpose — docs sweep.
 - A NOTES-only schematic regen is cheap to prove harmless: `<nets>` block md5 identical; project file restored from HEAD — docs/silk.
+- An illustrated assembly guide is generated, not drawn: authored short yaml + the SOP generator's step text + one keyed render per page; numbers stay in the SOP (one source) — D-76/CC-199.
+- A hand-written SOP that copies a generated seed inherits the seed's stale number three revisions later: cite the seed's file + md5, or generate the block — 2026-09-22 [docs/seeds].
+- "Software of record = `git log -1 -- tools/`" moves the stamp in seven documents on a README fix: stamp the md5 of the files that matter — 2026-09-22 [docs/provenance].
+- Markdown → PDF for a document set with wide tables and Ω / ≤ / ✓: a headless browser + CSS beat the installed TeX; `overflow-wrap: anywhere` breaks part numbers mid-word — 2026-09-22 [tooling/pdf].
+- The JLC / LCSC part-page JSON carries RoHS (`isRohsCert` + certificate URLs) and MSL fields: a compliance table is fetched at cut time from those, no declaration claimed — 2026-09-22 [parts/compliance].

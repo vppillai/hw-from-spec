@@ -1,6 +1,6 @@
 ---
 name: hw-from-spec
-version: 0.2.1
+version: 0.3.0
 description: Run a hardware project (PCB + printed or CNC enclosure, contract fab such as JLCPCB) from a written specification to a production cut with an owner-gated, generated-only, blind-reviewed workflow. Use this whenever someone starts a board or enclosure project from a spec, asks to set up gates, a decision log, generators, part verification, a fab DFM mirror, a case pipeline, FEA, blind reviews, a release report or a production cut for one, or resumes such a project — even if they only say "new KiCad board", "order this at JLC", "review the layout" or "cut the release".
 ---
 
@@ -78,6 +78,12 @@ Phases: **G0** spec approved → **G1** schematic approved → **G2** layout app
   table (commit, step, file md5, content signature); assert the content signature, keep the md5 informational (`references/pitfalls.md` layout).
 - Order of the chain after a copper change: drawing / FEA → collector → commit → `clone_gate.sh --regen` → commit. Reports are regenerated LAST,
   in the same commit as their inputs (`references/release-and-cut.md` §3).
+- **Every checker is read-only on the tree.** A `--check` builds in a temp dir and exports nowhere; `scripts/adopt_gates.sh` fails when
+  `git status --porcelain` differs before and after the gates, and the PR-check template ends with the same guard (a schematic `--check` once
+  replaced the ERC of record with a temp copy's warnings). Probe a script's usage from its docstring, never by running it without arguments.
+- **Layout changes are generated too.** The docs/ layout the defaults name is in `references/project-yaml.md` §Layout; moving files later is a
+  decision row + a `reorg:` block + `scripts/reorg_paths.py --plan → --apply → regenerate → --check → --proof` (zero-loss on two `git ls-files -s`
+  dumps); frozen records keep the old paths and `--map` explains them (`references/release-and-cut.md` §9).
 
 ## 3. Decision log
 
@@ -163,6 +169,11 @@ against the board mesh of record (provenance sidecar: board md5 + mesh md5) → 
 presets as `base + overrides` deep-merged before any module reads the yaml; drawing and FEA apply the same merge (`references/case-pipeline.md`).
 FEA: Gmsh + scikit-fem; fTetWild for CGAL STLs; caches keyed on content; compact nodes after dropping elements; NaN must read FAIL
 (`references/fea-stage.md`). Every md5-stamped consumer runs after the final STL pass (CGAL exports are not byte-stable).
+- **Point contacts.** Before any mark-shaped body or pocket (inlay plate, badge, deboss) run `scripts/thin_wall_check.py --pinch <stl>`: a traced
+  outline of touching shapes pinches to 0.01 mm and the part arrives as lobes; a wall census cannot see it. Bridge with web discs clipped to the
+  outline's closing, add the neck row, keep the components = 1 row; `--census` turns a fab heat-map colour into a number (`references/case-pipeline.md`).
+- **A case-version bump costs ≈ 45 min of machine time** (every STL md5 moves, every FEA mesh rebuilds): run case FEA / PCB FEA / drawings / the
+  alternative preset as background jobs and block on their EXIT lines; budget it before promising the full pipeline (`references/case-pipeline.md`).
 
 ## 9. Software track
 
@@ -179,12 +190,27 @@ the yaml and the contract, not the generator) builds `docs/production/<md5-8>/` 
 filled by an agent; records (photos, press logs, test results) are filed as they happen under a records folder or the cut cannot be written
 (`references/release-and-cut.md`).
 
+- **The last round is an order, then a fixed-point pass:** renders → reports → matrix → reports → analysis index → PDFs → cut build LAST → commit;
+  afterwards only `--check`s; run the round twice and diff after stripping the volatile cascade (`references/release-and-cut.md` §3.1). Whoever
+  appends a decision row runs the round.
+- **Placed order = frozen package.** Once an owner row says the order is PLACED (`markers.placed_regex` + the package name), the fab-package gate
+  judges stock on the records frozen at the build (`stock_snapshot.json`, hashed in the manifest), never on the live shelf; its selftest runs on a
+  stock fixture (`references/fab-dfm.md` §8). Fab files are never rebuilt; prose may be re-derived.
+- **Vendor review after the order** (`references/vendor-review.md`, record `templates/VENDOR_REVIEW_RECORD.md`): file the mail + images under
+  `docs/quotes/<date>/`, map every flag on the STLs of record, decide per line in the log, fix through the generator, re-run the vendor's DFM on
+  the replacements before uploading, then Replace File / chat **only on the owner's explicit word** — agents never pay, agree, cart or change a line.
+- **Illustrated assembly guide** beside the text SOP: `scripts/assembly_guide.py` (authored short yaml + generated step text + one keyed render per
+  page, `--check`), registered as a cut deliverable (`references/release-and-cut.md` §8).
+
 ## 11. Agent operations
 
 Parallel agents own disjoint files; explicit-path commits do not isolate hunks inside a shared file (stage the exact edit); re-read before every
 append; hand out record IDs with the task; block in-process on background jobs (`until ! kill -0 $pid; do sleep 20; done`, ≤ 600 s per call);
 heartbeat every ~25 min; time-box every long task; pause points with a resume list in `docs/governance/STATUS.md`; keep the machine awake; resume by message
 with the measured state, never from memory; kill a long render early when an owner addition arrives (`references/agent-ops.md`).
+Memory holds resume pointers and owner feedback, never project facts; a numbered PAUSE POINT carries an owner list (owner-only items, struck
+through with date + record as they close) and a Resume line; an owner-only item is listed, never attempted, and a chat delegation is quoted in the
+decision row before the named actions are done (`references/agent-ops.md` §7).
 
 ### 11.1 Resume (after a crash, a sleep, a new session)
 
@@ -211,8 +237,9 @@ Then fold the learnings back into this skill's `references/pitfalls.md` at the n
 | case yaml → STL → checks → quotes | `references/case-pipeline.md` |
 | meshing, solving, caches, reporting | `references/fea-stage.md` |
 | bring-up tool, criteria, codes | `references/software-track.md` |
-| reports, collateral, tag, cut yaml | `references/release-and-cut.md` |
-| orchestration, git, reviews | `references/agent-ops.md` |
+| reports, collateral, tag, cut yaml, one-round chain, assembly guide, re-layout | `references/release-and-cut.md` |
+| the fab's review mail after the order, Replace File boundaries, quote-page DFM mechanics | `references/vendor-review.md` |
+| orchestration, git, reviews, read-only checkers, memory / pause points | `references/agent-ops.md` |
 | every recorded pitfall, one line each | `references/pitfalls.md` |
 | instantiating a workflow | `workflows/README.md` |
 | the dry run | `smoke/README.md` |

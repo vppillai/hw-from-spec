@@ -41,6 +41,36 @@ Everything under `out/<board>/mechanical/case/<preset>/` is generated; `ASSEMBLY
   the method next to the number), snap/latch preload volume, mating lens estimates including ramp bands.
 - Check-mode totals (`--no-render --interference`) differ from full-run totals (`--stl` adds the mesh rows): quote the mode with the numbers.
 - Imported artwork (SVG) is measured from the PATH, not the canvas attributes (`resize(auto)` scales the glyph bbox).
+- Inward ray-cast rule: a ray from a point nudged 1e-3 inside a face hits THAT face at 0.000 for a fraction of samples — discard hits closer than
+  ~0.02 mm and take the first beyond (`scripts/thin_wall_check.py --census`, `--self-hit`), or solid 2 mm chamfers read "0.00 mm walls".
+- An STL md5 is not a geometry signature (CGAL export order moves every md5): "only piece X changed" is proven by facet count / volume / area /
+  bbox per piece, not by md5s.
+
+## Point contacts (mark-shaped bodies and pockets: inlay plates, badges, debosses)
+- A traced outline of touching shapes (potrace) is ONE path pinched to 0.003–0.03 mm at every contact; extruded, the body is lobes held by
+  hairlines (the fab's review: "B 0.01"), and a ridge / distance-transform "thinnest arm" census cannot see it. Test the SECTION polygon:
+  `scripts/thin_wall_check.py --pinch <stl>` = non-adjacent boundary vertices closer than ~0.05 mm with > 5 % of the perimeter between them.
+- Fix in the generator: a web disc (≥ the process minimum, e.g. 1.4 mm for 0.8 mm resin) at each contact, INTERSECTED with the outline's
+  closing (`offset(r = +R) offset(r = -R)`, R ≈ 3 × web) so each web is a concave fill — a bare disc bulges into the silhouette (a 0.4 mm nub on
+  a 3 mm arm). The pocket and every deboss that uses the outline follow; artwork that stays 2-D (UV print, laser) keeps the pure outline.
+- Two census rows: the neck through each contact after the webs (`--web D --clip R`; ≥ the minimum) AND `connected components = 1` per body —
+  the second caught a disc placed 7 mm off when the neck row measured the wrong frame.
+- trimesh `section().to_2D()` RE-ORIGINS the plane (its returned transform carried a 6.9 / 4.6 mm translation): coordinates read off the Path2D are
+  not model coordinates until mapped back through that to-3D matrix. Fractions of the mark width travel to the SCAD, which scales them itself.
+- Find the contacts once per artwork (cache by the SVG md5); the fdm preset that never prints the mark as a body sets the web to 0.
+
+## Cost of a case-version bump (worked example: one geometry change, one machine, 2026-09-23)
+| Stage | Time | Why every version pays it |
+|---|---|---|
+| renders (≈ 70 views) | ≈ 4 min | keyed on the SCAD text |
+| STL export + overlaps / interference | ≈ 5 min | every piece re-exported |
+| case FEA | ≈ 13 min | every mesh rebuilt — every STL md5 changed, even untouched pieces (export order) |
+| PCB / assembly FEA | ≈ 10 min | coupled cases read the case meshes |
+| drawings (+ STEP) | ≈ 3 min | keyed on the STL md5s |
+| one-round report chain + PDFs | ≈ 10 min | `references/release-and-cut.md` §3.1 |
+≈ 45 min. Run case FEA, PCB FEA, drawings and the alternative preset as FOUR background jobs (`python -u … > log 2>&1; echo EXIT $? >> log`) and
+block on the EXIT lines in a foreground `until` loop (`references/agent-ops.md` §5); never two memory-capped FEA pools at once. Kill early when an
+owner addition arrives. Budget the bump before promising "full release pipeline" in the same hour.
 
 ## Interference / clearance
 - Voxel/containment first, CGAL boolean only on flagged pairs (minutes per piece otherwise). Whole-piece overlaps empty except designed preloads.

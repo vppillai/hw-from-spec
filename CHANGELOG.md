@@ -1,7 +1,47 @@
+# CHANGELOG — hw-from-spec
+
+## 0.3.0 — 2026-09-26 — post-order learnings of the source project (D-70…D-76, CC-190…CC-199, learnings 2026-09-22 late … 09-26)
+
+Both 0.2.1 "Next" candidates plus the learnings logged after the order went in. Everything generic; the source project is cited as the worked example.
+
+### Added
+- **docs/ governance layout as the default paths** — `scripts/project.py` DEFAULTS: `docs/governance/` (DECISIONS STATUS GATES BLOCKERS KNOWN_ISSUES
+  TRACEABILITY LEARNINGS_LOG ERC_WAIVERS ENV), `docs/design/TEST_PLAN.md`, `docs/parts/PARTS_VERIFICATION.md`, `reviews_dir` / `quotes_dir` /
+  `production_dir` / `datasheet_notes` keys; every `docs/<FILE>.md` literal in SKILL / references / templates / workflows / evals / smoke migrated;
+  install recipes copy per folder; `references/project-yaml.md` §Layout.
+- **`scripts/reorg_paths.py`** — project.yaml `reorg:` block (moves, trim, untrack, gitignore, frozen, skip, allow_old_files, no_existence, allow_missing):
+  `--plan / --apply / --check / --map / --proof BEFORE AFTER REWRITES / --selftest`; word-boundary-guarded longest-first idempotent rewrite incl. the
+  `"docs" / "X"` join forms; own files exempt; zero-loss proof by blob identity. `release-and-cut.md` §9 (method, live vs record citations, tag checks).
+- **`scripts/thin_wall_check.py`** — `--census` (inward ray-cast with the < 0.02 mm self-hit discard, histogram, feature clusters) and `--pinch`
+  (point contacts on the section outline: non-adjacent vertices < 0.05 mm; necks after web discs clipped to the closing; `to_2D()` re-origin mapped
+  back); pure-python `--selftest`. `case-pipeline.md` §Point contacts + the ≈ 45 min version-bump cost table (background jobs, EXIT lines).
+- **`scripts/assembly_guide.py`** + `assembly_guide:` block — illustrated guide: authored short yaml + generated `### Step N` text + one render per
+  page keyed on (geometry md5, defs, camera, size); `--check`; `release-and-cut.md` §8; smoke fixture with a stub renderer.
+- **`references/vendor-review.md` + `templates/VENDOR_REVIEW_RECORD.md`** — the fab's post-order review: file mail + images → map every flag on the
+  STLs of record → decide per line → fix through the generator → re-run the vendor's DFM on the replacements → Replace File / chat only on the
+  owner's explicit word; hard boundaries (never pay / agree / cart / change a line); quote-page mechanics (`getFileAnalyzeResult` `previewUrl`,
+  Edit dialog saved = form state, "audit failed" mail = Replace File enabled) as the JLC3DP worked example.
+- **Placed-order stock freeze** — `markers.placed_regex`; `fab-dfm.md` §8 contract: a PLACED package is judged on `stock_snapshot.json` frozen at the
+  build and hashed in the manifest; selftest on a stock fixture; fab files never rebuilt.
+- **Read-only checkers** — `adopt_gates.sh` fails when `git status --porcelain` changes across the gates (selftest case); `templates/ci/pr-check.yml`
+  final "tree unchanged" step; `agent-ops.md` §3, SKILL §2.
+- **One-round record chain + fixed point** — `release-and-cut.md` §3.1 (order, analysis index ↔ cut build ↔ PDF render, volatile cascade, "whoever
+  appends a row runs the round").
+- **Memory / pause-point / owner-list conventions** — `agent-ops.md` §7; SKILL §11.
+- `references/pitfalls.md`: +35 lines (process, tooling, kicad render, mechanical/point contacts, documentation, sourcing/compliance).
+- Smoke: docs moved to the layout, `reorg:` + `assembly_guide:` blocks, new gates (three selftests, `reorg_paths --check`, `assembly_guide` build + `--check`).
+  Evals: 4 (vendor review mail — boundaries), 5 (re-layout — zero loss).
+
+### Changed
+- `templates/project.yaml`, `templates/CLAUDE.md` layout block, `smoke/project.yaml`, SKILL §0 step 2 / §2 / §8 / §10 / §11 / Where to look; README layout + version.
+
+### Not done (deferred)
+`scripts/production_cut.py` and the fab-package generator stay project-side (contracts only) · `gate_status.py` · a workflow `.js` for the vendor
+round (the flow is prose + a record template; the blind machinery is unchanged) · marketing-pack and schematic-pack generators (project-side;
+their pitfalls are in `pitfalls.md`).
+
 ## 0.2.1 — 2026-09-22
 - MUST-5 ci fill check greps `{{PROJECT_` only; SHOULD-14 dfm_check INVALID-ITEM instead of KeyError; gate_status.py deferred.
-
-# CHANGELOG — hw-from-spec
 
 ## 0.2.0 — 2026-09-22 — blind-review fix round
 
@@ -53,8 +93,3 @@ selftests leave `mkdtemp` dirs · plugin manifest example · prompt numbers in `
 
 ## 0.1.0 — 2026-09-22 — first cut (`eadc965`, ci templates `83da1ad`)
 SKILL.md, references, project.yaml-driven generic scripts with selftests, workflow templates, record templates, smoke dry run, evals.
-
-## Next (0.3.0 candidates)
-- Adopt the D-70 folder layout of the source project as the skill's default `project.yaml` paths: `docs/governance/` (DECISIONS, STATUS, GATES, BLOCKERS, KNOWN_ISSUES, LEARNINGS_LOG, ERC_WAIVERS, TRACEABILITY, ENV), `docs/design/`, `docs/parts/`, `docs/production/`, `docs/release/`, `docs/quotes/`, `docs/reviews/(archive)`, `docs/datasheet_notes/`, `docs/archive/`; ship `scripts/reorg_paths.py` (mapping table + `--check` for dangling references + zero-loss inventory proof) generalised from the source project's `gen/reorg_paths.py`. The 62 `docs/<FILE>.md` literals in SKILL.md / references / templates are the skill's own generic layout, not references to the source project.
-- (from AEC-CT2-MINI 2026-09-23, D-74 / CC-196 / CC-197) **Point-contact check for traced logos**: before any mark-shaped body or pocket (inlay plate, badge artwork, deboss), section the outline and look for non-adjacent boundary vertices closer than ~0.05 mm — a potrace path of touching shapes pinches to 0.003–0.03 mm and the SLA part arrives as separate lobes (JLC "B 0.01"); a ridge / distance-transform "thinnest arm" census cannot see it. Bridge with discs clipped to the outline's closing (concave fills only) and add a census row for the neck. Also: trimesh `section().to_2D()` re-origins the plane — map back through the returned transform; and a fab-package gate must judge a PLACED order on its frozen order-day stock records (the live shelf shows what the order consumed).
-- (same source) **Vendor review-mail flow** as a workflow template step: file the mail + linked images as evidence, map every flag to a design feature with a thin-wall census on the STLs of record, decide accept / fix per line, replace only the changed files, re-run the vendor's DFM on the replacements before uploading.
