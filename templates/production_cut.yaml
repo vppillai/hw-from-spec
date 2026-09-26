@@ -12,9 +12,9 @@ doc_id_prefix: {{PRODUCT}}               # <product>-<type>-<nnn>
 
 deliverables:
   - {id: pcb_design_report, doc_id: DR-001, title: PCB design report, kind: generated, path: docs/release/PCB_DESIGN_REPORT.md,
-     check: "$PY scripts/release_report.py --check", inputs: [docs/GATES.md, docs/DECISIONS.md, "{pkg}/board_id.txt"], required: true, owner_placeholders: forbidden}
+     check: "$PY scripts/release_report.py --check", inputs: [docs/governance/GATES.md, docs/governance/DECISIONS.md, "{pkg}/board_id.txt"], required: true, owner_placeholders: forbidden}
   - {id: case_design_report, doc_id: DR-002, title: Case design report, kind: generated, path: docs/release/CASE_DESIGN_REPORT.md,
-     check: "$PY scripts/release_report.py --check", inputs: [docs/GATES.md, design/case.yaml], required: true, owner_placeholders: forbidden}
+     check: "$PY scripts/release_report.py --check", inputs: [docs/governance/GATES.md, design/case.yaml], required: true, owner_placeholders: forbidden}
   - {id: pcb_drawing, doc_id: DWG-001, title: PCB drawing + board STEP, kind: generated, path: out/drawings/PCB_DRAWING.pdf, check: "{{PCB_DRAWING_CHECK}}", inputs: [out/drawings/PCB_DRAWING.json], required: true, owner_placeholders: forbidden}
   - {id: case_drawing, doc_id: DWG-002, title: Case drawing + piece / assembly STEPs, kind: generated, path: out/drawings/CASE_DRAWING.pdf, check: "{{CASE_DRAWING_CHECK}}", inputs: [out/drawings/CASE_DRAWING.json], required: true, owner_placeholders: forbidden}
   - {id: case_stl, doc_id: MECH-001, title: Case STL set of record + sidecar, kind: collected, path: "out/mechanical/case/{case_tag}*/stl/*.stl", inputs: ["out/mechanical/case/*/RENDERS.json"], required: true, owner_placeholders: forbidden}
@@ -23,8 +23,8 @@ deliverables:
   - {id: fab_package, doc_id: MFG-001, title: Fab package of record, kind: collected, path: "{pkg}/MANIFEST.md", check: "{{FAB_PACKAGE_CHECK}}", required: true, owner_placeholders: forbidden}
   - {id: collateral, doc_id: MFG-002, title: Fab collateral (DFM export, quote captures, renders index), kind: collected, path: "docs/release/collateral/{md5}/renders/RENDERS.md", required: true, owner_placeholders: forbidden}
   - {id: reviews, doc_id: REV-001, title: Blind reviews + verify files + merged reports, kind: collected, path: "docs/reviews/*_merged.md", required: true, owner_placeholders: forbidden}
-  - {id: traceability, doc_id: REQ-001, title: Requirement -> evidence matrix, kind: generated, path: docs/TRACEABILITY.md, check: "$PY scripts/traceability.py --check", required: true, owner_placeholders: forbidden}
-  - {id: known_issues, doc_id: REQ-002, title: Known issues index, kind: generated, path: docs/KNOWN_ISSUES.md, check: "$PY scripts/known_issues.py --check", required: true, owner_placeholders: forbidden}
+  - {id: traceability, doc_id: REQ-001, title: Requirement -> evidence matrix, kind: generated, path: docs/governance/TRACEABILITY.md, check: "$PY scripts/traceability.py --check", required: true, owner_placeholders: forbidden}
+  - {id: known_issues, doc_id: REQ-002, title: Known issues index, kind: generated, path: docs/governance/KNOWN_ISSUES.md, check: "$PY scripts/known_issues.py --check", required: true, owner_placeholders: forbidden}
   - {id: manufacturing_spec, doc_id: MFG-003, title: Manufacturing specification (PCB fab, PCBA, press-fit, case), kind: hand-written, path: "{root}/MANUFACTURING_SPEC.md", inputs: ["{pkg}/ORDER_PARAMETERS.md"], required: release, owner_placeholders: forbidden}
   - {id: product_manual, doc_id: MAN-001, title: Product manual, kind: hand-written, path: "{root}/PRODUCT_MANUAL.md", required: release, owner_placeholders: forbidden}
   - {id: developer_manual, doc_id: MAN-002, title: Developer manual (guards, overrides, record trail), kind: hand-written, path: "{root}/DEVELOPER_MANUAL.md", required: release, owner_placeholders: forbidden}

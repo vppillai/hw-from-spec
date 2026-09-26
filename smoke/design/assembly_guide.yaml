@@ -1,0 +1,14 @@
+# authored SHORT guide text — the numbers live in the SOP / manufacturing spec; scripts/assembly_guide.py renders one picture per page
+doc: {doc_id: VG-001, title: Illustrated assembly guide, revision: r1, date: 2026-01-03, companions: "SOP-001 (assembly SOP), MS-001 (manufacturing spec)",
+      how_to_read: "One picture and three lines per step. What you hold, what you use, what you check. The words with the numbers are in SOP-001."}
+parts: [tray (printed), hood (printed), board (assembled), 4 x M3 screws]
+tools: [ESD wrist strap, T10 driver]
+defaults: {defs: {show_text: 'true'}}
+pages:
+  - {id: X_exploded, position: after, heading: "X — Exploded view: every piece and where it goes", defs: {part: '"exploded"'}, camera: '0,0,5,55,0,25,600'}
+step_defaults: {camera: '0,0,5,55,0,25,400', defs: {part: '"step"'}}
+steps:
+  1: {camera: '0,0,5,55,0,215,400', parts: [tray, board], tools: [ESD wrist strap], check: board sits flat on all bosses}
+  2: {parts: [hood, 4 x M3], tools: [T10 driver], check: hood seam closed all round}
+where_the_words_are:
+  - "Every step in full, with the numbers: `out/ASSEMBLY.md` (generated) and SOP-001."

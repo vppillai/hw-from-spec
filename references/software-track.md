@@ -6,7 +6,7 @@ The software exists before the hardware does, so it is built to be testable with
 1. **Bring-up tool** (`tools/<board>_bringup.py`): every hardware access behind one adapter (bus, GPIO, identity reads); `--list`, `--dry-run <cmd>`
    (prints the transactions it would do), `--selftest` (fake device from an iterator hooked on the exact read shape the poll uses; time-driven
    paths testable by swapping `time.sleep` for a no-op in `try/finally`). Driver notes (which OS binds a serial driver, what `Access denied` means)
-   in `docs/ENV.md` with the hardware step OPEN until a unit exists.
+   in `docs/governance/ENV.md` with the hardware step OPEN until a unit exists.
 2. **Architecture note** (`docs/SOFTWARE_ARCHITECTURE.md`): states, safety guards S1…Sn with their record trail, override flags, what each guard
    protects (a fixed cap vs warn/throttle levels — print both at release, or the operator never sees a WARN).
 3. **Criteria as YAML** (`design/test_criteria.yaml`): every test T-nn with limits, the tool reads them; the test plan and the technician manual

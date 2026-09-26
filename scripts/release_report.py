@@ -225,26 +225,26 @@ def run(P, check):
 
 def selftest():
     d = tempfile.mkdtemp(prefix="hwfs_rr_")
-    for sub in ("docs", "kicad/b", "out/fab/2026-01-01_x", "design"):
+    for sub in ("docs/governance", "kicad/b", "out/fab/2026-01-01_x", "design"):
         os.makedirs(f"{d}/{sub}")
     open(f"{d}/project.yaml", "w").write("project: {name: t}\npaths: {board: kicad/b/b.kicad_pcb}\nreports:\n  - {name: R, title: test report, sections: [banner, identity, decisions, known_issues, package, traceability, dfm, renders, inventory], extra_sources: [design/case.yaml]}\n")
     open(f"{d}/kicad/b/b.kicad_pcb", "wb").write(b"(kicad_pcb)\n\xe9\r\n")   # a non-UTF-8 byte and a CRLF: the md5 is of the raw bytes
     md5 = hashlib.md5(b"(kicad_pcb)\n\xe9\r\n").hexdigest()
     open(f"{d}/out/fab/2026-01-01_x/board_id.txt", "w").write(f"board kicad/b/b.kicad_pcb\nmd5 {md5}\ncommit abc\n")
-    open(f"{d}/docs/DECISIONS.md", "w").write("| ID | Date | Status | Topic | P | R |\n|---|---|---|---|---|---|\n| **D-01 (owner)** | d | **APPROVED** | t | p | r |\n| CC-001 | d | OPEN q | t2 | p | r |\n")
-    open(f"{d}/docs/GATES.md", "w").write("| G0 | _not yet approved_ |\n")
+    open(f"{d}/docs/governance/DECISIONS.md", "w").write("| ID | Date | Status | Topic | P | R |\n|---|---|---|---|---|---|\n| **D-01 (owner)** | d | **APPROVED** | t | p | r |\n| CC-001 | d | OPEN q | t2 | p | r |\n")
+    open(f"{d}/docs/governance/GATES.md", "w").write("| G0 | _not yet approved_ |\n")
     open(f"{d}/design/case.yaml", "w").write("case: {version: v1, pieces: [tray, hood], note: skip me}\n")
     P = Project(f"{d}/project.yaml")
     assert run(P, False) == 0
     t = open(f"{d}/docs/release/R.md").read()
     assert "**STATUS: DRAFT**" in t and f"md5 **`{md5}`**" in t and "**1 OPEN**" in t and "CC-001" in t, t
     assert "`out/fab/2026-01-01_x/` — md5" in t and "case.version: v1" in t and "case.pieces: ['tray', 'hood']" in t and "skip me" not in t
-    assert "MISSING: `docs/KNOWN_ISSUES.md`" in t and "MISSING: `docs/TRACEABILITY.md`" in t and "MISSING: `out/dfm.json`" in t and "MISSING: `docs/release/collateral/" in t
+    assert "MISSING: `docs/governance/KNOWN_ISSUES.md`" in t and "MISSING: `docs/governance/TRACEABILITY.md`" in t and "MISSING: `out/dfm.json`" in t and "MISSING: `docs/release/collateral/" in t
     assert run(P, True) == 0
     for f in glob.glob(f"{d}/**/*", recursive=True):
         os.utime(f, (0, 0))
     assert run(P, True) == 0, "--check must survive a mtime change (git archive / clone)"
-    open(f"{d}/docs/GATES.md", "a").write("| G2 | clear to build — owner, 2026-01-02 |\n")
+    open(f"{d}/docs/governance/GATES.md", "a").write("| G2 | clear to build — owner, 2026-01-02 |\n")
     assert run(P, True) == 1, "a changed input makes the report STALE"
     run(P, False)
     assert "**STATUS: RELEASED" in open(f"{d}/docs/release/R.md").read()

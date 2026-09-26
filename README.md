@@ -24,7 +24,7 @@ evals/            skill-creator eval prompts (start a project / run a blind revi
 ## Install
 
 Requirements: Python ≥ 3.11 with `pyyaml`, git, bash ≥ 3.2 (macOS `/bin/bash` and any Linux). Nothing else for the generic scripts; the CAD,
-OpenSCAD, FEA and browser tooling belong to the project that uses the skill and are recorded in its `docs/ENV.md`.
+OpenSCAD, FEA and browser tooling belong to the project that uses the skill and are recorded in its `docs/governance/ENV.md`.
 
 ```sh
 git clone <this repo> ~/.claude/skills/hw-from-spec        # 1. as a Claude Code skill (personal); or
@@ -45,9 +45,9 @@ content; the clone gate links the working tree's scripts and venv into the archi
 cd <new project repo>                                        # git init done, project.yaml will sit here (top level)
 git submodule add <this repo> vendor/hw-from-spec && ln -s vendor/hw-from-spec/scripts scripts      # or: cp -R vendor/hw-from-spec/scripts scripts
 (cd vendor/hw-from-spec && uv venv .venv && uv pip install --python .venv/bin/python pyyaml)      # the skill's venv (gitignored, does not ship)
-T=vendor/hw-from-spec/templates; mkdir -p docs design
-cp $T/CLAUDE.md $T/.gitignore $T/project.yaml . && cp $T/{DECISIONS,STATUS,GATES,KNOWN_ISSUES,LEARNINGS_LOG,BLOCKERS,PARTS_VERIFICATION,ENV,TEST_PLAN,ERC_WAIVERS}.md docs/
-cp -R $T/datasheet_notes docs/ && cp $T/design/traceability.yaml design/
+T=vendor/hw-from-spec/templates; mkdir -p docs/{governance,design,parts,reviews,release,quotes,production} design
+cp $T/CLAUDE.md $T/.gitignore $T/project.yaml . && cp $T/{DECISIONS,STATUS,GATES,KNOWN_ISSUES,LEARNINGS_LOG,BLOCKERS,ENV,ERC_WAIVERS}.md docs/governance/
+cp $T/PARTS_VERIFICATION.md docs/parts/ && cp $T/TEST_PLAN.md docs/design/ && cp -R $T/datasheet_notes docs/ && cp $T/design/traceability.yaml design/
 grep -rn '{{' CLAUDE.md project.yaml docs design                  # fill every slot until this prints nothing
 ```
 Then follow `SKILL.md` §0 (day-1 setup: venv, selftests, smoke, first records, adopt gates). The scripts find `project.yaml` by walking up from the
@@ -64,7 +64,7 @@ and cut generators' shape, agent operations, every pitfall as a mechanism. Worke
 SWIG quirks, Freerouting facts, the source project's case and FEA cases. Not here: vendor-licensed library data, quotes, part numbers of the
 source project, its board hashes (only in `references/pitfalls.md` as labelled examples where the mechanism needs them).
 
-Feedback loop: every project appends to its `docs/LEARNINGS_LOG.md`; at its production cut the entries are folded into `references/pitfalls.md`
+Feedback loop: every project appends to its `docs/governance/LEARNINGS_LOG.md`; at its production cut the entries are folded into `references/pitfalls.md`
 here (one generalised line + evidence pointer), and the skill is re-reviewed blind.
 
 Licence: `LICENSE` is a placeholder until the owner chooses one — the repo is not yet redistributable. Changes: `CHANGELOG.md`.

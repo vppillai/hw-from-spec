@@ -17,11 +17,16 @@ import yaml
 DEFAULTS = {
     "ids": {"owner_prefix": "D", "agent_prefix": "CC", "blocker_prefix": "B"},
     "markers": {"release_regex": r"clear[ -]to[ -]build", "unverified": ["UNVERIFIED", "TBD-DRAWING"],
-                "nod_regex": r"\(!\)|owner nod", "hand_curated": ["<!-- hand-curated: begin -->", "<!-- hand-curated: end -->"]},
-    "paths": {"decisions": "docs/DECISIONS.md", "blockers": "docs/BLOCKERS.md", "gates": "docs/GATES.md",
-              "known_issues": "docs/KNOWN_ISSUES.md", "test_plan": "docs/TEST_PLAN.md", "status": "docs/STATUS.md",
-              "traceability_yaml": "design/traceability.yaml", "traceability_out": "docs/TRACEABILITY.md",
-              "fab_dir": "out/fab", "release_dir": "docs/release", "collateral_dir": "docs/release/collateral"},
+                "nod_regex": r"\(!\)|owner nod", "placed_regex": r"\bPLACED\b", "hand_curated": ["<!-- hand-curated: begin -->", "<!-- hand-curated: end -->"]},
+    # the docs/ layout: governance/ (records the generators read and write), design/ (intent), parts/, reviews/, release/, quotes/<date>/,
+    # production/<md5-8>/, datasheet_notes/ — a re-layout is a `reorg:` block + scripts/reorg_paths.py, never a hand sweep
+    "paths": {"decisions": "docs/governance/DECISIONS.md", "blockers": "docs/governance/BLOCKERS.md", "gates": "docs/governance/GATES.md",
+              "known_issues": "docs/governance/KNOWN_ISSUES.md", "status": "docs/governance/STATUS.md", "learnings": "docs/governance/LEARNINGS_LOG.md",
+              "erc_waivers": "docs/governance/ERC_WAIVERS.md", "env": "docs/governance/ENV.md", "traceability_yaml": "design/traceability.yaml",
+              "traceability_out": "docs/governance/TRACEABILITY.md", "test_plan": "docs/design/TEST_PLAN.md",
+              "parts_verification": "docs/parts/PARTS_VERIFICATION.md", "datasheet_notes": "docs/datasheet_notes", "reviews_dir": "docs/reviews",
+              "quotes_dir": "docs/quotes", "production_dir": "docs/production", "fab_dir": "out/fab", "release_dir": "docs/release",
+              "collateral_dir": "docs/release/collateral"},
     "tools": {"python": ".venv/bin/python", "kicad_cli": "kicad-cli", "kicad_python": "python3"},
 }
 
@@ -94,7 +99,7 @@ def selftest():
     P = Project.find(start=d)
     assert P.get("ids.agent_prefix") == "AG" and P.get("ids.owner_prefix") == "D", "explicit key wins, missing key falls back to DEFAULTS"
     assert P.get("markers.release_regex") and P.get("nope.x", 7) == 7
-    assert P.path("decisions") == f"{d}/d/D.md" and P.path("gates") == f"{d}/docs/GATES.md" and P.path("zz") is None
+    assert P.path("decisions") == f"{d}/d/D.md" and P.path("gates") == f"{d}/docs/governance/GATES.md" and P.path("zz") is None
     assert P.tool("python") == f"{d}/.venv/bin/python" and P.tool("kicad_cli") == "kicad-cli"
     assert P.id_re().findall("D-01 AG-002 B-03 CC-004") == ["D-01", "AG-002", "B-03"] and P.decision_re().findall("D-2a AG-002 B-03") == ["D-2a", "AG-002"]
     assert split_row("| a | b \\| c | d |") == ["a", "b \\| c", "d"], "an escaped pipe is content"

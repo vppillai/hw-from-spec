@@ -20,14 +20,14 @@ markers:
   nod_regex: '\(!\)|owner nod'            # status cells "applied ahead of the owner's nod" → KNOWN_ISSUES §2.1
   hand_curated: ["<!-- hand-curated: begin -->", "<!-- hand-curated: end -->"]
 paths:
-  decisions: docs/DECISIONS.md            # 6-cell table (ID | Date | Status | Topic | Proposal | Reason)
-  blockers: docs/BLOCKERS.md              # 6-cell table (ID | Date | Item | Tried | Result | Impact)
-  gates: docs/GATES.md
-  status: docs/STATUS.md
-  known_issues: docs/KNOWN_ISSUES.md      # written by scripts/known_issues.py
-  test_plan: docs/TEST_PLAN.md            # optional
+  decisions: docs/governance/DECISIONS.md            # 6-cell table (ID | Date | Status | Topic | Proposal | Reason)
+  blockers: docs/governance/BLOCKERS.md              # 6-cell table (ID | Date | Item | Tried | Result | Impact)
+  gates: docs/governance/GATES.md
+  status: docs/governance/STATUS.md
+  known_issues: docs/governance/KNOWN_ISSUES.md      # written by scripts/known_issues.py
+  test_plan: docs/design/TEST_PLAN.md            # optional
   traceability_yaml: design/traceability.yaml
-  traceability_out: docs/TRACEABILITY.md  # written by scripts/traceability.py
+  traceability_out: docs/governance/TRACEABILITY.md  # written by scripts/traceability.py
   board: kicad/<board>/<board>.kicad_pcb  # the board of record; its md5 keys packages, collateral, reports
   netlist: out/<board>.xml                # kicadxml netlist for netlist_net checks (optional)
   fab_dir: out/fab                        # packages <date>_<md5-8>/ each with board_id.txt (keys: board, md5, commit, built, + counts)

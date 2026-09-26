@@ -1,6 +1,6 @@
 # pitfalls.md — every recorded learning, one line each, generalised
 
-Source: the AEC-CT2-MINI `docs/LEARNINGS_LOG.md` (2026-09-21/22, ~155 entries). MINI-specific numbers are kept only where they make the
+Source: the AEC-CT2-MINI `docs/governance/LEARNINGS_LOG.md` (2026-09-21/22, ~155 entries). MINI-specific numbers are kept only where they make the
 mechanism concrete and are labelled *(worked example)*. Evidence pointers name the source repo's rows/files. Grouped by domain.
 
 ## process / gates

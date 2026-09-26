@@ -18,13 +18,15 @@ when you reach that step, not before. Nothing here is specific to one board: pro
    uv pip install --python .venv/bin/python pyyaml` (README step 2; the venv is gitignored, it does not ship). Then `uv venv .venv` in the
    project too (the gates use the first interpreter that imports yaml: project venv, skill venv, python3).
 2. **Copy the templates**, then `grep -rn '{{' CLAUDE.md docs project.yaml design` must print nothing:
-   `cp templates/CLAUDE.md templates/.gitignore templates/project.yaml .`; `mkdir docs design`;
-   `cp templates/{DECISIONS,STATUS,GATES,KNOWN_ISSUES,LEARNINGS_LOG,BLOCKERS,PARTS_VERIFICATION,ENV,TEST_PLAN,ERC_WAIVERS}.md docs/`;
-   `cp -R templates/datasheet_notes docs/`; `cp templates/design/traceability.yaml design/`. `{{SKILL_COMMIT}}` = `git -C vendor/hw-from-spec
-   rev-parse --short HEAD`; `{{DATE}}` = today; the CC-001 row is written after step 6, not before.
+   `cp templates/CLAUDE.md templates/.gitignore templates/project.yaml .`; `mkdir -p docs/{governance,design,parts,reviews,release,quotes,production} design`;
+   `cp templates/{DECISIONS,STATUS,GATES,KNOWN_ISSUES,LEARNINGS_LOG,BLOCKERS,ENV,ERC_WAIVERS}.md docs/governance/`; `cp templates/PARTS_VERIFICATION.md
+   docs/parts/`; `cp templates/TEST_PLAN.md docs/design/`; `cp -R templates/datasheet_notes docs/`; `cp templates/design/traceability.yaml design/`.
+   The docs/ layout (`references/project-yaml.md` §Layout) is the one the defaults name; re-laying it out later is a decision row + a `reorg:` block +
+   `scripts/reorg_paths.py --apply/--check/--proof`, never a hand sweep. `{{SKILL_COMMIT}}` = `git -C vendor/hw-from-spec rev-parse --short HEAD`;
+   `{{DATE}}` = today; the CC-001 row is written after step 6, not before.
 3. **project.yaml** (from `templates/project.yaml`: paths, id prefixes, markers, tools, the day-1 gate lists; the G1/G2 lines stay commented
    until those artefacts exist). Everything a script needs is there; no script carries a project constant (`references/project-yaml.md`).
-4. **docs/ENV.md**: tool versions, the CAD CLI paths, which endpoints answer (verify each by running it); run the CAD CLI once on a trivial
+4. **docs/governance/ENV.md**: tool versions, the CAD CLI paths, which endpoints answer (verify each by running it); run the CAD CLI once on a trivial
    file and note the file-format version. Put every tool path behind the `tools:` block — twenty generators with hard-coded paths cost a CI day
    later (`references/pitfalls.md` ci/tooling).
 5. **Prove the toolchain**: `for s in scripts/*.py; do .venv/bin/python $s --selftest; done; scripts/clone_gate.sh --selftest;
@@ -38,22 +40,22 @@ when you reach that step, not before. Nothing here is specific to one board: pro
 ## 1. Phase / gate model
 
 Phases: **G0** spec approved → **G1** schematic approved → **G2** layout approved → **submission** (fab package, order = owner's click) →
-**release cut** (reports RELEASED, collateral, tag) → **production cut** (document set, tag). Each gate has prerequisites listed in `docs/GATES.md`.
+**release cut** (reports RELEASED, collateral, tag) → **production cut** (document set, tag). Each gate has prerequisites listed in `docs/governance/GATES.md`.
 
-- The owner writes the gate line; agents never do. `docs/GATES.md` approval cells and the release line (`markers.release_regex`) are owner text.
+- The owner writes the gate line; agents never do. `docs/governance/GATES.md` approval cells and the release line (`markers.release_regex`) are owner text.
   Reports read that file and say **DRAFT** until the line exists (`scripts/release_report.py`).
 - Do not start the next phase's CAD before the gate line exists. If the owner delegates ("proceed, I retro-approve"), quote the instruction in
-  `docs/GATES.md` under the table and keep the approval cells empty.
+  `docs/governance/GATES.md` under the table and keep the approval cells empty.
 - Blind reviews precede every gate: two reviewers, then a merge (§5).
 - Never quote the release phrase in prose anywhere the regex can see it (a GATES.md sentence explaining the rule turned every report RELEASED
   in the smoke project) — describe the marker indirectly (`references/pitfalls.md` process).
 
 ### 1.1 At a gate (asking the owner)
 
-1. Prerequisites first: the row's prerequisite cell in `docs/GATES.md` is satisfied and provable (merged review report committed, ERC/DRC files,
+1. Prerequisites first: the row's prerequisite cell in `docs/governance/GATES.md` is satisfied and provable (merged review report committed, ERC/DRC files,
    `scripts/adopt_gates.sh` green at HEAD, KNOWN_ISSUES §2 lists only items the owner has seen). If one is missing, say so and stop.
 2. Write the STATUS pause-point paragraph: what was reviewed (commit, SPEC rev / board md5-8), the merged report path, the OPEN rows the owner
-   must decide, and the exact ask: *"Please write the Gn cell in docs/GATES.md: `<your name>, <date>, <SPEC rev | schematic commit | board md5-8>`"*.
+   must decide, and the exact ask: *"Please write the Gn cell in docs/governance/GATES.md: `<your name>, <date>, <SPEC rev | schematic commit | board md5-8>`"*.
 3. Ask in one message with that sentence; do not start the next phase's CAD while waiting (other work — docs, tests, tooling — may continue).
 4. A valid cell is owner text in the approval column of that row; `_not yet approved_` is empty. **Agents never write approval cells or the
    release line**, not even when told "go ahead" in chat: quote the chat instruction verbatim with date/time under the table, note "cell pending"
@@ -79,7 +81,7 @@ Phases: **G0** spec approved → **G1** schematic approved → **G2** layout app
 
 ## 3. Decision log
 
-`docs/DECISIONS.md` is one table, six cells: `ID | Date | Status | Topic | Proposal / decision | Reason`.
+`docs/governance/DECISIONS.md` is one table, six cells: `ID | Date | Status | Topic | Proposal / decision | Reason`.
 
 - **D-nn** rows are the owner's (text as issued); **CC-nnn** rows are the agent's. Status words: OPEN (needs the owner), APPROVED, DECIDED
   (within delegated authority), APPLIED (!) (applied ahead of the nod — the nod marker), REJECTED, SUPERSEDED, CLOSED. History goes after
@@ -87,7 +89,7 @@ Phases: **G0** spec approved → **G1** schematic approved → **G2** layout app
 - Rule 2: a value, part, topology or pin assignment named in the spec is never changed silently. Write the CC row (reason, options, recommendation),
   mark it OPEN, ask. Apply only after approval, or ship it behind an optional flag that warns when omitted so the code path is tested now
   (`references/pitfalls.md` process).
-- `docs/KNOWN_ISSUES.md` is generated from the log: OPEN rows, rows mentioning OPEN, provisional rows, the nod section (§2.1), blockers, the
+- `docs/governance/KNOWN_ISSUES.md` is generated from the log: OPEN rows, rows mentioning OPEN, provisional rows, the nod section (§2.1), blockers, the
   test plan's UNVERIFIED markers. Section 1 is hand-curated between markers (`scripts/known_issues.py`). Describe the nod marker indirectly in
   status cells or the generator re-triggers on the description.
 - A literal `|` inside a cell is `\|`; the generator refuses a row with the wrong cell count. An ID is reserved only when its row is in HEAD:
@@ -99,13 +101,13 @@ Phases: **G0** spec approved → **G1** schematic approved → **G2** layout app
 
 - Tags: **[V]** verified live this session (fetch of the distributor / fab page: MPN, package, stock, basic/extended), **[K]** known but
   unverified (never fitted), **[S]** select-by-parameter (a row without an MPN yet). Never invent a fab part number; every check is a row in
-  `docs/PARTS_VERIFICATION.md` with date, URL, stock (`references/part-verification.md`).
+  `docs/parts/PARTS_VERIFICATION.md` with date, URL, stock (`references/part-verification.md`).
 - Gate value ↔ MPN ↔ fab code on every fitted part (the BOM groups by code: a value edited on the symbol does not change the ordered part).
 - Stock gate is run-relative: qty per board × boards × attrition for every code, not "> 0" on a few.
 - **VERIFY item** = a value or claim in the spec (or in a review finding) that rests on a datasheet, drawing or standard nobody has read yet:
   a current, a pin function, a footprint dimension, a reflow limit, a standard clause. The spec author tags them `VERIFY` in SPEC.md (or the
-  G0 review lists them in `docs/VERIFY.md`: item, part, what to read). Each is closed by a row in `docs/datasheet_notes/<part>.md` (page/section,
-  value read, matches yes/no — `templates/datasheet_notes/_TEMPLATE.md`) or moved to `docs/BLOCKERS.md` when the source cannot be fetched.
+  G0 review lists them in `docs/design/VERIFY.md`: item, part, what to read). Each is closed by a row in `docs/datasheet_notes/<part>.md` (page/section,
+  value read, matches yes/no — `templates/datasheet_notes/_TEMPLATE.md`) or moved to `docs/governance/BLOCKERS.md` when the source cannot be fetched.
   Rule 3: every VERIFY item touching a part is closed before that part is drawn; G0 requires all closed or BLOCKED; curve-only values are
   marked "not in datasheet text" with the reader named.
 
@@ -134,7 +136,7 @@ changed specialties only). `{{EXTERNAL_MODELS}}` needs at least two distinct mod
 **The G0 round (spec review)** uses `blind-deep-review.js` with `{{ROLE_SET}}` = `spec`: four roles — spec coherence (requirements, interfaces,
 numbers that must agree, the VERIFY list), parts and sourcing (every named part fetchable live, tags, alternates, stock for the run), mechanical
 intent (envelope, connectors, case concept, thermal), test plan (every requirement has a measurable check). The artefact is `SPEC.md` (+
-`docs/PARTS_VERIFICATION.md`, `docs/TEST_PLAN.md`, the case concept); the hand-off (`templates/REVIEW_HANDOFF.md`) lists SPEC.md with its md5
+`docs/parts/PARTS_VERIFICATION.md`, `docs/design/TEST_PLAN.md`, the case concept); the hand-off (`templates/REVIEW_HANDOFF.md`) lists SPEC.md with its md5
 in §2, and the generated header's board / package / case rows read **MISSING by design** — say so in the hand-off. Verdict options: approve the
 spec as is / after the REQUIRED edits / not yet. Merged report `docs/reviews/G0_merged.md`; REQUIRED edits go into SPEC (owner text: OWNER rows,
 agent proposals: CC rows OPEN), the VERIFY list is closed or BLOCKED (§4), then the G0 ask (§1.1). G1 pack and roles: `references/schematic-phase.md` §4.
@@ -181,20 +183,20 @@ filled by an agent; records (photos, press logs, test results) are filed as they
 
 Parallel agents own disjoint files; explicit-path commits do not isolate hunks inside a shared file (stage the exact edit); re-read before every
 append; hand out record IDs with the task; block in-process on background jobs (`until ! kill -0 $pid; do sleep 20; done`, ≤ 600 s per call);
-heartbeat every ~25 min; time-box every long task; pause points with a resume list in `docs/STATUS.md`; keep the machine awake; resume by message
+heartbeat every ~25 min; time-box every long task; pause points with a resume list in `docs/governance/STATUS.md`; keep the machine awake; resume by message
 with the measured state, never from memory; kill a long render early when an owner addition arrives (`references/agent-ops.md`).
 
 ### 11.1 Resume (after a crash, a sleep, a new session)
 
-1. `docs/STATUS.md` STATE NOW + the newest paragraph (what was running, the pause list) → 2. `docs/DECISIONS.md` OPEN rows (= owner items; also
-`docs/KNOWN_ISSUES.md` §2) → 3. `git status --short` and `git log -3 --stat` (what was left uncommitted; never commit another agent's half-edit)
+1. `docs/governance/STATUS.md` STATE NOW + the newest paragraph (what was running, the pause list) → 2. `docs/governance/DECISIONS.md` OPEN rows (= owner items; also
+`docs/governance/KNOWN_ISSUES.md` §2) → 3. `git status --short` and `git log -3 --stat` (what was left uncommitted; never commit another agent's half-edit)
 → 4. `scripts/handoff_header.py` (board of record vs HEAD, clean/dirty) → 5. `scripts/adopt_gates.sh` (what is green at HEAD) → 6. compare
 with STATE NOW: every difference is written into a new STATUS paragraph BEFORE any work resumes (measured state, not remembered state) → 7. if a
 gate ask was pending, check the cell; if the owner answered in chat only, §1.1 step 4.
 
 ## 12. Before your final commit
 
-Append every non-obvious learning to `docs/LEARNINGS_LOG.md` as `- YYYY-MM-DD [domain] learning — evidence`; one DECISIONS row for the task;
+Append every non-obvious learning to `docs/governance/LEARNINGS_LOG.md` as `- YYYY-MM-DD [domain] learning — evidence`; one DECISIONS row for the task;
 one dated STATUS paragraph; run the `--check` chain; `git status --short <paths>` after every explicit-path commit of a generated set.
 Then fold the learnings back into this skill's `references/pitfalls.md` at the next production cut.
 

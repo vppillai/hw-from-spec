@@ -18,7 +18,7 @@ _(G0 round: board, package and case rows read MISSING by design — the artefact
 | `kicad/<board>/<board>.kicad_pcb` | board of record | `{{md5}}` |
 | `out/fab/<date>_<md5-8>/` | fab package of record | `{{md5 of MANIFEST}}` |
 | `design/case.yaml` / `out/.../case/<preset>/stl/*.stl` | case of record | `{{version}}` |
-| `docs/DECISIONS.md` rows D-… / CC-… | decision trail for this round | |
+| `docs/governance/DECISIONS.md` rows D-… / CC-… | decision trail for this round | |
 
 ## 3. Known / open items with dispositions (from KNOWN_ISSUES.md — generated; do not add prose here)
 ### 3.1 Applied ahead of the owner's nod

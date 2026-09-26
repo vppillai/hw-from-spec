@@ -26,7 +26,7 @@ Re-verify before every package build (`verify_parts` style script: machine endpo
 - `https://cart.jlcpcb.com/shoppingCart/smtGood/getComponentDetail?componentCode=Cxxxx` — JSON (`componentModelEn`, `componentLibraryType`, stock, datasheet URL): the basic/extended + fab-stock check.
 - `https://www.lcsc.com/product-detail/Cxxxx.html`, `https://jlcpcb.com/partdetail/Cxxxx` — server-rendered evidence pages.
 - EasyEDA component API needs a browser UA (403 with a bare one); `easyeda2kicad` fetches symbol/footprint/3D. Post-process converted footprints: zero-ring pegs → NPTH, `attr smd` when every numbered pad is SMD, real pin electrical types (ERC depends on them), duplicate-numbered pegs renumbered `MP<n>`.
-Record every endpoint that answered in `docs/ENV.md`; a fab that changes its API is a BLOCKER row, not a guess.
+Record every endpoint that answered in `docs/governance/ENV.md`; a fab that changes its API is a BLOCKER row, not a guess.
 
 ## Gates that catch the usual mistakes
 - **value ↔ MPN ↔ code**: the BOM groups by fab code; a value edited on the symbol does not change the ordered part. Decode the MPN (chip codes) and refuse a group with > 1 value or a Value ≠ decoded MPN.
@@ -39,7 +39,7 @@ Record every endpoint that answered in `docs/ENV.md`; a fab that changes its API
 
 ## Datasheets (rule 3)
 Every VERIFY item in the findings is closed by reading the primary datasheet, page/section cited in `docs/datasheet_notes/<part>.md`, before the
-part is drawn. If the vendor site blocks the fetch: `docs/BLOCKERS.md` row (what was tried, result, workaround — e.g. an older revision read via
+part is drawn. If the vendor site blocks the fetch: `docs/governance/BLOCKERS.md` row (what was tried, result, workaround — e.g. an older revision read via
 an archive with the deltas marked unknown). Vendor library footprint vs vendor drawing: the drawing governs; the vendor STEP is the only source
 for heights. Values read from curves are marked "not in datasheet text" with the reader named.
 

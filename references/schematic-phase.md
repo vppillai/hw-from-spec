@@ -1,6 +1,6 @@
 # schematic-phase.md — G0 → G1: what the design yaml holds, the ERC gate, map checks, the G1 review pack
 
-The schematic generator is project code (`gen/build_sch.py`); this page fixes what it must consume and produce so the gates in `docs/GATES.md`
+The schematic generator is project code (`gen/build_sch.py`); this page fixes what it must consume and produce so the gates in `docs/governance/GATES.md`
 mean the same thing in every project. The source project's generator (KiCad 10, sheet fragments instantiated per port) is the worked example; the
 shapes below are the generic contract.
 
@@ -51,7 +51,7 @@ Run after every generation, with every severity on, machine-readable, zero error
 <cad-cli> sch erc --severity-all --format json -o out/<board>/erc.json <cad>/<board>/<board>.kicad_sch     # KiCad 10 form; other CADs: the equivalent
 ```
 
-Errors → fix the yaml or the generator. Warnings → fix, or one row in `docs/ERC_WAIVERS.md` (sheet, item, type, justification, decision row,
+Errors → fix the yaml or the generator. Warnings → fix, or one row in `docs/governance/ERC_WAIVERS.md` (sheet, item, type, justification, decision row,
 date). Add the ERC run to `gates.adopt` at G1 (`templates/project.yaml` has the commented block) so it is repeated on every adopt run and in
 `git archive HEAD`. Export the netlist in the same step (`<cad-cli> sch export netlist --format kicadxml -o out/<board>.xml …`): `paths.netlist`
 feeds the `netlist_net` checks of `scripts/traceability.py`.
@@ -62,7 +62,7 @@ A "map" is any table in the spec or in `design/` that says which pin, address or
 I²C address map, a connector pinout, a switch/strap table, a test-point map. **Map checks** = a project script (`gen/check_maps.py --check`) that
 reads every map and the exported netlist and asserts both directions: every map row is present in the netlist as written (net name on that pin;
 address on that device), and every relevant netlist net appears in exactly one map. Output `out/<board>/check_maps.md` (one table per map: row,
-netlist evidence, OK/FAIL) — a G1 prerequisite in `docs/GATES.md` and a `gates.adopt` line. A map row the spec names but the design does not
+netlist evidence, OK/FAIL) — a G1 prerequisite in `docs/governance/GATES.md` and a `gates.adopt` line. A map row the spec names but the design does not
 implement is a CC row (rule 2), not a silent omission.
 
 ## 4. The G1 review pack (`out/G1/`, generated, committed)
@@ -72,7 +72,7 @@ implement is a CC row (rule 2), not a silent omission.
 | `<board>.pdf` | `<cad-cli> sch export pdf` | the schematic as drawn, every sheet |
 | `<board>.xml` | `<cad-cli> sch export netlist --format kicadxml` | machine-checkable connectivity |
 | `bom.csv`, `procurement.csv` | the project's BOM exporter | every fitted part with MPN / fab code / tag; DNP excluded |
-| `erc.json` + `docs/ERC_WAIVERS.md` | §2 | zero errors, justified warnings |
+| `erc.json` + `docs/governance/ERC_WAIVERS.md` | §2 | zero errors, justified warnings |
 | `check_maps.md` | §3 | maps vs netlist |
 | `EVIDENCE.md` | the generator | which yaml revision / commit produced the pack; md5 of every file above |
 | `REVIEW_NOTES.md` | hand-written, short | what changed since the last round, what the reviewers should weigh |

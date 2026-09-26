@@ -9,21 +9,23 @@ markers:
   release_regex: 'clear[ -]to[ -]build'       # the owner's release line in paths.gates — never quote the phrase in prose
   unverified: [UNVERIFIED, TBD-DRAWING]
   nod_regex: '\(!\)|owner nod'
+  placed_regex: '\bPLACED\b'                 # owner row with this word + the package name = placed order -> judged on frozen stock (references/fab-dfm.md §8)
 paths:
-  decisions: docs/DECISIONS.md
-  blockers: docs/BLOCKERS.md
-  gates: docs/GATES.md
-  status: docs/STATUS.md
-  known_issues: docs/KNOWN_ISSUES.md
-  test_plan: docs/TEST_PLAN.md
+  decisions: docs/governance/DECISIONS.md
+  blockers: docs/governance/BLOCKERS.md
+  gates: docs/governance/GATES.md
+  status: docs/governance/STATUS.md
+  known_issues: docs/governance/KNOWN_ISSUES.md
+  test_plan: docs/design/TEST_PLAN.md
   traceability_yaml: design/traceability.yaml
-  traceability_out: docs/TRACEABILITY.md
+  traceability_out: docs/governance/TRACEABILITY.md
   board: kicad/{{BOARD}}/{{BOARD}}.kicad_pcb  # the board of record once it exists (G1+); until then handoff_header says "no board in HEAD"
   netlist: out/{{BOARD}}.xml
   fab_dir: out/fab
   release_dir: docs/release
   collateral_dir: docs/release/collateral
   case_yaml: design/case.yaml                 # optional; delete the line if the project has no enclosure
+  # learnings / erc_waivers / env / parts_verification / reviews_dir / quotes_dir / production_dir default to the docs/ layout (references/project-yaml.md)
 tools:
   python: .venv/bin/python
   kicad_cli: {{CAD_CLI_PATH}}
@@ -34,6 +36,18 @@ dfm:
   accept: design/{{BOARD}}_board.yaml         # key dfm_accepted
   report: out/dfm.json
 renders: []                                   # G2+: see references/project-yaml.md `renders:`
+# reorg:                                      # only when the layout changes: decision row first, then scripts/reorg_paths.py --plan/--apply/--check/--proof
+#   moves: {docs/OLD.md: docs/<folder>/OLD.md}
+#   frozen: [out/fab/]                        # uploaded packages, archived records: never rewritten, `--map` explains their old paths
+#   no_existence: ['.py', '.js', docs/governance/DECISIONS.md, docs/governance/STATUS.md, docs/governance/LEARNINGS_LOG.md, docs/reviews/]
+#   allow_missing: ['^docs/production/[0-9a-f]{8}/']
+# assembly_guide:                             # production cut: the illustrated guide beside the SOP (scripts/assembly_guide.py; references/release-and-cut.md §8)
+#   yaml: design/assembly_guide.yaml
+#   steps_md: out/mechanical/case/ASSEMBLY.md
+#   scad: out/mechanical/case/<preset>/case.scad
+#   out_dir: docs/production/{MD5_8}
+#   render_cmd: "openscad -o {OUT} --camera={CAMERA} --imgsize={SIZE} --colorscheme=Tomorrow {DEFS} out/mechanical/case/<preset>/case.scad"
+#   size: '1920,1440'
 reports:
   - name: PCB_DESIGN_REPORT
     title: {{PROJECT}} PCB design report

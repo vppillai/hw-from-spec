@@ -285,13 +285,13 @@ def main():
 
 def selftest():
     d = tempfile.mkdtemp(prefix="hwfs_tr_")
-    os.makedirs(f"{d}/docs"); os.makedirs(f"{d}/design"); os.makedirs(f"{d}/kicad/b"); os.makedirs(f"{d}/out")
+    os.makedirs(f"{d}/docs/governance"); os.makedirs(f"{d}/design"); os.makedirs(f"{d}/kicad/b"); os.makedirs(f"{d}/out")
     open(f"{d}/project.yaml", "w").write("project: {name: t}\npaths: {board: kicad/b/b.kicad_pcb}\ntools: {python: %s}\n" % sys.executable)
     open(f"{d}/kicad/b/b.kicad_pcb", "w").write("(kicad_pcb)\n")
     h = hashlib.md5(open(f"{d}/kicad/b/b.kicad_pcb", "rb").read()).hexdigest()
     open(f"{d}/out/EVIDENCE.md", "w").write(f"board md5 `{h}`\n")
     open(f"{d}/design/board.yaml", "w").write("board: {width: 42.0}\nitems: [{ref: J1, x: 3}]\n")
-    open(f"{d}/docs/DECISIONS.md", "w").write("| ID | Date | Status | Topic | P | R |\n|---|---|---|---|---|---|\n| **D-01 (owner)** | d | **APPROVED** | t | p | r |\n"
+    open(f"{d}/docs/governance/DECISIONS.md", "w").write("| ID | Date | Status | Topic | P | R |\n|---|---|---|---|---|---|\n| **D-01 (owner)** | d | **APPROVED** | t | p | r |\n"
                                              "| CC-001 | d | OPEN | t | p | r |\n| CC-002 | d | DECIDED (was: OPEN) | t | p | r |\n| CC-003 | d | OPEN | unmapped | p | r |\n")
     open(f"{d}/design/traceability.yaml", "w").write(f"""
 stages:
