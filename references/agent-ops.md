@@ -27,8 +27,8 @@
 - Rows that describe a marker (the nod marker, the release phrase) re-trigger the generator that keys on it: describe indirectly.
 - Every checker is READ-ONLY on the tree: `--check` builds in a temp dir and exports nowhere (a schematic `--check --out /tmp` that still wrote
   `erc.json` into `out/` replaced the ERC of record with a temp copy's 58 lib-link warnings). `scripts/adopt_gates.sh` fails when
-  `git status --porcelain` differs before/after the gates; the PR-check template ends with the same guard. Probe a script's usage with
-  `sed -n 1,12p` of its docstring, never by running it: a script without argparse runs its default WRITE action on `--help`.
+  `git status --porcelain` differs before/after the gates; the PR-check template ends with the same guard. Every skill script answers `--help` read-only (argparse); a project script must too — a
+  script without argparse runs its default WRITE action on `--help`, so until it has one, probe its usage with `sed -n 1,12p` of its docstring.
 
 ## 4. Blind reviews (the protocol; templates in `workflows/`)
 - Freeze: clean tree (`git status --short --untracked-files=no` empty), `git worktree add --detach <frozen> HEAD`, then

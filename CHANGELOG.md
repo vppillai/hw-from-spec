@@ -28,9 +28,20 @@ Both 0.2.1 "Next" candidates plus the learnings logged after the order went in. 
 - **One-round record chain + fixed point** — `release-and-cut.md` §3.1 (order, analysis index ↔ cut build ↔ PDF render, volatile cascade, "whoever
   appends a row runs the round").
 - **Memory / pause-point / owner-list conventions** — `agent-ops.md` §7; SKILL §11.
-- `references/pitfalls.md`: +35 lines (process, tooling, kicad render, mechanical/point contacts, documentation, sourcing/compliance).
+- `references/pitfalls.md`: +40 lines (process, tooling, kicad render, mechanical/point contacts, documentation, sourcing/compliance).
 - Smoke: docs moved to the layout, `reorg:` + `assembly_guide:` blocks, new gates (three selftests, `reorg_paths --check`, `assembly_guide` build + `--check`).
   Evals: 4 (vendor review mail — boundaries), 5 (re-layout — zero loss).
+
+### Fixed (blind review 0.3.0, `docs/reviews/SKILL_REVIEW_0.3.0_merged.md`)
+- `known_issues.py` / `release_report.py` / `handoff_header.py` gained argparse: `--help` or an unknown flag never runs the default write (A-01).
+- `reorg_paths --check`: a directory segment (`docs/v1.2/x`) is not a dangling file; `allow_missing` and the `--proof` failure branch are selftested; URLs documented as not rewritten (B-01/02/21).
+- `adopt_gates.sh`: empty `gates.adopt` is a failure; the read-only guard also hashes `git diff HEAD` (a re-modified dirty file shows); ERR traps name the line (B-03/05, A-06).
+  `pr-check.yml` snapshots the tree after Bootstrap and diffs (B-06).
+- `thin_wall_check`: missing trimesh / numpy / shapely exits 2 with the install hint; `--pinch` also tests between rings and fails on > 1 polygon; the
+  `to_2D()` map-back uses the full 2-D affine part; a plane that misses the mesh is a message (B-04/07/08, A-16).
+- `assembly_guide`: orphan renders pruned / flagged; `{SIZE}` quoted; yaml booleans lowered (B-09/25).
+- Templates / docs: `production_cut.yaml` VG-001 row; SKILL agent-ops § numbers; project venv gets pyyaml; vendor-review tables live in the record;
+  generic wording for the bump cost and the vendor frame; project-side generators italicised in §3.1; `reorg.gitignore` documented.
 
 ### Changed
 - `templates/project.yaml`, `templates/CLAUDE.md` layout block, `smoke/project.yaml`, SKILL §0 step 2 / §2 / §8 / §10 / §11 / Where to look; README layout + version.

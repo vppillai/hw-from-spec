@@ -18,22 +18,22 @@ the owner's account. Record template: `templates/VENDOR_REVIEW_RECORD.md` (one f
 ## 2. The round
 1. **File the evidence.** Save the mail as `.eml` and every linked image (the vendor's marked-up heat maps are `<img>` links to its message-file
    ids, often fetchable without login; the mail itself carries no attachments) under `docs/quotes/<date>/`, named by order and line id. A
-   vendor picture uses its own frame (hood-local Z = body Z − split plane): write the conversion next to the picture.
+   vendor picture may use a piece-local frame (e.g. a lid's Z = body Z − the split plane): write the conversion next to the picture.
 2. **Map every flag to a design feature** on the STLs of record (`scripts/thin_wall_check.py --census` per piece, `--pinch` on mark-shaped
    bodies): each red area is either designed geometry listed before ordering (knife edges, slits, legend webs — quote the order sheet line that
-   listed it) or a real defect. Write the mapping table into `docs/reviews/<VENDOR>_REVIEW_<order>.md`; a flag you cannot map is a finding.
+   listed it) or a real defect. Write the mapping table into §2 of the record (`templates/VENDOR_REVIEW_RECORD.md`, under `docs/quotes/<date>/`); a flag you cannot map is a finding.
 3. **Decide per line** — a CC row with options and a recommendation, OPEN for the owner: accept the risk (bodies whose thin parts are designed),
    fix and replace (a real defect), redesign (rare). The owner's row (D-nn) decides; the reply wording per line goes into the CC row.
 4. **Fix through the yaml + generator** (never the STL): version bump, full generated chain, new census row for the defect class (§3 point
    contacts), `--check`s green, tag. Compare facet count / volume / area / bbox per piece to know which files actually changed (an STL md5 is
    not a geometry signature — CGAL export order moves every md5).
 5. **Re-run the vendor's own DFM on the replacements** before uploading them, on the quote page, nothing saved (§4 mechanics): the record says
-   "no new flag" or names the new one. List the replacement files with md5s and which order line each replaces (`REPLACE_FILES_<order>.md`).
+   "no new flag" or names the new one. List the replacement files with md5s and which order line each replaces (record §4).
 6. **Replace on the order** — owner's word (§1): Replace File per activated line; a line without the button → one chat message asking to
    activate it (the vendor tip: ask Live Chat right away instead of waiting for a mail); upload; screenshot before / each line / after; record
    quantities and prices unchanged. Then the vendor re-reviews; the owner pays.
-7. **Read the follow-up mails right.** "Order Dxxx audit failed — please replace files" is the vendor's wording for *Replace File enabled*, not a
-   rejection; the approvals arrive per line minutes after the upload. A status check is read-only: order history + detail + message centre,
+7. **Read the follow-up mails right.** An automated "order … audit failed — please replace files" mail (JLC3DP wording, worked example) means
+   *Replace File enabled*, not a rejection; the approvals arrive per line minutes after the upload. A status check is read-only: order history + detail + message centre,
    screenshots, a table "pending on our side?" per order, watch items (factory closures) listed, buttons not clicked listed.
 
 ## 3. Point contacts — the defect class a wall census cannot see (worked example: an SLA inlay plate)

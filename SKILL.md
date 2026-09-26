@@ -15,8 +15,9 @@ when you reach that step, not before. Nothing here is specific to one board: pro
 1. **Install the skill — one layout.** `git submodule add <skill repo> vendor/hw-from-spec && ln -s vendor/hw-from-spec/scripts scripts`
    (relative link; or `cp -R vendor/hw-from-spec/scripts scripts` and pin `skill.commit` in project.yaml). Never a submodule AT `scripts/`
    (every gate command would need `scripts/scripts/…`). Create the skill's interpreter once: `cd vendor/hw-from-spec && uv venv .venv &&
-   uv pip install --python .venv/bin/python pyyaml` (README step 2; the venv is gitignored, it does not ship). Then `uv venv .venv` in the
-   project too (the gates use the first interpreter that imports yaml: project venv, skill venv, python3).
+   uv pip install --python .venv/bin/python pyyaml` (README step 2; the venv is gitignored, it does not ship). Then `uv venv .venv && uv pip install
+   --python .venv/bin/python pyyaml` in the project too — `tools.python` and the step-5 loop use it (the shell gates fall back to the first
+   interpreter that imports yaml: project venv, skill venv, python3; the python loop does not).
 2. **Copy the templates**, then `grep -rn '{{' CLAUDE.md docs project.yaml design` must print nothing:
    `cp templates/CLAUDE.md templates/.gitignore templates/project.yaml .`; `mkdir -p docs/{governance,design,parts,reviews,release,quotes,production} design`;
    `cp templates/{DECISIONS,STATUS,GATES,KNOWN_ISSUES,LEARNINGS_LOG,BLOCKERS,ENV,ERC_WAIVERS}.md docs/governance/`; `cp templates/PARTS_VERIFICATION.md
@@ -99,9 +100,9 @@ Phases: **G0** spec approved → **G1** schematic approved → **G2** layout app
   test plan's UNVERIFIED markers. Section 1 is hand-curated between markers (`scripts/known_issues.py`). Describe the nod marker indirectly in
   status cells or the generator re-triggers on the description.
 - A literal `|` inside a cell is `\|`; the generator refuses a row with the wrong cell count. An ID is reserved only when its row is in HEAD:
-  `grep -c 'CC-nnn |'` immediately before writing (CC rows; owner rows are bold in the template), hand numbers out with tasks (`references/agent-ops.md` §4).
+  `grep -c 'CC-nnn |'` immediately before writing (CC rows; owner rows are bold in the template), hand numbers out with tasks (`references/agent-ops.md` §1).
 - One record row per agent task, appended after re-reading the file; commit it right away with the exact-edit staging recipe when other agents
-  share the tree (`references/agent-ops.md` §3).
+  share the tree (`references/agent-ops.md` §2).
 
 ## 4. Parts
 
@@ -119,7 +120,7 @@ Phases: **G0** spec approved → **G1** schematic approved → **G2** layout app
 
 ## 5. Blind reviews
 
-Protocol (`workflows/README.md`, `references/agent-ops.md` §5):
+Protocol (`workflows/README.md`, `references/agent-ops.md` §4):
 
 1. Freeze: commit, `git status --short --untracked-files=no` empty, `git worktree add --detach <frozen> HEAD`, then `git -C <frozen> submodule
    update --init` (otherwise the skill submodule is empty there and `scripts` dangles). Reviewers read only there.
@@ -172,8 +173,9 @@ FEA: Gmsh + scikit-fem; fTetWild for CGAL STLs; caches keyed on content; compact
 - **Point contacts.** Before any mark-shaped body or pocket (inlay plate, badge, deboss) run `scripts/thin_wall_check.py --pinch <stl>`: a traced
   outline of touching shapes pinches to 0.01 mm and the part arrives as lobes; a wall census cannot see it. Bridge with web discs clipped to the
   outline's closing, add the neck row, keep the components = 1 row; `--census` turns a fab heat-map colour into a number (`references/case-pipeline.md`).
-- **A case-version bump costs ≈ 45 min of machine time** (every STL md5 moves, every FEA mesh rebuilds): run case FEA / PCB FEA / drawings / the
-  alternative preset as background jobs and block on their EXIT lines; budget it before promising the full pipeline (`references/case-pipeline.md`).
+- **A case-version bump re-runs every keyed stage** (every STL md5 moves, every FEA mesh rebuilds — ≈ 45 min on the source project's machine, the
+  worked example in `references/case-pipeline.md`): run case FEA / PCB FEA / drawings / the alternative preset as background jobs and block on
+  their EXIT lines; budget it before promising the full pipeline.
 
 ## 9. Software track
 
@@ -190,7 +192,7 @@ the yaml and the contract, not the generator) builds `docs/production/<md5-8>/` 
 filled by an agent; records (photos, press logs, test results) are filed as they happen under a records folder or the cut cannot be written
 (`references/release-and-cut.md`).
 
-- **The last round is an order, then a fixed-point pass:** renders → reports → matrix → reports → analysis index → PDFs → cut build LAST → commit;
+- **The last round is an order, then a fixed-point pass:** records → renders → reports → matrix → reports → analysis index → PDFs → cut build LAST → commit;
   afterwards only `--check`s; run the round twice and diff after stripping the volatile cascade (`references/release-and-cut.md` §3.1). Whoever
   appends a decision row runs the round.
 - **Placed order = frozen package.** Once an owner row says the order is PLACED (`markers.placed_regex` + the package name), the fab-package gate

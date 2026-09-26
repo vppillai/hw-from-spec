@@ -17,7 +17,7 @@ scripts/          generic generators driven by a project.yaml — known_issues, 
 workflows/        four blind-review workflow templates ({{PLACEHOLDERS}}) + README on instantiating them
 templates/        CLAUDE.md rules, project.yaml (day-1 gate lists), .gitignore, DECISIONS / STATUS / GATES / KNOWN_ISSUES / LEARNINGS_LOG /
                   BLOCKERS / PARTS_VERIFICATION / ENV / TEST_PLAN / ERC_WAIVERS seeds, datasheet_notes/, design/traceability.yaml seed,
-                  hand-off and release-notes skeletons, production_cut.yaml; templates/ci/ = CI workflow templates (fill with the sed recipe there)
+                  hand-off, vendor-review record and release-notes skeletons, production_cut.yaml; templates/ci/ = CI workflow templates (fill with the sed recipe there)
 smoke/            the automated dry run: a five-part one-sheet project with a two-piece case; run_smoke.sh drives every script to a DRAFT report
 evals/            skill-creator eval prompts (start a project / run a blind review / cut a release)
 ```

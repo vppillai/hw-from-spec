@@ -21,10 +21,11 @@ Everything downstream is keyed on the board md5, so:
 chain only after the last board-touching workflow of the round (a silk-only merge changes the md5 and orphans everything).
 
 ### 3.1 The one-round record chain (production cut) and the fixed-point pass
-Generated records read each other, so the LAST round has an order, not a digest:
-`known_issues` → order sheet / package notes → `collect_renders` (the reports hash its index) → `release_report` → `traceability` → `release_report`
+Generated records read each other, so the LAST round has an order, not a digest (skill scripts in `code`, the project's own generators in
+*italics* — a project without one skips that step):
+`known_issues` → *order sheet / package notes* → `collect_renders` (the reports hash its index) → `release_report` → `traceability` → `release_report`
 (the matrix's report rows flip with the reports' freshness and the report quotes the matrix line: dependent writer, matrix, dependent writer again)
-→ `analysis_index` → `render_pdf` (its PDF source md5s) → `production_cut build` LAST (the manifest stamps what render_pdf and collect_renders
+→ *analysis_index* → *render_pdf* (its PDF source md5s) → *production_cut build* LAST (the manifest stamps what the PDF renderer and the collector
 wrote) → commit. Afterwards only the pure `--check`s; a `clone_gate.sh --regen` run AFTER the build makes the cut STALE although the reports are
 content-identical (`production_cut --check` compares md5s, `release_report --check` strips the volatile lines) — a confirming regen copy-back is
 discarded with `git checkout` once its diff is timestamp-only.
@@ -82,7 +83,7 @@ orderable state and does not substitute for the owner's gate cells.
 Beside the text SOP, a picture per step: authored SHORT yaml (parts / tools / check / camera per step, fixed pages before and after), generated
 step text (the case generator's `### Step N - title (T s)` + paragraph → the first two sentences), one clean render per page from the geometry of
 record (marketing look: clean scheme, the ordered colours, legends readable → cameras on the side the legend is laid out for), keyed on
-(geometry md5, defs, camera, size) so a text edit renders nothing and a case bump re-renders every page (≈ 1 min). Numbers stay in the SOP /
+(geometry md5 of the one scad file named — flatten includes or accept that included files do not move the key, defs, camera, size) so a text edit renders nothing and a case bump re-renders every page (≈ 1 min). Numbers stay in the SOP /
 manufacturing spec (one source); the guide names where the words are. Registered in `production_cut.yaml` as a deliverable with its `--check`;
 the SOP's companion cell points at it (a pointer, no revision bump). Worked example: the source project's VG-001 (D-76 / CC-199).
 
@@ -91,6 +92,6 @@ When the tree is a mess at the order: phase 1 deletions (superseded generated ar
 the owner sees the proposed tree. Method: decision row → `reorg:` block → `--plan` → `git ls-files -s` BEFORE → `--apply` → regenerate every
 generated file that embeds paths (never edit them) → `--check` 0 findings → AFTER dump → `--proof BEFORE AFTER REWRITES` (every blob at its mapped
 path with the same sha, or in the rewrite list) → gates → tag. Frozen records keep the old paths (`--map` reads them); an uploaded package's
-generator-owned notes are re-derived, its fab files never rebuilt. Before a deletion: grep basenames AND exact paths, separate live citations
+generator-owned notes are re-derived, its fab files never rebuilt. URLs into the repo are not rewritten (grep `blob/.*/<old>` by hand). Before a deletion: grep basenames AND exact paths, separate live citations
 (gen/, design/, CI, live docs) from record citations (DECISIONS / STATUS / merged reviews) — treating records as blockers freezes the tree; a
 traceability `exists` check on a file that leaves the tree becomes `git show <tag>:<path> | grep -qF '<same string>'`, nothing weakened.

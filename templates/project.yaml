@@ -25,7 +25,7 @@ paths:
   release_dir: docs/release
   collateral_dir: docs/release/collateral
   case_yaml: design/case.yaml                 # optional; delete the line if the project has no enclosure
-  # learnings / erc_waivers / env / parts_verification / reviews_dir / quotes_dir / production_dir default to the docs/ layout (references/project-yaml.md)
+  # learnings / erc_waivers / env / parts_verification / datasheet_notes / reviews_dir / quotes_dir / production_dir default to the docs/ layout (references/project-yaml.md)
 tools:
   python: .venv/bin/python
   kicad_cli: {{CAD_CLI_PATH}}

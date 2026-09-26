@@ -46,7 +46,7 @@ paths:
   mesh_provenance: out/mechanical/board.stl.provenance.json   # optional; {board_md5, board_commit, mesh_md5, facets}
 tools:
   python: .venv/bin/python                # {PY} in traceability commands; a leading "." makes it root-relative
-  kicad_cli: /Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli   # {KICAD_CLI}
+  kicad_cli: /Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli   # {KICAD_CLI} (macOS example)
   kicad_python: /Applications/KiCad/KiCad.app/Contents/Frameworks/Python.framework/Versions/Current/bin/python3   # {KPY}
 traceability:
   scratch_links: [lib]                    # symlinked next to the scratch copy of the board dir so ${KIPRJMOD}/../../lib resolves
@@ -58,7 +58,8 @@ dfm:
 reorg:                                    # scripts/reorg_paths.py — only when the layout changes (decision row first)
   moves: {docs/OLD.md: docs/<folder>/OLD.md}   # old -> new, git mv + literal rewrite (word-boundary guarded, longest first, idempotent)
   trim: [out/old_dir]                     # git rm -r (name the tag that keeps them in the decision row)
-  untrack: ['out/**/logs/*.log']          # git rm --cached, files stay on disk; gitignore: lines appended
+  untrack: ['out/**/logs/*.log']          # git rm --cached, files stay on disk
+  gitignore: ['out/**/logs/*.log']        # lines appended to .gitignore by --apply (skipped when present; usually = untrack)
   frozen: [out/fab/]                      # never rewritten, never checked (uploaded packages, archived records)
   skip: [lib/]                            # never touched
   allow_old_files: [docs/reviews/REORG_PLAN.md]   # files that legitimately spell the old names (this script and project.yaml are exempt already)
@@ -67,9 +68,9 @@ reorg:                                    # scripts/reorg_paths.py — only when
   allow_missing: ['^docs/production/[0-9a-f]{8}/']   # regexes of literals allowed to be dangling (deliverables named before they exist, negative checks)
   rewrites_record: docs/reviews/REORG_REWRITES.txt   # written by --apply; read by --proof
 assembly_guide:                           # scripts/assembly_guide.py (release-and-cut §8)
-  yaml: design/assembly_guide.yaml        # authored short text: doc, parts, tools, pages (before/after), step_defaults, steps{n: camera/parts/tools/check}
+  yaml: design/assembly_guide.yaml        # authored short text: doc, parts, tools, defaults{defs}, pages (before/after), step_defaults, steps{n: camera/parts/tools/check}, where_the_words_are[]
   steps_md: out/mechanical/case/ASSEMBLY.md   # optional generated step source: '### Step N - title (T s)' + paragraph
-  scad: out/mechanical/case/<preset>/case.scad   # geometry of record; its md5 keys every render
+  scad: out/mechanical/case/<preset>/case.scad   # geometry of record; the md5 of this ONE file keys every render (flatten includes, or accept that they do not move the key)
   out_dir: docs/production/{MD5_8}        # {MD5_8} board md5-8, {CASE_VERSION}
   doc_name: VISUAL_ASSEMBLY_GUIDE.md
   size: '1920,1440'
@@ -113,7 +114,7 @@ docs/quotes/<date>/  fab evidence: quote captures, DFM exports, vendor review ma
 docs/production/<md5-8>/  the production cut (MANIFEST, STATUS, documents, records/, pdf/)
 docs/datasheet_notes/
 ```
-The 62 `docs/<FILE>.md` literals in SKILL.md / references / templates ARE this layout. Changing it later is a decision row + a `reorg:` block +
+Every `docs/…` path in SKILL.md / references / templates spells this layout. Changing it later is a decision row + a `reorg:` block +
 `scripts/reorg_paths.py` (release-and-cut §9) — never a hand sweep; frozen records keep the old paths and `--map` explains them.
 
 ## Conventions the scripts rely on

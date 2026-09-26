@@ -19,7 +19,7 @@
     {
       "id": 2,
       "name": "run-blind-review-round",
-      "prompt": "The layout of our board (kicad/ct1/ct1.kicad_pcb, package under out/fab/) is done. Run a blind review round before I approve G2. We have the Cursor agent CLI available for external models.",
+      "prompt": "The layout of our board (kicad/b1/b1.kicad_pcb, package under out/fab/) is done. Run a blind review round before I approve G2. We have the Cursor agent CLI available for external models.",
       "expected_output": "Commits and checks the tree is clean, creates a detached frozen worktree, generates the hand-off header with scripts/handoff_header.py (HEAD md5 MATCH, clean tree), writes the hand-off with a waiver paragraph, instantiates workflows/blind-deep-review.js with placeholders filled (roles, models, fallback), runs in-session + external reviewers who never see each other's output, adversarial verifiers on BLOCKER/MAJOR, merges into REQUIRED / OWNER / DOCUMENT / ACCEPT with a verdict, commits the review files with explicit paths, and does NOT write the G2 line.",
       "files": [],
       "assertions": [
