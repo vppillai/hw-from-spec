@@ -29,6 +29,9 @@ jobs:
         run: {{PROJECT_SETUP_CMD}}
       - name: Check
         run: {{PROJECT_CHECK_CMD}}
+      - name: Tree unchanged by the checks   # a checker that writes into the tree is a write, not a check (it once replaced the ERC of record)
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then echo "checkers wrote to the tree:"; git status --porcelain; exit 1; fi
       - name: Upload check outputs
         if: always()
         uses: actions/upload-artifact@v4
