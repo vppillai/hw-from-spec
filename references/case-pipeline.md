@@ -28,11 +28,16 @@ Everything under `out/<board>/mechanical/case/<preset>/` is generated; `ASSEMBLY
   otherwise one of them silently describes the other build). `preset_default` picks the build of record; `--preset fdm` writes to its own folder.
 - A fix that turns out to be for every build belongs in the base block; prove "no geometry change" by diffing the merged dict key by key, not by
   re-exporting (CGAL STLs are not byte-stable).
-- FDM (owner's printer): walls in extrusion lines (two-line 0.85 mm), colour on TOP faces in ONE Z band per part (a coloured vertical flank costs a
-  filament swap per layer), legends as 0.4 mm debosses, supports per print sheet.
-- Print service (MJF/SLA): walls ≥ 1.2 mm where the geometry allows; list what stays thinner; part min size per process; two-tone via an **inlay
-  plate** (a mark-shaped pocket is its own key when the mark is chiral) or a **badge** (metal plate in a pocket, UV-print or laser artwork as DXF +
-  B-rep STEP).
+- FDM (owner's printer): printer-first rules as FAIL rows — walls ≥ 1.6 (a two-line 0.85 skirt failed as a product), every external face on the bed /
+  vertical / clean top, legends RAISED cap 4 / stroke 1.0 / 0.6 on a face-up top, screws over slit tabs, coupons and a board dummy before the part,
+  slicer projects with embedded presets (`references/dfm-printed-enclosure.md` §8). Colour on TOP faces in ONE Z band per part (a coloured vertical
+  flank costs a filament swap per layer).
+- Print service (MJF/SLA): every wall AND every void ≥ the vendor's grey line (1.2 at JLC3DP — design at 1.3), no free-standing wedge, no engraved text, no
+  slit tabs, closed rims; **nothing "stays thinner" — a listed-below-minimum row is a waiver, and the waived lip cracked on all five parts**
+  (`references/dfm-printed-enclosure.md` §1–§4). Part min size per process; two-tone via an **inlay plate** (a mark-shaped pocket is its own key when
+  the mark is chiral) or a **badge** (metal plate in a pocket, UV-print or laser artwork as DXF + B-rep STEP); text on a label carrier.
+- Two versions from one yaml (vendor + home): variant-only lines behind hook tokens that expand to the original text for the other presets, own version
+  key per preset, byte identity of the vendor SCAD proven against HEAD before committing (`references/dfm-printed-enclosure.md` §9).
 
 ## Census (every row = a check with yaml value, measured value, gate, FAIL/WARN/OK)
 - Wall thickness by ray-cast, **bucketed by entry surface** (a blind-hole bottom skin is not the recess floor); report each entry class with its own
@@ -43,8 +48,13 @@ Everything under `out/<board>/mechanical/case/<preset>/` is generated; `ASSEMBLY
 - Imported artwork (SVG) is measured from the PATH, not the canvas attributes (`resize(auto)` scales the glyph bbox).
 - Inward ray-cast rule: a ray from a point nudged 1e-3 inside a face hits THAT face at 0.000 for a fraction of samples — discard hits closer than
   ~0.02 mm and take the first beyond (`scripts/thin_wall_check.py --census`, `--self-hit`), or solid 2 mm chamfers read "0.00 mm walls".
-- An STL md5 is not a geometry signature (CGAL export order moves every md5): "only piece X changed" is proven by facet count / volume / area /
-  bbox per piece, not by md5s.
+- An STL md5 is not a geometry signature (CGAL export order moves every md5) UNLESS the export is rewritten canonically (sorted triangles, own binary
+  writer with normals recomputed from the float32 vertices — `references/dfm-printed-enclosure.md` §7.7); without that, "only piece X changed" is
+  proven by facet count / volume / area / bbox per piece, not by md5s.
+- **The census is a FAIL gate per print preset, not a review aid** (`scripts/thin_wall_census.py`): inward rays = walls, outward rays = voids, clusters
+  below `gate − 0.05` classified wall / wedge by the opposite-face angle; walls and voids gate, wedges are listed (each must be a chamfer backed by a
+  wall); a SANITY row reproduces the vendor's colouring; `--gate <census dir>` in the adopt list proves md5 + 0 FAIL against the committed STL
+  (`references/dfm-printed-enclosure.md` §2, rows in `templates/CENSUS_GATE_ROWS.md`). Concentricity and every face render come from the mesh too.
 
 ## Point contacts (mark-shaped bodies and pockets: inlay plates, badges, debosses)
 - A traced outline of touching shapes (potrace) is ONE path pinched to 0.003–0.03 mm at every contact; extruded, the body is lobes held by
