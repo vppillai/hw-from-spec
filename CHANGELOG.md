@@ -1,5 +1,50 @@
 # CHANGELOG — hw-from-spec
 
+## 0.4.0 — 2026-09-28 — printed-enclosure DFM: one vendor round instead of four (source project D-79 … D-84, CC-204 / CC-205, learnings 2026-09-27 / 09-28)
+
+The source project's MJF trays cracked on a 0.88 × 141 mm lip that a "kept below minimum (listed)" row had waived, and its FDM preset passed its own
+census and failed as a print. Four vendor rounds and twelve full rebuilds later every rule was measured; 0.4.0 ships them so the next enclosure is
+vendor-clean before its first quote. Owner's words: "include all the learnings into the skills so that next time we reduce the number of iterations".
+
+### Added
+- **`references/dfm-printed-enclosure.md`** — the acceptance bar (0 FAIL / 0 WARN in tables and census, zero slicer warnings, no vendor flag, no
+  yellow / red, every face looked at; INFO-vs-WARN split); MJF rules as measured at JLC3DP (every parallel-faced wall ≥ 1.2 designed 1.3, every void
+  ≥ 1.2, no free-standing wedge — chamfers into walls stay grey, no slit tabs / detents / living hinges, no engraved text, a 141 × 0.88 skin cracks,
+  a feature that cannot be clean in its space budget goes, rule-drift re-derivation, coupled knobs, overshoot slabs); waivers are not checks — the
+  census is a FAIL gate per preset with wall / wedge / void classes, span, SANITY row and a pure adopt gate; heat map = strength finding; closed
+  rims; designed asymmetries rendered + in the order sheet + KNOWN_ISSUES; every face incl. the sole; the JLC3DP quote-page procedure (ONE STL per
+  session, process + material set BEFORE reading the flag — the default is resin and its map differs, flag first, viewer → Analysis Results → Thin
+  Wall Heatmap on every face, screenshots named with the md5, verdict flips → diff the meshes, canonical STL so the md5 is the geometry); the FDM /
+  Bambu P2S printer-first preset (walls ≥ 1.6, raised legends cap 4 / stroke 1.0 / 0.6, no rigid bump on a slit tab, fan bosses = holes, hood
+  roof-down on screws + inserts, coupons before the case, two-piece AND one-piece board dummy at final dimensions, 3MF projects with project-named
+  presets + `different_settings_to_system`, floating-region warning = FAIL, auto-orientation); two versions from one yaml (hook tokens, own version
+  key, byte-identical vendor SCAD); the cracked-part post-mortem pattern (measure the ordered STL, intent vs defect, accept-and-ship reply with the
+  number, apply design-wide).
+- **`scripts/thin_wall_census.py`** — inward rays = walls, outward rays = voids, clusters below `gate − 0.05` classified wall / wedge by the
+  opposite-face angle, legend boxes gate at `--box-min`, `--json` record (`stl_md5`, clusters, voids, `fails`), pure `--gate-dir` for `gates.adopt`,
+  exit 1 on FAIL; `--selftest` runs the pure core without mesh libraries and three trimesh primitives when installed (1.0 plate FAIL, 45° prism
+  wedges only, 2.0 plate 0 FAIL). Validated read-only on the source project's ordered tray (WALL 1.00 × 144 mm + 0.50 detent voids → FAIL 5) and on
+  its v3.16 tray (0 FAIL, SANITY 0.00 % / 0.00 %). `thin_wall_check.py --census` stays the quick look and points at the gate.
+- **`templates/CENSUS_GATE_ROWS.md`** — the check-table rows every printed body carries (census header, WALL / VOID / wedge clusters, SANITY,
+  band-by-design, bodies = 1, concentricity from mesh sections, designed offsets, six face renders) + the adopt-list line.
+- **`templates/DFM_ROUND.md`** — one record per vendor quote-page session under `docs/quotes/<date>/`: body, canonical md5, material set before the
+  flag, flag, heat-map screenshots per face, colour → feature mapping, our numbers, verdict.
+- SKILL §8.1 "DFM for printed enclosures" + Where-to-look row; §11 commit after every meaningful step (uncommitted four-hour trees, subagent turn
+  limits → checkpoint commits); `agent-ops.md` §2 the same + a worker fork hands the blind review back.
+- `references/pitfalls.md`: new section *dfm / printed enclosures* (32 lines) + agents/git (checkpoint commits, turn limits, Linux CI parity checklist,
+  filter-repo hash remap) + mechanical (GLB face groups, vertex-colour bleed); header now 09-21 … 09-28.
+- `references/case-pipeline.md`: the print-service bullet no longer says "list what stays thinner" — no waiver, census gate, canonical STL, two
+  versions; `references/vendor-review.md` §4: material first, one file per session, wall / void / free-wedge colouring, verdict-flip rule;
+  `references/project-yaml.md`: the census gate as a measurer + adopt-list example.
+- Smoke step 0: the reference must carry the 1.2 / 1.3, void, free-wedge, one-STL-per-session, material-first and waiver-row rules and
+  `thin_wall_census.py --selftest` passes without mesh libraries. Eval 6: first DFM round of a printed enclosure.
+
+### Not done (deferred)
+The census "backed vs free" wedge attribute (today every free wedge is removed by design and the listed wedges are the vendor-confirmed grey set) ·
+a canonical-STL writer as a skill script (the contract is in the reference §7.7; the writer stays project-side next to the exporter) · coupon,
+board-dummy and 3MF generators (project-side; their rules are in the reference §8) · concentricity / face-render measurers (project-side; rows in
+`CENSUS_GATE_ROWS.md`) · a workflow `.js` for the DFM round (prose + `DFM_ROUND.md`).
+
 ## 0.3.0 — 2026-09-26 — post-order learnings of the source project (D-70…D-76, CC-190…CC-199, learnings 2026-09-22 late … 09-26)
 
 Both 0.2.1 "Next" candidates plus the learnings logged after the order went in. Everything generic; the source project is cited as the worked example.
