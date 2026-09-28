@@ -1,6 +1,6 @@
 ---
 name: hw-from-spec
-version: 0.3.0
+version: 0.4.0
 description: Run a hardware project (PCB + printed or CNC enclosure, contract fab such as JLCPCB) from a written specification to a production cut with an owner-gated, generated-only, blind-reviewed workflow. Use this whenever someone starts a board or enclosure project from a spec, asks to set up gates, a decision log, generators, part verification, a fab DFM mirror, a case pipeline, FEA, blind reviews, a release report or a production cut for one, or resumes such a project — even if they only say "new KiCad board", "order this at JLC", "review the layout" or "cut the release".
 ---
 
@@ -177,6 +177,30 @@ FEA: Gmsh + scikit-fem; fTetWild for CGAL STLs; caches keyed on content; compact
   worked example in `references/case-pipeline.md`): run case FEA / PCB FEA / drawings / the alternative preset as background jobs and block on
   their EXIT lines; budget it before promising the full pipeline.
 
+### 8.1 DFM for printed enclosures (before the FIRST quote — `references/dfm-printed-enclosure.md`)
+
+Acceptance bar, written into the decision row first: **0 FAIL / 0 WARN in every check table and census · zero slicer warnings · no vendor flag ·
+no yellow, no red on the vendor's heat map · every face rendered and looked at.** A row is PASS / FAIL on a MEASURED value or it is INFO (no verdict,
+own table); "kept below minimum (listed)" is a waiver, and the waived 0.88 × 141 mm lip cracked on five parts.
+1. **Census as a FAIL gate on every body of every preset** (`scripts/thin_wall_census.py --json`, rows `templates/CENSUS_GATE_ROWS.md`, pure
+   `--gate-dir` in `gates.adopt`): walls AND voids ≥ the vendor minimum (MJF 1.2 → design 1.3; FDM 1.6 / voids 1.0), wedges listed and each backed
+   by a wall, SANITY row = the vendor's colouring reproduced, bodies = 1, concentricity and six face renders from the mesh.
+2. **Geometry rules**: no free-standing wedge (rail tips, lips, added coves / fillets), no slit tabs / detents / living hinges on MJF, no engraved
+   text on an MJF body (label carrier), closed rims (no slot / notch / gap on the single part unless it has an obvious job), designed asymmetries
+   rendered + in the order sheet + KNOWN_ISSUES or removed; re-derive every yaml value set against an older print rule; a feature that cannot be
+   clean in its space budget goes; every wall change reruns the whole table.
+3. **Canonical STL** (own binary writer, sorted triangles, normals from the float32 vertices) so the md5 IS the geometry; the census gate, vendor
+   uploads and the cut key on it.
+4. **Vendor quote page**: ONE STL per session, process + material set on the line BEFORE the flag is read (the default is resin, its map differs),
+   flag first, then the heat map on every face, screenshots named with the md5, one `templates/DFM_ROUND.md` per session under `docs/quotes/<date>/`;
+   a verdict that flips → diff the meshes before touching the generator. Nothing saved, carted, agreed or paid (§10 boundaries).
+5. **Home FDM preset** (printer-first, its own version key, hook tokens keep the vendor SCAD byte-identical): coupons and a board dummy (two-piece
+   AND one-piece at final dimensions) before the part, walls ≥ 1.6, raised legends cap 4 / stroke 1.0 / 0.6, fan bosses = fan holes, hood roof-down
+   on screws + inserts, slicer projects with project-named presets + `different_settings_to_system`, floating-region warning = FAIL, auto-orientation.
+6. **When a vendor reports a cracked part**: measure the ORDERED STL (sections + census with span and class), separate design intent from defect,
+   draft the accept-and-ship reply with the number for the owner, then apply the learning design-wide (every body, every preset), not to the
+   failed feature (`references/dfm-printed-enclosure.md` §10).
+
 ## 9. Software track
 
 Bring-up tool first (a `--selftest` that needs no hardware, `--dry-run`), then the architecture note, criteria as YAML the tool reads, PASS / FAIL
@@ -207,7 +231,9 @@ filled by an agent; records (photos, press logs, test results) are filed as they
 ## 11. Agent operations
 
 Parallel agents own disjoint files; explicit-path commits do not isolate hunks inside a shared file (stage the exact edit); re-read before every
-append; hand out record IDs with the task; block in-process on background jobs (`until ! kill -0 $pid; do sleep 20; done`, ≤ 600 s per call);
+append; hand out record IDs with the task; **commit after every meaningful step** (a four-hour agent tree sat uncommitted through twelve rebuilds
+until a `WIP … not yet gated` checkpoint; a subagent that hits its turn limit loses everything not in HEAD — checkpoint commits, then the gated one);
+block in-process on background jobs (`until ! kill -0 $pid; do sleep 20; done`, ≤ 600 s per call);
 heartbeat every ~25 min; time-box every long task; pause points with a resume list in `docs/governance/STATUS.md`; keep the machine awake; resume by message
 with the measured state, never from memory; kill a long render early when an owner addition arrives (`references/agent-ops.md`).
 Memory holds resume pointers and owner feedback, never project facts; a numbered PAUSE POINT carries an owner list (owner-only items, struck
@@ -237,6 +263,7 @@ Then fold the learnings back into this skill's `references/pitfalls.md` at the n
 | part tags, verification table | `references/part-verification.md` |
 | fab rules, panel, quote form, DFM export | `references/fab-dfm.md` |
 | case yaml → STL → checks → quotes | `references/case-pipeline.md` |
+| printed-enclosure DFM: MJF / FDM rules as measured, census gate, heat-map procedure, coupons, dummies, slicer projects, post-mortem | `references/dfm-printed-enclosure.md` |
 | meshing, solving, caches, reporting | `references/fea-stage.md` |
 | bring-up tool, criteria, codes | `references/software-track.md` |
 | reports, collateral, tag, cut yaml, one-round chain, assembly guide, re-layout | `references/release-and-cut.md` |

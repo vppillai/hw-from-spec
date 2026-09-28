@@ -18,6 +18,11 @@
 - Stage and commit a `git rm`/`git mv` set in ONE command; the next agent's bare `git commit` sweeps a staged set into its commit.
 - After an explicit-path commit of a generated set: `git status --short <paths>` (globs skip siblings silently).
 - Write the commit message from `git show --stat`, not from what you believe you staged.
+- **Commit after every meaningful step, gated or not.** A four-hour worker tree (twelve full case rebuilds) sat uncommitted until a `WIP … not yet
+  gated` checkpoint; a subagent stops at its turn limit and everything not in HEAD is gone. Checkpoint commits say "not yet gated" in the message;
+  the gated commit follows; the coordinator never commits another agent's half-edit but does read the checkpoints when it resumes (SKILL §11.1).
+- A worker fork may not spawn agents: it writes the blind-review checklist and the artefact list into its record and hands the round back to the
+  coordinator, never skips it silently.
 
 ## 3. Regenerating shared records
 - Re-read (re-grep) the row immediately before replacing a status cell; prefer a suffix append over a full-cell rewrite.
