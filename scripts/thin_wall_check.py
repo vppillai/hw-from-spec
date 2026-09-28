@@ -3,7 +3,8 @@
 
   scripts/thin_wall_check.py --census PIECE.stl [--samples 40000] [--thin 1.0] [--red 0.5] [--self-hit 0.02] [--cell 3.0] [--json OUT]
       inward ray-cast wall-thickness census: histogram (mm bins) + clusters of thin samples (n, min, median, n_red, bbox) so a heat-map colour
-      becomes a number and a named feature. Needs trimesh + numpy at run time.
+      becomes a number and a named feature. Needs trimesh + numpy at run time. The GATE form (wall / wedge classification, outward void rays,
+      --json record + a pure --gate-dir for the adopt list) is `scripts/thin_wall_census.py` — use that to gate a body; this mode stays a quick look.
   scripts/thin_wall_check.py --pinch PIECE.stl [--z Z] [--close 0.05] [--path-frac 0.05] [--merge 3.0] [--web D] [--clip R]
       POINT CONTACTS of a mark-shaped body: section the piece at Z, take the outline, report non-adjacent boundary vertices closer than --close
       (a potrace path of touching shapes pinches to 0.003–0.03 mm; a ridge / distance-transform "thinnest arm" census cannot see it). With --web,

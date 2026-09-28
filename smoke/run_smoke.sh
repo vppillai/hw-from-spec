@@ -15,6 +15,15 @@ cd "$R"; git init -q; git add -A; git -c user.name=smoke -c user.email=s@s commi
 git archive HEAD | tar -tf - | grep -qx scripts || { echo "FAIL: the archive must carry the relative scripts symlink"; exit 1; }
 say() { printf -- '\n--- %s\n' "$*"; }
 md5of() { "$PY" -c 'import hashlib,sys; print(hashlib.md5(open(sys.argv[1],"rb").read()).hexdigest())' "$1"; }
+say "0 printed-enclosure DFM contract: the reference carries the measured rules and the census gate selftests without mesh libraries"
+REF="$SKILL/references/dfm-printed-enclosure.md"
+grep -q 'wall ≥ 1.2 — design at 1.3' "$REF" || { echo "FAIL: $REF lost the 1.2 / 1.3 wall rule"; exit 1; }
+grep -q 'Every void ≥ 1.2' "$REF" || { echo "FAIL: $REF lost the void rule"; exit 1; }
+grep -q 'No free-standing wedge' "$REF" || { echo "FAIL: $REF lost the free-wedge rule"; exit 1; }
+grep -q 'One STL per page session' "$REF" || { echo "FAIL: $REF lost the one-STL-per-session rule"; exit 1; }
+grep -q 'material on the line BEFORE reading' "$REF" || { echo "FAIL: $REF lost the material-before-flag rule"; exit 1; }
+grep -q 'KEPT BELOW' "$REF" || { echo "FAIL: $REF lost the waiver-row rule"; exit 1; }
+"$PY" scripts/thin_wall_census.py --selftest
 say "1 fab package of record keyed on the board md5"
 MD5=$(md5of kicad/smoke/smoke.kicad_pcb); PKG=out/fab/2026-01-03_${MD5:0:8}; mkdir -p $PKG
 printf 'board kicad/smoke/smoke.kicad_pcb\nmd5 %s\ncommit %s\nbuilt 2026-01-03\nsegments 1\nvias 0\n' $MD5 $(git rev-parse --short HEAD) > $PKG/board_id.txt

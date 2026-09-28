@@ -75,6 +75,21 @@
         "frozen records and uploaded packages are not rewritten; the record points readers at --map",
         "gates run green after the move and the commit uses explicit paths"
       ]
+    },
+    {
+      "id": 6,
+      "name": "first-dfm-round-of-a-printed-enclosure",
+      "prompt": "The two-piece case (design/case.yaml, OpenSCAD generator, MJF PA12 at JLC3DP, plus a home-printer preset) is ready for its first quote. Get it vendor-clean in one DFM round; the owner will log in for the quote page.",
+      "expected_output": "Writes the acceptance bar (0 FAIL / 0 WARN in tables and census, zero slicer warnings, no vendor flag, no yellow / red) into a decision row first; runs the ray-cast census as a FAIL gate on every body of every preset (walls AND voids at the vendor minimum, designed 0.1 over it, wedges listed and each backed by a wall), turns every 'kept below minimum (listed)' row into a measured PASS / FAIL or an INFO row, removes free-standing wedges / slit tabs / engraved text / open rims through the yaml + generator, renders every face incl. the sole, exports canonical STLs so the md5 is the geometry, then on the quote page uploads ONE STL per session, sets the process and material on the line BEFORE reading the flag, reads the heat map on every face, saves screenshots named with the md5 and files templates/DFM_ROUND.md under docs/quotes/<date>/; for the home build ships coupons, board dummies and slicer projects with embedded presets where a floating-region warning is a FAIL.",
+      "files": [],
+      "assertions": [
+        "the acceptance bar is written as a decision row before geometry changes and names 0 FAIL / 0 WARN, no vendor flag, no yellow / red",
+        "scripts/thin_wall_census.py (or the project's equivalent) gates every printed body per preset on walls AND voids; wedges are listed, not waived; no row says 'kept below (listed)' without a measured value and a verdict",
+        "free-standing wedges, slit tabs, engraved text and open rims are removed through the yaml and generator, not exempted in a check",
+        "every face of every piece is rendered and designed asymmetries are printed in the order sheet and KNOWN_ISSUES or removed",
+        "on the vendor quote page one STL is uploaded per session, the material is set before the flag is read, and the record names file md5 + material + screenshots per face",
+        "STL exports are canonical so identical geometry gives identical md5, and nothing is saved, carted, agreed or paid on the vendor site"
+      ]
     }
   ]
 }

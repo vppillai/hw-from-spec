@@ -96,6 +96,7 @@ gates:
     - "$PY scripts/release_report.py --check"
     - "$PY scripts/reorg_paths.py --check"   # when a reorg: block exists: no old literal, no dangling docs/ path in structural files
     - "$PY scripts/assembly_guide.py --check"   # production cut
+    - "$PY scripts/thin_wall_census.py --gate-dir out/<board>/mechanical/case/<preset>/census"   # every printed body: census record md5 = STL of record, 0 FAIL
   clone:                                  # scripts/clone_gate.sh: run inside `git archive HEAD`
     - "$PY scripts/release_report.py --check"
   regen:                                  # clone_gate.sh --regen: run inside the archive, then copy regen_copy_back into the tree
@@ -128,7 +129,9 @@ Every `docs/…` path in SKILL.md / references / templates spells this layout. C
   imports `yaml` among `$PYTHON`, the project `.venv`, the skill's `.venv`, `python3` (printed at the top of every run).
 - Which scripts are generators and which are graders: `known_issues`, `traceability`, `release_report`, `collect_renders`, `dfm_check`,
   `assembly_guide` have `--check`; `reorg_paths --check` is a grader (no generator side); `thin_wall_check` is a measurer (`--census`, `--pinch`,
-  exit 1 on a finding); `handoff_header.py` prints a header (nothing to check); `project.py` is the reader.
+  exit 1 on a finding); `thin_wall_census` is the printed-body GATE (`<stl> --gate G --void-gate V --json out/…/census/<piece>.json`, exit 1 on a
+  WALL or VOID cluster below its gate) plus a PURE `--gate-dir <census dir>` for `gates.adopt` (md5 of the STL beside the record + empty `fails`);
+  `handoff_header.py` prints a header (nothing to check); `project.py` is the reader.
 - Every `--check` is read-only on the tree (`adopt_gates.sh` fails when `git status --porcelain` changes across the gates); every `--selftest`
   works in a temp dir only.
 

@@ -8,7 +8,8 @@ measurer, renders are copied files.
     ./run_smoke.sh            # copies smoke/ to a temp git repo, drives every generic script end to end, prints the DRAFT report path
     ./run_smoke.sh --keep     # keep the temp repo for a look
 
-What it proves: known_issues → traceability → dfm_check → collect_renders → assembly_guide (keyed stub renders) → reorg_paths --check (layout of
+What it proves: the printed-enclosure DFM reference still carries its measured rules (1.2 / 1.3 walls, voids, free wedges, one STL per session,
+material before the flag, no waiver rows) and `thin_wall_census.py --selftest` passes without mesh libraries → known_issues → traceability → dfm_check → collect_renders → assembly_guide (keyed stub renders) → reorg_paths --check (layout of
 record) → release_report (DRAFT) → every `--check` OK → handoff_header MATCH/clean → adopt_gates.sh green incl. the clone gate on `git archive HEAD`
 and the read-only guard (tree unchanged by the gates) → an owner clear-to-build line flips the reports to RELEASED
 and `--check` catches the stale report until regenerated.
