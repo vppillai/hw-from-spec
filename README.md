@@ -35,8 +35,8 @@ Requirements: Python ≥ 3.11 with `pyyaml`, git, bash ≥ 3.2 (macOS `/bin/bash
 OpenSCAD, FEA and browser tooling belong to the project that uses the skill and are recorded in its `docs/governance/ENV.md`.
 
 ```sh
-git clone <this repo> ~/.claude/skills/hw-from-spec        # 1. as a Claude Code skill (personal); or
-mkdir -p .claude/skills && git submodule add <this repo> .claude/skills/hw-from-spec   #    per project (the skill is then also your scripts source)
+git clone https://github.com/vppillai/hw-from-spec.git ~/.claude/skills/hw-from-spec        # 1. as a Claude Code skill (personal); or
+mkdir -p .claude/skills && git submodule add https://github.com/vppillai/hw-from-spec.git .claude/skills/hw-from-spec   #    per project (the skill is then also your scripts source)
 cd <skill dir> && uv venv .venv && uv pip install --python .venv/bin/python pyyaml      # 2. the scripts' interpreter
 for s in scripts/*.py; do .venv/bin/python $s --selftest; done; scripts/clone_gate.sh --selftest; scripts/adopt_gates.sh --selftest
 smoke/run_smoke.sh                                          # 3. the dry run — green before you start a project
@@ -51,7 +51,7 @@ content; the clone gate links the working tree's scripts and venv into the archi
 
 ```sh
 cd <new project repo>                                        # git init done, project.yaml will sit here (top level)
-git submodule add <this repo> vendor/hw-from-spec && ln -s vendor/hw-from-spec/scripts scripts      # or: cp -R vendor/hw-from-spec/scripts scripts
+git submodule add https://github.com/vppillai/hw-from-spec.git vendor/hw-from-spec && ln -s vendor/hw-from-spec/scripts scripts      # or: cp -R vendor/hw-from-spec/scripts scripts
 (cd vendor/hw-from-spec && uv venv .venv && uv pip install --python .venv/bin/python pyyaml)      # the skill's venv (gitignored, does not ship)
 T=vendor/hw-from-spec/templates; mkdir -p docs/{governance,design,parts,reviews,release,quotes,production} design
 cp $T/CLAUDE.md $T/.gitignore $T/project.yaml . && cp $T/{DECISIONS,STATUS,GATES,KNOWN_ISSUES,LEARNINGS_LOG,BLOCKERS,ENV,ERC_WAIVERS}.md docs/governance/
