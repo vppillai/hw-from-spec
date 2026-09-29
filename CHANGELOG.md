@@ -1,5 +1,84 @@
 # CHANGELOG — hw-from-spec
 
+## 0.5.0 — 2026-09-28 — two blind reviews of 0.4.1 fixed, the kickoff questionnaire, the zero-warning bar, PCB build rules, the retro loop
+
+Two blind reviews of 0.4.1 (`docs/reviews/blind_review_A_0.4.1_cold_user.md`, 30 findings; `…_B_0.4.1_dfm_expert.md`, 42 findings) found a
+pasted gate line that did not parse, two install stories, rules calibrated on one vendor's checker stated as material physics, a "±0.1
+tolerance" waiver dressed as a PASS, an untested census with two blind spots, and no PCB build rules at all. The owner asked for three things the
+same day: every question up front with recommended answers, a skill that improves with each project, and "0 DFM errors and warnings" as the bar.
+
+### Changed
+- **One install block** (README, SKILL §0 step 1): vendor/hw-from-spec + relative `scripts` symlink is the only project layout; a personal clone is
+  for discovery; two venvs (skill: pyyaml; project: pyyaml + numpy trimesh scipy shapely); `uv` or `python3 -m venv` (C-02 / C-06 / C-12).
+- **"One review round" defined once** (SKILL §1) and used in GATES / CLAUDE / workflows / smoke (C-04); **deciders per phase** table (C-17);
+  **the manufacturability bar** as SKILL §1.2 (zero errors / zero warnings / no waivers; board DRC + fab DFM, printed enclosure census + slicer +
+  vendor API, CNC) — an owner row from the questionnaire, a prerequisite on G2, the board order and the new **Case order** gate row (B-32).
+- **`references/dfm-printed-enclosure.md` rewritten with tags** [checker] / [vendor sheet] / [physics] / [owner bar] / [convention] on every number
+  (C-09 / C-10 / B-15 / B-35): snap features, engraved text ≥ the void gate and tangent fillets are ALLOWED options; the 1.2 / 1.3 / 2.0 numbers are
+  JLC3DP's checker at ~150 mm plus the owner's no-yellow bar (B-02 / B-03 / B-04); the ±0.1 PASS-by-design row is gone — vendor tolerance from the
+  sheet, first-article spread feeds the margin, INFO until then (B-01); the "141 × 0.88 cracked" cause marked as not fractographed (B-07); the
+  bbox-resolution hypothesis and its test for the length-dependent metric (B-05); §7.7 → §7.2 canonical STL + geometry signature (C-20 / B-20).
+- **`scripts/thin_wall_census.py`**: no gate constant in the script — `--target <name>` reads `project.yaml print_targets` (B-33); wedges gated by the
+  width of the sub-gate band; **nearest opposing face in any direction** gated (exact point-to-face distance over KD-tree sample pairs; the ring-root
+  / ledge class every normal-ray census missed); samples ∝ surface area; wall-class and wedge-class samples clustered separately (retro); a dated
+  `accepted` list with vendor evidence is the only pass (B-31); SANITY row renamed NOISE FLOOR; recall primitives in `--selftest` (0.8 rib and 0.6
+  slit must FAIL, a 0.4 rim-ring root must FAIL through the opposing metric, an accepted root passes) (B-12 / B-13 / B-14). Needs scipy.
+- **`scripts/dfm_check.py`** reads `fab_dfm:` (`dfm:` still accepted) and `fab_dfm.bar`: an acceptance without every `accepted_requires` field
+  (reason, date, evidence) is ignored and listed; `scripts/project.py --help` exits 0 (C-24).
+- `templates/CENSUS_GATE_ROWS.md` (`--gate-dir`, C-01; the new rows: wedge band, opposing faces, accepted, geometry signature, retention in the
+  mesh, worst-case clearance; INFO rows state why), `templates/DFM_ROUND.md` (raw API JSON, site-changed branch, capability snapshot, bbox / area /
+  scale sanity, price, browser / UA, consent line, legend as displayed, material rating, build orientation, bbox-hypothesis probe; B-17 … B-19,
+  B-29, B-36 … B-38), `templates/GATES.md` (round definition, bar, Case order, literal `spec`, footprint-verification record location; C-21 / C-28),
+  `templates/project.yaml` (`skill.version`, `kickoff`, `fab_dfm` + `bar`, `print_targets` incl. `home_fdm`, historical CAD key names explained,
+  `quiet_regex` aligned; C-16), `templates/DECISIONS.md` (anchored grep, CC-001 evidence cell; C-13 / C-19), `templates/RELEASE_NOTES.md` +
+  `production_cut.yaml` + `release-and-cut.md` (**one records home** `docs/production/<md5-8>/records/`; C-05), `templates/STATUS.md` (PAUSE POINT
+  skeleton; C-30), `templates/VENDOR_REVIEW_RECORD.md` (reply template; B-22), `templates/CLAUDE.md` (bar in rule 9, kickoff answers as decisions).
+- `references/pitfalls.md`: the retracted material-before-flag line replaced by the corrected mechanism (C-03); a provenance note on the source
+  pointers (C-27); snap / wedge / engraved-text lines relabelled; `home_fdm` naming; `references/agent-ops.md`: the per-call ceiling stated once
+  (600 s, platform limit) and every other mention points there (C-18); `references/fea-stage.md` / `software-track.md`: who accepts a WARN, who
+  approves T-nn limits (C-17); `references/fab-dfm.md` / `vendor-review.md`: checker line vs published minimum vs owner bar (B-15), SLA 2 mm part
+  vs 0.8 wall (B-09), acceptances need date + evidence; `references/case-pipeline.md`: `--gate-dir`, §7.2, targets by name.
+- Smoke: `smoke/design/case.yaml` labelled FIXTURE and at 1.6 (C-11); MFG-003 doc id (C-22); README wording (C-23); `fab_dfm` + `print_targets` in
+  `smoke/project.yaml`; the dfm acceptance dated with an evidence file; greps for every rule above and for source-identifier leaks (C-15 / B-34).
+- Evals: 1 says "fab part number" (C-25); 6 and 7 re-worded for targets, accepted list, allowed options; 7 labelled as the source scenario.
+- README rewritten: title block, what you get, five-line quick start, repository map as a table, install as numbered steps with one command per
+  line (no fenced line over 90 characters — the old blocks scrolled on GitHub), the questionnaire, the retro loop, versioning, MIT (C-29), retro PRs.
+
+### Added
+- **`references/pcb-layout-dfm.md`** (owner: "are the PCB building rules captured" — they were not): the G1→G2 chain (placement CSV, router session,
+  `out/G2/` pack, decider) and the PCB build rules tagged checker / fab capability (dated, URL) / physics / owner choice — stack-up and copper
+  weights, controlled impedance and differential pairs, trace / space / via / annular / drill vs the fab table with margins, via-in-pad and
+  tenting, thermal reliefs and teardrops, mask / paste / stencil, component size and link-part policy (no 0201, 0402 min, 0603 signal links, 1206
+  power links as owner choices), two-sided assembly, polarity / rotation / CPL and the fab's rotation table, fiducials and test points, silk,
+  courtyards and tombstoning, creepage, panelization, the DRC census (0 / 0 / 0 warnings unless a dated waiver row), route-quality classes,
+  parity, the canary rule, the fab DFM mirror before the order, the stock freeze (C-07 widened).
+- **`references/kickoff-questionnaire.md` + `templates/KICKOFF_ANSWERS.md` + SKILL §0.1**: 40 decision classes in ten `AskUserQuestion` batches
+  (product / process / material / quantity; PCB build ×8; enclosure architecture ×8 incl. retention screws+inserts / magnets / none, labelling
+  deboss / plate / badge, fan, vents, light pipe; the bar and what may be waived — default nothing; verification; bought parts; software; release;
+  identity / envelope / delegation), each with a RECOMMENDED answer and 2–3 alternatives with consequences; answers → D rows, `project.yaml`,
+  traceability, before any CAD.
+- **`scripts/skill_retro.py` + SKILL §13 + `docs/retro/`**: the self-improvement step (classify a project's learnings against the skill, draft the
+  CHANGELOG / reference patches / evals / questionnaire questions; version drift); first run on the source project folded in (per-class census
+  clustering, magnet grades and polarity keying, colliding owner rules, eight pitfalls lines, questionnaire batch 10).
+- **`references/cnc-enclosure.md`** (B-10): corner radii, pocket depth, walls, threads, tolerances, anodising build-up, quote page, case-order gate.
+- **`references/dfm-printed-enclosure.md`** §1.1 retention hardware per material (inserts: type / bore / depth / boss OD from the TDS, temperature;
+  magnets: the D-85 pattern — grade, coating, max temperature, pull vs gap, pocket fits glued MJF / pressed PLA, polarity by an asymmetric boss),
+  §1.2 post-processing effects, §1.3 material rating and thermal, §1.4 tolerance stack + per-preset fits, §8 FDM elephant foot / hole shrink / seam /
+  2 × line width / anisotropy / g-code as the support record / rotate not mirror / insert + torque coupon, §10 post-mortem with the received-part
+  caliper table, photo protocol, fractography, vendor-fault decision table, §11 SLA rule set (B-08 / B-09 / B-11 / B-16 / B-21 / B-23 / B-24 / B-28 /
+  B-36 … B-38 / B-42); `references/part-verification.md` hardware line schema, hardware classes table, adhesive substrate compatibility on PA12
+  (B-26 / B-27 / B-28); `references/release-and-cut.md` labels / regulatory marks and packaging (B-40 / B-41); `pcb-layout-dfm.md` §12 creepage and
+  the EMI / grounding row as a decision prompt (B-39).
+- Templates: `SPEC.md`, `design/VERIFY.md`, `G1/EVIDENCE.md`, `G1/REVIEW_NOTES.md`, `parts/PROCUREMENT.md`, `design/SOFTWARE_ARCHITECTURE.md` (C-08).
+- Workflows: the `case_dfm` role in the board role set (B-30). Evals 8 (kickoff) and 9 (retro). Smoke: `skill_retro.py --selftest`.
+
+### Not done (deferred)
+`gate_status.py` (gate cells stay free text) · a probe generator (the recipe is §7.1) · a `--slabs` mode in the census · the bbox-resolution test
+itself (hypothesis and test stated, not run) · a KD-tree-free opposing metric (scipy is now a mesh-script dependency) · the questionnaire's
+owner-topic matcher is a keyword scorer (71 of 87 source owner rows still listed as candidates — most are project narrative, batch 10 took the
+recurring ones) · `pitfalls.md` still names source rows as provenance (a note explains them; a footnote file was judged not worth it) · the SLA
+and CNC references are literature + two quote sessions, not received parts · evals 6 / 7 stay the source scenario as regression tests.
+
 ## 0.4.1 — 2026-09-28 — vendor quote-page verdicts done right, the length-dependent thin-wall metric, p2s mirror, one-piece dummy, bought hardware (source project late 2026-09-28: CC-205 r4 / r5, D-84, CC-206 / B-11, PROBES.md)
 
 0.4.0 shipped the same evening the source project found that two of its "no flag" quote-page readings were false, that JLC3DP's thin-wall metric
