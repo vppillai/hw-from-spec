@@ -5,8 +5,11 @@
   python scripts/dfm_check.py --check      # exit 1 when the on-disk report (dfm.report) differs from the regenerated one, or items are open
   python scripts/dfm_check.py --selftest
 
-Defaults come from project.yaml `dfm:` (thresholds, items, accept, report); the JSON report is written to dfm.report on every plain run
-(release_report reads it), so the gate list can carry the bare command.
+Defaults come from project.yaml `fab_dfm:` (thresholds, items, accept, report, bar; the old block name `dfm:` is still read); the JSON report is
+written to fab_dfm.report on every plain run (release_report reads it), so the gate list can carry the bare command. The manufacturability bar
+(`fab_dfm.bar`, owner decision from the kickoff: `{open: 0, warnings_fail: true, accepted_requires: [reason, date, evidence]}`) is enforced here:
+every Danger AND Warning is open unless an acceptance entry covers it, and an acceptance entry counts only when it carries every field in
+`accepted_requires` (a refdes + a reason without the vendor's evidence path is not a waiver).
 
 Split of work: MEASURING is CAD-specific (a KiCad SWIG measurer lives in the project and emits items); GRADING is generic and lives here,
 so the grading rule is written once and tested once. Items JSON (schema table: references/fab-dfm.md §2): [{"check": "Trace spacing", "value": 0.15, "refs": ["R1", "C2"],
@@ -21,8 +24,9 @@ threshold is STILL Warning — design to strictly greater); value > warning -> G
 2 decimals); the project rule (`project_min`, applied when the fab lists no threshold or to checks the fab does not run) uses full precision.
 
 Exit 1 when any Danger / Warning / project failure remains that the --accept file does not cover (yaml key `dfm_accepted`, or a standalone list):
-entries {check, refs: [REF, ...] | {REF: max_count}, reason}; an item is accepted only when EVERY refdes it involves is listed (a pair needs both)
-and, in the dict form, the per-ref count is not exceeded. Items without a refdes (bare tracks, vias) cannot be accepted — fix them.
+entries {check, refs: [REF, ...] | {REF: max_count}, reason, date, evidence}; an item is accepted only when EVERY refdes it involves is listed (a pair
+needs both), the per-ref count (dict form) is not exceeded, and the entry carries the fields `accepted_requires` names. Items without a refdes
+(bare tracks, vias) cannot be accepted — fix them.
 """
 import argparse, collections, json, os, sys, tempfile
 from decimal import Decimal, ROUND_HALF_UP
@@ -59,13 +63,13 @@ def grade(check, value, thresholds):
     return "INFO", None
 
 
-def accepted(item, acc):
-    """The first acceptance entry that covers EVERY refdes of the item (list or dict form), else None."""
+def accepted(item, acc, requires=()):
+    """The first acceptance entry that covers EVERY refdes of the item (list or dict form) and carries every field in `requires`, else None."""
     refs = item.get("refs") or []
     if not refs:
         return None
     for a in acc:
-        if a.get("check") != item["check"]:
+        if a.get("check") != item["check"] or not all(str(a.get(k, "")).strip() for k in requires):
             continue
         lst = a.get("refs") or {}
         names = set(lst) if isinstance(lst, (list, dict)) else set()
@@ -74,7 +78,9 @@ def accepted(item, acc):
     return None
 
 
-def run(items, thresholds, acc, top=10):
+def run(items, thresholds, acc, top=10, bar=None):
+    bar = bar or {}
+    requires = tuple(bar.get("accepted_requires") or ())
     graded, counts = [], collections.Counter()
     by_ref_used = collections.Counter()
     known = set((thresholds.get("checks") or {})) | set((thresholds.get("project_min") or {}))
@@ -85,7 +91,7 @@ def run(items, thresholds, acc, top=10):
             continue
         g, lim = grade(it["check"], it.get("value"), thresholds)
         ok = g in ("Good", "INFO")
-        a = None if ok else accepted(it, acc)
+        a = None if ok else accepted(it, acc, requires)
         acc_hit = a is not None
         if acc_hit and isinstance(a.get("refs"), dict):   # dict form: per-ref budget, applied to the MATCHING entry only
             for r in it.get("refs") or []:
@@ -105,7 +111,10 @@ def run(items, thresholds, acc, top=10):
     unknown = sorted({g["check"] for g in graded} - known)
     if unknown:
         L += ["", f"WARNING: {len(unknown)} check name(s) match no thresholds key (graded INFO): {unknown} — spell them as the fab does"]
-    L += ["", f"Open (not accepted) Danger/Warning/project failures: **{len(open_bad)}**"]
+    incomplete = [a for a in acc if requires and not all(str(a.get(k, "")).strip() for k in requires)]
+    if incomplete:
+        L += ["", f"WARNING: {len(incomplete)} acceptance entr{'y' if len(incomplete) == 1 else 'ies'} ignored — missing {list(requires)}: " + "; ".join(f"{a.get('check')} {a.get('refs')}" for a in incomplete)]
+    L += ["", f"Bar: open {bar.get('open', 0)} (Danger + Warning + project); acceptances need {list(requires) or 'refs + reason'}", f"Open (not accepted) Danger/Warning/project failures: **{len(open_bad)}**"]
     for g in sorted(open_bad, key=lambda g: (g["grade"] != "Danger", g.get("value") if g.get("value") is not None else 0))[:top]:
         L.append(f"- {g['grade']} {g['check']} value {g.get('value')} (limit {g['limit']}) refs {g.get('refs')} layer {g.get('layer')} at {g.get('xy')}")
     return graded, open_bad, "\n".join(L)
@@ -126,14 +135,15 @@ def main():
     if a.selftest:
         return selftest()
     P = Project.find(arg=a.project)
-    th_path = a.thresholds or os.path.join(P.root, P.get("dfm.thresholds", "design/dfm_thresholds.json"))
-    items_path = a.items or os.path.join(P.root, P.get("dfm.items", "out/dfm_items.json"))
-    acc_path = a.accept or (os.path.join(P.root, P.get("dfm.accept")) if P.get("dfm.accept") else None)
-    rep_path = a.json or (os.path.join(P.root, P.get("dfm.report")) if P.get("dfm.report") else None)
+    cfg = lambda k, d=None: P.get(f"fab_dfm.{k}", P.get(f"dfm.{k}", d))          # `fab_dfm:` is the block name; `dfm:` the old spelling
+    th_path = a.thresholds or os.path.join(P.root, cfg("thresholds", "design/dfm_thresholds.json"))
+    items_path = a.items or os.path.join(P.root, cfg("items", "out/dfm_items.json"))
+    acc_path = a.accept or (os.path.join(P.root, cfg("accept")) if cfg("accept") else None)
+    rep_path = a.json or (os.path.join(P.root, cfg("report")) if cfg("report") else None)
     if not os.path.exists(items_path):
         print(f"MISSING: {items_path} — run the project's measurer first (references/fab-dfm.md §3)"); return 1
     thresholds = json.load(open(th_path)) if os.path.exists(th_path) else {"checks": {}}
-    graded, open_bad, report = run(json.load(open(items_path)), thresholds, load_accept(acc_path), a.top)
+    graded, open_bad, report = run(json.load(open(items_path)), thresholds, load_accept(acc_path), a.top, cfg("bar") or {})
     print(report)
     doc = {"items": graded, "open": len(open_bad), "thresholds": os.path.relpath(th_path, P.root)}
     if rep_path and a.check:
@@ -169,9 +179,14 @@ def selftest():
     g2, ob2, rep2 = run(mixed, th, [{"check": "Trace spacing", "refs": ["R1"], "reason": "list form, unlimited"}, {"check": "Trace spacing", "refs": {"R2": 1}, "reason": "budget"}])
     assert [x["accepted"] for x in g2] == [True, True, True] and not ob2, ("mixed-form acceptances: list entry unlimited, dict entry budgeted", g2)
     assert "WARNING" not in rep2 and "WARNING: 1 check name" in run([{"check": "trace spacing", "value": 0.1, "refs": ["R1"]}], th, [])[2], "unknown check names are warned about"
+    # the manufacturability bar: an acceptance without date / evidence does not count when the bar requires them
+    bar = {"open": 0, "warnings_fail": True, "accepted_requires": ["reason", "date", "evidence"]}
+    dated = [{"check": "Trace spacing", "refs": ["R1"], "reason": "vendor accepted", "date": "2026-09-28", "evidence": "docs/quotes/2026-09-28/dfm.pdf"}]
+    g3, ob3, rep3 = run(mixed[:1], th, dated, bar=bar); assert g3[0]["accepted"] and not ob3 and "acceptances need ['reason', 'date', 'evidence']" in rep3, rep3
+    g4, ob4, rep4 = run(mixed[:1], th, [dict(dated[0], evidence="")], bar=bar); assert not g4[0]["accepted"] and len(ob4) == 1 and "acceptance entry ignored" in rep4, rep4
     d = tempfile.mkdtemp()
     json.dump(items, open(f"{d}/i.json", "w")); json.dump(th, open(f"{d}/t.json", "w"))
-    open(f"{d}/project.yaml", "w").write("dfm: {thresholds: t.json, items: i.json, report: out/dfm.json}\n")
+    open(f"{d}/project.yaml", "w").write("fab_dfm: {thresholds: t.json, items: i.json, report: out/dfm.json, bar: {open: 0, warnings_fail: true}}\n")
     sys.argv = ["x", "--project", f"{d}/project.yaml"]
     assert main() == 1 and json.load(open(f"{d}/out/dfm.json"))["open"] == 4, "the report is written to dfm.report by default"
     sys.argv = ["x", "--project", f"{d}/project.yaml", "--check"]

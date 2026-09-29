@@ -1,191 +1,315 @@
 # dfm-printed-enclosure.md — a vendor-clean printed enclosure in ONE DFM round
 
-Rules as MEASURED on one project (AEC-CT2-MINI case v3.12 → v3.16, JLC3DP MJF PA12 + a Bambu Lab P2S at home, 2026-09-21 … 09-28): four vendor
+Rules as MEASURED on one project (the source project's two-piece case, MJF PA12 at JLC3DP + a home FDM printer, 2026-09-21 … 09-28): four vendor
 rounds, five cracked trays, one failed home print, twelve full rebuilds. Everything below is what the next project does BEFORE its first quote.
-Numbers are the vendor's (JLC3DP, labelled) or the printer's; substitute yours, keep the mechanism. The chain itself is `references/case-pipeline.md`;
-the post-order review round is `references/vendor-review.md`; the script is `scripts/thin_wall_census.py`; the records are
-`templates/CENSUS_GATE_ROWS.md` (check-table rows) and `templates/DFM_ROUND.md` (one file per quote-page session under `docs/quotes/<date>/`, API verdict + probes).
+The chain itself is `references/case-pipeline.md`; the post-order review round is `references/vendor-review.md`; the script is
+`scripts/thin_wall_census.py`; the records are `templates/CENSUS_GATE_ROWS.md` (check-table rows) and `templates/DFM_ROUND.md` (one file per
+quote-page session under `docs/quotes/<date>/`). SLA is §11, CNC is `references/cnc-enclosure.md`.
 
-## 0. The acceptance bar (write it into the decision row before the first census)
-**0 FAIL / 0 WARN in every check table and in the census of every body · zero slicer warnings · no vendor flag · no yellow, no red on the vendor's
-heat map · every face rendered and looked at.** A WARN is not a verdict: a row either has a threshold (then it is PASS or FAIL on a MEASURED value) or
-it has none (then it is **INFO**, in its own table, no verdict). "0 FAIL, 81 WARN" told the owner nothing and hid the row that cracked the part;
-the same data as PASS / FAIL + INFO exposed a second defect nobody had seen (a dummy 0.4 mm low).
+**Every number here carries a tag** — the same four as `references/pcb-layout-dfm.md`: **[checker]** = what the vendor's thin-wall map colours
+(JLC3DP, read 2026-09-28, on ~150 mm parts); **[vendor sheet: URL, date]** = a published capability or tolerance; **[physics]** = the material;
+**[owner bar]** = the bar the owner set (no yellow on the map, closed rims); **[convention]** = what the scripts rely on. **No number lives in a
+script**: every gate value is read from `project.yaml print_targets.<target>` (`references/project-yaml.md`), and the numbers quoted below are the
+source project's targets, labelled.
 
-## 1. MJF (worked example: JLC3DP PA12-HP, grey line 1.2 mm)
-- **Every parallel-faced wall ≥ 1.2 — design at 1.3.** A 1.2 nominal samples 1.19 on the mesh and prints 1.1 … 1.3; the map may read it yellow and the
-  argument is lost. The 0.1 costs nothing on a 2 mm shell. "Wall" = any skin whose opposite face is within 30° of parallel, whatever the yaml calls it
-  (lip, land, skin, floor, ring, cheek).
-- **Every void ≥ 1.2.** The map colours voids too: slots, slits, grooves, boss-to-wall gaps, and engraved strokes — every 0.45 glyph was red, the 0.5 slot
-  ends red, a 0.5 gap between a Ø8 boss and a wall yellow (web it). A cap-4 engraved stroke is a 0.82 void: **no engraved text on an MJF body** — put
-  identity / labels on a label carrier (UV-printed metal plate in a rebate, adhesive label) or raise them on a separate plate.
-- **No free-standing wedge.** JLC colours RED a thin edge with no wall behind it: 36° rail tips and lips (yellow / red full length), an added interior 45°
-  roof cove (red on every wall), a fillet's thin edge. It leaves GREY a chamfer or 45° ramp cut INTO a ≥ 1.2 wall (tray and shell passed with them).
-  So: chamfers into walls yes; added coves, fillets, rails, lips, knife edges no — round the tip or give it a ≥ 1.2 flat land, or remove the feature.
-- **No living hinges, slit tabs, compliant detents on MJF.** A snap tab needs a 0.6 slit (a void → red); a rigid detent bump does not deflect in PA12 any
-  more than in PETG (F ∝ t³). Fasten with screws into heat-set inserts (boss ring ≥ 1.3 around the bore); key rotation by the asymmetric openings.
-- **A 141 mm × 0.88 mm skin WILL crack** (all five trays, from the free ends inward, MJF cooling / depowdering stress on the 4 mm wedge it carried). A long
-  skin is a wall, never a "feature": anything spanning > 10 mm is judged at the wall minimum; a knife edge under 10 mm span is a feature — and under the
-  no-yellow bar even that gets a flat land.
-- **The vendor's metric is length-dependent** (§7.1): a rim over a skirt-lap step passed at 48 mm and failed at 88 / 147 mm with every census clean —
-  rim over a lap step ≥ 2.0 OR the undercut filled; calibrate any long-wall profile with full-length probes, never with a coupon.
-- **A feature that cannot be made vendor-clean inside its space budget goes; it is not thinned.** A stepped dovetail with 1.2 flats on lip AND tongue needs
-  2.4 mm of depth; the groove had 2.15 before the next counterbore skin → rail off, screws, plain edges (a wider part with an ENCLOSED pocket rail is the
-  owner's option, logged). Thickening one wall moves its neighbours (skirt 1.2 → 1.3 pushed the snap-tab force over its class; fixing that broke the catch
-  minimum): **every wall change reruns the whole table, never one row.**
-- **Rule drift check.** When the print rule changes (FDM two lines 0.85 → MJF 1.2), re-derive EVERY yaml value that was set against the old rule; a yaml
-  comment `>= 0.8` beside a 0.9 wall is the tell (body-rail skin 0.90, cheeks 1.0, hole floors 1.0, a mark debossed 0.8 into a 1.2 band → 0.4 skins).
-- **Overshoots become slabs.** A `+ 0.01` extrude used against coplanar-face artefacts is a 0.01 mm slab in the mesh = a RED line on the map (the step-wall
-  ledge). Trim the union at the design face (intersection) and let the interference row prove 0.00 mm³; never exempt "coplanar seam slabs" in a check.
+## 0. The acceptance bar (an owner decision at kickoff; written into the decision row before the first census)
+**0 FAIL / 0 WARN in every check table and in the census of every body · zero slicer warnings · no vendor flag (API read) · no yellow, no red on
+the vendor's heat map · every face rendered and looked at · no waivers.** A WARN is not a verdict: a row either has a threshold (then it is PASS
+or FAIL on a MEASURED value) or it has none (then it is **INFO**, in its own table, no verdict, **with the reason it has no threshold**). "0 FAIL,
+81 WARN" told the owner nothing and hid the row that cracked the part; the same data as PASS / FAIL + INFO exposed a second defect nobody had
+seen (a dummy 0.4 mm low). The only exception path is the machine-readable `accepted` list (§2) — dated, with the vendor's written evidence.
+
+## 1. MJF rules (worked example: JLC3DP PA12-HP; checker grey line 1.2 mm)
+- **Three numbers, three sources — never confuse them** (B-15): the vendor's **published printable minimum** (JLC review mail: "nylon ≥ 1.0";
+  Shapeways / Sculpteo / HP direct list 0.6–1.0 for PA12) **[vendor sheet]**; the **checker's yellow line** (JLC3DP heat map: grey ≥ 1.2, yellow
+  0.5–1.2, red < 0.5) **[checker]**; and the **owner's bar** (no yellow → design at `wall_gate + design_margin` = 1.2 + 0.1 = 1.3) **[owner bar]**.
+  A team at another vendor or without the no-yellow bar designs to a different number; the mechanism (design above the line the checker
+  flags, by a margin the sampling and the process spread need) is what generalises. A 1.2 nominal samples 1.19 on the mesh; the 0.1 margin
+  costs nothing on a 2 mm shell.
+- **Every parallel-faced wall ≥ `wall_gate`, designed at `wall_gate + design_margin`** **[checker + owner bar]**. "Wall" = any skin whose opposite
+  face is within 30° of parallel, whatever the yaml calls it (lip, land, skin, floor, ring, cheek).
+- **Every void ≥ `void_gate`** **[checker]** — the map colours voids too: slots, slits, grooves, boss-to-wall gaps, engraved strokes (every 0.45
+  glyph red, 0.5 slot ends red, a 0.5 gap between a Ø8 boss and a wall yellow → web it).
+- **Engraved text is ALLOWED on MJF** (standard practice: stroke ~0.8–1.0, depth ~0.5 per vendor guides **[vendor sheet]**) **when the stroke ≥
+  `void_gate`** — at 1.2 that means cap height ≥ ~6 mm. Under a no-yellow bar with cap 4 (a 0.82 stroke) it does not fit → widen the text, or a
+  label carrier (UV-printed plate in a rebate, adhesive label), or raised text on a separate plate. Do not delete legibility the space allows.
+- **No FREE-STANDING wedge** **[checker]**: the map colours RED a thin edge with no wall behind it — 36° rail tips and lips (yellow / red full
+  length), an interior roof cove unioned without tangency (a knife-edge sliver), the 0.01 mm overshoot slab. It leaves GREY a chamfer or 45° ramp
+  cut INTO a ≥ `wall_gate` wall. **Tangent fillets cut into ≥ gate walls are fine and recommended at stress risers** (they lower the ~1.2× slit-
+  root concentration the FEA reference reports) **[physics]**; what went red was a non-tangent cove body and a fillet's exposed thin edge. So:
+  chamfers and tangent fillets into walls yes; added free edges, rails, lips, knife edges no — round the tip, give it a ≥ gate flat land, or
+  remove the feature.
+- **Snap fits, living hinges, compliant detents: PA12 CAN do them** **[physics]** (E ≈ 1.7 GPa, elongation at break 15–25 %; HP's MJF design
+  guide shows both). What killed them on the source project was (a) the ≥ `void_gate` slit a no-yellow bar demands at JLC3DP, which rarely fits
+  the space budget, and (b) a rigid bump with no arm length (F ∝ t³ — a stiff bump blocks, in PA12 as in PETG). Allowed when the slit ≥ the void
+  gate and the arm is engineered (length, root fillet, FEA); otherwise screws into inserts or magnets (§1.1). On PLA / FDM: screws.
+- **A long thin skin is a wall, never a "feature"** **[owner bar + physics]**: a 141 mm × 0.88 mm skin **cracked on 5 / 5 parts** of one geometry
+  (from the free ends inward; likely causes cooling / depowdering stress on the 4 mm wedge it carried — not fractographed, see §10). Design
+  consequence: anything spanning > 10 mm is judged at the wall minimum; a knife edge under 10 mm span is a feature — and under the no-yellow bar
+  even that gets a flat land.
+- **The vendor's metric is length-dependent** (§7.1) **[checker]**: a rim over a skirt-lap step passed at 48 mm and failed at 88 / 147 mm with
+  every census clean — rim over a lap step ≥ 2.0 OR the undercut filled; calibrate any long-wall profile with full-length probes, never a coupon.
+- **A feature that cannot be vendor-clean inside its space budget goes; it is not thinned.** A stepped dovetail with 1.2 flats on lip AND tongue
+  needs 2.4 mm of depth; the groove had 2.15 → rail off, screws, plain edges (a wider part with an ENCLOSED pocket rail is the owner's option).
+  Thickening one wall moves its neighbours (skirt 1.2 → 1.3 pushed the snap-tab force over its class; fixing that broke the catch minimum):
+  **every wall change reruns the whole table, never one row.**
+- **Rule drift check.** When the print rule changes (FDM two lines 0.85 → MJF 1.2), re-derive EVERY yaml value set against the old rule; a yaml
+  comment `>= 0.8` beside a 0.9 wall is the tell.
+- **Overshoots become slabs.** A `+ 0.01` extrude against coplanar-face artefacts is a 0.01 mm slab in the mesh = a RED line on the map. Trim
+  the union at the design face (intersection); never exempt "coplanar seam slabs" in a check.
+- **Dimensional tolerance is the vendor's, not ±0.1** (B-01) **[vendor sheet]**: MJF PA12 is typically ±0.3 mm or ±0.3 % (HP: ±0.2 mm below
+  100 mm, worse above — cite the vendor's sheet with URL + date in `print_targets.<t>.tolerance_source`). A 1.3 wall can print 1.0–1.1. "A 1.2
+  nominal prints 1.1 … 1.3" is an **assumption until the first-article caliper table exists** (§10 step 1); the measured spread of every gated wall
+  and bore on the received parts feeds `print_targets.<t>.tolerance` and the design margin — until then the margin row is INFO, not PASS.
+- **Build orientation and anisotropy** (B-38) **[vendor sheet + physics]**: MJF Z-direction strength is ~10–20 % below XY (HP data — check the
+  vendor's sheet), FDM 30–50 % across layers; ask the vendor for the build orientation / position when the part matters (a cantilever, a boss under
+  screw preload) and record it in `DFM_ROUND.md`. Draft angles: **n/a for MJF / SLA / FDM**; required if the design is ever moulded — say so in the
+  brief so a reader does not think it was forgotten.
+
+### 1.1 Retention hardware: inserts, screws, magnets — per material
+| Material | Insert / fastener | Bore and depth | Boss OD / wall | Notes |
+|---|---|---|---|---|
+| **MJF PA12** | thread-forming screws for plastics (Delta PT / Remform class) into a plain pilot are the usual choice **[vendor sheet]**; heat-set inserts work but at a higher iron temperature (Tm ≈ 178 °C **[physics]**) — set the temperature from the insert TDS; press-fit / self-tapping inserts also fine | from the insert or screw manufacturer's TDS, never a rule of thumb; insert 0.1–0.2 below flush | boss OD ≥ 2 × insert OD (~3 mm wall around an M3 insert) **[physics]**; the source project's 1.3 ring is marginal for hoop stress at insertion — labelled so | pull-out / torque to failure on the coupon (§8) before the value goes on the SOP as `[OWNER: …]` |
+| **PLA (FDM)** | heat-set inserts at the TDS temperature; **creep under screw preload above ~45 °C** **[physics]** → the FDM preset is a fit / assembly mock-up unless PETG / ASA and the thermal case says otherwise | TDS bore, drilled/reamed if hole shrink (§8) matters | ≥ 1.6 boss wall at 0.4 nozzle (4 perimeters) — a 1.3 ring around an M3 heat-set insert in PLA is a known crack site | insert + torque coupon in the kit (B-42) |
+| **PETG** | as PLA; softens ~75–80 °C **[physics]** | | | |
+| **Magnets** (D-85 pattern) | Ø6 × 3 N42 / N45 disc pairs (a standard, easy-to-find size), Ni coating; **max operating temperature N35/N42 ≈ 80 °C, N35H / N42H 120 °C** **[vendor sheet]** — record grade + coating on the BOM line | pocket Ø = magnet Ø + fit: **MJF glued (CA) Ø + 0.4, PLA light press Ø + 0.1** (drill / ream the 6.35 imperial size if that is what arrives); depth = magnet + 0.3 recess each side | pocket walls ≥ `wall_gate`; boss OD ≥ pocket + 2 × wall | **pull force vs gap** from the supplier's curve at (2 × recess + lap gap), stated on the row ("15.7 N at touch, N at 0.9 mm"); **polarity keying** by an asymmetric boss (Ø10 left / Ø11 right) — never a mark cut into an MJF face; the mating part's steel counterpart (screw head, plate) is the cheap half |
+
+Retention is a kickoff question (`references/kickoff-questionnaire.md`): screws + inserts (recommended for a part that is opened for service),
+magnets (tool-free, for a hood the technician lifts daily), none (friction lap only — a fit mock-up). Whatever is chosen, **the retention feature
+must exist in the exported mesh of the version ordered** — a blind review found a "retained" hood whose STLs carried no bosses (the check rows had
+read the yaml, not the mesh — every retention row measures the MESH).
+
+### 1.2 Post-processing effects (B-16) **[vendor sheet + physics]**
+Dyeing adds no dimension; **bead-blast / vapour smoothing removes 0.05–0.15 mm per surface and rounds edges** — a `wall_gate + 0.1` wall and a
+1.0 legend stroke lose that; SLA post-cure warps thin flat plates; FDM sanding / ironing of a top face flattens raised legends. Rule: **every
+post-process is named on the order sheet and on the print target (`print_targets.<t>.post_process`) and is subtracted in the census margin.**
+
+### 1.3 Material rating and thermal (B-36) **[vendor sheet + owner bar]**
+An enclosure holding a powered board: state per target on the order sheet **UL 94 rating and Tg / softening point** (PA12 MJF: typically HB;
+PLA: unrated, softens ~55–60 °C; PETG ~75–80 °C; resins per the TDS), keep vents away from the hot zone, and record the owner's acceptance
+**"engineering sample, not a rated enclosure"** as a decision row (the questionnaire asks it). A hood over a hot module in PLA is a fit mock-up.
+
+### 1.4 Tolerance stack (B-37) **[convention]**
+The interference check proves 0 mm³ overlap on NOMINAL meshes. Add a **worst-case clearance row per mating pair**: nominal clearance −
+Σ tolerances ≥ 0 (case ±`tolerance` from the target, board outline ±0.2, insert position, connector float, post-process removal). A pair that
+binds at worst case is a FAIL row, not a note. **Fit clearances are per-preset knobs** (`presets.<p>.overrides.fits.*`), never numbers in the
+base block: FDM holes shrink ~0.1–0.3, MJF ±0.3, SLA ~0.1 — the coupon decides each (B-23).
 
 ## 2. Waivers are not checks — the census is a FAIL gate
-- A row `KEPT BELOW 1.2 (listed): …` with verdict `None` and yaml numbers is a waiver nobody signed. The cracked lip's row quoted the MALE profile (tip /
-  neck); the female hinge (parting line − groove roof = 0.88) was never a measured quantity; the 0.90 skin next to it was judged against `feature_min`
-  0.8 instead of `wall_min` 1.2. **Every thin feature gets a measured number from the MESH (not the yaml), a span and a class (wall / void / wedge).**
-- **The ray-cast census is a FAIL gate per print preset** (`scripts/thin_wall_census.py`, `templates/CENSUS_GATE_ROWS.md`), not a one-off review aid:
-  inward rays = wall thickness, outward rays = void width; clusters below `gate − 0.05` (at the gate itself the nominal 1.2 walls sampled 1.19 join every
-  region into one 145 mm cluster); each cluster classified by the angle between the sample face and the hit face (< 30° = wall, ≥ 30° = wedge); only
-  walls and voids gate, wedges are listed and each must be a chamfer / ramp backed by a wall — otherwise remove it. A **SANITY row** = the vendor's
-  colouring reproduced: fraction of wall-class surface below `gate − 0.05` and of void-facing surface below it must equal the noise floor measured on a
-  known-good primitive (a 1.3 plate + Ø8 boss + Ø3.4 hole: 0.00 % / 0.00 %). Legend lands between debossed strokes are deboss-deep features judged at the
-  red band (0.5) and "inside the hull of the lands it touches", not "inside one land" (a block of strings merges into one cluster).
-- **A PURE gate in the adopt list**: the census JSON beside each STL carries the STL md5 and the FAIL list; `thin_wall_census.py --gate <dir>` proves
-  md5 = the committed STL and 0 FAIL without recomputing (the chain did the census; the gate proves the record matches the mesh of record).
-- The census that "passed" the old preset never gated the vendor build: give EVERY preset its FAIL rows on day 1 (the `p2s` preset got them after the
-  order; the `jlc` preset after the crack).
+- A row `KEPT BELOW 1.2 (listed): …` with verdict `None` and yaml numbers is a waiver nobody signed. The cracked lip's row quoted the MALE profile
+  (tip / neck); the female hinge (parting line − groove roof = 0.88) was never a measured quantity. **Every thin feature gets a measured number from
+  the MESH (not the yaml), a span and a class (wall / void / wedge / opposing).**
+- **The ray-cast census is a FAIL gate per print preset** (`scripts/thin_wall_census.py --target <t>`, rows `templates/CENSUS_GATE_ROWS.md`):
+  inward rays = wall thickness, outward rays = void width; clusters below `gate − 0.05` (**convention**: at the gate itself the nominal 1.2 walls
+  sampled 1.19 join every region into one 145 mm cluster); each cluster classified by the angle between the sample face and the hit face (< 30°
+  = wall, ≥ 30° = wedge — the 30° is a **convention**, not calibrated); **walls and voids FAIL below their gates; wedges FAIL when the band of
+  surface below the gate is wider than `wedge_band`** (default 1.5 mm — the width from the thin edge to where thickness reaches the gate; a
+  chamfer cut into a wall has a band of ~1 mm and no free edge, a 35° free rail flank has ~1.8) unless an `accepted` entry names the backing
+  wall (B-12); **the nearest OPPOSING face in ANY direction is gated too** (B-14): two faces whose normals oppose within 30° and whose distance is
+  below the gate FAIL whether or not a normal ray from one hits the other — the ledge underside 0.5 from a step top, a ring face 0.4 from a wall
+  plane, the 0.4 mm root of a rim ring set inboard of its wall: the class the vendor found and the normal-ray census did not (§7.1).
+- **Samples scale with surface area** (`samples_per_mm2`, default 10; 60 000 fixed samples on a 150 mm tray were 1–2 / mm² and a 0.6 × 4 mm slit
+  gets a handful) (B-13). **Recall is selftested**: a plate with one 0.8 mm rib and one 0.6 mm slit must produce one WALL FAIL and one VOID FAIL.
+- **The NOISE-FLOOR row** (was "SANITY = the vendor's colouring reproduced" — it is not; it measures false positives, not recall): fraction of
+  wall-class surface below `gate − 0.05` and of void-facing surface below it, equal to the floor measured on a known-good primitive (a plate +
+  boss + hole at the gate + margin: 0.00 % / 0.00 %). **Known blind spots** of the census, listed here so nobody calls it complete: bbox-scale
+  effects of the vendor's own resolution (§7.1), contacts under 0.05 mm (`thin_wall_check.py --pinch`), and anything a *slicer* adds (supports
+  on visible faces are read from the g-code, §8).
+- **The `accepted` list** (`print_targets.<t>.accepted`, B-31) mirrors the board's `dfm_accepted`: entries `{class, bbox, reason, date, evidence}`
+  — a FAIL cluster whose bbox lies inside an entry's bbox (1 mm tolerance) with the same class is machine-matched every run and listed as
+  ACCEPTED (with the entry's evidence path: the vendor's written acceptance, a first-article measurement); an entry without date / reason /
+  evidence does not count. Nothing else moves a FAIL.
+- **A PURE gate in the adopt list**: the census JSON beside each STL carries the STL md5 and the FAIL list; `thin_wall_census.py --gate-dir <dir>`
+  proves md5 = the committed STL and 0 unaccepted FAIL without recomputing.
+- Give EVERY preset its FAIL rows on day 1 (the home preset got them after the order; the vendor preset after the crack).
+- Legend lands between debossed strokes are deboss-deep features judged at the red band (`red_line`) and "inside the hull of the lands it
+  touches", not "inside one land" (a block of strings merges into one cluster).
+- **INFO rows added since the previous round are listed in the gate merge** (B-29) — an INFO table is the new escape hatch if a row can move
+  there by deleting its threshold; each INFO row states why it has none.
 
 ## 3. Vendor heat map = strength finding
-A heat map yellow "full length" along a feature is a strength finding, not cosmetic: file it as an owner decision **with the number** ("the lip hangs on
-0.88 × 141; it may crack; accept?") or fix it. "Kept (design geometry)" with no strength argument is how the order went out. The vendor's picture is
-evidence only together with the uploaded file's md5 AND the API's `parseStatus 2` / `thinWall` for that upload (§7); the material on the line does not change the flag.
+A heat map yellow "full length" along a feature is a strength finding, not cosmetic: file it as an owner decision **with the number** ("the lip
+hangs on 0.88 × 141; it may crack; accept?") or fix it. "Kept (design geometry)" with no strength argument is how the order went out. The vendor's
+picture is evidence only together with the uploaded file's md5 AND the API's `parseStatus 2` / `thinWall` for that upload (§7).
 
-## 4. Closed rims (the owner's visual bar)
+## 4. Closed rims (the owner's visual bar) **[owner bar]**
 Every rim and wall reads CLOSED on the single part: no through-slot, notch, key gap or slit visible from any face unless it has an obvious job
-(connector, vent, LED, switch, screw). A coupling groove open along a wall, a lead-in notch at a sill, a key notch at a skirt edge, a snap-tab slit —
-all functional, all read as "literal gaps … a broken design" by the owner in the vendor's viewer. Coupling features that need a slot belong INSIDE a wall
-as an enclosed pocket, in a wider part, or not at all.
+(connector, vent, LED, switch, screw). Coupling features that need a slot belong INSIDE a wall as an enclosed pocket, in a wider part, or not at all.
 
 ## 5. Designed asymmetries and the visual review
-- A designed asymmetry that looks like a defect (foot pockets 1.0 mm inboard beside concentric counterbores) is **rendered, printed in the order sheet
-  and listed in KNOWN_ISSUES §1** — a yaml note, a passing check row and one guide sentence did not stop the owner reading the printed part as "holes not
-  concentric". Better: remove the asymmetry when the reason for it goes (no groove → concentric pockets); measure concentricity from the mesh (circle fit
-  in sections, families within 0.2).
+- A designed asymmetry that looks like a defect (foot pockets 1.0 mm inboard beside concentric counterbores) is **rendered, printed in the order
+  sheet and listed in KNOWN_ISSUES §1** — or removed when the reason for it goes. Measure concentricity from the mesh (circle fit in sections;
+  families within `concentricity` — 0.2 mm is a **convention** from one part family).
 - **Render every face, the sole included** (six orthographic faces per piece, `faces/`), and ask of each "will a technician or the vendor photograph
-  this and read it as broken?". The sole with the off-centre pockets HAD been rendered; nobody asked the question.
+  this and read it as broken?".
 
 ## 6. INFO vs WARN, and the numbers in the rows
-- Verdict table: PASS / FAIL only, every row a measured value against a stated threshold. INFO table: measured values with no threshold (heights, cone
-  angles, supported ceilings, feasibility notes). `None` must render as INFO, never as WARN.
-- Accepted-with-note items (a wall printed AT the minimum, shrunk legends) are PASS rows whose note says so and whose value is measured, not a WARN.
+- Verdict table: PASS / FAIL only, every row a measured value against a stated threshold. INFO table: measured values with no threshold and the
+  reason (heights, cone angles, supported ceilings, feasibility notes). `None` must render as INFO, never as WARN.
+- Accepted-with-note items (a wall printed AT the minimum, shrunk legends) are PASS rows whose note says so and whose value is measured.
 - Quote the mode with every number (check mode vs full `--stl` run totals differ) and the STL md5 the census describes.
 
-## 7. Vendor quote-page procedure (worked example: JLC3DP, 2026-09-28, corrected the same evening — verify live, they change)
+## 7. Vendor quote-page procedure (worked example: JLC3DP, 2026-09-28 — verify live, they change)
+0. **Consent first** (B-19): uploading a design to a third-party quote page is a disclosure. The decision row that opens the round quotes the
+   owner's consent to upload and cites the vendor's terms page (read once, URL + date); a vendor whose terms claim rights to uploaded files is a
+   BLOCKER, not a shrug.
 1. **One STL per page session, reload between uploads.** With several lines present the page opened the wrong file's analysis twice. The hidden
-   `input[type=file]` can be unhidden by script (`el.classList.remove('hidden')` / `style.display=''`) and given the file without the file chooser;
-   uploads and the analysis work **signed out** — the DFM read needs no login (ordering does). Name the uploaded copy `<piece>_<version><round>_<md5-8>.stl`.
-2. **The verdict of record is the analysis API, not the page.** The page polls `GET …/tdpFile/getFileAnalyzeResult?fileAccessId=…`; read it from the
-   browser's network log (or re-request the same URL) and accept it only when `parseStatus == 2` (analysis complete). Then `modelAnalysisVO.thinWall`
-   (bool) IS the flag; `modelAnalysisVO.previewUrl` opens the heat-map viewer directly (the Analysis Results tab), `volume` / bbox must equal yours.
-   **A DOM reading taken before parseStatus 2 is invalid**: two "no flag" rows were read that way and the API later said `thinWall: true` on the same
-   file — the tray would have been ordered on a false pass. A verdict without `parseStatus 2` + file md5 in the record is not evidence.
-3. **The flag is computed at UPLOAD and does not depend on the process / material chosen on the line.** Setting MJF / PA12-HP on the line (Edit
-   dialog SAVED — form state, not a cart) is still done first: it gives the price of the order and the legend of the material's heat map, and the
-   record names the material on the line BEFORE reading anything. But changing the material never flips `thinWall`; a verdict that "changed with the
-   material" was two different reads (one premature). The page defaults to **9600 Resin** after an upload.
-4. **Open the heat map on every face** even when `thinWall` is false (`previewUrl` exists either way): inside, sole, iso top, front; the legend is a
-   colour scale (grey ≥ 1.2, yellow 0.5–1.2, red < 0.5) — the census turns a colour into a number.
-5. **Save screenshots named `<piece>_<round>_<md5-8>_<material>_heatmap_<face>.png`** plus `quote_page_<round>_flags.png`, keep the uploaded STL beside
-   them, and write `templates/DFM_ROUND.md` into `docs/quotes/<date>/` with the API fields (`parseStatus`, `thinWall`, volume) per body.
+   `input[type=file]` can be unhidden by script; uploads and the analysis work **signed out** (ordering does not). Name the uploaded copy
+   `<piece>_<version><round>_<md5-8>.stl`.
+2. **The verdict of record is the analysis API, not the page.** The page polls `GET …/tdpFile/getFileAnalyzeResult?fileAccessId=…`; read it from
+   the browser's network log (or re-request the same URL) and accept it only when `parseStatus == 2`. Then `modelAnalysisVO.thinWall` (bool) IS
+   the flag; `modelAnalysisVO.previewUrl` opens the heat-map viewer; `volume`, surface area and bbox must equal yours (**same geometry parsed, same
+   scale — a 10 × unit error gives a clean map and a wrong quote**). **A DOM reading before parseStatus 2 is invalid**: two "no flag" rows were read
+   that way and the API later said `thinWall: true` on the same file. **Save the RAW JSON response** to `docs/quotes/<date>/<md5-8>_analyze.json`
+   with URL, timestamp and response headers — not three fields (B-17). **Site-changed branch**: endpoint or field missing → BLOCKERS row, the
+   verdict class downgrades to "page popover + screenshot", the round is NOT YET until the API read is restored or the owner accepts the weaker
+   evidence in a D row. **Capability-page snapshot** once per round: PDF / print of the vendor's published design rules with the date, so the
+   numbers in `print_targets` can be re-derived when the site changes.
+3. **The flag is computed at UPLOAD and does not depend on the process / material chosen on the line.** Setting the material (Edit dialog SAVED —
+   form state, not a cart) is still done first: it gives the price and the legend of the material's heat map; the record names the material on the
+   line and **the quote price per body** before reading anything. Changing the material never flips `thinWall`. The page defaults to a resin.
+4. **Open the heat map on every face** even when `thinWall` is false: inside, sole, iso top, front; record **the legend thresholds as displayed
+   that day** — the census turns a colour into a number.
+5. **Save screenshots named `<piece>_<round>_<md5-8>_<material>_heatmap_<face>.png`** plus `quote_page_<round>_flags.png`, keep the uploaded STL
+   beside them, and write `templates/DFM_ROUND.md` into `docs/quotes/<date>/` with the API fields, the browser / UA / signed-in state per body.
 6. **When a verdict flips between two uploads, diff the meshes before touching the generator**: the r3 tray read RED where the r2 tray had passed —
-   same 4088 triangles, every vertex within 7.7e-6 mm (ASCII vs binary container). The coordinator's candidate fixes were plausible and all wrong; the
-   real difference was a premature DOM read (step 2). An ASCII twin of the identical geometry is the cheap A/B for container sensitivity.
-7. **Canonical STL, or the md5 means nothing.** OpenSCAD 2021.01 writes the same CGAL geometry in a different triangle order on every export (three
-   exports = three md5s); trimesh's exporter writes run-dependent NORMALS for identical vertices. Write the binary STL yourself: round vertices, rotate
-   each triangle to its smallest vertex, sort triangles, recompute normals from the float32 vertices, 50-byte records — prove idempotence AND equality on
-   a copy from another run before calling a hash "the geometry". The census gate, the vendor uploads and the production cut key on that md5.
-8. **A coordinator verifies a worker's "no flag" claim itself** (re-request the API for the md5 in the record) before a decision row says PASS — the
-   false passes above were relayed claims (`references/agent-ops.md` §6).
+   same 4088 triangles, every vertex within 7.7e-6 mm. The real difference was a premature DOM read (step 2).
+7. **A coordinator verifies a worker's "no flag" claim itself** (re-request the API for the md5 in the record) before a decision row says PASS.
 
-### 7.1 The vendor's thin-wall metric is LENGTH-DEPENDENT — calibrate with probes, in one round (worked example: JLC3DP MJF PA12-HP, 147 mm tray)
+### 7.1 The vendor's thin-wall metric is LENGTH-DEPENDENT — calibrate with probes, in one round (JLC3DP checker, 2026-09-28, 147 mm tray)
 Three independent ray-cast censuses (60 k … 400 k samples) found nothing under 1.37 mm on a tray JLC read RED along both long walls: the trip was a
-**rim 1.4 mm above a skirt-lap step with a 0.9 mm inward undercut** — opposing faces that never overlap, and a metric that reads a long wall differently
-from a short one. **An identical wall profile passed at 48 mm and failed at 88 and 147 mm.** A wall that passes on a coupon can fail on the part; a
-40 mm probe that passes proves nothing about a 147 mm body.
-- **Calibrated rule (MJF PA12 at ~150 mm parts):** a rim above a skirt-lap step must be **≥ 2.0 mm** (1.4 fails; 2.0 passes with the step AND the inward
-  undercut kept — probes K2 wall 2.6 / rim 2.0 and K5 lap 0.9 / rim 2.0 both `thinWall: false`), **OR the undercut is filled** so the inner wall runs
-  straight from the floor to the rim top (`lap.ring_down: true` — then a 1.25 … 1.3 rim above the step passed on the full tray; the mating skirt still
-  registers on the kept step, partner overlap 0 mm³). Stay grey: plain 2.0 walls, 2.0 floors, boss rings, chamfers cut into ≥ 1.2 walls, 45° dish
-  ramps. Red: free-standing wedges (rail tips, lips, added coves / fillets). A rim thinner than 2.0 over an undercut is the one geometry every census
-  passed and the vendor failed — put it in the census as a named row (`rim over a lap step ≥ 2.0 OR undercut filled`).
+**rim 1.4 mm above a skirt-lap step with a 0.9 mm inward undercut** — opposing faces that never overlap. **An identical wall profile passed at
+48 mm and failed at 88 and 147 mm.**
+- **Hypothesis and its test** (B-05): a checker with **bbox-relative voxel / sampling resolution** produces exactly this — on a 147 mm body each
+  voxel is coarser, so a 1.4 mm rim over a 0.9 undercut smears below 1.2. If so: (a) the margin needed scales with the LARGEST bbox dimension,
+  not the wall's length; (b) probes must match the body's bbox in all three axes (a full-length but shallower probe reads finer); (c) ANY
+  near-threshold feature on a larger next part will flip, not only a rim over a lap step. **Test**: the same profile at the same length in a taller
+  / wider closed box; if the taller box flips, the rule is "margin ∝ max bbox dimension" and `print_targets.<t>.max_bbox_for_rule` records the
+  size the rule was calibrated at. Until tested, the calibrated rule below is stated for ~150 mm parts only.
+- **Calibrated rule (this checker, this size):** a rim above a skirt-lap step must be **≥ 2.0 mm** (1.4 fails; 2.0 passes with the step AND the
+  inward undercut kept), **OR the undercut is filled** so the inner wall runs straight from the floor to the rim top (a yaml `undercut filled`
+  knob — then a 1.25 … 1.3 rim above the step passed on the full tray; the mating skirt still registers on the kept step, partner overlap 0 mm³).
+  Stay grey: plain 2.0 walls, 2.0 floors, boss rings, chamfers cut into ≥ 1.2 walls, 45° dish ramps. Put it in the census as a named row and in the
+  opposing-face metric (§2), which measures the ring root the normal rays missed.
 - **The probe method (converges in ONE quote-page round, ~2 h):**
   1. *Localise*: cut the FAILING body of record (the archived md5 file) into capped slabs with `trimesh.intersections.slice_mesh_plane(mesh, n, o,
      cap=True)` — front / middle / rear, 40 … 60 mm each, then an 88 mm and the full length — upload each ALONE, read the API. The slice that first
-     turns `true` localises the feature AND shows the length threshold (here ≤ 60 false, 88 true).
-  2. *Isolate*: build plain-profile probes with OpenSCAD — one 2-D `polygon()` of the wall section (floor, wall, lap step, rim, undercut) extruded
-     to **40 mm AND to the full part length**, closed box with 2.0 end walls, no bosses, **one knob per probe** (`WALL_T`, `LAP`, `RIM_IN`, `FILL` via
-     `-D`): as-is, rim flush 2.0, wall +0.6, undercut filled, rim 2.0 via the lap. Upload each alone; the API answers in seconds.
-  3. *Decide*: the first knob whose FULL-LENGTH probe reads false and whose geometry the mating part tolerates becomes the yaml change; the census gets
-     the rule as a row; the probe folder (`docs/quotes/<date>/<round>/probe/` with the `.scad`, `.stl`, heat-map PNGs and a `PROBES.md` table
-     probe | what | thinWall) is the evidence. A scaled-down copy of the body (0.6 ×) is not informative (every wall scales).
-  4. *Record*: `PROBES.md` names the method (API, parseStatus 2, one file per session), every probe with its knob and verdict, the rule adopted, and
-     the re-verification of every body of record by the API — the round's DFM_ROUND.md points at it.
+     turns `true` localises the feature AND shows the length threshold.
+  2. *Isolate*: plain-profile probes with OpenSCAD — one 2-D `polygon()` of the wall section extruded to **40 mm AND to the full part length**,
+     closed box with 2.0 end walls, no bosses, **one knob per probe** (`-D`): as-is, rim flush 2.0, wall +0.6, undercut filled. Upload each alone.
+  3. *Decide*: the first knob whose FULL-LENGTH probe reads false and whose geometry the mating part tolerates becomes the yaml change; the census
+     gets the rule as a row; the probe folder (`docs/quotes/<date>/<round>/probe/` with `.scad`, `.stl`, PNGs and `PROBES.md`) is the evidence. A
+     scaled-down copy of the body is not informative (every wall scales).
+  4. *Record*: `PROBES.md` names the method, every probe with its knob and verdict, the rule adopted, and the API re-verification of every body.
 
-## 8. FDM at home (worked example: Bambu Lab P2S, 0.4 nozzle, PLA / PETG) — printer-first preset
-A census that passes on paper is not a print: the FDM preset had 0 FAIL and failed as a product (bad finish, supports on visible faces, illegible text,
-3 bosses under a 4-hole fan, a detent that blocked the slide, a raw board mesh that wrecked the print). Rules now enforced as FAIL rows:
-- Every EXTERNAL face on the bed, vertical, or a clean top — the mesh outer-face assertion (0 support-touched outer clusters), not a WARN; visible bridges
-  ≤ 10 mm; interior support area stated per body.
-- **Walls ≥ 1.6** (a two-line 0.85 skirt / rim / tab is a FAIL, not "thin"); ribs ≥ 1.2; voids ≥ 1.0 (a 0.4 nozzle clears a 1.0 slot).
-- **Legends RAISED**: cap 4 / stroke ≥ 1.0 / height 0.6 on a face-up top (a 0.4-deep, 0.45-wide debossed void at cap 2.2 is illegible on a 0.4 nozzle however
-  good the printer); raised text cannot print face-down (the plate bridges over the glyphs) — a face-down face gets debosses or flush colour bodies. A fit
-  filter keeps a legend only where it fits its land and LISTS what it dropped so the owner sees what a coupon answer buys back.
-- No rigid bump on a slit tab (it blocks, F ∝ t³); screws + heat-set inserts in ≥ 1.6 boss walls instead of snap tabs where the arm cannot be long enough.
-- **Fan boss count = fan hole count** (consumer 30 mm fans have 4 holes even when one SKU drawing shows 3); any point set drawn in two places (SCAD `for`
-  over four corners vs a Python 3-point list) is passed to the SCAD as ONE vector.
-- Hood ROOF-DOWN with no supports: a roof recess printed roof-down is a ceiling → drop it (the fan locates on its screws); screws + inserts hold the hood.
-- **Test coupons BEFORE the part** (15–25 min prints, generated from the SAME yaml numbers and SCAD modules as the part): text strokes × caps in the real
-  font (raised face-up, debossed face-up, debossed face-down), wall thicknesses, mating clearances; the numbers they decide are a yaml parameter block
-  (legend cap / stroke / depth, rail clearance) so the answer is a 3-number edit + regenerate. Ship the coupons in every kit.
-- **Board dummy, never the raw CAD mesh** (0.25 mm sheet metal, 0402s, 0.1 mm pins are unprintable): slab + holes + solid envelopes + fins at printable
-  thickness, in the board frame, bbox stated against the mesh of record. **Two versions, both kept**: the two-piece glue version (a scribed locator ring
-  0.6 × 0.2 OUTSIDE the tall part's footprint locates it without a pocket — a compensating plinth lifts an overhang off the bed = a floating-region
-  warning; a pocket stacks the glued part low by its depth) AND the **one-piece version (D-84 pattern)**: cage / sink fused to the slab in its exact
-  position at FINAL dimensions; a nose that overhangs the board edge stands on a **break-away shim** — a 1.2 mm block on the bed, inset 0.5 from the
-  nose sides, 0.6 clear of the board edge, joined to the nose floor through 8 posts 1.2 × 1.2 across a 0.4 mm two-layer perforation gap (the bottom
-  layer bridges ≤ 5 mm between posts without a warning; the shim snaps off in one piece, stubs trimmed flush). **Say in the README that the shim looks
-  like a "PCB lip" and comes off** — the owner read it as part of the board. Verify the one-piece against the two-piece by **section symmetric
-  difference = 0 mm²** at several Z (slab, cage, sink) and both bboxes against the cage envelope of record; the generator asserts the bbox equality.
-- **Slicer projects with every setting embedded**: flatten the system presets (`inherits` chains), give the project preset ITS OWN NAME (`<system> - <project>
-  <plate>`) and list the differing keys in `different_settings_to_system` — a project naming a system preset with that list empty is reconciled back to
-  the system values when the GUI opens it (supports OFF → "floating regions", while the CLI slice was clean). Open with File → Open Project, never Import.
-  Slice every object ALONE headless; **a floating-region warning is a build FAIL** (a 36° overhang triggers it at the 30° threshold), the only exceptions are
-  documented per plate and none should be left at release. Auto-orient every non-text piece (score the face-down choices by down-facing area above the
-  bed, then bed contact; bake the rotation into the STL): a plate the owner must rotate by hand is a generator defect. One material knob (PLA / PETG) read by
-  the 3MF builder, the print sheets and every README, with the material caveat printed (PLA softens ~55–60 °C: a hood over a hot module is a fit mock-up).
-- Hand over ONE kit folder: case pieces + coupons + BOTH board dummies (two-piece and one-piece, each with its 3MF) + every project file + READMEs
-  (case, coupons, dummy); a moved folder keeps a `README_MOVED.md` pointer. The kit is regenerated with the preset — a stale kit folder from the
-  previous version is named for deletion in the record.
+### 7.2 Canonical STL and the geometry signature **[convention]**
+OpenSCAD 2021.01 writes the same CGAL geometry in a different triangle order on every export (three exports = three md5s); trimesh's exporter
+writes run-dependent NORMALS for identical vertices. Write the binary STL yourself: round vertices, rotate each triangle to its smallest vertex,
+sort triangles, recompute normals from the float32 vertices, 50-byte records — prove idempotence AND equality on a copy from another run before
+calling a hash "the geometry". The census gate, the vendor uploads and the production cut key on that md5. **Beside the md5 record a geometry
+signature** (volume, area, bbox, facet count, rounded to 1e-3) (B-20): two STLs that differ by a 1e-6 vertex jitter are "different geometry" to
+the md5 and identical to the signature — a flipped verdict on "identical" geometry is diagnosed in one line instead of a mesh diff.
+
+## 8. FDM at home (worked example: Bambu Lab P2S, 0.4 nozzle, 0.20 mm layers, PLA / PETG, Bambu Studio 02.08) — printer-first preset
+A census that passes on paper is not a print: the FDM preset had 0 FAIL and failed as a product (bad finish, supports on visible faces, illegible
+text, 3 bosses under a 4-hole fan, a detent that blocked the slide, a raw board mesh that wrecked the print). Rules enforced as FAIL rows — the
+numbers are **[owner bar]** for a 0.4 nozzle at 0.20 mm and live in `print_targets.home_fdm`:
+- Every EXTERNAL face on the bed, vertical, or a clean top — **asserted from the sliced g-code in the 3MF** (`; FEATURE: Support` extrusions
+  outside the outer-wall hull = a scar on a visible face), not only from the mesh's down-facing analysis; visible bridges ≤ 10 mm; interior
+  support area stated per body.
+- **Walls ≥ 1.6** (4 perimeters; a two-line 0.85 skirt / rim / tab is a FAIL), ribs ≥ 1.2, voids ≥ 1.0 (a 0.4 nozzle clears a 1.0 slot);
+  **minimum feature = 2 × line width** (0.8–0.9 at 0.42 line) **[physics]**.
+- **Elephant foot** (B-11): the first 2–3 layers flare 0.1–0.15 mm on a textured plate at 55 °C — a 0.30 lap clearance loses that at the seam;
+  chamfer the bottom edge 0.3–0.5 × 45° on mating skirts or use the slicer's elephant-foot compensation (0.1), recorded on the print sheet.
+- **Hole shrink**: vertical holes print 0.1–0.3 mm under nominal **[physics]** — compensate in the preset's `fits` block (per-preset, coupon-decided)
+  or ream; state which on the print sheet.
+- **Seam placement**: the seam is set to the rear / a hidden edge in the slicer project (recorded key), never on a legend face.
+- **Layer anisotropy**: a tab or boss loaded across layers is 30–50 % weaker; boss walls shear along layers — orient bosses so the load is in-plane
+  where possible, and read the FEA with the anisotropy factor.
+- **Legends RAISED**: cap 4 / stroke ≥ 1.0 / height 0.6 on a face-up top (a 0.4-deep, 0.45-wide debossed void at cap 2.2 is illegible on a 0.4
+  nozzle); raised text cannot print face-down — a face-down face gets debosses or flush colour bodies. A fit filter keeps a legend only where it
+  fits its land and LISTS what it dropped.
+- No rigid bump on a slit tab (it blocks, F ∝ t³); screws + heat-set inserts in ≥ 1.6 boss walls, or magnets (§1.1), instead of snap tabs where the
+  arm cannot be long enough.
+- **Fan boss count = fan hole count** (consumer 30 mm fans have 4 holes even when one SKU drawing shows 3); any point set drawn in two places is
+  passed to the SCAD as ONE vector.
+- Hood ROOF-DOWN with no supports: a roof recess printed roof-down is a ceiling → drop it; **put the roof on the bed by `rotate([180,0,0])`, never
+  `mirror()`** — a mirror flips handedness and every asymmetric mark prints backwards; check the export against the board-frame mesh with a
+  proper-vs-improper rigid-match row.
+- **Test coupons BEFORE the part** (15–25 min prints, generated from the SAME yaml numbers and SCAD modules): text strokes × caps in the real font
+  (raised face-up, debossed face-up, debossed face-down), wall thicknesses, mating clearances, **an insert + screw coupon (three bosses: install,
+  torque to failure, record)** (B-42); the numbers they decide are a yaml parameter block. Ship the coupons in every kit.
+- **Board dummy, never the raw CAD mesh** (sheet metal, 0402s, 0.1 mm pins are unprintable): slab + holes + solid envelopes + fins at printable
+  thickness, in the board frame, bbox stated against the mesh of record. **Two versions, both kept**: the two-piece glue version (a scribed locator
+  ring 0.6 × 0.2 OUTSIDE the tall part's footprint locates it without a pocket — a compensating plinth lifts an overhang off the bed = a
+  floating-region warning) AND the **one-piece version**: cage / sink fused to the slab at FINAL dimensions; a nose that overhangs the board edge
+  stands on a **break-away shim** (worked example: a 1.2 mm block on the bed, inset 0.5 from the nose sides, 0.6 clear of the board edge, joined
+  through 8 posts 1.2 × 1.2 across a 0.4 mm two-layer perforation gap; the shim snaps off in one piece). **Say in the README that the shim looks
+  like a "PCB lip" and comes off.** Verify one-piece vs two-piece by **section symmetric difference = 0 mm²** at several Z and both bboxes against
+  the envelope of record. Model compressible envelopes (EMI springs) at the compressed width or the dummy jams the bezel.
+- **Slicer projects with every setting embedded** (Bambu Studio 02.08 specifics, labelled): flatten the system presets (`inherits` chains), give
+  the project preset ITS OWN NAME and list the differing keys in `different_settings_to_system` (a project naming a system preset with that list
+  empty is reconciled back to system values when the GUI opens it — supports OFF → "floating regions"). Open with File → Open Project, never
+  Import. Slice every object ALONE headless; **a floating-region warning is a build FAIL**. Auto-orient every non-text piece and bake the rotation
+  into the STL. One material knob (PLA / PETG) read by the 3MF builder, the print sheets and every README, with the material caveat printed
+  (§1.3). **A generator that refuses to overwrite its artefact on a failed run leaves the OLD 3MF on disk while the sidecar describes the new
+  one** — the analysis must read the file it names (md5 in the sidecar checked before any forensics).
+- Hand over ONE kit folder: case pieces + coupons + BOTH board dummies (each with its 3MF) + every project file + READMEs; a moved folder keeps a
+  `README_MOVED.md` pointer; a stale kit folder is named for deletion in the record.
 
 ## 9. Two versions from one yaml (vendor MJF + home FDM)
-Presets `base + overrides` deep-merged before any module reads the yaml (`references/case-pipeline.md` §Presets); the geometry may differ wherever the
-printer needs it (split legend plate, raised legends, 1.6 walls, screws) while the envelope, bezel, windows and any coupling stay shared. Every
-variant-only generator line sits behind **hook tokens that expand to the ORIGINAL text for the other presets** (`HOOKS_DEFAULT` / `HOOKS_<preset>`), and the
-variant gets **its own version key** (`presets.<p>.version`) instead of bumping `case.version` — the SCAD header carries the version, so a bump alone
-re-keys every cached STL of record. Prove byte identity before committing: `Case(base).scad() == git show HEAD:<scad>`.
+Presets `base + overrides` deep-merged before any module reads the yaml (`references/case-pipeline.md` §Presets); the geometry may differ wherever
+the printer needs it (split legend plate, raised legends, 1.6 walls, screws or magnets) while the envelope, bezel and windows stay shared —
+**fit clearances are NOT shared numbers** (§1.4): every mating dimension is a per-preset `fits` knob, the coupon decides each. Every
+variant-only generator line sits behind **hook tokens that expand to the ORIGINAL text for the other presets**, and the variant gets **its own
+version key** (`presets.<p>.version`). **A hook that references a variable the preset never defines expands to NOTHING** — no error, a body
+exported with the feature missing (a hood shipped a day without counterbores): every hook variable is asserted defined per preset, and every
+check row reads the MESH, not the yaml. **Duplicate yaml keys are gated**: PyYAML keeps the LAST of two duplicate keys silently (`body_rail:
+{enabled: false}` followed by `body_rail: {land: …}` re-enabled a rail the README said was off) — load every design yaml through a
+duplicate-aware SafeLoader and fail on a duplicate. Prove byte identity before committing: `Case(base).scad() == git show HEAD:<scad>`.
 
-- **The home preset mirrors every vendor DFM decision the same day** (owner: "once that closes apply those findings to the p2s version as well"):
-  rails off, key off, closed rims, undercut filled (`lap.ring_down`), feet concentric, hood on screws — applied to the p2s preset in the SAME yaml with
-  its own version key (`presets.p2s.version`) and a comment naming the vendor round that decided it. Its gate is its own census (walls 1.6 / ribs 1.2 /
-  voids 1.0, legends by the coupon rule) + the slicer log clean on every plate; the STLs, 3MFs and the kit folder regenerate with it. A vendor-only
-  fix (a fill that exists only where MJF needed it) is a divergence the two-units-must-mate check has to prove harmless (partner overlap 0 mm³).
+- **The home preset (`home_fdm`) mirrors every vendor DFM decision the same day** (owner: "once that closes apply those findings to the home
+  version as well"): rails off, key off, closed rims, undercut filled, feet concentric, hood on screws or magnets — applied to the home preset in
+  the SAME yaml with its own version key and a comment naming the vendor round that decided it. Its gate is its own census (`print_targets.home_fdm`)
+  + the slicer log clean on every plate. A vendor-only fix is a divergence the two-units-must-mate check proves harmless (partner overlap 0 mm³).
 
 ## 10. Post-mortem pattern (when the vendor reports cracked / deformed parts)
-1. **Measure the ordered STL** (the archived md5, not the current file): sections through the failure with the numbers on them, the census with span and
-   class; photos mapped feature by feature to the model (a table: photo feature | model | designed / defect).
-2. **Separate design intent from defect**: the "designed gap" the vendor points at may be correct AND the crack beside it may be yours; the off-centre hole
-   may be designed and still a finding (it looks broken). Say which is which, with numbers.
-3. **Write the accept-and-ship reply with the number** ("the lifted strips are the 0.9 mm skin over 141 mm cracking; that is our file, please ship") — the
-   owner sends it; do not claim a printing defect for a designed feature; a goodwill credit is the owner's call.
-4. **Apply the learning design-wide, not to the failed feature**: census every body of every preset, re-derive every value set against the old rule, turn
-   every waiver row into a measured row, render every face, then the vendor's own DFM on every replacement body — and only then a new order. Expect ~12
-   full builds for the first design-wide pass; commit after each (`references/agent-ops.md` §2).
+1. **Measure the RECEIVED part** (B-21a): a caliper / pin-gauge table of every gated wall and bore on the failed part AND on a good region —
+   that table is the real process spread and feeds `print_targets.<t>.tolerance` (§1). **Photo protocol**: scale bar in frame, raking light, the
+   feature ID written on the part, both sides of a crack, one overview per face. **Fractography basics**: origin vs propagation direction (river
+   marks, the fastest region is the origin), brittle vs ductile surface, crack path relative to the build layers (along a layer plane = cooling /
+   layer bond; through layers = overload / handling). **Ask the vendor** for the build orientation / position in the build and the post-process
+   route. **Retain the failed parts**, labelled with the order line id.
+2. **Measure the ordered STL** (the archived md5, not the current file): sections through the failure with the numbers on them, the census with
+   span and class; photos mapped feature by feature to the model.
+3. **Separate design intent from defect**, then decide who is at fault with the table:
+
+   | Finding | Vendor at fault | Our file |
+   |---|---|---|
+   | a dimension outside the vendor's published tolerance | yes — reprint or credit | |
+   | the part is not the file (missing feature, wrong scale, wrong material / colour) | yes | |
+   | contamination, unfused powder, layer delamination in a ≥ gate wall | yes (process) | |
+   | a wall / feature below the vendor's published minimum that the checker did not flag | shared — say so | fix the design anyway |
+   | a designed feature the checker coloured and the round accepted | | ours: "that is our file, please ship" |
+   | a designed asymmetry read as a defect | | ours: render + order-sheet line |
+
+4. **Reply template** (the owner sends it; wording lives in `templates/VENDOR_REVIEW_RECORD.md` §3): facts (order, line, file md5), what we
+   measured (numbers, photos), what we changed (new md5, what moved), what we ask (ship as is / reprint at our cost / reprint at the vendor's cost /
+   credit), what we do NOT accept. Never claim a printing defect for a designed feature; a goodwill credit is the owner's call.
+5. **Apply the learning design-wide, not to the failed feature**: census every body of every preset, re-derive every value set against the old
+   rule, turn every waiver row into a measured row, render every face, then the vendor's own DFM on every replacement body — and only then a new
+   order. Expect ~12 full builds for the first design-wide pass; commit after each.
+
+## 11. SLA (resin) rule set (worked example: JLC3DP 8000 / 9600 resins, 2026-09-22 … 23 — verify live) **[vendor sheet + physics]**
+- **Two minimums, two meanings** (B-09): the quote page's Edit dialog refuses a PART smaller than 2 mm in its thinnest overall dimension (a
+  plate); the review mail asks for **walls ≥ 0.8** ("resin ≥ 0.8"). Design walls at 1.0 (0.8 + margin), plates ≥ 2 mm thick, and record both
+  numbers in `print_targets.<sla target>` with the page and mail as sources.
+- **Minimum feature / emboss 0.3–0.5, engraved stroke ≥ 0.4, hole Ø ≥ 0.5** (vendor guides); a point contact (0.01 mm) is a broken part: `--pinch`.
+- **Hollow bodies need drain holes** (≥ 2 × Ø3 at the lowest print point) or the part traps resin and cups; a large flat face parallel to the
+  plate causes **cupping / suction** — orient at 10–20° or accept the support scars on that face (the vendor decides orientation; ask and record).
+- **Supports** land on the down-facing faces the vendor chooses: state the visible faces on the order sheet ("no supports on the top face")
+  and accept a scar elsewhere.
+- **Post-cure warp**: thin flat plates (< 2 mm, > 40 mm span) warp 0.2–0.5 mm after UV post-cure — rib them or accept; **UV yellowing** of clear
+  resin within weeks in daylight; **brittleness**: the standard 8000 / 9600 class resins are stiff and brittle (elongation a few %) — no snap
+  fits, no press fits, no thin cantilevers; the inlay plate that arrived "in pieces" was point-contact geometry in a brittle resin.
+- Colour / dye adds a day; the material rating (§1.3) per the TDS — most standard resins are unrated and soften < 60 °C.

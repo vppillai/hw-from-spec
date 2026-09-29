@@ -1,3 +1,4 @@
+# FIXTURE numbers for the smoke run, not rules: the print rules live in project.yaml print_targets (references/dfm-printed-enclosure.md)
 case:
   version: v0.1-smoke
   pieces: [tray, hood]
@@ -5,5 +6,5 @@ case:
   clearance_board: 0.3
   preset_default: fdm
   presets:
-    fdm: {min_wall: 0.85, colour_bands: top_only}
+    fdm: {min_wall: 1.6, colour_bands: top_only}     # 1.6 = the home_fdm target's wall_gate (a two-line 0.85 wall failed as a product)
     jlc: {min_wall: 1.2, process: MJF, material: PA12}

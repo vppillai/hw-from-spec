@@ -2,7 +2,8 @@
 
 You are building a {{CAD_TOOL}} hardware project ({{BOARD_SUMMARY}} + {{ENCLOSURE_SUMMARY}}) from a written specification, for fabrication and
 assembly at {{FAB}}. Humans review at gates. Read `SPEC.md`, `docs/governance/STATUS.md`, `docs/governance/DECISIONS.md` before doing anything. The process is the
-`hw-from-spec` skill (installed at `{{SKILL_PATH}}`); `project.yaml` carries every project constant.
+`hw-from-spec` skill (installed at `{{SKILL_PATH}}`); `project.yaml` carries every project constant. The owner's kickoff answers
+(`docs/governance/KICKOFF_ANSWERS.md`, D rows) are decisions of record: do not re-ask them, do not deviate silently (rule 2).
 
 ## Non-negotiable rules
 1. **Never invent a fab part number.** A number enters the BOM only after a fetch of its live page in this session confirms MPN, package and stock.
@@ -12,7 +13,7 @@ assembly at {{FAB}}. Humans review at gates. Read `SPEC.md`, `docs/governance/ST
 3. **Every VERIFY item is closed by reading the primary datasheet** before the part is drawn. A VERIFY item is a spec value or claim that rests
    on a datasheet or standard nobody has read yet (definition: skill `SKILL.md` §4); they are listed in SPEC.md (tag `VERIFY`) or `docs/design/VERIFY.md`,
    and closed by a `docs/datasheet_notes/<part>.md` row (page/section) or a `docs/governance/BLOCKERS.md` row.
-4. **Stop at gates.** G0 = SPEC approved (after a blind review round). G1 = schematic approved. G2 = layout approved. Do not start the next phase's
+4. **Stop at gates.** G0 = SPEC approved (after one review round — defined in `docs/governance/GATES.md`). G1 = schematic approved. G2 = layout approved. Do not start the next phase's
    CAD before the owner writes the approval into `docs/governance/GATES.md`. **Agents never write approval cells or the release line** — they ask (skill
    `SKILL.md` §1.1) and wait; a chat approval is quoted verbatim under the table, the cell stays the owner's. Never quote the release phrase in prose.
 5. **Everything is generated, nothing is hand-edited.** CAD files, reports and indexes come from `gen/` scripts reading `design/*.yaml`. A review
@@ -25,7 +26,10 @@ assembly at {{FAB}}. Humans review at gates. Read `SPEC.md`, `docs/governance/ST
    reasoning. Verify BLOCKER/MAJOR adversarially, merge in `docs/reviews/`.
 9. **Fab constraints are hard:** {{FAB_CONSTRAINTS}} (state them: assembly sides, minimum package, link parts, excluded package families, parts on
    the verified list, fab code field on every fitted part, DNP marked and excluded from BOM/CPL). Mirror the fab's DFM checker in-repo
-   (`design/dfm_thresholds.json`, `scripts/dfm_check.py`).
+   (`design/dfm_thresholds.json`, `scripts/dfm_check.py`). **The manufacturability bar is zero / zero / no waivers** (owner row {{D-BAR}}):
+   board DRC 0 errors / 0 warnings and fab DFM 0 Danger / 0 Warning unless a dated accepted entry with vendor evidence; printed enclosure census
+   0 unaccepted FAIL, slicer log clean, vendor checker no flag by API read; CNC vendor DFM clean. Build rules: `references/pcb-layout-dfm.md`,
+   `references/dfm-printed-enclosure.md`; every print target's numbers live in `project.yaml print_targets`, never in a script.
 10. **Say what you don't know.** If a datasheet, drawing or page cannot be fetched, mark the item BLOCKED in `docs/governance/BLOCKERS.md` and continue elsewhere.
 11. **Capture learnings.** Before your final commit, append every non-obvious learning as a dated, domain-tagged line to `docs/governance/LEARNINGS_LOG.md`.
 

@@ -16,7 +16,10 @@ for heavy solids (heat sink, cage).
    per-label result records merged (`--only <subset>` must never overwrite the full record: one complete `fea_results_all_<label>.json` per label).
 4. **Solve**: per case in its own process (multiprocessing), pyamg for the big systems; ties between parts as penalty springs with a gap.
 5. **Status ladder**: `if not isfinite(x): return "FAIL"` FIRST in the shared status helper (NaN compares False against every limit and shipped as OK
-   once); OK / WARN / FAIL against material limits (yield, glass temperature) with the margin printed.
+   once); OK / WARN / FAIL against material limits (yield, glass temperature) with the margin printed. **Who decides**: the material limits and
+   the required margin come from the TDS and the kickoff answers (owner rows); a WARN or a margin below the limit is reported with its number and
+   is **accepted only by an owner D row** cited in the report — an agent never downgrades a WARN. Anisotropy (MJF Z, FDM across layers —
+   `dfm-printed-enclosure.md` §1) is applied as a factor and stated.
 6. **Report**: FEA_REPORT.md generated with a version-to-version table (previous version's record extracted from the commit that produced it),
    per-case: load, BCs, mesh size, DOF, peak/p99 von Mises, displacement, status, figure paths; composites (undeformed/deformed pairs ≥ 2000 px + 16:9
    slide variants) from per-case `.npz` sidecars via one shared plotting module.

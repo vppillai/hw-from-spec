@@ -9,7 +9,8 @@ top level** — the shell gates (`adopt_gates.sh`, `clone_gate.sh`) archive HEAD
 project:
   name: <short name>                      # used in generated headers
   description: <one line>
-skill: {repo: <url>, commit: <sha>}       # the hw-from-spec commit the project follows (informational; README "Use in a new project")
+skill: {repo: <url>, commit: <sha>, version: <SKILL.md version>}   # the hw-from-spec commit + version the project follows; scripts/skill_retro.py reports drift
+kickoff: docs/governance/KICKOFF_ANSWERS.md   # the owner's kickoff answers (references/kickoff-questionnaire.md) — D rows before any CAD
 ids:
   owner_prefix: D                         # owner decision rows  D-nn
   agent_prefix: CC                        # agent rows           CC-nnn (three digits)
@@ -46,15 +47,37 @@ paths:
   mesh_provenance: out/mechanical/board.stl.provenance.json   # optional; {board_md5, board_commit, mesh_md5, facets}
 tools:
   python: .venv/bin/python                # {PY} in traceability commands; a leading "." makes it root-relative
-  kicad_cli: /Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli   # {KICAD_CLI} (macOS example)
-  kicad_python: /Applications/KiCad/KiCad.app/Contents/Frameworks/Python.framework/Versions/Current/bin/python3   # {KPY}
+  kicad_cli: /Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli   # {KICAD_CLI} — the key names are HISTORICAL: put your CAD's CLI here whatever the CAD
+  kicad_python: /Applications/KiCad/KiCad.app/Contents/Frameworks/Python.framework/Versions/Current/bin/python3   # {KPY} — the CAD's Python (python3 when it has none)
 traceability:
   scratch_links: [lib]                    # symlinked next to the scratch copy of the board dir so ${KIPRJMOD}/../../lib resolves
-dfm:
-  thresholds: design/dfm_thresholds.json  # the fab's numbers, with source URL + date (references/fab-dfm.md)
+fab_dfm:                                  # the board's fab-DFM mirror (references/fab-dfm.md); the old block name `dfm:` is still read
+  thresholds: design/dfm_thresholds.json  # the fab's numbers, with source URL + date
   items: out/dfm_items.json               # written by the project's measurer
-  accept: design/board.yaml               # yaml with key dfm_accepted: [{check, refs: [..] | {REF: n}, reason}]
+  accept: design/board.yaml               # yaml with key dfm_accepted: [{check, refs: [..] | {REF: n}, reason, date, evidence}]
   report: out/dfm.json                    # written by every plain scripts/dfm_check.py run (--check compares); read by release_report section dfm
+  bar: {open: 0, warnings_fail: true, accepted_requires: [reason, date, evidence]}   # the owner's manufacturability bar (SKILL §1.2): an acceptance missing a field is ignored
+print_targets:                            # one entry per print target; scripts/thin_wall_census.py --target <name> reads it — no gate constant lives in a script
+  jlc_mjf:                                # vendor / process / material / wall_gate / void_gate / red_line [checker]; design_margin [owner bar];
+    vendor: JLC3DP                        # wedge_band (convention 1.5); tolerance + tolerance_source [vendor sheet, replaced by the first-article spread];
+    process: MJF                          # max_bbox_for_rule (the size the length-dependent rule was calibrated at); checker_url + checker_date;
+    material: PA12-HP                     # samples_per_mm2 (census density); post_process; rating {ul94, tg_c, source}; accepted [{class, bbox, reason, date, evidence}]
+    wall_gate: 1.2
+    void_gate: 1.2
+    red_line: 0.5
+    design_margin: 0.1
+    wedge_band: 1.5
+    tolerance: 0.3
+    tolerance_source: "<vendor tolerance page>, <date>"
+    max_bbox_for_rule: 147
+    checker_url: "<quote page>"
+    checker_date: 2026-09-28
+    samples_per_mm2: 10
+    post_process: none
+    rating: {ul94: HB, tg_c: 178, source: "<TDS url>"}
+    accepted: []
+  home_fdm: {vendor: home, process: FDM, material: PLA, printer: "0.4 nozzle, 0.20 mm", wall_gate: 1.6, rib_gate: 1.2, void_gate: 1.0, red_line: 0.5,
+             design_margin: 0.0, wedge_band: 1.5, tolerance: 0.2, samples_per_mm2: 10, post_process: none, rating: {ul94: unrated, tg_c: 55, source: "<TDS>"}, accepted: []}
 reorg:                                    # scripts/reorg_paths.py — only when the layout changes (decision row first)
   moves: {docs/OLD.md: docs/<folder>/OLD.md}   # old -> new, git mv + literal rewrite (word-boundary guarded, longest first, idempotent)
   trim: [out/old_dir]                     # git rm -r (name the tag that keeps them in the decision row)
@@ -96,7 +119,7 @@ gates:
     - "$PY scripts/release_report.py --check"
     - "$PY scripts/reorg_paths.py --check"   # when a reorg: block exists: no old literal, no dangling docs/ path in structural files
     - "$PY scripts/assembly_guide.py --check"   # production cut
-    - "$PY scripts/thin_wall_census.py --gate-dir out/<board>/mechanical/case/<preset>/census"   # every printed body: census record md5 = STL of record, 0 FAIL
+    - "$PY scripts/thin_wall_census.py --gate-dir out/<board>/mechanical/case/<preset>/census"   # every printed body: census record md5 = STL of record, 0 unaccepted FAIL, accepted entries dated with evidence
   clone:                                  # scripts/clone_gate.sh: run inside `git archive HEAD`
     - "$PY scripts/release_report.py --check"
   regen:                                  # clone_gate.sh --regen: run inside the archive, then copy regen_copy_back into the tree
@@ -106,13 +129,13 @@ gates:
 
 ## Layout the defaults name
 ```
-docs/governance/   DECISIONS STATUS GATES BLOCKERS KNOWN_ISSUES TRACEABILITY LEARNINGS_LOG ERC_WAIVERS ENV   (records the generators read and write)
-docs/design/       TEST_PLAN VERIFY briefs, design notes, mechanical notes                                    (intent)
+docs/governance/   DECISIONS STATUS GATES BLOCKERS KNOWN_ISSUES TRACEABILITY LEARNINGS_LOG ERC_WAIVERS ENV KICKOFF_ANSWERS   (records the generators read and write)
+docs/design/       TEST_PLAN VERIFY SOFTWARE_ARCHITECTURE briefs, design notes, mechanical notes                      (intent)
 docs/parts/        PARTS_VERIFICATION PROCUREMENT parts_check.json compliance json
 docs/reviews/      REVIEW_HANDOFF, <ROUND>_<role>_<model>.md, *_merged.md, REORG_* inventories
 docs/release/      reports, RELEASE_NOTES, collateral/<md5-8>/, marketing/
 docs/quotes/<date>/  fab evidence: quote captures, DFM exports, vendor review mails + images, order screenshots (never inside a package)
-docs/production/<md5-8>/  the production cut (MANIFEST, STATUS, documents, records/, pdf/)
+docs/production/<md5-8>/  the production cut (MANIFEST, STATUS, documents, records/ = THE records folder, pdf/)
 docs/datasheet_notes/
 ```
 Every `docs/…` path in SKILL.md / references / templates spells this layout. Changing it later is a decision row + a `reorg:` block +
@@ -129,8 +152,10 @@ Every `docs/…` path in SKILL.md / references / templates spells this layout. C
   imports `yaml` among `$PYTHON`, the project `.venv`, the skill's `.venv`, `python3` (printed at the top of every run).
 - Which scripts are generators and which are graders: `known_issues`, `traceability`, `release_report`, `collect_renders`, `dfm_check`,
   `assembly_guide` have `--check`; `reorg_paths --check` is a grader (no generator side); `thin_wall_check` is a measurer (`--census`, `--pinch`,
-  exit 1 on a finding); `thin_wall_census` is the printed-body GATE (`<stl> --gate G --void-gate V --json out/…/census/<piece>.json`, exit 1 on a
-  WALL or VOID cluster below its gate) plus a PURE `--gate-dir <census dir>` for `gates.adopt` (md5 of the STL beside the record + empty `fails`);
+  exit 1 on a finding); `thin_wall_census` is the printed-body GATE (`<stl> --target <print target> --json out/…/census/<piece>.json`, exit 1 on a
+  WALL / VOID / WEDGE-band / OPPOSING cluster below its gate that no dated `accepted` entry covers) plus a PURE `--gate-dir <census dir>` for
+  `gates.adopt` (md5 of the STL beside the record + empty `fails` + every accepted entry still dated with evidence); `skill_retro` reads a
+  project's learnings and decisions and drafts the skill's next changes (no --check);
   `handoff_header.py` prints a header (nothing to check); `project.py` is the reader.
 - Every `--check` is read-only on the tree (`adopt_gates.sh` fails when `git status --porcelain` changes across the gates); every `--selftest`
   works in a temp dir only.

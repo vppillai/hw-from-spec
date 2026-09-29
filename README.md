@@ -13,7 +13,7 @@ SKILL.md          the procedure (≤ 500 lines): phases/gates, generated-only ru
                   case + FEA, printed-enclosure DFM (§8.1), software track, release/production cut, agent operations
 references/       detail per topic, loaded on demand: project-yaml, schematic-phase, part-verification, fab-dfm, case-pipeline,
                   dfm-printed-enclosure (MJF / FDM rules as measured, census gate, API-verdict quote-page procedure, length-dependent metric + probes,
-                  p2s mirror, coupons, dummies, post-mortem), fea-stage,
+                  home-preset mirror, coupons, dummies, post-mortem), fea-stage,
                   software-track, release-and-cut, vendor-review, agent-ops, pitfalls (every recorded learning, one line each)
 scripts/          generic generators driven by a project.yaml — known_issues, traceability, handoff_header, dfm_check (grading engine),
                   release_report (skeleton), collect_renders, reorg_paths (layout migration + zero-loss proof), thin_wall_check (quick census +
@@ -31,39 +31,72 @@ evals/            skill-creator eval prompts (start a project / blind review / r
 
 ## Install
 
-Requirements: Python ≥ 3.11 with `pyyaml`, git, bash ≥ 3.2 (macOS `/bin/bash` and any Linux). Nothing else for the generic scripts; the CAD,
-OpenSCAD, FEA and browser tooling belong to the project that uses the skill and are recorded in its `docs/governance/ENV.md`.
+Requirements: git, bash ≥ 3.2, Python ≥ 3.11, and `uv` (or `python3 -m venv` + `pip`). The generic
+scripts need only `pyyaml`; the two mesh scripts (`thin_wall_census.py`, `thin_wall_check.py`) need
+`numpy trimesh scipy shapely`. CAD, OpenSCAD, FEA and browser tooling belong to the project and are
+recorded in its `docs/governance/ENV.md`.
+
+The skill lives in ONE place inside a project: a submodule at `vendor/hw-from-spec` with a relative
+symlink `scripts -> vendor/hw-from-spec/scripts`. A personal clone under `~/.claude/skills/` only
+makes the skill discoverable to Claude Code; it is never a project's scripts source.
+
+1a. Personal install (skill discovery only):
 
 ```sh
-git clone https://github.com/vppillai/hw-from-spec.git ~/.claude/skills/hw-from-spec        # 1. as a Claude Code skill (personal); or
-mkdir -p .claude/skills && git submodule add https://github.com/vppillai/hw-from-spec.git .claude/skills/hw-from-spec   #    per project (the skill is then also your scripts source)
-cd <skill dir> && uv venv .venv && uv pip install --python .venv/bin/python pyyaml      # 2. the scripts' interpreter
-for s in scripts/*.py; do .venv/bin/python $s --selftest; done; scripts/clone_gate.sh --selftest; scripts/adopt_gates.sh --selftest
-smoke/run_smoke.sh                                          # 3. the dry run — green before you start a project
+git clone https://github.com/vppillai/hw-from-spec.git ~/.claude/skills/hw-from-spec
 ```
-As a plugin: point a Claude Code plugin manifest at this directory (the skill is `SKILL.md`); the scripts stay usable from the plugin path.
+
+1b. In a project (the layout every gate command assumes; `<repo>` is your project's git top level):
+
+```sh
+cd <repo>
+git submodule add https://github.com/vppillai/hw-from-spec.git vendor/hw-from-spec
+ln -s vendor/hw-from-spec/scripts scripts
+```
+
+2. Two virtual environments, both gitignored (the skill's for its selftests, the project's for
+`tools.python` and the mesh scripts). Without `uv`: `python3 -m venv .venv && .venv/bin/pip install …`.
+
+```sh
+uv venv vendor/hw-from-spec/.venv
+uv pip install --python vendor/hw-from-spec/.venv/bin/python pyyaml
+uv venv .venv
+uv pip install --python .venv/bin/python pyyaml numpy trimesh scipy shapely
+```
+
+3. Prove the toolchain before reading the spec:
+
+```sh
+for s in scripts/*.py; do .venv/bin/python "$s" --selftest; done
+scripts/clone_gate.sh --selftest
+scripts/adopt_gates.sh --selftest
+vendor/hw-from-spec/smoke/run_smoke.sh
+```
 
 ## Use in a new project
 
-One canonical layout — the skill under `vendor/hw-from-spec`, a RELATIVE symlink `scripts` (or a copy of `scripts/`), `project.yaml` at the git
-top level. This is the layout the smoke run and `clone_gate.sh --selftest` exercise (`git archive HEAD` carries the symlink but no submodule
-content; the clone gate links the working tree's scripts and venv into the archive).
+4. Copy the templates and fill every `{{…}}` slot (`T` is the templates folder):
 
 ```sh
-cd <new project repo>                                        # git init done, project.yaml will sit here (top level)
-git submodule add https://github.com/vppillai/hw-from-spec.git vendor/hw-from-spec && ln -s vendor/hw-from-spec/scripts scripts      # or: cp -R vendor/hw-from-spec/scripts scripts
-(cd vendor/hw-from-spec && uv venv .venv && uv pip install --python .venv/bin/python pyyaml)      # the skill's venv (gitignored, does not ship)
-T=vendor/hw-from-spec/templates; mkdir -p docs/{governance,design,parts,reviews,release,quotes,production} design
-cp $T/CLAUDE.md $T/.gitignore $T/project.yaml . && cp $T/{DECISIONS,STATUS,GATES,KNOWN_ISSUES,LEARNINGS_LOG,BLOCKERS,ENV,ERC_WAIVERS}.md docs/governance/
-cp $T/PARTS_VERIFICATION.md docs/parts/ && cp $T/TEST_PLAN.md docs/design/ && cp -R $T/datasheet_notes docs/ && cp $T/design/traceability.yaml design/
-grep -rn '{{' CLAUDE.md project.yaml docs design                  # fill every slot until this prints nothing
+T=vendor/hw-from-spec/templates
+mkdir -p docs/governance docs/design docs/parts docs/reviews docs/release docs/quotes docs/production design
+cp "$T/CLAUDE.md" "$T/.gitignore" "$T/project.yaml" "$T/SPEC.md" .
+cp "$T"/{DECISIONS,STATUS,GATES,KNOWN_ISSUES,LEARNINGS_LOG,BLOCKERS,ENV,ERC_WAIVERS}.md docs/governance/
+cp "$T/PARTS_VERIFICATION.md" "$T/parts/PROCUREMENT.md" docs/parts/
+cp "$T/TEST_PLAN.md" "$T/design/VERIFY.md" "$T/design/SOFTWARE_ARCHITECTURE.md" docs/design/
+cp -R "$T/datasheet_notes" docs/
+cp "$T/design/traceability.yaml" design/
+grep -rn '{{' CLAUDE.md project.yaml SPEC.md docs design
 ```
-Then follow `SKILL.md` §0 (day-1 setup: venv, selftests, smoke, first records, adopt gates). The scripts find `project.yaml` by walking up from the
-cwd (or `HWFS_PROJECT=…`); the shell gates use the first interpreter that imports `yaml` among `$PYTHON`, the project `.venv`, the skill's `.venv`,
-`python3`, and print which. Pin the skill commit in `project.yaml skill: {repo, commit}`. Never put the submodule AT `scripts/`.
 
-Project-specific generators (schematic builder, placement, routing, export, fab package, panel, silk, case, drawings, FEA measurer) stay in the
-project's `gen/`; they read constants through `scripts/project.py` and are added to `gates.adopt` with their `--selftest` and `--check`.
+5. Follow `SKILL.md` §0: the kickoff questionnaire (every owner decision up front), ENV record,
+first records, adopt gates, then G0. The scripts find `project.yaml` by walking up from the cwd
+(or `HWFS_PROJECT=…`); the shell gates print which interpreter they use. Pin the skill in
+`project.yaml skill: {repo, commit, version}`. Never put the submodule AT `scripts/`.
+
+Project-specific generators (schematic builder, placement, routing, export, fab package, panel,
+silk, case, drawings, FEA measurer) stay in the project's `gen/`; they read constants through
+`scripts/project.py` and join `gates.adopt` with their `--selftest` and `--check`.
 
 ## What is and is not here
 

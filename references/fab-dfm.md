@@ -27,8 +27,9 @@ first quote and make it part of the adopt rule.
    and every refdes of the item is listed; the dict form `{REF: n}` is a per-ref budget applied to that acceptance entry only.
 3. **Grader** `scripts/dfm_check.py`: value ≤ danger → Danger; danger < value ≤ warning → Warning; else Good; 2-decimal half-up rounding before
    grading (viewers work at 2 decimals); project rule at full precision with a 5e-4 tolerance. Exit 1 on any open item.
-4. **Acceptances** by refdes with a reason (`dfm_accepted` in the board yaml): a pair item needs BOTH refs listed; dict form `{REF: n}` is a budget;
-   bare tracks/vias cannot be accepted — fix them.
+4. **Acceptances** by refdes with reason, **date and vendor evidence** (`dfm_accepted` in the board yaml; the fields `fab_dfm.bar.accepted_requires`
+   names — an entry missing one is ignored and listed): a pair item needs BOTH refs listed; dict form `{REF: n}` is a budget; bare tracks/vias
+   cannot be accepted — fix them. The bar is 0 Danger / 0 Warning open (SKILL §1.2).
 5. **Design strictly greater**: rules at limit + 0.01 (0.16 where the fab says 0.15), annular ring > the minimum, silk line ≥ the minimum + 0.01.
 6. **Fixture disagreements**: when the selftest fixture and the checker disagree, print the checker's REASON before touching either — the "extra"
    unconnected-via hits were correct (copper on one layer only); the fix was in the fixture.
@@ -65,18 +66,21 @@ first quote and make it part of the adopt rule.
   with a figure.
 
 ## 6. Print-service / CNC DFM (worked example: JLC3DP / JLCCNC)
-- Print DFM = a thin-wall heat map (grey ≥ 1.2, yellow 0.5–1.2, red < 0.5) + one yes/no risk gate; compare process rule sets, not colours; keep the
-  census gates in extrusion lines for FDM. Its only numbers are volume/area/bbox — turn a heat-map colour into a number with your own ray-cast.
-- FDM refuses parts < 30 × 30 × 10 mm per file; SLA refuses < 2 mm thickness at the Edit dialog (not at upload); a mandatory customs cascader makes
-  Save a silent no-op; dyeing is an add-on; pricing linear in quantity.
+- Print DFM = a thin-wall heat map + one yes/no risk gate (API `thinWall`). The legend (JLC3DP 2026-09-28: grey ≥ 1.2, yellow 0.5–1.2, red < 0.5)
+  is the **checker's** colouring; the vendor's **published printable minimum** is a different number (its review mail: nylon ≥ 1.0, resin ≥ 0.8);
+  the **owner's bar** (no yellow) is a third — keep the three apart (`references/dfm-printed-enclosure.md` §1) and put them in `print_targets`.
+  Compare process rule sets, not colours. Its only numbers are volume / area / bbox — turn a colour into a number with your own ray-cast.
+- FDM refuses parts < 30 × 30 × 10 mm per file; **SLA: the Edit dialog refuses a PART thinner than 2 mm overall, the wall minimum is 0.8** (two
+  different numbers — `dfm-printed-enclosure.md` §11); a mandatory customs cascader makes Save a silent no-op; dyeing / post-processing is an
+  add-on that changes dimensions (§1.2 there); pricing linear in quantity.
 - CNC: a faceted STL-sewn STEP goes to manual quote; a true B-rep STEP (cadquery) quotes instantly; a finish change drops the mandatory drawing
-  upload — re-upload before Save.
+  upload — re-upload before Save. The machining rules (corner radii, walls, threads, anodising build-up) are `references/cnc-enclosure.md`.
 
 - After the order: the print service's engineer review arrives by mail with per-line file ids; the flow, the boundaries and the quote-page
   mechanics (`getFileAnalyzeResult` → `previewUrl` heat map for a "clean" part; Edit dialog saved = form state; "audit failed" mail = Replace
   File enabled) are in `references/vendor-review.md`.
 
-## 7. Worked-example numbers (JLCPCB, 2026-09)
+## 7. Worked-example numbers (JLCPCB, 2026-09) — the full build-rule set with tags is `references/pcb-layout-dfm.md`
 2 oz outer: track/space 0.16/0.16 (published), via 0.30 drill / 0.62 ring (annular > 0.15 to escape Warning), pad-to-edge warning 0.20, PTH-to-trace
 0.23 (project 0.24), silk line 0.16, silk-to-hole 0.22, mask bridge 0.20, hole-to-hole 0.50, PCBA min side 70 mm, V-cut copper-to-edge 0.40.
 These are the values that were live then; fetch the current capability page before using them.

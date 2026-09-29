@@ -18,6 +18,11 @@ Agent: {{AGENT}}; owner delegation quoted verbatim in §4/§5; nothing here was 
 |---|---|---|---|
 | {{LINE_ID}} | accept risk / fix + replace / redesign | {{DECISION}} | {{TEXT}} |
 
+Reply template (the owner sends it; `references/dfm-printed-enclosure.md` §10): **Facts** — order {{ORDER_ID}}, line {{LINE_ID}}, file
+`{{FILE}}` md5 `{{MD5}}`. **What we measured** — {{NUMBERS}} on the received part / the ordered STL (photos `{{PNG}}`). **What we changed** — new file
+`{{FILE_vX}}` md5 `{{MD5_NEW}}`, {{WHAT_MOVED}}. **What we ask** — ship as is / reprint at our cost / reprint at your cost (dimension outside your
+published tolerance {{TOL}}) / credit. **What we do not accept** — {{E.G. a part not matching the file}}. Vendor-fault decision table: §10 step 3.
+
 ## 4. Replacement files (generated chain, version {{CASE_VERSION}}, tag {{TAG}})
 | Order line | Replace with | md5 | What changed (facets / volume / bbox vs the uploaded file) | Vendor DFM re-check (quote page, nothing saved) |
 |---|---|---|---|---|

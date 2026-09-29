@@ -4,6 +4,6 @@ The owner writes the approval line; agents never edit the approval cells. The re
 
 | Gate | Meaning | Prerequisites | Owner approval (name, date, revision) |
 |---|---|---|---|
-| **G0** | SPEC approved for schematic capture | two blind reviews merged, PARTS_VERIFICATION with no [K] left | _not yet approved_ |
-| **G1** | Schematic approved for layout | ERC 0 errors, review pack, two blind reviews merged | _not yet approved_ |
-| **G2** | Layout approved for fabrication outputs | DRC 0 errors, fab DFM mirror 0 open, two blind reviews merged | _not yet approved_ |
+| **G0** | SPEC approved for schematic capture | one review round merged, PARTS_VERIFICATION with no [K] left | _not yet approved_ |
+| **G1** | Schematic approved for layout | ERC 0 errors, review pack, one review round merged | _not yet approved_ |
+| **G2** | Layout approved for fabrication outputs | DRC 0 errors, fab DFM mirror 0 open, one review round merged | _not yet approved_ |

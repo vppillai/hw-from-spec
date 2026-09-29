@@ -1,5 +1,5 @@
 # authored SHORT guide text — the numbers live in the SOP / manufacturing spec; scripts/assembly_guide.py renders one picture per page
-doc: {doc_id: VG-001, title: Illustrated assembly guide, revision: r1, date: 2026-01-03, companions: "SOP-001 (assembly SOP), MS-001 (manufacturing spec)",
+doc: {doc_id: VG-001, title: Illustrated assembly guide, revision: r1, date: 2026-01-03, companions: "SOP-001 (assembly SOP), MFG-003 (manufacturing spec)",
       how_to_read: "One picture and three lines per step. What you hold, what you use, what you check. The words with the numbers are in SOP-001."}
 parts: [tray (printed), hood (printed), board (assembled), 4 x M3 screws]
 tools: [ESD wrist strap, T10 driver]

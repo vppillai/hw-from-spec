@@ -28,13 +28,16 @@ Everything under `out/<board>/mechanical/case/<preset>/` is generated; `ASSEMBLY
   otherwise one of them silently describes the other build). `preset_default` picks the build of record; `--preset fdm` writes to its own folder.
 - A fix that turns out to be for every build belongs in the base block; prove "no geometry change" by diffing the merged dict key by key, not by
   re-exporting (CGAL STLs are not byte-stable).
-- FDM (owner's printer): printer-first rules as FAIL rows — walls ≥ 1.6 (a two-line 0.85 skirt failed as a product), every external face on the bed /
-  vertical / clean top, legends RAISED cap 4 / stroke 1.0 / 0.6 on a face-up top, screws over slit tabs, coupons and a board dummy before the part,
-  slicer projects with embedded presets (`references/dfm-printed-enclosure.md` §8). Colour on TOP faces in ONE Z band per part (a coloured vertical
+- FDM (owner's printer, target `home_fdm`): printer-first rules as FAIL rows, numbers from `project.yaml print_targets.home_fdm` (worked example,
+  0.4 nozzle / 0.20 mm / PLA-PETG: walls ≥ 1.6 = 4 perimeters — a two-line 0.85 skirt failed as a product), every external face on the bed /
+  vertical / clean top, legends RAISED cap 4 / stroke 1.0 / 0.6 on a face-up top, screws or magnets over slit tabs, coupons and a board dummy before
+  the part, slicer projects with embedded presets (`references/dfm-printed-enclosure.md` §8). Colour on TOP faces in ONE Z band per part (a coloured vertical
   flank costs a filament swap per layer).
-- Print service (MJF/SLA): every wall AND every void ≥ the vendor's grey line (1.2 at JLC3DP — design at 1.3), no free-standing wedge, no engraved text, no
-  slit tabs, closed rims; **nothing "stays thinner" — a listed-below-minimum row is a waiver, and the waived lip cracked on all five parts**
-  (`references/dfm-printed-enclosure.md` §1–§4). Part min size per process; two-tone via an **inlay plate** (a mark-shaped pocket is its own key when
+- Print service (MJF / SLA, target e.g. `jlc_mjf`): every wall AND every void ≥ the checker's grey line (`print_targets.<t>.wall_gate` /
+  `void_gate`; JLC3DP 2026-09-28: 1.2 — design at + `design_margin` under a no-yellow bar), no free-standing wedge (tangent fillets into walls are
+  fine), engraved text only with stroke ≥ the void gate, snap features only with the slit ≥ the void gate and an engineered arm, closed rims;
+  **nothing "stays thinner" — a listed-below-minimum row is a waiver, and the waived lip cracked on all five parts**
+  (`references/dfm-printed-enclosure.md` §1–§4; inserts / magnets §1.1; SLA §11; CNC `references/cnc-enclosure.md`). Part min size per process; two-tone via an **inlay plate** (a mark-shaped pocket is its own key when
   the mark is chiral) or a **badge** (metal plate in a pocket, UV-print or laser artwork as DXF + B-rep STEP); text on a label carrier.
 - Two versions from one yaml (vendor + home): variant-only lines behind hook tokens that expand to the original text for the other presets, own version
   key per preset, byte identity of the vendor SCAD proven against HEAD before committing (`references/dfm-printed-enclosure.md` §9).
@@ -49,11 +52,11 @@ Everything under `out/<board>/mechanical/case/<preset>/` is generated; `ASSEMBLY
 - Inward ray-cast rule: a ray from a point nudged 1e-3 inside a face hits THAT face at 0.000 for a fraction of samples — discard hits closer than
   ~0.02 mm and take the first beyond (`scripts/thin_wall_check.py --census`, `--self-hit`), or solid 2 mm chamfers read "0.00 mm walls".
 - An STL md5 is not a geometry signature (CGAL export order moves every md5) UNLESS the export is rewritten canonically (sorted triangles, own binary
-  writer with normals recomputed from the float32 vertices — `references/dfm-printed-enclosure.md` §7.7); without that, "only piece X changed" is
+  writer with normals recomputed from the float32 vertices — `references/dfm-printed-enclosure.md` §7.2); without that, "only piece X changed" is
   proven by facet count / volume / area / bbox per piece, not by md5s.
-- **The census is a FAIL gate per print preset, not a review aid** (`scripts/thin_wall_census.py`): inward rays = walls, outward rays = voids, clusters
-  below `gate − 0.05` classified wall / wedge by the opposite-face angle; walls and voids gate, wedges are listed (each must be a chamfer backed by a
-  wall); a SANITY row reproduces the vendor's colouring; `--gate <census dir>` in the adopt list proves md5 + 0 FAIL against the committed STL
+- **The census is a FAIL gate per print preset, not a review aid** (`scripts/thin_wall_census.py --target <t>`): inward rays = walls, outward rays =
+  voids, clusters below `gate − 0.05` classified wall / wedge by the opposite-face angle; walls, voids, wedges over the band width and opposing
+  faces in any direction gate; a dated `accepted` entry with vendor evidence is the only pass; a NOISE-FLOOR row (false positives, not recall); `--gate-dir <census dir>` in the adopt list proves md5 + 0 unaccepted FAIL against the committed STL
   (`references/dfm-printed-enclosure.md` §2, rows in `templates/CENSUS_GATE_ROWS.md`). Concentricity and every face render come from the mesh too.
 
 ## Point contacts (mark-shaped bodies and pockets: inlay plates, badges, debosses)
@@ -70,7 +73,7 @@ Everything under `out/<board>/mechanical/case/<preset>/` is generated; `ASSEMBLY
 - Find the contacts once per artwork (cache by the SVG md5); the fdm preset that never prints the mark as a body sets the web to 0.
 
 ## Cost of a case-version bump (worked example: one geometry change, one machine, 2026-09-23)
-| Stage | Time | Why every version pays it |
+| Stage | Time (worked example) | Why every version pays it |
 |---|---|---|
 | renders (≈ 70 views) | ≈ 4 min | keyed on the SCAD text |
 | STL export + overlaps / interference | ≈ 5 min | every piece re-exported |
@@ -96,6 +99,7 @@ geometry together), per-piece and assembly STEP (OCP/cadquery), `--check` = md5 
 - A 25–35 min render + STL + interference chain: process pool for views and STL export, `--renders` off in check mode, STL cache by preset hash; kill it
   early when an owner addition arrives.
 - Never run a case "check" in the working tree if it writes tracked files — the traceability sandbox copies `gen/ + design/` and symlinks the mesh.
-- Print sheets and order sheets list filaments / processes per piece, orientation, supports, insert temperature/time and screw torque placeholders
-  `[OWNER: …]` until measured.
+- Print sheets and order sheets list filaments / processes per piece, orientation, supports, post-process, the material rating (UL 94 / Tg from the
+  TDS), insert type / bore / temperature per material (from the insert TDS, `dfm-printed-enclosure.md` §1.1), and the insert temperature/time and
+  screw torque `[OWNER: …]` placeholders until the insert + torque coupon measured them.
 - Debug dumps under `out/**/scratch/` (gitignored), never the repo root.

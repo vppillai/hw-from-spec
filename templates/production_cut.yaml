@@ -7,7 +7,7 @@
 # owner_placeholders: allowed (templates; `[OWNER: …]` fields are counted, never filled by an agent) | forbidden (a RELEASED cut fails --check on one).
 case_yaml: design/case.yaml
 package_root: docs/production            # -> docs/production/{md5}/
-records_dir: records                     # under the package folder: photos, press logs, test results, calibration, order captures
+records_dir: records                     # docs/production/{md5}/records/ — THE records folder (photos, press logs, first-article caliper table, test results, calibration, order captures); RELEASE_NOTES points here
 doc_id_prefix: {{PRODUCT}}               # <product>-<type>-<nnn>
 
 deliverables:
@@ -25,7 +25,7 @@ deliverables:
   - {id: reviews, doc_id: REV-001, title: Blind reviews + verify files + merged reports, kind: collected, path: "docs/reviews/*_merged.md", required: true, owner_placeholders: forbidden}
   - {id: traceability, doc_id: REQ-001, title: Requirement -> evidence matrix, kind: generated, path: docs/governance/TRACEABILITY.md, check: "$PY scripts/traceability.py --check", required: true, owner_placeholders: forbidden}
   - {id: known_issues, doc_id: REQ-002, title: Known issues index, kind: generated, path: docs/governance/KNOWN_ISSUES.md, check: "$PY scripts/known_issues.py --check", required: true, owner_placeholders: forbidden}
-  - {id: manufacturing_spec, doc_id: MFG-003, title: Manufacturing specification (PCB fab, PCBA, press-fit, case), kind: hand-written, path: "{root}/MANUFACTURING_SPEC.md", inputs: ["{pkg}/ORDER_PARAMETERS.md"], required: release, owner_placeholders: forbidden}
+  - {id: manufacturing_spec, doc_id: MFG-003, title: Manufacturing specification (PCB fab, PCBA, press-fit, case incl. material rating UL94/Tg per print target, post-process, build orientation, label / mark placement), kind: hand-written, path: "{root}/MANUFACTURING_SPEC.md", inputs: ["{pkg}/ORDER_PARAMETERS.md"], required: release, owner_placeholders: forbidden}
   - {id: product_manual, doc_id: MAN-001, title: Product manual, kind: hand-written, path: "{root}/PRODUCT_MANUAL.md", required: release, owner_placeholders: forbidden}
   - {id: developer_manual, doc_id: MAN-002, title: Developer manual (guards, overrides, record trail), kind: hand-written, path: "{root}/DEVELOPER_MANUAL.md", required: release, owner_placeholders: forbidden}
   - {id: technician_manual, doc_id: MAN-003, title: Technician manual + quick card (reason-code table generated), kind: hand-written, path: "{root}/TECHNICIAN_MANUAL.md", check: "{{CODE_TABLE_CHECK}}", required: release, owner_placeholders: forbidden}

@@ -110,6 +110,8 @@ def selftest():
 def main(argv):
     if len(argv) > 1 and argv[1] == "--selftest":
         sys.exit(selftest())
+    if len(argv) > 1 and argv[1] in ("--help", "-h"):
+        print(__doc__); return
     if len(argv) < 2 or argv[1] not in ("get", "path", "root"):
         sys.exit(__doc__)
     P = Project.find()
