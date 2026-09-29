@@ -80,15 +80,32 @@
       "id": 6,
       "name": "first-dfm-round-of-a-printed-enclosure",
       "prompt": "The two-piece case (design/case.yaml, OpenSCAD generator, MJF PA12 at JLC3DP, plus a home-printer preset) is ready for its first quote. Get it vendor-clean in one DFM round; the owner will log in for the quote page.",
-      "expected_output": "Writes the acceptance bar (0 FAIL / 0 WARN in tables and census, zero slicer warnings, no vendor flag, no yellow / red) into a decision row first; runs the ray-cast census as a FAIL gate on every body of every preset (walls AND voids at the vendor minimum, designed 0.1 over it, wedges listed and each backed by a wall), turns every 'kept below minimum (listed)' row into a measured PASS / FAIL or an INFO row, removes free-standing wedges / slit tabs / engraved text / open rims through the yaml + generator, renders every face incl. the sole, exports canonical STLs so the md5 is the geometry, then on the quote page uploads ONE STL per session, sets the process and material on the line BEFORE reading the flag, reads the heat map on every face, saves screenshots named with the md5 and files templates/DFM_ROUND.md under docs/quotes/<date>/; for the home build ships coupons, board dummies and slicer projects with embedded presets where a floating-region warning is a FAIL.",
+      "expected_output": "Writes the acceptance bar (0 FAIL / 0 WARN in tables and census, zero slicer warnings, no vendor flag, no yellow / red) into a decision row first; runs the ray-cast census as a FAIL gate on every body of every preset (walls AND voids at the vendor minimum, designed 0.1 over it, wedges listed and each backed by a wall), turns every 'kept below minimum (listed)' row into a measured PASS / FAIL or an INFO row, removes free-standing wedges / slit tabs / engraved text / open rims through the yaml + generator, renders every face incl. the sole, exports canonical STLs so the md5 is the geometry, then on the quote page uploads ONE STL per session (reloading between uploads), sets the process and material on the line first, reads the verdict from the analysis API response at parseStatus 2 (modelAnalysisVO.thinWall) rather than the page — the flag is computed at upload and does not depend on the material — opens the heat map via previewUrl on every face, saves screenshots named with the md5 and files templates/DFM_ROUND.md under docs/quotes/<date>/; for the home build ships coupons, board dummies and slicer projects with embedded presets where a floating-region warning is a FAIL. Every vendor decision is mirrored into the home preset the same day under its own version key, and the kit folder holds the pieces, coupons and BOTH board dummies with READMEs.",
       "files": [],
       "assertions": [
         "the acceptance bar is written as a decision row before geometry changes and names 0 FAIL / 0 WARN, no vendor flag, no yellow / red",
         "scripts/thin_wall_census.py (or the project's equivalent) gates every printed body per preset on walls AND voids; wedges are listed, not waived; no row says 'kept below (listed)' without a measured value and a verdict",
         "free-standing wedges, slit tabs, engraved text and open rims are removed through the yaml and generator, not exempted in a check",
         "every face of every piece is rendered and designed asymmetries are printed in the order sheet and KNOWN_ISSUES or removed",
-        "on the vendor quote page one STL is uploaded per session, the material is set before the flag is read, and the record names file md5 + material + screenshots per face",
-        "STL exports are canonical so identical geometry gives identical md5, and nothing is saved, carted, agreed or paid on the vendor site"
+        "STL exports are canonical so identical geometry gives identical md5, and nothing is saved, carted, agreed or paid on the vendor site",
+        "on the vendor quote page one STL is uploaded per session and the verdict is read from the analysis API at parseStatus 2 (thinWall), never from a page reading before that; the record names file md5 + parseStatus + material + screenshots per face",
+        "the agent does not claim the material on the line changes the thin-wall flag, and a coordinator re-reads a worker's 'no flag' from the API before writing PASS",
+        "every vendor DFM decision is applied to the home-printer preset in the same yaml under its own version key, with its census and slicer log clean"
+      ]
+    },
+    {
+      "id": 7,
+      "name": "vendor-flags-a-body-the-census-calls-clean",
+      "prompt": "JLC3DP flags our 147 mm MJF tray 'thin walls' (API thinWall true, red along the inside of both long walls) but scripts/thin_wall_census.py finds nothing under 1.37 mm on that exact STL, and a 40 mm test piece of the same wall section uploads clean. Find the rule and fix the tray in one more round.",
+      "expected_output": "Does not trust the 40 mm piece (the vendor's metric is length-dependent: the same profile can pass at 48 mm and fail at 88 / 147 mm); slices the flagged STL of record into capped slabs (trimesh slice_mesh_plane) and uploads each alone to localise the feature and the length threshold; builds plain-profile OpenSCAD polygon-extrusion probes at 40 mm AND full length with ONE knob each (rim thickness, wall, undercut filled), uploads each alone, reads every verdict from the API at parseStatus 2; identifies the trip as the rim over the skirt-lap step with an inward undercut and adopts the first full-length pass (rim >= 2.0 over the step, or the undercut filled so the inner wall runs straight to the rim top) through the yaml on BOTH presets with their own version keys; adds the rule as a named census row; re-verifies every body of record by the API; files probe/PROBES.md and a DFM_ROUND.md; proves the mating part still registers (overlap 0 mm3). Nothing saved, carted or paid.",
+      "files": [],
+      "assertions": [
+        "the agent states that a 40 mm probe passing proves nothing about the 147 mm part (length-dependent metric) and builds full-length probes",
+        "slabs are cut from the flagged STL of record and each probe / slab is uploaded alone with its verdict read from the analysis API at parseStatus 2",
+        "each probe varies ONE knob and the adopted rule is 'rim over a lap step >= 2.0 OR the undercut filled' (or the equivalent measured on the part), not a guess from the generator",
+        "the fix goes through the yaml on the vendor preset AND the home preset with their own version keys, and the rule becomes a named census row",
+        "every body of record is re-verified by the API after the change and a PROBES.md / DFM_ROUND.md record the probes, md5s and verdicts",
+        "the mating part's registration is proven unchanged (partner overlap 0 mm3) and nothing is saved, carted, agreed or paid on the vendor site"
       ]
     }
   ]
