@@ -57,3 +57,21 @@ flagged in the decision row, not resolved silently.
 ## Fields on every symbol
 `MPN, Manufacturer, LCSC (or the fab's code field), Datasheet (the live URL of the fitted code), Confidence (V/K/S/N/A), Alt_MPN, Alt_LCSC`.
 The generator copies them to the footprint as hidden properties so schematic parity holds.
+
+## Hardware line schema (what a buyer needs to execute the line — `templates/parts/PROCUREMENT.md`)
+`Line | Class | MPN | Manufacturer | Spec (thread × length, Ø × h, grade, size) | Drive / head / coating / colour | Material / finish | Qty per unit |
+Spares % | Order qty | MOQ | Unit price (currency, date) | Supplier URL (how verified) | Equivalent MPNs | RoHS / REACH source | Fit numbers | Tag`.
+The `PARTS_VERIFICATION.md` columns (fab code, package, class) do not fit a screw or a magnet: hardware rows put the spec in "Refdes / value" and
+"Package", the supplier in "URL fetched", and the class in "Class" (screw / insert / magnet / foot / label / O-ring / light pipe).
+
+## Hardware classes and what to verify per class
+| Class | Verify on the manufacturer page / TDS | Fit numbers beside the part | Notes |
+|---|---|---|---|
+| screws (machine, thread-forming for plastics) | thread, length, head Ø / height, drive, material, finish, tensile class | counterbore Ø / depth, pilot Ø for thread-forming (TDS), engagement length | thread-forming (Delta PT / Remform class) is the normal MJF fastener; torque `[OWNER]` until the coupon |
+| heat-set / press-fit inserts | OD, length, bore Ø + depth from the TDS, install temperature per material | boss OD ≥ 2 × insert OD; 0.1–0.2 below flush | PA12 needs a higher iron temperature (Tm ≈ 178 °C); PLA creeps above ~45 °C under preload |
+| magnets | grade (N35 … N52), coating (Ni-Cu-Ni), max operating temperature (N35 ≈ 80 °C, H grades 120 °C), pull force vs gap curve, tolerance | pocket Ø = magnet Ø + 0.4 glued (MJF) / + 0.1 light press (PLA), depth = h + recess, pocket wall ≥ the wall gate | polarity keyed by geometry (asymmetric boss), never by a mark cut into the face; imperial 6.35 vs metric 6.0 stated |
+| adhesive feet / pads | shape (flat-top vs hemisphere), Ø × h, adhesive family, **substrate compatibility table** | pocket Ø − foot Ø at the tolerance limit (moulded ±0.5), adhesive annulus area | **PA12 is a low-surface-energy plastic and MJF surfaces are porous: most PSA feet (incl. acrylic Bumpon) need a primer or fail — the TDS substrate table (or a named primer) is part of the [V] check for anything bonded to nylon** |
+| labels / badges / inlay plates | material, thickness, print process, adhesive, temperature rating | recess = label + 1 mm each side, flat land, orientation | regulatory / serial marks go here (release-and-cut §7) |
+| O-rings / gaskets | ID, cross-section, material (NBR / silicone), hardness, compression set | groove width / depth for 15–25 % compression | only if the enclosure claims any ingress rating |
+| light pipes | Ø, length, material, bend radius, mounting (press / snap) | hole Ø + 0.1, LED-to-pipe gap | VERIFY the LED position against the mesh of record |
+| fans | frame size, hole count and pattern (4 even when one SKU drawing shows 3), thickness, connector, airflow at the working point | boss count = hole count, screw type | |

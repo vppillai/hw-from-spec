@@ -48,9 +48,10 @@
   waiver list without reasoning so verifiers spend their budget on new defects.
 - Reviewers never read other reviewers' output nor the author's reasoning (name the forbidden file patterns explicitly in the prompt).
 - External models via the Cursor agent CLI: `agent -p --mode ask --model <m> --output-format text "<prompt>"` from the frozen worktree (ask/plan
-  modes are read-only; `-p` alone has shell access — never for reviews); prompt ≤ ~30 kB naming the files (the model reads them); packet ceiling
-  ≈ 440 kB; rotate two vendors per role; an EMPTY report is a failure → retry once with the fallback model, note the substitution, else write the
-  failure into the report and return zero findings. macOS has no `timeout`: background + PID + until-loop ≤ 8 min per call.
+  modes are read-only; `-p` alone has shell access — never for reviews); prompt ≤ ~30 kB naming the files (the model reads them; observed CLI
+  limit, unversioned); packet ceiling ≈ 440 kB (observed: the CLI returns 0 bytes above it); rotate two vendors per role; an EMPTY report is a
+  failure → retry once with the fallback model, note the substitution, else write the failure into the report and return zero findings. macOS has
+  no `timeout`: background + PID + until-loop within the §5 ceiling.
 - Adversarial verifier per specialty on every BLOCKER/MAJOR: default REFUTED; open the cited files; a number about copper carries the script that
   produced it (a disputed clearance is one `Collide` bisection); convert coordinate frames before calling a site "missing".
 - Merge: verifier verdicts applied (REFUTED → rejected table with reason), dedupe by defect, corroboration matrix, REQUIRED / OWNER (proposed row
@@ -59,7 +60,9 @@
   (copy them into a fresh directory and run the CLI there).
 
 ## 5. Background jobs and the machine
-- Task watchers may not wake the agent: block in-process, `until ! kill -0 $pid; do sleep 20; done` (≤ 600 s per call, repeat), continue in the same turn.
+- **The per-call wait ceiling is the harness's Bash timeout: 600 s per tool call (Claude Code, platform limit; the workflow templates' "≤ 8 min"
+  waits are the same limit with margin).** Stated here once; every other mention points here. Block in-process, `until ! kill -0 $pid; do sleep
+  20; done` per ≤ 600 s call, repeat, continue in the same turn.
 - Redirected Python block-buffers: `python -u` or judge by `kill -0` + output files. Long chains: `python -u … > log 2>&1; echo EXIT $? >> log`
   per job, several jobs in parallel when they do not share memory ceilings (never two FEA pools), then one foreground
   `until grep -q '^EXIT' a.log && grep -q '^EXIT' b.log; do sleep 30; done` per ≤ 600 s call; a non-zero EXIT line stops the chain.
@@ -84,7 +87,7 @@
 - **Auto-memory (`MEMORY.md` + topic files)** holds what must survive a session: the project's resume pointer (which files to read first), owner
   feedback that changes how to work ("verify live, never cached"; "use parallel agents while I sleep"; "read the rendered image, not the geometry"),
   never project facts that live in the repo (those go to STATUS / DECISIONS). One file per feedback item with the date and the owner's words.
-- **Pause point** (`docs/governance/STATUS.md`, numbered): what happened (rows, commits, tag), what is green, an **owner list** (numbered, each
+- **Pause point** (`docs/governance/STATUS.md`, numbered; skeleton at the end of `templates/STATUS.md`): what happened (rows, commits, tag), what is green, an **owner list** (numbered, each
   item owner-only: gate cells, payments, replies to the vendor, hardware records) that is struck through with date/time + record path as items
   close, and a **Resume** line (nothing running / what is running with its log path; read order). Written whenever the owner says they are going
   offline and at every tag.

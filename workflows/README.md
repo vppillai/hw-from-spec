@@ -7,7 +7,7 @@ subagents in the order of the phases (Review → Verify → Merge) — the blind
 
 | Template | Use | Shape |
 |---|---|---|
-| `blind-deep-review.js` | full audit before a gate / an order; `{{ROLE_SET}}` = `spec` for the G0 round (SPEC.md is the artefact), `board` later | roles × (1 in-session + 2 external) → verifier per role → merge with REQUIRED / OWNER / DOCUMENT / ACCEPT + verdict |
+| `blind-deep-review.js` | **one review round** (SKILL §5: the unit every gate needs) before a gate / an order; `{{ROLE_SET}}` = `spec` for the G0 round (SPEC.md is the artefact), `board` later (incl. the `case_dfm` role) | roles × (1 in-session + 2 external) → verifier per role → merge with REQUIRED / OWNER / DOCUMENT / ACCEPT + verdict |
 | `delta-audit.js` | after a bounded change | same, filtered to the affected roles, briefed with the round's CLAIMS, merged against the previous audit item by item |
 | `routing-inspection.js` | routed copper | tile every layer ≥ 40 px/mm → two blind inspectors (the external one sees ONLY the tiles) → merge to a fix list |
 | `silk-audit-verify.js` | silk after a design change | audit → fix through yaml (copper signature unchanged) → blind visual verify A/B → merge + fix → re-verify |
@@ -20,7 +20,7 @@ subagents in the order of the phases (Review → Verify → Merge) — the blind
    `{{CAD_PYTHON}}`, `{{CAD_CLI}}`, `{{EXTERNAL_MODELS}}` (quoted, comma-separated, **at least two distinct models** — role i gets entries i and i+1),
    `{{EXTERNAL_MODEL}}` (one model: inspection, silk), `{{FALLBACK_MODEL}}`, `{{ROLE_SET}}` (`spec` | `board`),
    `{{VERDICT_OPTIONS}}` (e.g. `order the <md5> package as is / order after the REQUIRED list / do not order yet`; at G0 `approve the spec as is / after the REQUIRED edits / not yet`),
-   `{{BRIEF_*}}` (what each specialty looks at: files, nets, decision rows — numbers come from the hand-off, not the brief; G0 uses `BRIEF_SPEC`, `BRIEF_PARTS`, `BRIEF_MECH`, `BRIEF_TEST`),
+   `{{BRIEF_*}}` (what each specialty looks at: files, nets, decision rows — numbers come from the hand-off, not the brief; G0 uses `BRIEF_SPEC`, `BRIEF_PARTS`, `BRIEF_MECH`, `BRIEF_TEST`; the board set adds `BRIEF_CASE_DFM`: the STL dir, the census JSONs, `print_targets`),
    `{{ROUND_CONTEXT}}` / `{{CLAIMS}}` / `{{DELTA_ROLE_KEYS}}` (delta), `{{BOARD_FILE}}`, `{{BOARD_YAML}}`, `{{BOARD_STATE}}`, `{{RULES_OF_RECORD}}`,
    `{{INSPECTION_DIR}}`, `{{COPPER_LAYERS}}`, `{{CHECKLIST_SOURCE}}`, `{{NET_CLASS_HIGHLIGHTS}}`, `{{RUN_TAG}}`,
    `{{SILK_REGEN_COMMAND}}`, `{{COPPER_SIGNATURE_COMMAND}}`, `{{EXPORT_COMMAND}}`, `{{CROPS_COMMAND}}`, `{{SILK_DESIGN_INTENT}}`, `{{RECROP_DIR}}`.

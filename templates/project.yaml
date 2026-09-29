@@ -3,7 +3,8 @@
 project:
   name: {{PROJECT}}
   description: {{ONE_LINE_DESCRIPTION}}
-skill: {repo: {{SKILL_REPO_URL}}, commit: {{SKILL_COMMIT}}}   # the hw-from-spec commit this project follows (README "Use in a new project")
+skill: {repo: {{SKILL_REPO_URL}}, commit: {{SKILL_COMMIT}}, version: {{SKILL_VERSION}}}   # the hw-from-spec commit + SKILL.md version this project follows; scripts/skill_retro.py reads `version`
+kickoff: docs/governance/KICKOFF_ANSWERS.md   # the owner's answers to references/kickoff-questionnaire.md (D rows); written before any CAD
 ids: {owner_prefix: D, agent_prefix: CC, blocker_prefix: B}
 markers:
   release_regex: 'clear[ -]to[ -]build'       # the owner's release line in paths.gates — never quote the phrase in prose
@@ -28,13 +29,49 @@ paths:
   # learnings / erc_waivers / env / parts_verification / datasheet_notes / reviews_dir / quotes_dir / production_dir default to the docs/ layout (references/project-yaml.md)
 tools:
   python: .venv/bin/python
-  kicad_cli: {{CAD_CLI_PATH}}
-  kicad_python: {{CAD_PYTHON_PATH}}
-dfm:
-  thresholds: design/dfm_thresholds.json
+  kicad_cli: {{CAD_CLI_PATH}}                 # the key names are historical: put YOUR CAD's CLI here ({KICAD_CLI} in commands), whatever the CAD
+  kicad_python: {{CAD_PYTHON_PATH}}           # the CAD's own Python ({KPY}); python3 when the CAD has none
+fab_dfm:                                      # the board's fab-DFM mirror (references/fab-dfm.md; the old block name `dfm:` is still read)
+  thresholds: design/dfm_thresholds.json      # the fab's numbers with source URL + date
   items: out/dfm_items.json                   # written by the project's measurer (G2)
-  accept: design/{{BOARD}}_board.yaml         # key dfm_accepted
+  accept: design/{{BOARD}}_board.yaml         # key dfm_accepted: [{check, refs, reason, date, evidence}]
   report: out/dfm.json
+  bar: {open: 0, warnings_fail: true, accepted_requires: [reason, date, evidence]}   # owner decision {{D-BAR}}: 0 Danger / 0 Warning; an acceptance without all three fields does not count
+print_targets:                                # every printed body is censused against ONE named target; no number lives in a script (references/dfm-printed-enclosure.md)
+  {{VENDOR_TARGET}}:                          # e.g. jlc_mjf
+    vendor: {{VENDOR}}                        # e.g. JLC3DP
+    process: {{PROCESS}}                      # MJF | SLA | FDM | CNC
+    material: {{MATERIAL}}                    # e.g. PA12-HP
+    wall_gate: {{WALL_GATE}}                  # the checker's grey line (JLC3DP 2026-09-28: 1.2)         [checker]
+    void_gate: {{VOID_GATE}}                  # slots / slits / engraved strokes (1.2)                    [checker]
+    red_line: {{RED_LINE}}                    # the checker's red band (0.5)                              [checker]
+    design_margin: {{DESIGN_MARGIN}}          # walls drawn at wall_gate + margin (0.1)                   [owner bar]
+    wedge_band: 1.5                           # a wedge whose sub-gate band is wider FAILs unless accepted [convention]
+    tolerance: {{TOLERANCE}}                  # the vendor's published dimensional tolerance (MJF PA12 ±0.3 or ±0.3 %); replaced by the first-article spread
+    tolerance_source: {{URL_AND_DATE}}
+    max_bbox_for_rule: {{MAX_BBOX_MM}}        # the largest part dimension the length-dependent rule was calibrated at (147)
+    checker_url: {{CHECKER_URL}}              # the vendor's quote / DFM page
+    checker_date: {{DATE}}                    # when checker_url and the numbers above were last read
+    samples_per_mm2: 10                       # census density (a fixed count under-samples a large part)
+    post_process: none                        # dye | bead-blast | vapour-smooth | paint — subtracted in the margin, printed on the order sheet
+    rating: {ul94: {{UL94}}, tg_c: {{TG}}, source: {{TDS_URL}}}   # printed on the order sheet; owner row "engineering sample" if unrated
+    accepted: []                              # [{class: wall|void|wedge|opp, bbox: [x0,y0,z0,x1,y1,z1], reason, date, evidence}] — the only way a FAIL cluster passes
+  home_fdm:                                   # the home printer preset (printer-first; mirrors every vendor DFM decision the same day)
+    vendor: home
+    process: FDM
+    material: {{FILAMENT}}                    # PLA | PETG
+    printer: {{PRINTER_AND_NOZZLE}}           # e.g. "Bambu Lab P2S, 0.4 nozzle, 0.20 mm"
+    wall_gate: 1.6                            # 4 perimeters at 0.4                                       [owner bar]
+    rib_gate: 1.2
+    void_gate: 1.0
+    red_line: 0.5
+    design_margin: 0.0
+    wedge_band: 1.5
+    tolerance: 0.2                            # hole shrink 0.1..0.3 until the coupon says otherwise
+    samples_per_mm2: 10
+    post_process: none
+    rating: {ul94: unrated, tg_c: 55, source: {{TDS_URL}}}
+    accepted: []
 renders: []                                   # G2+: see references/project-yaml.md `renders:`
 # reorg:                                      # only when the layout changes: decision row first, then scripts/reorg_paths.py --plan/--apply/--check/--proof
 #   moves: {docs/OLD.md: docs/<folder>/OLD.md}
@@ -54,7 +91,7 @@ reports:
     sections: [banner, identity, decisions, known_issues, package, traceability, dfm, renders, inventory]
     extra_sources: []
 gates:
-  quiet_regex: 'Fontconfig|wxApp'
+  quiet_regex: 'Fontconfig|wxApp|Debug:'
   adopt:                                      # day 1 (G0): selftests + the records that exist; exit 1 on the first failure
     - "$PY scripts/project.py --selftest"
     - "$PY scripts/known_issues.py --selftest"
@@ -67,10 +104,13 @@ gates:
     # - "$PY gen/build_sch.py --selftest"
     # - "$PY gen/build_sch.py --check"
     # - "$PY gen/check_maps.py --check"
-    # G2 (routed board): DRC / parity / route quality / DFM mirror / renders (SKILL §6)
-    # - "$PY gen/drc_gate.py --check"
+    # G2 (routed board): DRC census / parity / route quality / DFM mirror / renders (references/pcb-layout-dfm.md §1, SKILL §6)
+    # - "$PY gen/drc_gate.py --check"          # DRC 0 errors / 0 unconnected / 0 warnings-or-waived + canary fires once + parity 0
+    # - "$PY gen/route_quality.py"
     # - "$PY scripts/dfm_check.py --check"
     # - "$PY scripts/collect_renders.py --check"
+    # Case (every printed body, every preset): the PURE census gate
+    # - "$PY scripts/thin_wall_census.py --gate-dir out/<board>/mechanical/case/<preset>/census"
   clone:                                      # run inside `git archive HEAD`
     - "$PY scripts/known_issues.py --check"
     - "$PY scripts/release_report.py --check"

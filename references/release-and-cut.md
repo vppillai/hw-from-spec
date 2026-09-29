@@ -60,9 +60,16 @@ orderable state and does not substitute for the owner's gate cells.
   the documents listed in the yaml.
 - Deliverable row: `id, doc_id, title, kind (generated | hand-written | template | collected), path (glob ok), check (the owner generator's --check),
   inputs (md5-stamped), required (true | release), owner_placeholders (allowed | forbidden)`.
-- Templates (records: photos, press logs, insert temperature/time, torque, test results, calibration, order screenshots) are written ONCE with
-  `[OWNER: …]` fields, never overwritten, never filled by an agent; the manifest counts the placeholders; a RELEASED cut fails `--check` on a
-  placeholder in a `forbidden` document.
+- Templates (records: photos, press logs, insert temperature/time, torque, the first-article caliper table, test results, calibration, order
+  screenshots) are written ONCE with `[OWNER: …]` fields, never overwritten, never filled by an agent; the manifest counts the placeholders; a
+  RELEASED cut fails `--check` on a placeholder in a `forbidden` document. **The one records folder is `docs/production/<md5-8>/records/`**
+  (`records_dir` in the cut yaml; RELEASE_NOTES and the "capture now" list point there — never a second home under `docs/release/`).
+- **Labelling and regulatory marks are a DFM item**: the manufacturing spec names where the serial / model label, any claimed CE / FCC / WEEE mark
+  and warning icons sit on the enclosure (a recess label + 1 mm each side, a flat land, reading orientation), what carries them (label carrier,
+  engraving ≥ the void gate, UV print) and what is NOT claimed (no DoC); the case yaml carries the recess.
+- **Packaging, shipping, storage** (one paragraph in the manufacturing spec): ESD bag for the assembled unit; printed parts wrapped or in card
+  (MJF parts ship loose and scuff, SLA plates warp in a hot van); PA12 moisture uptake before insert installation (dry 4 h at 80 °C or install
+  within a day of unpacking); PLA storage below 40 °C; magnets kept paired and away from the boards.
 - Document set (contents checklists live in the project's plan): product manual, developer manual (guards + overrides with record trail),
   technician manual (reason-code table generated from the code list, set equality asserted), manufacturing specification (order-form values from the
   package's ORDER_PARAMETERS, acceptance classes with standard revisions), assembly SOP (photos per step, fixture use, measured values), incoming

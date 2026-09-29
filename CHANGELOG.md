@@ -200,7 +200,7 @@ row written after the gates ran · no-runner fallback sentence · skill `.gitign
 
 ### Not done (deferred)
 `scripts/production_cut.py` (contract only) · `gate_status.py` / `markers.gate_regex` (gate cells stay free text; the protocol is prose) ·
-pitfalls.md worked-example labelling and per-call ceiling alignment · `--project` in known_issues / release_report / handoff_header ·
+pitfalls.md worked-example labelling and per-call ceiling alignment (both done in 0.5.0) · `--project` in known_issues / release_report / handoff_header (done in 0.3.x) ·
 selftests leave `mkdtemp` dirs · plugin manifest example · prompt numbers in `silk-audit-verify.js`.
 
 ## 0.1.0 — 2026-09-22 — first cut (`eadc965`, ci templates `83da1ad`)

@@ -11,7 +11,11 @@ the owner's account. Record template: `templates/VENDOR_REVIEW_RECORD.md` (one f
   signed-in or redirects).
 - **Replace File and a chat message only on the owner's explicit word** for that action ("do it" after the file list was shown), and only the
   actions named: the record quotes the delegation, lists every click made and every button NOT clicked (`templates/VENDOR_REVIEW_RECORD.md` §5).
-- The reply mail to the vendor is the owner's; the agent drafts the text into the decision row (option wording per line).
+- The reply mail to the vendor is the owner's; the agent drafts the text into the decision row (option wording per line) from the template in
+  `templates/VENDOR_REVIEW_RECORD.md` §3 (facts, measured, changed, asked, not accepted) and decides fault with the table in
+  `references/dfm-printed-enclosure.md` §10 — the vendor is at fault when a dimension is outside its published tolerance or the part is not the file.
+- Uploading a design to a vendor's quote page is a disclosure: the owner's consent is quoted in the decision row that opens the round, the vendor's
+  terms page read once and cited (`dfm-printed-enclosure.md` §7 step 0).
 - A hand-over that stops one click before the cart is the right split: the agent puts every field, upload, dialog and price on record with
   screenshots; the owner spends two minutes reading deviations; the account never sees an agent-side purchase.
 
@@ -60,8 +64,9 @@ re-origins the plane: map the outline back through the returned to-3D transform 
   `GET …/tdpFile/getFileAnalyzeResult?fileAccessId=…` (read it in the network log or re-request it) whose `modelAnalysisVO` carries `thinWall` (bool),
   volume, surface, bbox and `previewUrl` (a `forface3dPreview?params=<base64 {thicknessModelUrl, modelUrl}>` viewer link = the Analysis Results tab)
   — that response at `parseStatus 2` is the verdict of record; open `previewUrl` to read the map of a part the vendor calls clean.
-- The viewer legend is a colour scale (grey ≥ 1.2, yellow 0.5–1.2, red < 0.5 mm); its only numbers are volume / area / bbox — the census turns a
-  colour into a number. The vendor's volume must equal yours (same geometry parsed). The map colours walls, VOIDS (slots, engraved strokes) and
+- The viewer legend is a colour scale (JLC3DP 2026-09-28: grey ≥ 1.2, yellow 0.5–1.2, red < 0.5 mm) — the CHECKER's line, not the vendor's
+  published printable minimum (its mail: nylon ≥ 1.0) and not the owner's bar (`dfm-printed-enclosure.md` §1); its only numbers are volume / area /
+  bbox — the census turns a colour into a number. The vendor's volume must equal yours (same geometry parsed). The map colours walls, VOIDS (slots, engraved strokes) and
   FREE-STANDING wedges (rail tips, added coves); chamfers cut into a ≥ 1.2 wall stay grey (`references/dfm-printed-enclosure.md` §1).
 - A yellow band "full length" along a feature is a strength finding: an owner decision row with the number, or a fix — never "kept (design geometry)".
 - A verdict that flips between two uploads of one body: diff the meshes (facets, vertices, winding, volume) and check that BOTH reads were API reads

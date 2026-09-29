@@ -10,7 +10,9 @@ The software exists before the hardware does, so it is built to be testable with
 2. **Architecture note** (`docs/design/SOFTWARE_ARCHITECTURE.md`): states, safety guards S1…Sn with their record trail, override flags, what each guard
    protects (a fixed cap vs warn/throttle levels — print both at release, or the operator never sees a WARN).
 3. **Criteria as YAML** (`design/test_criteria.yaml`): every test T-nn with limits, the tool reads them; the test plan and the technician manual
-   quote them from the same file (one source).
+   quote them from the same file (one source). **Who decides**: the agent drafts every limit from the spec with its source in a CC row; the owner
+   approves the set (a D row the yaml header cites) before the software refuses or throttles on it; the refuse-vs-warn posture per guard is an
+   owner answer at kickoff (`references/kickoff-questionnaire.md` §software).
 4. **Result verdicts**: PASS / FAIL / **INCONCLUSIVE** with a reason code from one code list (`tools/codes.py` or a yaml); the technician manual's
    code table is GENERATED from that list and a generator check asserts set equality (every code the software can emit is documented).
 5. **Records**: identity fields (serial, firmware, board md5) copied into the record FIRST, gates second — a refusal must still be attributable.

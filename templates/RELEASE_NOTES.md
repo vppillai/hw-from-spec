@@ -30,4 +30,4 @@ Generated index: `docs/governance/KNOWN_ISSUES.md` §1 (operator-facing), §2 (O
 {{bullet list, each with its decision row}}
 
 ## Owner actions
-- Write the gate lines in `docs/governance/GATES.md`; place the order; file records under `docs/release/records/{{MD5_8}}/` as they happen.
+- Write the gate lines in `docs/governance/GATES.md`; place the order; file records under `docs/production/{{MD5_8}}/records/` (the cut's `records_dir`) as they happen — the only records folder.
