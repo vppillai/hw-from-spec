@@ -43,6 +43,17 @@ part is drawn. If the vendor site blocks the fetch: `docs/governance/BLOCKERS.md
 an archive with the deltas marked unknown). Vendor library footprint vs vendor drawing: the drawing governs; the vendor STEP is the only source
 for heights. Values read from curves are marked "not in datasheet text" with the reader named.
 
+## Bought hardware (feet, screws, inserts, labels) — where a live read is possible
+Rule 1 applies to every purchased item, not only fab codes — and for hardware the usual pages are closed to an agent: **McMaster-Carr answers every
+product URL with a login wall for automated / new sessions** (HTTP 200 JS shell; rendered "To continue browsing, please log in"), **Digi-Key sits behind
+Cloudflare, Mouser / Newark / Farnell / RS / Keystone / Essentra return 403**. What does read: the **manufacturer's own product pages in a real browser**
+(3M Bumpon pages rendered), the **manufacturer's PDF TDS by curl** (dimension tables, tolerances — ±0.5 mm on moulded shapes), and **small plain-HTML
+dealers** (price, stock). So: verify on the manufacturer's site + TDS → [V]; a price or number seen only in a search snippet → [K]; a login-walled
+source → `docs/governance/BLOCKERS.md` row per rule 10 with the exact URL and filter set for the owner to open logged in (2 minutes) — never invent a
+number, never promote a snippet to [V]. Fit numbers belong beside the part (pocket Ø − foot Ø margin at the tolerance limit; height above the sole;
+adhesive area on an annulus when the pocket floor is opened by a counterbore), and a count that disagrees between records (yaml five, guide four) is
+flagged in the decision row, not resolved silently.
+
 ## Fields on every symbol
 `MPN, Manufacturer, LCSC (or the fab's code field), Datasheet (the live URL of the fitted code), Confidence (V/K/S/N/A), Alt_MPN, Alt_LCSC`.
 The generator copies them to the footprint as hidden properties so schematic parity holds.

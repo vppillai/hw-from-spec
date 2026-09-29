@@ -46,20 +46,26 @@ keep the `connected components = 1` row (it caught the mis-placed disc when the 
 re-origins the plane: map the outline back through the returned to-3D transform before placing anything. Detail: `references/case-pipeline.md`.
 
 ## 4. Quote-page DFM mechanics (worked example: JLC3DP, 2026-09-23 / 09-28 — verify live, they change)
-- **One STL per page session, material set BEFORE reading the flag, screenshots named with the STL md5** — the full procedure and the record template
-  are `references/dfm-printed-enclosure.md` §7 + `templates/DFM_ROUND.md`. With several lines present the page opened the wrong file's analysis
-  twice; after an upload the line defaults to **9600 Resin**, whose map is not the MJF map (two rounds of verdicts were read under the wrong process).
+- **One STL per page session (reload between uploads), verdict read from the analysis API at `parseStatus == 2`, screenshots named with the STL md5** —
+  the full procedure and the record template are `references/dfm-printed-enclosure.md` §7 + `templates/DFM_ROUND.md`. With several lines present the
+  page opened the wrong file's analysis twice. The thin-wall flag is computed at UPLOAD and does not depend on the material chosen on the line (the
+  line defaults to **9600 Resin**; set the order's material anyway for the price and the map legend). A DOM "no flag" read before `parseStatus 2` is
+  invalid — two such reads passed a tray the API later flagged. Uploads and the analysis work signed out; the hidden `input[type=file]` can be unhidden
+  by script for a chooser-less upload.
+- **The metric is length-dependent** (`dfm-printed-enclosure.md` §7.1): the same wall profile passed at 48 mm and failed at 88 / 147 mm — calibrate with
+  full-length probes cut from the failing body (`slice_mesh_plane`, capped) and plain-profile extrusions with one knob each, uploaded alone.
 - Upload on the quote page, no account state: per-line **Edit** dialog must be *saved* for the material to stick on the quote line (that is form
   state, not a cart); the risk checkbox stays unticked; "I agree" stays as the site pre-checks it; the tab is closed afterwards.
 - A clean part has NO "Printing risk" popover but its thin-wall heat map still exists: the page polls
-  `GET …/tdpFile/getFileAnalyzeResult?fileAccessId=…` whose `modelAnalysisVO` carries `thinWall` (bool), volume, surface, bbox and `previewUrl`
-  (a `forface3dPreview?params=<base64 {thicknessModelUrl, modelUrl}>` viewer link) — open it to read the map of a part the vendor calls clean.
+  `GET …/tdpFile/getFileAnalyzeResult?fileAccessId=…` (read it in the network log or re-request it) whose `modelAnalysisVO` carries `thinWall` (bool),
+  volume, surface, bbox and `previewUrl` (a `forface3dPreview?params=<base64 {thicknessModelUrl, modelUrl}>` viewer link = the Analysis Results tab)
+  — that response at `parseStatus 2` is the verdict of record; open `previewUrl` to read the map of a part the vendor calls clean.
 - The viewer legend is a colour scale (grey ≥ 1.2, yellow 0.5–1.2, red < 0.5 mm); its only numbers are volume / area / bbox — the census turns a
   colour into a number. The vendor's volume must equal yours (same geometry parsed). The map colours walls, VOIDS (slots, engraved strokes) and
   FREE-STANDING wedges (rail tips, added coves); chamfers cut into a ≥ 1.2 wall stay grey (`references/dfm-printed-enclosure.md` §1).
 - A yellow band "full length" along a feature is a strength finding: an owner decision row with the number, or a fix — never "kept (design geometry)".
-- A verdict that flips between two uploads of one body: diff the meshes (facets, vertices, winding, volume) and check the material on both lines
-  before touching the generator — the r3 tray that read red was the r2 tray that passed, both under the default resin.
+- A verdict that flips between two uploads of one body: diff the meshes (facets, vertices, winding, volume) and check that BOTH reads were API reads
+  at `parseStatus 2` before touching the generator — the r3 tray that read red was the r2 tray that "passed" on a premature DOM read.
 - Order page: the Replace Files dialog shows old name, upload, Confirm; no terms / payment wording; the site re-weighs the order and the
   shipping *display* moves — a quote figure while unpaid, say so in the record.
 - Remark caps (PCB 200 / assembly 500 chars) and a mandatory customs description cascader exist on the quote form; a placed order has no

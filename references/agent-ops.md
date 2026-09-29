@@ -23,6 +23,10 @@
   the gated commit follows; the coordinator never commits another agent's half-edit but does read the checkpoints when it resumes (SKILL §11.1).
 - A worker fork may not spawn agents: it writes the blind-review checklist and the artefact list into its record and hands the round back to the
   coordinator, never skips it silently.
+- **A fork subagent stops at ~200 turns.** Plan the task in chunks that each end in a checkpoint commit + a STATUS line; when it stops, resume it (or a
+  new agent) from HEAD with the MEASURED state, never from what the coordinator remembers it was doing.
+- **Tags follow the gated commit.** A tag created on a checkpoint or a WIP commit is re-pointed (`git tag -f <tag> <gated commit>`) once the gated
+  commit exists — and the record says so; a tag on a `not yet gated` commit is a false release marker.
 
 ## 3. Regenerating shared records
 - Re-read (re-grep) the row immediately before replacing a status cell; prefer a suffix append over a full-cell rewrite.
@@ -69,6 +73,12 @@
 - Report before/after per class, not one number (a repo-wide grep count is not a work estimate).
 - "Already done by <agent>" in the manifest instead of editing twice; re-read each target line before editing on a multi-agent day.
 - Numbers in a record carry the mode they were measured in (check mode vs full run) and the file md5 they refer to.
+- **The coordinator verifies a subagent's claim independently before it becomes a decision row.** Two "vendor: no flag" claims were premature DOM
+  reads; re-requesting the vendor's analysis API for the md5 in the record flipped them (`references/dfm-printed-enclosure.md` §7). A claim of PASS
+  names its evidence (API field, file md5, log line) or it is a claim, not a result.
+- **Browser sessions are shared state.** The DevTools-driven browser can be restarted or re-used by another agent between two of your turns: page
+  ids, tabs and the signed-in state are then gone. Re-list the pages, re-derive the id, re-check the sign-in (a fresh tab on the account URL) before
+  every upload / read — never act on a page id from an earlier turn.
 
 ## 7. Memory, pause points, owner lists
 - **Auto-memory (`MEMORY.md` + topic files)** holds what must survive a session: the project's resume pointer (which files to read first), owner

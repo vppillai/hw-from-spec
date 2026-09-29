@@ -1,6 +1,6 @@
 ---
 name: hw-from-spec
-version: 0.4.0
+version: 0.4.1
 description: Run a hardware project (PCB + printed or CNC enclosure, contract fab such as JLCPCB) from a written specification to a production cut with an owner-gated, generated-only, blind-reviewed workflow. Use this whenever someone starts a board or enclosure project from a spec, asks to set up gates, a decision log, generators, part verification, a fab DFM mirror, a case pipeline, FEA, blind reviews, a release report or a production cut for one, or resumes such a project — even if they only say "new KiCad board", "order this at JLC", "review the layout" or "cut the release".
 ---
 
@@ -191,12 +191,21 @@ own table); "kept below minimum (listed)" is a waiver, and the waived 0.88 × 14
    clean in its space budget goes; every wall change reruns the whole table.
 3. **Canonical STL** (own binary writer, sorted triangles, normals from the float32 vertices) so the md5 IS the geometry; the census gate, vendor
    uploads and the cut key on it.
-4. **Vendor quote page**: ONE STL per session, process + material set on the line BEFORE the flag is read (the default is resin, its map differs),
-   flag first, then the heat map on every face, screenshots named with the md5, one `templates/DFM_ROUND.md` per session under `docs/quotes/<date>/`;
-   a verdict that flips → diff the meshes before touching the generator. Nothing saved, carted, agreed or paid (§10 boundaries).
+4. **Vendor quote page**: ONE STL per session (reload between uploads; uploads work signed out), process + material set on the line first (price,
+   map legend — the flag itself is computed at upload and does not depend on it), **verdict = the analysis API at `parseStatus == 2`
+   (`getFileAnalyzeResult` → `modelAnalysisVO.thinWall`, from the network log or re-requested) — a DOM read before that is invalid**, then the heat map
+   (`previewUrl`) on every face, screenshots named with the md5, one `templates/DFM_ROUND.md` per session under `docs/quotes/<date>/`; a verdict
+   that flips → check both reads were API reads, then diff the meshes, before touching the generator; the coordinator re-reads a worker's "no flag"
+   itself. Nothing saved, carted, agreed or paid (§10 boundaries).
+   **The vendor's thin-wall metric is length-dependent** (`references/dfm-printed-enclosure.md` §7.1): a rim over a skirt-lap step ≥ 2.0 OR the undercut
+   filled; a coupon or 40 mm probe that passes proves nothing about a 150 mm body — when a body is flagged and the census is clean, slice the body of
+   record into capped slabs and build 40 mm AND full-length one-knob profile probes, upload each alone, read the API, adopt the first full-length pass.
 5. **Home FDM preset** (printer-first, its own version key, hook tokens keep the vendor SCAD byte-identical): coupons and a board dummy (two-piece
-   AND one-piece at final dimensions) before the part, walls ≥ 1.6, raised legends cap 4 / stroke 1.0 / 0.6, fan bosses = fan holes, hood roof-down
-   on screws + inserts, slicer projects with project-named presets + `different_settings_to_system`, floating-region warning = FAIL, auto-orientation.
+   AND one-piece at final dimensions — the one-piece nose on a break-away shim the README calls out as a removable "PCB lip"; section symmetric
+   difference 0 mm² between the two) before the part, walls ≥ 1.6 / ribs 1.2 / voids 1.0, raised legends cap 4 / stroke 1.0 / 0.6, fan bosses = fan
+   holes, hood roof-down on screws + inserts, slicer projects with project-named presets + `different_settings_to_system`, floating-region warning =
+   FAIL, auto-orientation. **Every vendor DFM decision is mirrored into this preset the same day** (rails / key off, closed rim, undercut filled, feet
+   concentric) in the same yaml under its own version key; its census + slicer log clean; ONE kit folder = pieces + coupons + BOTH dummies + READMEs.
 6. **When a vendor reports a cracked part**: measure the ORDERED STL (sections + census with span and class), separate design intent from defect,
    draft the accept-and-ship reply with the number for the owner, then apply the learning design-wide (every body, every preset), not to the
    failed feature (`references/dfm-printed-enclosure.md` §10).
