@@ -22,6 +22,7 @@ silent assumption (rule 2). Re-asking an answered question is a defect; changing
 | 7 verification | E1–E4 | the G0 review round |
 | 8 bought parts & software | F1–F2, G1–G2 | parts.yaml, the bring-up tool |
 | 9 release & cut | H1–H4 | the first release report |
+| 10 identity, envelope, delegation | I1–I4 | the spec is read (found by the first retro: the owner rows the source project needed that no batch above asked) |
 
 ## A. Product, process, material, quantity
 **A1 Product class.** **RECOMMENDED: engineering sample / internal tool** — no regulatory claim, compliance = a RoHS table fetched at cut time,
@@ -158,6 +159,22 @@ before every tag.
 drafts the skill's next changes and a retro report goes to the skill repo as a PR** — the skill gets better with each project (SKILL §13). *Alt:*
 no retro — the next project repeats this one's rounds.
 
+## I. Identity, envelope, delegation (added by the first retro — the owner rows that recurred and no question asked)
+**I1 Envelope: fixed or grows.** **RECOMMENDED: the board grows as routing needs, the case follows; connector positions and the form-factor
+class are fixed** — clean routing beats a millimetre. *Alt:* envelope fixed by a mating part (a cage, a rail, a pocket) — a routing budget
+per iteration and a decision row when it is missed. *Alt:* smallest possible — expect two placement iterations per connector.
+**I2 Branding, look and identity.** **RECOMMENDED: product name + logo lock-up as one designed block on the silk and on the case (label
+carrier or gold copper artwork), a consistent legend grid, no exposed copper except designed artwork, the order number hidden** — a product, not a
+coupon. *Alt:* engineering look — refdes everywhere, no logo, cheapest. *Alt:* premium finish (black mask, anodised, two-tone) — the B4 / A4
+consequences apply.
+**I3 Debug and service access.** **RECOMMENDED: a simple wire header + cuttable straps for the debug path, reachable with the hood off; no
+vendor-specific pod connector exposed by the case** — one keyed header, one manual page. *Alt:* a dedicated debug connector in the wall — a
+window, a tolerance stack row, a light-pipe-class part. *Alt:* none — the board is programmed in the fixture only.
+**I4 Delegation while the owner is offline.** **RECOMMENDED: "go with the recommended option" applies to every OPEN agent proposal below a
+named class (parts alternates, copper rules, case fits); spec values, gate cells, orders and payments never** — quoted in a D row, checked at
+every pause point. *Alt:* nothing delegated — the agent stops at every OPEN row. *Alt:* full delegation for a bounded window — the record quotes the
+window and lists every action taken.
+
 ## What the answers write
 | Answer | `project.yaml` | Other records |
 |---|---|---|
@@ -169,3 +186,4 @@ no retro — the next project repeats this one's rounds.
 | F1–F2 | `kickoff.sourcing` (sources, stock_floor, attrition) | PARTS_VERIFICATION header, BLOCKERS |
 | G1–G2 | `kickoff.software` (modes, posture) | SOFTWARE_ARCHITECTURE.md §1/§3, test_criteria.yaml header |
 | H1–H4 | `kickoff.release` (reports, cut, ci, retro) | production_cut.yaml, ci templates, SKILL §13 |
+| I1–I4 | `kickoff.identity` (envelope, branding, debug_access, delegation) | SPEC §1, §4; CLAUDE.md conventions; the pause-point owner list |

@@ -9,7 +9,8 @@
       Every surface sample casts a ray INWARD (hit distance = wall thickness) and OUTWARD (hit within the void gate = a slot / slit / groove /
       engraved stroke narrower than the gate). Samples below `gate - 0.05` are grid-clustered (26-neighbour cells) and each cluster is CLASSIFIED
       by the angle between the sample face and the hit face: < 30 deg = WALL (a skin whose thickness IS the hit distance), else WEDGE (chamfer,
-      ramp, rail flank — thickness grows away from the edge). Gated: WALL clusters below the gate, VOID clusters below the void gate, WEDGE
+      ramp, rail flank — thickness grows away from the edge); the two classes are clustered SEPARATELY (a mixed cluster chained through chamfer
+      flanks once swallowed a sub-gate lip under the "wedge" label). Gated: WALL clusters below the gate, VOID clusters below the void gate, WEDGE
       clusters whose band of sub-gate surface is wider than --wedge-band (a chamfer cut into a wall has a narrow band; a free-standing 35 deg
       rail flank a wide one), and OPPOSING faces — the nearest face with an opposing normal in ANY direction (a ledge underside beside a step top,
       the root of a rim ring set inboard of its wall: invisible to normal rays, coloured by the vendor). A FAIL cluster passes only when an
@@ -289,8 +290,13 @@ def census(stl, samples, gate, void_gate, cell, self_hit, red, boxes, box_min, o
     ang = np.where(np.isnan(ang), 180.0, ang)
     dopp, kind = opposing_faces(m, pts, nrm, fid, max(gate, void_gate), np)
     P = pts.tolist(); T = th.tolist(); A = ang.tolist(); G = gap.tolist(); D = dopp.tolist(); K = kind.tolist()
-    thin = [i for i in range(samples) if T[i] < thr]
-    clusters = cluster_rows([P[i] for i in thin], [T[i] for i in thin], [A[i] for i in thin], cell, red, boxes)
+    # cluster WALL-class and WEDGE-class samples SEPARATELY: one mixed cluster that chained across a body through chamfer flanks was labelled
+    # "wedge" and swallowed a 1.0..1.2 lip and 1.3 slot lands (retro of the source project, 2026-09-28)
+    clusters = []
+    for pick in (lambda i: A[i] < WALL_DEG, lambda i: A[i] >= WALL_DEG):
+        thin = [i for i in range(samples) if T[i] < thr and pick(i)]
+        clusters += cluster_rows([P[i] for i in thin], [T[i] for i in thin], [A[i] for i in thin], cell, red, boxes)
+    clusters.sort(key=lambda r: (r["cls"] != "wall", -r["n"]))
     vt = [i for i in range(samples) if G[i] < void_gate]
     voids = void_rows([P[i] for i in vt], [G[i] for i in vt], cell, boxes)
     # opposing faces: only where the normal rays are clean (otherwise the wall / void row already carries the finding)
