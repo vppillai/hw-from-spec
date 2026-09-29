@@ -108,6 +108,21 @@
         "every body of record is re-verified by the API after the change and a PROBES.md / DFM_ROUND.md record the probes, md5s and verdicts",
         "the mating part's registration is proven unchanged (partner overlap 0 mm3) and nothing is saved, carted, agreed or paid on the vendor site"
       ]
+    },
+    {
+      "id": 8,
+      "name": "kickoff-questionnaire-before-any-cad",
+      "prompt": "New repo, SPEC.md is a two-page draft for a USB-powered sensor board with a two-piece printed case (MJF at a print service, plus my home printer). Set the project up. I want to make all the decisions now, not one by one over the next weeks.",
+      "expected_output": "Installs the skill in the vendor/hw-from-spec layout, then runs the kickoff questionnaire from references/kickoff-questionnaire.md with the AskUserQuestion tool in nine batches (product/process, PCB build x2, enclosure x2, manufacturability bar, verification, parts + software, release), each question with its RECOMMENDED answer listed first and 2-3 alternatives with consequences, each batch offering 'accept every recommended answer'; writes docs/governance/KICKOFF_ANSWERS.md, one owner D row per answer (words quoted), project.yaml kickoff / board / fab_dfm.bar / print_targets (vendor, process, material, gates, margin, tolerance + source), traceability entries; a deferred answer is an OPEN D row; only then reads the spec. No CAD file is created.",
+      "files": [],
+      "assertions": [
+        "the questions are asked through AskUserQuestion in batches grouped by phase, not one at a time and not all in one call",
+        "every question shows a marked RECOMMENDED answer plus alternatives with one-line consequences, and each batch offers 'accept every recommended answer'",
+        "the manufacturability bar question is asked and its default is zero errors / zero warnings / no waivers, written to fab_dfm.bar and GATES.md",
+        "docs/governance/KICKOFF_ANSWERS.md exists and every answered question has an owner D row in DECISIONS.md with the owner's words",
+        "project.yaml carries print_targets for both targets (vendor, process, material, wall_gate, void_gate, red_line, design_margin, tolerance, checker_url + date) and the board block from the PCB answers",
+        "no schematic, board or case file is created before the answers are recorded, and no answered question is asked again later"
+      ]
     }
   ]
 }

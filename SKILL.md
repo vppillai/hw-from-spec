@@ -42,6 +42,20 @@ when you reach that step, not before. Nothing here is specific to one board: pro
 7. **CI (optional, when the repo has a remote)**: `templates/ci/` holds pr-check / nightly / release workflows with `{{PROJECT_*}}` placeholders;
    fill them with the `sed` recipe in `templates/ci/README.md`, write `scripts/ci/project.env`, commit under `.github/workflows/`.
 
+### 0.1 The kickoff questionnaire — every owner decision up front, with a recommended answer (`references/kickoff-questionnaire.md`)
+
+Before the spec is read and before any CAD, ask the owner **every decision class a board + enclosure project needs**, grouped by phase and asked
+in nine batches with the **`AskUserQuestion` tool** (≤ 4 questions per call): product / process / material / quantity; PCB build (layers, copper,
+impedance, finish, min part size + link policy, assembly sides, test points, panel); enclosure architecture (pieces, retention = screws + inserts /
+magnets / none, coupling, feet, labelling = deboss / plate / badge, fan, vents, light pipe, two targets); the manufacturability bar per target and
+what may be waived (default: zero / zero / nothing); verification (coupons, dummies, review rounds per gate, visual inspections, vendor API read
+before the order, FEA); bought parts (acceptable verification sources, the blocked-source rule, stock floor); software / test posture; release /
+cut / CI / the retro. **Every question lists its RECOMMENDED answer first (marked) and two or three alternatives with a one-line consequence**;
+each batch opens with "accept every recommended answer of this batch". Answers go into `docs/governance/KICKOFF_ANSWERS.md`
+(`templates/KICKOFF_ANSWERS.md`), one owner D row each (words quoted; `accepted recommended` when the default stood), the machine-readable values
+into `project.yaml` (`kickoff`, `board`, `fab_dfm.bar`, `print_targets`), a traceability entry per row — then commit. A deferred question is an
+OPEN D row that blocks the phase needing it; an answered question is never re-asked, and a later change is a superseding D row (rule 2).
+
 ## 1. Phase / gate model
 
 Phases: **G0** spec approved → **G1** schematic approved → **G2** layout approved → **submission** (fab package, order = owner's click) →
