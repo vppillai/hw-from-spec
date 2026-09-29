@@ -1,17 +1,19 @@
-# hw-from-spec — v0.4.0
+# hw-from-spec — v0.4.1
 
 A Claude Code skill + generic scripts + workflow templates for running a hardware project (PCB + printed/CNC enclosure, contract fab such as
 JLCPCB) from a written specification to a production cut: owner-gated phases, generated-only artefacts, live part verification, a fab-DFM mirror,
 blind double reviews with external models, a release report and a production document set. Distilled from one complete project
-(a KiCad 10 QSFP-DD test dongle, 200+ decision rows, five audit rounds, ~230 logged learnings, one vendor review round after the order and four
-printed-enclosure DFM rounds — folded into one procedure so the next case is vendor-clean before its first quote); nothing project-specific ships
+(a KiCad 10 QSFP-DD test dongle, 200+ decision rows, five audit rounds, ~230 logged learnings, one vendor review round after the order and five
+printed-enclosure DFM rounds — folded into one procedure with the vendor's API verdict and length-calibration probes so the next case is vendor-clean
+before its first quote); nothing project-specific ships
 here except as labelled worked examples.
 
 ```
 SKILL.md          the procedure (≤ 500 lines): phases/gates, generated-only rule, decision log, parts, blind reviews, adopt rule, DFM mirror,
                   case + FEA, printed-enclosure DFM (§8.1), software track, release/production cut, agent operations
 references/       detail per topic, loaded on demand: project-yaml, schematic-phase, part-verification, fab-dfm, case-pipeline,
-                  dfm-printed-enclosure (MJF / FDM rules as measured, census gate, heat-map procedure, coupons, dummies, post-mortem), fea-stage,
+                  dfm-printed-enclosure (MJF / FDM rules as measured, census gate, API-verdict quote-page procedure, length-dependent metric + probes,
+                  p2s mirror, coupons, dummies, post-mortem), fea-stage,
                   software-track, release-and-cut, vendor-review, agent-ops, pitfalls (every recorded learning, one line each)
 scripts/          generic generators driven by a project.yaml — known_issues, traceability, handoff_header, dfm_check (grading engine),
                   release_report (skeleton), collect_renders, reorg_paths (layout migration + zero-loss proof), thin_wall_check (quick census +
@@ -23,7 +25,8 @@ templates/        CLAUDE.md rules, project.yaml (day-1 gate lists), .gitignore, 
                   hand-off, vendor-review record, DFM_ROUND record, CENSUS_GATE_ROWS check-table rows and release-notes skeletons,
                   production_cut.yaml; templates/ci/ = CI workflow templates (fill with the sed recipe there)
 smoke/            the automated dry run: a five-part one-sheet project with a two-piece case; run_smoke.sh drives every script to a DRAFT report
-evals/            skill-creator eval prompts (start a project / blind review / release / vendor mail / re-layout / first printed-enclosure DFM round)
+evals/            skill-creator eval prompts (start a project / blind review / release / vendor mail / re-layout / first printed-enclosure DFM round /
+                  a vendor flag the census cannot see)
 ```
 
 ## Install

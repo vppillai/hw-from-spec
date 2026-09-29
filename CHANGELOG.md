@@ -1,5 +1,61 @@
 # CHANGELOG — hw-from-spec
 
+## 0.4.1 — 2026-09-28 — vendor quote-page verdicts done right, the length-dependent thin-wall metric, p2s mirror, one-piece dummy, bought hardware (source project late 2026-09-28: CC-205 r4 / r5, D-84, CC-206 / B-11, PROBES.md)
+
+0.4.0 shipped the same evening the source project found that two of its "no flag" quote-page readings were false, that JLC3DP's thin-wall metric
+depends on part LENGTH, and that its home-printer preset had to carry every vendor decision. Owner's words: "the skill we are developing should handle
+p2s and jlc like operations properly". 0.4.1 corrects the procedure and adds the probe method that closes such a round in one pass. No script changes.
+
+### Changed
+- **`references/dfm-printed-enclosure.md` §7 (quote-page procedure) rewritten**: the verdict of record is the analysis API response
+  `getFileAnalyzeResult` at `parseStatus == 2` → `modelAnalysisVO.thinWall`, read from the browser's network log or re-requested; **a DOM reading before
+  parseStatus 2 is invalid** (a false "no flag" happened twice); **the flag is computed at UPLOAD and does not depend on the material chosen on the
+  line** (material is still set first — for the price and the map legend; 0.4.0 had attributed a flipped verdict to the resin default);
+  `modelAnalysisVO.previewUrl` opens the heat map (Analysis Results tab) directly; one STL per page session with a reload between uploads; the hidden
+  `input[type=file]` can be unhidden by script; uploads and analysis work signed out (ordering does not); the coordinator re-reads a worker's PASS
+  from the API before a decision row says so. §3 evidence = md5 + parseStatus 2 (not md5 + material).
+- **`references/vendor-review.md` §4**, **SKILL.md §8.1 items 4 / 5**, **`templates/DFM_ROUND.md`** (new column `API parseStatus / thinWall (how
+  read)`, rows without it have no verdict, material column marked "price + legend; not the flag", flip rule = check both reads first) follow.
+
+### Added
+- **`dfm-printed-enclosure.md` §7.1 — the thin-wall metric is LENGTH-DEPENDENT** (an identical rim-over-lap-step profile passed at 48 mm, failed at 88
+  and 147 mm while three ray-cast censuses found nothing under 1.37): calibrated MJF PA12 rule at ~150 mm parts — **rim above a skirt-lap step ≥ 2.0
+  (1.4 fails; 2.0 passes with step + inward undercut kept) OR the undercut filled so the inner wall runs straight to the rim top (`lap.ring_down`,
+  then 1.25 … 1.3 above the step passed)**; grey set (plain 2.0 walls / floors, boss rings, chamfers into ≥ 1.2 walls, 45° dish ramps) and red set
+  (free-standing wedges). **The probe method** that converges in one round: slice the failing body of record into capped slabs
+  (`trimesh slice_mesh_plane`) to localise the feature and the length threshold, then plain-profile OpenSCAD polygon extrusions at **40 mm AND full
+  length with ONE knob each**, each uploaded alone and API-read, tabulated in `probe/PROBES.md`; a 40 mm pass proves nothing about a 147 mm body; a
+  scaled body is not informative. `templates/DFM_ROUND.md` §5 Probes; §1 pointer line.
+- **§9 P2S mirror**: every vendor DFM decision (rails off, key off, closed rim, undercut filled, feet concentric, hood on screws) applied to the home
+  preset the same day in the SAME yaml under its own version key with the deciding round in the comment; its census gate (walls 1.6 / ribs 1.2 /
+  voids 1.0) and slicer log clean; a vendor-only geometry fix must prove partner overlap 0 mm³.
+- **§8 one-piece board dummy pattern (D-84)**: cage / sink fused to the slab at final dimensions; the nose overhang on a break-away shim (1.2 mm block
+  on the bed, inset 0.5 from the nose sides, 0.6 clear of the board edge, 8 posts 1.2 × 1.2 across a 0.4 mm two-layer perforation gap); **the README
+  says the shim looks like a "PCB lip" and comes off** (the owner read it as the board); one-piece vs two-piece proven by section symmetric
+  difference 0 mm² and both bboxes against the cage envelope of record; both versions kept; kit folder = case pieces + coupons + BOTH dummies (with
+  their 3MFs) + READMEs, the stale kit named for deletion.
+- **`references/part-verification.md` "Bought hardware"**: McMaster-Carr is login-walled for automation (JS shell + "please log in" in a real
+  Chromium), Digi-Key (Cloudflare) / Mouser / Newark / Farnell / RS / Keystone / Essentra block fetches → verify on the manufacturer's site (3M product
+  pages rendered in a real browser) + the manufacturer's PDF TDS by curl + plain-HTML dealers; snippet-only prices and numbers [K]; a BLOCKERS row
+  with the exact URL + filter set for the owner to open logged in; never invent a number; fit numbers beside the part; count drift between records
+  flagged in the decision row.
+- **`references/agent-ops.md`** §2: a fork subagent stops at ~200 turns → chunked tasks with checkpoint commits, resume from HEAD with measured
+  state; tags created before the final gated commit are re-pointed (`git tag -f`) and the record says so. §6: the coordinator verifies a subagent's
+  claim independently before it becomes a decision row (the "no flag" claims were re-read); the DevTools browser is shared state — another agent
+  can restart it between turns, so page ids and sign-in are re-derived before every upload / read.
+- **`references/pitfalls.md`**: +12 dfm lines (API verdict, flag at upload, previewUrl / unhide / signed out, length dependence, calibrated rim rule,
+  probe method, opposing faces in any direction, p2s mirror, one-piece dummy, vendor-only divergence, coordinator re-read), +3 agents / git (turn
+  limit, tag re-point, browser restart), +3 sourcing (McMaster / distributors, feet-over-screws bond ring, count drift); header 0.4.1.
+- **Smoke step 0** greps the API-verdict, flag-independent-of-material, LENGTH-DEPENDENT, rim-over-lap-step and full-length-probe rules in the
+  reference, SKILL §8.1 and `DFM_ROUND.md` §5. **Eval 6** re-worded (API verdict, no "material flips the flag" claim, coordinator re-read, p2s mirror,
+  kit contents); **eval 7** "vendor flags a body the census calls clean" (probe method, one knob each, both presets, named census row, API
+  re-verification, partner overlap 0).
+
+### Not done (deferred)
+A probe-generator script (the polygon-extrusion probes stay project-side; the recipe is §7.1) · a `--slabs` mode in `thin_wall_census.py` (the
+`slice_mesh_plane` call is one line in the reference) · the census "opposing face in any direction" metric as a skill script (recorded, not gated,
+on the source project — over-reads on 0.4 offsets the vendor accepts) · the 0.4.0 deferrals stand.
+
 ## 0.4.0 — 2026-09-28 — printed-enclosure DFM: one vendor round instead of four (source project D-79 … D-84, CC-204 / CC-205, learnings 2026-09-27 / 09-28)
 
 The source project's MJF trays cracked on a 0.88 × 141 mm lip that a "kept below minimum (listed)" row had waived, and its FDM preset passed its own
