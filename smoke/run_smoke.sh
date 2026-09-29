@@ -55,7 +55,9 @@ grep -c 'RECOMMENDED' "$SKILL/references/kickoff-questionnaire.md" | awk '$1 >= 
 grep -q '^| D1 | the manufacturability bar' "$SKILL/templates/KICKOFF_ANSWERS.md" || { echo "FAIL: KICKOFF_ANSWERS.md lost the bar row"; exit 1; }
 grep -q 'references/pcb-layout-dfm.md' "$SKILL/SKILL.md" || { echo "FAIL: SKILL.md lost the layout reference (C-07)"; exit 1; }
 grep -q -E 'p2s|presets\.P2S|AEC-CT2|lap\.ring_down' "$SKILL/SKILL.md" "$SKILL/README.md" "$SKILL/templates"/*.md "$SKILL/templates"/*.yaml && { echo "FAIL: a source-project identifier leaked into SKILL / README / templates (C-15 / B-34)"; exit 1; }
+grep -q '^## 13. Retro' "$SKILL/SKILL.md" || { echo "FAIL: SKILL.md lost the retro phase (§13)"; exit 1; }
 "$PY" scripts/thin_wall_census.py --selftest
+"$PY" scripts/skill_retro.py --selftest
 say "1 fab package of record keyed on the board md5"
 MD5=$(md5of kicad/smoke/smoke.kicad_pcb); PKG=out/fab/2026-01-03_${MD5:0:8}; mkdir -p $PKG
 printf 'board kicad/smoke/smoke.kicad_pcb\nmd5 %s\ncommit %s\nbuilt 2026-01-03\nsegments 1\nvias 0\n' $MD5 $(git rev-parse --short HEAD) > $PKG/board_id.txt

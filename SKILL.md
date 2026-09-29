@@ -45,12 +45,12 @@ when you reach that step, not before. Nothing here is specific to one board: pro
 ### 0.1 The kickoff questionnaire — every owner decision up front, with a recommended answer (`references/kickoff-questionnaire.md`)
 
 Before the spec is read and before any CAD, ask the owner **every decision class a board + enclosure project needs**, grouped by phase and asked
-in nine batches with the **`AskUserQuestion` tool** (≤ 4 questions per call): product / process / material / quantity; PCB build (layers, copper,
+in ten batches with the **`AskUserQuestion` tool** (≤ 4 questions per call): product / process / material / quantity; PCB build (layers, copper,
 impedance, finish, min part size + link policy, assembly sides, test points, panel); enclosure architecture (pieces, retention = screws + inserts /
 magnets / none, coupling, feet, labelling = deboss / plate / badge, fan, vents, light pipe, two targets); the manufacturability bar per target and
 what may be waived (default: zero / zero / nothing); verification (coupons, dummies, review rounds per gate, visual inspections, vendor API read
 before the order, FEA); bought parts (acceptable verification sources, the blocked-source rule, stock floor); software / test posture; release /
-cut / CI / the retro. **Every question lists its RECOMMENDED answer first (marked) and two or three alternatives with a one-line consequence**;
+cut / CI / the retro; identity, envelope and delegation. **Every question lists its RECOMMENDED answer first (marked) and two or three alternatives with a one-line consequence**;
 each batch opens with "accept every recommended answer of this batch". Answers go into `docs/governance/KICKOFF_ANSWERS.md`
 (`templates/KICKOFF_ANSWERS.md`), one owner D row each (words quoted; `accepted recommended` when the default stood), the machine-readable values
 into `project.yaml` (`kickoff`, `board`, `fab_dfm.bar`, `print_targets`), a traceability entry per row — then commit. A deferred question is an
@@ -331,7 +331,19 @@ gate ask was pending, check the cell; if the owner answered in chat only, §1.1 
 
 Append every non-obvious learning to `docs/governance/LEARNINGS_LOG.md` as `- YYYY-MM-DD [domain] learning — evidence`; one DECISIONS row for the task;
 one dated STATUS paragraph; run the `--check` chain; `git status --short <paths>` after every explicit-path commit of a generated set.
-Then fold the learnings back into this skill's `references/pitfalls.md` at the next production cut.
+Then the retro (§13) folds the learnings back into this skill at the next production cut.
+
+## 13. Retro — the skill improves with each project (owner: "self improving, gets better with each new project we successfully build")
+
+After every production cut (and after any round that cost an order or a reprint): `scripts/skill_retro.py --project <root> --since <the project's
+first day>` reads the project's `LEARNINGS_LOG.md` and `DECISIONS.md`, classifies every dated entry against this skill's sections (CARRIED /
+PARTIAL / NEW, "costly" when the text names a failure that cost a round), compares the skill version the project recorded (`project.yaml skill:
+{version}`) with `SKILL.md`, and writes `docs/retro/<project>_<date>.md` in the skill repo: the NEW and PARTIAL tables, a CHANGELOG entry draft,
+one reference patch stub per target file, an eval stub per costly NEW entry, and the owner decision topics the kickoff questionnaire does not
+ask yet. Then, in the skill repo: fold every NEW line into the named reference (generalised, the source number as the labelled worked example),
+extend the PARTIAL sections, add the evals, add a questionnaire question per recurring owner topic, run the smoke, bump `version`, write the
+CHANGELOG entry from the draft, blind-review the skill (a cold-user lens and a DFM-expert lens), open the PR. The project pins the new version in
+`project.yaml` and its CC-001 row. The classifier is a keyword matcher: the report is the input to the change, never the change itself.
 
 ## Where to look
 
@@ -354,5 +366,6 @@ Then fold the learnings back into this skill's `references/pitfalls.md` at the n
 | the fab's review mail after the order, Replace File boundaries, quote-page DFM mechanics | `references/vendor-review.md` |
 | orchestration, git, reviews, read-only checkers, memory / pause points | `references/agent-ops.md` |
 | every recorded pitfall, one line each | `references/pitfalls.md` |
+| the retro after a cut: what the project learned that the skill lacks | `scripts/skill_retro.py`, `docs/retro/` |
 | instantiating a workflow | `workflows/README.md` |
 | the dry run | `smoke/README.md` |

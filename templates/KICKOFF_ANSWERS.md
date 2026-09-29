@@ -42,5 +42,9 @@ answered question is a defect; changing an answer is a new D row that supersedes
 | H2 | production cut | {{full document set}} | yes | D-{{nn}} | production_cut.yaml |
 | H3 | CI / hygiene | {{PR check = adopt gates}} | yes | D-{{nn}} | `templates/ci/` |
 | H4 | feedback loop | {{retro at the cut, PR to the skill}} | yes | D-{{nn}} | `skill.version`; SKILL §13 |
+| I1 | envelope fixed or grows | {{grows, connectors fixed}} | yes | D-{{nn}} | `kickoff.identity.envelope`; SPEC §4 |
+| I2 | branding / look | {{name + logo lock-up, legend grid}} | yes | D-{{nn}} | `kickoff.identity.branding`; SPEC §6 |
+| I3 | debug / service access | {{wire header + straps, hood off}} | yes | D-{{nn}} | `kickoff.identity.debug_access` |
+| I4 | delegation while offline | {{recommended option below a named class}} | yes | D-{{nn}} | `kickoff.identity.delegation`; pause-point owner list |
 
-Batches asked: {{1–9 with date/time}}. Questions deferred: {{none}}. Owner's closing words: "{{QUOTE}}".
+Batches asked: {{1–10 with date/time}}. Questions deferred: {{none}}. Owner's closing words: "{{QUOTE}}".

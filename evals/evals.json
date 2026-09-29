@@ -123,6 +123,21 @@
         "project.yaml carries print_targets for both targets (vendor, process, material, wall_gate, void_gate, red_line, design_margin, tolerance, checker_url + date) and the board block from the PCB answers",
         "no schematic, board or case file is created before the answers are recorded, and no answered question is asked again later"
       ]
+    },
+    {
+      "id": 9,
+      "name": "retro-after-the-production-cut",
+      "prompt": "Our project shipped (production cut tagged yesterday). Its docs/governance/LEARNINGS_LOG.md has ~60 dated entries and DECISIONS.md ~90 rows. Make the skill better from it.",
+      "expected_output": "Runs scripts/skill_retro.py --project <root> (read-only on the project), reads docs/retro/<project>_<date>.md, and in the SKILL repo: folds every NEW learning into the reference the report names (generalised one-liners, the project's number kept as a labelled worked example), extends the PARTIAL sections where the mechanism is missing, adds one eval per costly NEW entry, adds a kickoff question with a recommended answer for every owner decision topic the questionnaire lacks, runs the smoke, bumps SKILL.md version, writes the CHANGELOG entry (Changed / Added / Not done) from the draft, blind-reviews the skill with two lenses, opens a PR; the project pins the new skill version in project.yaml skill.version and its CC-001 row.",
+      "files": [],
+      "assertions": [
+        "scripts/skill_retro.py is run against the project and the report under docs/retro/ is the basis of the changes (the agent does not hand-classify 60 entries)",
+        "every NEW entry ends up as a line in a reference with the source-specific numbers labelled as a worked example, and PARTIAL sections are extended, not duplicated",
+        "at least one new eval is added for a learning that cost a round, and the smoke run is green afterwards",
+        "SKILL.md version is bumped and CHANGELOG.md has Changed / Added / Not done sections for it",
+        "a blind review of the skill with two lenses is run (or scheduled with the checklist) before the PR",
+        "the project's project.yaml skill.version is updated to the new skill version and nothing in the project repo is rewritten by the retro script"
+      ]
     }
   ]
 }

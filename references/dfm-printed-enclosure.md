@@ -53,6 +53,9 @@ seen (a dummy 0.4 mm low). The only exception path is the machine-readable `acce
   needs 2.4 mm of depth; the groove had 2.15 → rail off, screws, plain edges (a wider part with an ENCLOSED pocket rail is the owner's option).
   Thickening one wall moves its neighbours (skirt 1.2 → 1.3 pushed the snap-tab force over its class; fixing that broke the catch minimum):
   **every wall change reruns the whole table, never one row.**
+- **Two owner rules can collide inside one feature** (a legend-plate lip needed inset ≥ 0.6 against a top fillet, its web beside a dish needed
+  inset ≤ 0.45 to stay a "wall"): the way out is honest classification — a plate is a plate, its webs are ribs at the rib gate — never a thinner
+  wall under a friendlier name.
 - **Rule drift check.** When the print rule changes (FDM two lines 0.85 → MJF 1.2), re-derive EVERY yaml value set against the old rule; a yaml
   comment `>= 0.8` beside a 0.9 wall is the tell.
 - **Overshoots become slabs.** A `+ 0.01` extrude against coplanar-face artefacts is a 0.01 mm slab in the mesh = a RED line on the map. Trim
@@ -72,7 +75,7 @@ seen (a dummy 0.4 mm low). The only exception path is the machine-readable `acce
 | **MJF PA12** | thread-forming screws for plastics (Delta PT / Remform class) into a plain pilot are the usual choice **[vendor sheet]**; heat-set inserts work but at a higher iron temperature (Tm ≈ 178 °C **[physics]**) — set the temperature from the insert TDS; press-fit / self-tapping inserts also fine | from the insert or screw manufacturer's TDS, never a rule of thumb; insert 0.1–0.2 below flush | boss OD ≥ 2 × insert OD (~3 mm wall around an M3 insert) **[physics]**; the source project's 1.3 ring is marginal for hoop stress at insertion — labelled so | pull-out / torque to failure on the coupon (§8) before the value goes on the SOP as `[OWNER: …]` |
 | **PLA (FDM)** | heat-set inserts at the TDS temperature; **creep under screw preload above ~45 °C** **[physics]** → the FDM preset is a fit / assembly mock-up unless PETG / ASA and the thermal case says otherwise | TDS bore, drilled/reamed if hole shrink (§8) matters | ≥ 1.6 boss wall at 0.4 nozzle (4 perimeters) — a 1.3 ring around an M3 heat-set insert in PLA is a known crack site | insert + torque coupon in the kit (B-42) |
 | **PETG** | as PLA; softens ~75–80 °C **[physics]** | | | |
-| **Magnets** (D-85 pattern) | Ø6 × 3 N42 / N45 disc pairs (a standard, easy-to-find size), Ni coating; **max operating temperature N35/N42 ≈ 80 °C, N35H / N42H 120 °C** **[vendor sheet]** — record grade + coating on the BOM line | pocket Ø = magnet Ø + fit: **MJF glued (CA) Ø + 0.4, PLA light press Ø + 0.1** (drill / ream the 6.35 imperial size if that is what arrives); depth = magnet + 0.3 recess each side | pocket walls ≥ `wall_gate`; boss OD ≥ pocket + 2 × wall | **pull force vs gap** from the supplier's curve at (2 × recess + lap gap), stated on the row ("15.7 N at touch, N at 0.9 mm"); **polarity keying** by an asymmetric boss (Ø10 left / Ø11 right) — never a mark cut into an MJF face; the mating part's steel counterpart (screw head, plate) is the cheap half |
+| **Magnets** (D-85 pattern) | Ø6 × 3 N42 / N45 disc pairs (a standard, easy-to-find size), Ni coating; **max operating temperature N35/N42 ≈ 80 °C, N35H / N42H 120 °C** **[vendor sheet]** — record grade + coating on the BOM line | pocket Ø = magnet Ø + fit: **MJF glued (CA) Ø + 0.4, PLA light press Ø + 0.1** (drill / ream the 6.35 imperial size if that is what arrives); depth = magnet + 0.3 recess each side | pocket walls ≥ `wall_gate`; boss OD ≥ pocket + 2 × wall | **pull force vs gap** from the supplier's curve at (2 × recess + lap gap), stated on the row ("15.7 N at touch, N at 0.9 mm"); **polarity keying** by an asymmetric boss (Ø10 left / Ø11 right) — a debossed dot beside a Ø6.4 pocket in a Ø10 boss leaves 0.25 mm lands (yellow) and a raised dot in a 0.3 lap gap collides; hobby-standard discs (Ø6 × 3, Ø4 × 2) exist only in N35 … N52 (80 °C) at vendors whose pages render without a login — the H / SH grades start at 2 × 2 / 4 × 4 and need a distributor; the mating part's steel counterpart (screw head, plate) is the cheap half |
 
 Retention is a kickoff question (`references/kickoff-questionnaire.md`): screws + inserts (recommended for a part that is opened for service),
 magnets (tool-free, for a hood the technician lifts daily), none (friction lap only — a fit mock-up). Whatever is chosen, **the retention feature
@@ -101,8 +104,9 @@ base block: FDM holes shrink ~0.1–0.3, MJF ±0.3, SLA ~0.1 — the coupon deci
   the MESH (not the yaml), a span and a class (wall / void / wedge / opposing).**
 - **The ray-cast census is a FAIL gate per print preset** (`scripts/thin_wall_census.py --target <t>`, rows `templates/CENSUS_GATE_ROWS.md`):
   inward rays = wall thickness, outward rays = void width; clusters below `gate − 0.05` (**convention**: at the gate itself the nominal 1.2 walls
-  sampled 1.19 join every region into one 145 mm cluster); each cluster classified by the angle between the sample face and the hit face (< 30°
-  = wall, ≥ 30° = wedge — the 30° is a **convention**, not calibrated); **walls and voids FAIL below their gates; wedges FAIL when the band of
+  sampled 1.19 join every region into one 145 mm cluster); each sample classified by the angle between the sample face and the hit face (< 30°
+  = wall, ≥ 30° = wedge — the 30° is a **convention**, not calibrated) and **the two classes clustered separately** (one mixed cluster that chained
+  across a body through chamfer flanks was labelled "wedge" and swallowed a 1.0 … 1.2 lip and 1.3 slot lands; when the rail went, both surfaced); **walls and voids FAIL below their gates; wedges FAIL when the band of
   surface below the gate is wider than `wedge_band`** (default 1.5 mm — the width from the thin edge to where thickness reaches the gate; a
   chamfer cut into a wall has a band of ~1 mm and no free edge, a 35° free rail flank has ~1.8) unless an `accepted` entry names the backing
   wall (B-12); **the nearest OPPOSING face in ANY direction is gated too** (B-14): two faces whose normals oppose within 30° and whose distance is
