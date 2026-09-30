@@ -138,6 +138,20 @@
         "a blind review of the skill with two lenses is run (or scheduled with the checklist) before the PR",
         "the project's project.yaml skill.version is updated to the new skill version and nothing in the project repo is rewritten by the retro script"
       ]
+    },
+    {
+      "id": 10,
+      "name": "two-colour-brand-mark-plate-on-a-home-fdm-printer",
+      "prompt": "Our FDM case has a debossed logo on the face that sits on the print bed and the owner says it looks 'webbed' next to the rest of the face. The printer has an AMS. Fix the logo finish and give me a plate I can print, with the numbers.",
+      "expected_output": "Names the cause (a bed-face deboss ceiling is a bridge underside beside a glossy bed-contact face) and offers the two first-class options from references/dfm-printed-enclosure.md §8.1 as an owner choice (questionnaire C9): (a) the mark as a top-face feature with the part re-oriented so that face is a top face, plate profile ironing_type top (never topmost), top shell >= recess + 1.0; (b) a flush AMS colour body in the bed layers, mark mirrored in the model, 2 colour layers by default (3 for a light mark), as ONE multi-part object with per-part extruder in the 3MF and one filament JSON per slot carrying filament_colour (the CLI segfaults on a two-filament prime tower without it); never a vertical-wall deboss and never sparse_infill_density 100% (rejected). Adds the FAIL-gated mark rows (recess span <= 6.0, island >= 2.5, colour region >= 0.84, margins >= 1.5, whole-layer depth on the mesh, chirality vs the artwork), a mark coupon first on the plate, and reports per plate minutes, grams per filament, filament changes and the purge share of the mark filament.",
+      "files": [],
+      "assertions": [
+        "the answer explains the webbing as the bridge-underside ceiling of a bed-face recess, not as a slicer setting",
+        "both options are offered as an owner decision: an ironed top-face feature (ironing_type top, not topmost, part re-oriented) and a flush AMS colour body in the bed layers (mirrored, 2 layers default, 3 for a light mark)",
+        "the AMS route is one multi-part object with per-part extruder and one filament profile per slot with filament_colour; the agent does not set sparse_infill_density to 100%",
+        "FAIL-gated geometry rows with thresholds are listed (recess span, enclosed island, colour-region width, edge margin, whole-layer depth, chirality) and a mark coupon is first on the plate",
+        "the plate report states minutes, grams per filament, filament changes and the purge share, and says which check is printer-dependent (the coupon) and which is guaranteed by geometry"
+      ]
     }
   ]
 }

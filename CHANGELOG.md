@@ -1,5 +1,48 @@
 # CHANGELOG — hw-from-spec
 
+## 0.6.0 — 2026-09-29 — FDM brand marks (ironed top face / AMS bed layers), dust caps, Bambu CLI facts, one worktree per agent
+
+Second retro on the source project (`docs/retro/aec-tester_2026-09-29.md`: 19 learnings, 15 NEW, 5 costly). The owner's directive: "push the
+learnings into the hw-from-spec skill as well. ironed surface and bottom ams are both viable options."
+
+### Added
+- **`references/dfm-printed-enclosure.md` §8.1 Brand marks / logos on FDM parts** — two first-class options chosen at kickoff: (a) a TOP-face
+  feature (deboss or raised 0.6 = 3 layers) under `ironing_type: top` — never `topmost` (it skips recess floors), top shell ≥ recess + 1.0, the
+  part oriented so the marked face is a top face; (b) a flush AMS colour body in the bed layers (face on the bed, mark mirrored, 2 layers for a
+  dark mark / 3 for a light one, cost = 2 swaps per 2 layers + purge). NEVER a bed-face deboss (bridge-ceiling "webbing"), a vertical-wall deboss
+  (stair-steps) or webs / discs that alter the artwork; the glued face-up plate in a keyed rebate (spans > 10 mm split by glue lands) when the mark
+  must sit on a bed face without an AMS; one reader orientation for every mark (rotate, never mirror; render vs the artwork). **FAIL-gated mark
+  rows** (recess span ≤ 6.0, enclosed island Ø ≥ 2.5, colour region ≥ 0.84, edge ≥ 1.5, whole-layer depth on the mesh, floor ≥ rib gate and
+  ≥ top shell, chirality; necks INFO; bbox rows from vertices, not centroids) and the **mark coupon** first on the plate (printer-dependent vs
+  geometry-guaranteed, stated in the report).
+- **§8.2 Dust caps / protective covers**: no through-hole into the protected cavity (a lanyard hole is a dust path), external support-free tether
+  lug, mouth-down print (flange on the bed, chamfer ≤ 45°, ribs start ≥ 1.0, the tip face the only bridge ≤ 10, elephant-foot 0.15 + 0.5 lines),
+  pocket radius from the mating part's drawing.
+- **§8.3 Bambu Studio CLI facts (02.08.x)**: `sparse_infill_density` 100 % rejected (rc -18) → shell thickness; two-filament + prime tower
+  segfaults (rc -11) without `filament_colour` → one filament JSON per slot with its colour; multi-material = ONE multi-part object with per-part
+  `extruder` in `Metadata/model_settings.config` (the package pattern documented; the skill ships no slicing helper, the project's writer is the
+  worked example); filament per colour + purge per plate (purge derivable for a SOLID part only); N × the same STL = N objects;
+  `different_settings_to_system` omits system-default values; ironing ~ +5 min on a small plate.
+- **Kickoff questionnaire C9 Brand marks on FDM parts** (RECOMMENDED: ironed top-face feature; alts: AMS colour body, both plates, glued plate;
+  never-list) in batch 6 with the bar; `templates/KICKOFF_ANSWERS.md` C9 row; `kickoff.enclosure.marks`.
+- **`references/agent-ops.md` §2**: one git worktree per parallel agent, commit from a clean HEAD worktree, move `main` with a mixed reset /
+  fast-forward; a `--copy` / kit mirror syncs EVERY plate of record, not only the default.
+- `references/pitfalls.md`: the 09-29 lines (branding, measurement, dust cap, Bambu CLI, worktrees, date-stamped selftest across midnight,
+  `pdftoppm` for drawing-only PDF pages, the pluggable-module-is-not-a-box rule).
+- `evals/evals.json` #10: the webbed bed-face logo on an AMS printer (the costly Bambu CLI class).
+- `smoke/run_smoke.sh`: greps for §8.1 (`ironing_type: top` — never `topmost`, the AMS option), §8.2 / §8.3 (`filament_colour`, the cavity
+  rule) and C9.
+
+### Changed
+- `references/dfm-printed-enclosure.md` §8 "Legends RAISED": a face-down face gets a flush colour body, never a deboss (was "debosses or flush
+  colour bodies"). SKILL §0.1 / §8 step 5 / Where-to-look name the brand-mark options; README feature line + eval count.
+
+### Not done
+- No slicing helper in `scripts/` (the 3MF writer stays a documented pattern: the skill ships mesh gates, not slicer drivers).
+- The 72 owner topics the retro listed are project decisions (form factor, part numbers, order lines), not recurring questions — only the
+  brand-mark decision recurred (three marks, two rounds) and became C9.
+- No blind review of the skill this version (a one-topic retro; the next full retro reviews 0.6.0 with both lenses).
+
 ## 0.5.0 — 2026-09-28 — two blind reviews of 0.4.1 fixed, the kickoff questionnaire, the zero-warning bar, PCB build rules, the retro loop
 
 Two blind reviews of 0.4.1 (`docs/reviews/blind_review_A_0.4.1_cold_user.md`, 30 findings; `…_B_0.4.1_dfm_expert.md`, 42 findings) found a

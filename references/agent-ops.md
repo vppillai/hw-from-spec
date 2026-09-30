@@ -25,6 +25,11 @@
   coordinator, never skips it silently.
 - **A fork subagent stops at ~200 turns.** Plan the task in chunks that each end in a checkpoint commit + a STATUS line; when it stops, resume it (or a
   new agent) from HEAD with the MEASURED state, never from what the coordinator remembers it was doing.
+- **One git worktree per parallel agent — never two agents in one working tree.** Two agents regenerating in the same tree corrupt each other's
+  kit parity and record gates (a kit mirror compared against a sibling's half-written plate; a `--check` reading the other's STL). Each agent works
+  in `git worktree add <dir> -b <agent-branch>`, commits there from a clean HEAD, and the coordinator moves `main` with a mixed reset / fast-forward
+  once that worktree's gates are green. A `--copy` / kit-mirror step syncs EVERY plate of record (default, AMS, alternates + sidecars), not only the
+  default — a partial mirror is a stale kit the parity gate reports as a design change (source: plug-cap + case agents, 2026-09-29).
 - **Tags follow the gated commit.** A tag created on a checkpoint or a WIP commit is re-pointed (`git tag -f <tag> <gated commit>`) once the gated
   commit exists — and the record says so; a tag on a `not yet gated` commit is a false release marker.
 

@@ -4,7 +4,7 @@ A Claude Code skill that takes a board + enclosure from a written spec to a prod
 owner-gated phases, generated-only artefacts, a zero-warning manufacturability bar, blind reviews,
 and a retro that folds every project's learnings back into the skill.
 
-`version 0.5.0` · MIT · `SKILL.md` is the procedure, everything else is reference, template or tool.
+`version 0.6.0` · MIT · `SKILL.md` is the procedure, everything else is reference, template or tool.
 
 ## Quick start
 
@@ -31,6 +31,8 @@ Then `SKILL.md` §0: templates, the kickoff questionnaire, first records — bef
 - Generic, `project.yaml`-driven scripts with `--selftest` and read-only `--check`: decision log
   index, traceability matrix, DFM grader, thin-wall census gate, release report, collateral,
   illustrated assembly guide, re-layout with a zero-loss proof, the retro.
+- FDM brand marks as two first-class options (ironed top-face feature or flush AMS colour body in
+  the bed layers) with FAIL-gated mark rows, dust-cap rules and the Bambu Studio CLI facts.
 - Blind-review workflow templates (in-session + external models, adversarial verifiers, merge).
 - A dry run (`smoke/`) that drives every script and greps every rule the skill must not lose.
 
@@ -44,7 +46,7 @@ Then `SKILL.md` §0: templates, the kickoff questionnaire, first records — bef
 | `scripts/` | 15 generic tools driven by `project.yaml` (`references/project-yaml.md` lists which are generators, graders, gates) |
 | `workflows/` | four blind-review workflow templates + how to instantiate them |
 | `smoke/` | the automated dry run (`run_smoke.sh`) |
-| `evals/` | nine skill evals (start, review, release, vendor mail, re-layout, first DFM round, census-blind flag, kickoff, retro) |
+| `evals/` | ten skill evals (start, review, release, vendor mail, re-layout, first DFM round, census-blind flag, kickoff, retro, AMS mark plate) |
 | `docs/retro/` | retro reports, one per project fed back into the skill |
 | `CHANGELOG.md` | what changed per version and what was deliberately not done |
 

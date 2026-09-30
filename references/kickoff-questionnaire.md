@@ -18,7 +18,7 @@ silent assumption (rule 2). Re-asking an answered question is a defect; changing
 | 3 PCB build (cont.) | B5–B8 | SPEC §5, layout rules |
 | 4 enclosure architecture | C1–C4 | the case concept in SPEC §8 |
 | 5 enclosure architecture (cont.) | C5–C8 | case.yaml |
-| 6 the manufacturability bar | D1–D3 | day-1 `fab_dfm.bar` / `print_targets` |
+| 6 the manufacturability bar + brand marks | D1–D3, C9 | day-1 `fab_dfm.bar` / `print_targets`; the mark option before the first FDM plate |
 | 7 verification | E1–E4 | the G0 review round |
 | 8 bought parts & software | F1–F2, G1–G2 | parts.yaml, the bring-up tool |
 | 9 release & cut | H1–H4 | the first release report |
@@ -100,6 +100,14 @@ piece or a clear resin part.
 coupon, every vendor DFM decision mirrored into `home_fdm` the same day** — two versions, one geometry of record. *Alt:* vendor target only — no
 mock-up before the order. *Alt:* separate generators — divergence nobody diffs.
 
+**C9 Brand marks / logos on FDM parts** (`references/dfm-printed-enclosure.md` §8.1). **RECOMMENDED: a TOP-face feature (deboss or raised
+0.6 = 3 layers) under `ironing_type: top` (never `topmost`), top shell ≥ recess + 1.0, the part oriented so the marked face is a top face, one
+mark coupon first on the plate** — one filament, one ironing pass builds face and mark alike. *Alt:* a flush AMS colour body in the bed layers —
+marked face on the bed, mark mirrored in the model, 2 layers (0.4) for a dark mark / 3 for a light one on a dark body; the crispest boundary and a
+second colour, at 2 filament changes per 2 layers + purge; needs an AMS. *Alt:* both, as two plates in the kit — the owner picks by eye on the
+first print. *Alt:* a face-up printed plate glued into a keyed rebate (spans > 10 mm split by glue lands) when the mark must sit on a bed face
+without an AMS. *Never:* a bed-face deboss (bridge-ceiling "webbing"), a vertical-wall deboss (stair-steps), webs / discs that alter the artwork.
+
 ## D. The manufacturability bar (SKILL §1.2) — the owner confirms the default explicitly
 **D1 The bar.** **RECOMMENDED: zero errors, zero warnings, no waivers** — board: DRC 0 / 0 / 0 warnings, fab DFM 0 Danger / 0 Warning; printed
 enclosure: census 0 unaccepted FAIL, slicer log clean, vendor checker no flag by API read, no yellow / red; CNC: vendor DFM clean; recorded as
@@ -180,7 +188,7 @@ window and lists every action taken.
 |---|---|---|
 | A1–A4 | `kickoff.product_class`, `kickoff.quantity`, `kickoff.fab`, `print_targets.<t>` (vendor, process, material, rating) | SPEC §1, §8; D rows |
 | B1–B8 | `board.layers / thickness / copper / stackup_template / impedance / finish / mask / silk / min_package / link_parts / sides / test_points / panel` | SPEC §4–§6 (R-M01…), `design/<board>_board.yaml`, `design/dfm_thresholds.json` (source + date) |
-| C1–C8 | `kickoff.enclosure` (pieces, retention, coupling, feet, labelling, fan, light_pipe, targets) | SPEC §8, `design/case.yaml` presets + `fits` knobs |
+| C1–C9 | `kickoff.enclosure` (pieces, retention, coupling, feet, labelling, fan, light_pipe, targets, marks) | SPEC §8, `design/case.yaml` presets + `fits` knobs |
 | D1–D3 | `fab_dfm.bar`, `print_targets.<t>.design_margin / tolerance / accepted` | GATES.md `{{D-BAR}}` row id, CLAUDE.md rule 9 |
 | E1–E4 | `kickoff.verification` (rounds, external_models, coupons, fea) | GATES prerequisites, `workflows/` model list |
 | F1–F2 | `kickoff.sourcing` (sources, stock_floor, attrition) | PARTS_VERIFICATION header, BLOCKERS |

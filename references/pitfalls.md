@@ -3,7 +3,8 @@
 Source: the source project's (AEC-CT2-MINI, the worked example) learnings log, 2026-09-21 … 09-28, ~230 entries; 0.3.0 folded the late 09-22, 09-23 and 09-26 entries;
 0.4.0 folded 09-27 / 09-28 (the printed-enclosure DFM rounds: D-79 … D-84, CC-204 / CC-205 — the new section *dfm / printed enclosures* and the agents / git and
 tooling additions); 0.4.1 folded the late 09-28 entries (the API verdict, the length-dependent metric + probes, the home-preset mirror, the one-piece dummy,
-bought-hardware sourcing, CC-206 / B-11). Project-specific numbers are kept only where they make the mechanism concrete and are labelled *(worked example)*. **Evidence pointers (CC-nnn,
+bought-hardware sourcing, CC-206 / B-11); 0.6.0 folded 09-29 (the FDM brand-mark rounds CC-209 addenda 1–5 / CC-210: ironed top-face marks, AMS bed-layer
+marks, dust caps, Bambu CLI facts, one worktree per agent). Project-specific numbers are kept only where they make the mechanism concrete and are labelled *(worked example)*. **Evidence pointers (CC-nnn,
 D-nn, round names, review file names) name the SOURCE project's records: they are provenance for the maintainer, not files a new project can
 open — read the mechanism, ignore the pointer.** The home-printer preset is called `home_fdm` in the skill (the source project's key was its
 printer's model name). Grouped by domain.
@@ -61,7 +62,16 @@ printer's model name). Grouped by domain.
 - A FEA record that merges the previous results of the same label keeps stale rows for cases the design no longer has (snap tab of a screwed hood): a skip must pop the entry; the completeness test counts only applicable cases — 2026-09-28 [fea/records].
 - `.gitignore` has no inline comments (`out/x/   # note` ignores a path ending in the comment); zsh aborts a whole `git add a b c/*.json` when one glob has no match — 2026-09-28 [tooling/git].
 
+- A bed-face deboss is never as good as the face around it: the recess ceiling is a bridge underside beside a glossy bed-contact face = the "webbing" of debossed logos; a vertical-wall deboss stair-steps every horizontal edge — the mark is a TOP-face feature under `ironing_type: top` (`topmost` skips the recess floor) or a flush AMS colour body in the bed layers (mirrored; 2 layers dark / 3 light) — CC-209 addenda 4 / 5, 2026-09-29 [fdm/branding].
+- Webs / discs / closing fillets added to a mark so a land rule passes read as dimples and round every inner corner: fix the rule set to the artwork (point contacts fuse over one line width) — CC-209, 2026-09-29.
+- "Minimum gap" of a filled mark is ill-posed (chord ~0 at a boundary point, medial axis → 0 at every convex vertex): gate the failure mode — inscribed circle per recessed region ≤ 6.0, enclosed island Ø ≥ 2.5, colour region ≥ 0.84, whole-layer depth on the mesh — 2026-09-29 [dfm/branding/measurement].
+- "Apply the rule to the other places too" is an audit: list every instance of the feature class across every body / preset with a FAIL-gated verdict before changing one; a hidden bed-face rebate on a roof-down body is still a bridge ceiling — split spans > 10 mm with glue lands, no covered-face exemption — CC-210.
+- A mesh footprint from facet CENTROIDS under-reads the extent (11.66 vs 12.53): bbox rows use the selected facets' VERTICES — 2026-09-29 [dfm/measurement].
+- A dust cap's lanyard through-hole opened into the protected cavity: no through-hole into a protected cavity, tether = external lug on the bed with a vertical hole; print the cap mouth down (flange on the bed, ribs start ≥ 1.0 above the bed, the tip face the only bridge) — CC-209 addenda 2 / 4.
+- A mark coupon (the marked face alone) first on the plate checks the printer-dependent part (squish, ironing, opacity); the geometry rows guarantee the rest — say which is which — CC-209 addendum 3.
+
 ## process / gates
+- A date-stamped artefact selftest (two dated packages, one expected STALE) run across midnight produced two dates and failed the PR gate for no design reason: pin the date in the test or make the gate tolerate a rollover — 2026-09-29 [tooling/gates].
 - A DFM/DRC rule set at the fab's published limit passes DRC and still lights up the fab's DFM: mirror the fab's checks in-repo and gate on them — CC-124/127/128.
 - A value changed on the schematic symbol does not change the ordered part (BOM groups by fab code): gate value ↔ MPN ↔ code — audit #2 F02.
 - Blind reviewers must not see the author's dispositions; a hand-off naming a board the frozen worktree does not carry invalidates the review — CC-103, `handoff_header`.
@@ -118,7 +128,11 @@ printer's model name). Grouped by domain.
 - First Linux CI run of a macOS-authored gate set = twelve parity fixes: `$GITHUB_ENV` takes KEY=value only, no `make` in the CAD image, shim every hard-coded path, `git config safe.directory`, pin EVERY lazily imported package (one failure per push), install the renderer where a check renders, a proprietary font cannot ship (count font-aware, exclude silk-text items cross-host), gitignored inputs absent = NOTE; reproduce with `docker run --platform linux/amd64 <the CI image>` first (3 min vs 8–10 per push) — 2026-09-27 [process/ci].
 - A history rewrite (filter-repo) must remap every hash a TOOL uses functionally (replay defaults, freeze-stock build commits), not only record hashes: commit the old→new map and resolve through it; push tags oldest-first (GitHub's 2 GB pack limit) — 2026-09-27 [process/git].
 
+- **One worktree per parallel agent**: two agents in one working tree corrupted each other's kit parity and record gates; commit from a clean HEAD worktree, move `main` with a mixed reset / fast-forward; a `--copy` / kit mirror must sync EVERY plate of record (default, AMS, alternates + sidecars), not only the default — 2026-09-29 [agents/git].
+
 ## tooling / determinism
+- Bambu Studio CLI (02.08.x): `sparse_infill_density` 100 % is rejected (rc -18) — use top / bottom shell thickness for a solid column; a two-filament slice with a prime tower SEGFAULTS (rc -11 / 133, "no filament colors found in projects") unless each slot's filament JSON carries `filament_colour` (or `--filament-colour '#..;#..'`); bisect on the temp inputs one variable per run — 2026-09-29 [tooling/bambu].
+- Multi-material on the Bambu CLI = one multi-part object: Bambu-style 3MF with per-part `extruder` in `Metadata/model_settings.config` (or pre-placed STLs + `--load-filament-ids 1,2 --assemble --arrange 0`); purge mass = used − solid-part volume × density, derivable for the SOLID colour mark only; the same STL path N times = N objects, count from the CLI's `objects`; `different_settings_to_system` omits values equal to the system default — prove from the embedded value — 2026-09-29 [tooling/bambu/ams].
 - The file md5 of an in-place CAD step is write-order dependent; assert a sorted content signature, keep the md5 informational — CC-143.
 - Any identity hash built from `sort` must pin the locale (`LC_ALL=C`): the same copper gave two signatures under two locales; re-stamp every recorded value in the SAME commit as the recipe — round 6l.
 - A `--check` that embeds anything a clone changes (mtimes, absolute paths, `{PY}` expanded) never passes on a fresh checkout; test by `os.utime()` every input and by running from two checkout locations and diffing — G02, CC-173.
@@ -227,6 +241,7 @@ printer's model name). Grouped by domain.
 - DNP no longer forces exclude-from-BOM; footprint attributes mirror the symbol 1:1 for schematic parity — CC-067.
 
 ## sourcing
+- A drawing page that `pdftotext` returns empty still yields its numbers: `pdftoppm -f N -l N -r 110 -png` and read the render — no BLOCKED row needed — 2026-09-29 [process].
 - The vendor's own library footprint and its customer drawing disagreed (drill sizes); the drawing governs; the vendor STEP is the only source for a height — D-51/D-53.
 - McMaster-Carr is login-walled for automation (JS shell + "please log in" in a real Chromium); Digi-Key (Cloudflare), Mouser, Newark, Farnell, RS, Keystone, Essentra block fetches: verify bought hardware on the manufacturer's site + PDF TDS + plain-HTML dealers, tag snippet-only prices [K], BLOCKERS row with the exact URL + filters for the owner to open logged in, never invent a number — CC-206 / B-11.
 - Feet over screws: a Ø8 foot in a Ø8.5 pocket whose floor is opened by a Ø6.3 counterbore bonds on a 0.85 mm ring (38 % of its adhesive) — flat-top cylinders over hemispheres there, and the ±0.5 mm moulding tolerance eats a 0.5 mm pocket margin at worst case — 2026-09-28 [mechanical/feet].
@@ -234,6 +249,7 @@ printer's model name). Grouped by domain.
 - A datasheet note from the `pdftotext` layer must mark curve-only values "not in datasheet text" and attribute figure readings to whoever read them — 2026-09-21.
 
 ## mechanical / case
+- A pluggable module is not a plain box (QSFP-DD: bottom open at the leading edge, latch recess on top, corners R 0.15..0.60): anything that grips it bears on the faces the MSA drawing shows solid, and a pocket corner radius comes from the drawing (R > 0.66 clips a legal module), not from a print rule of thumb — CC-209, 2026-09-29 [mechanical/msa].
 - Coloured marks on vertical FDM flanks cost a filament swap per layer; keep colour on top faces in one Z band per part — D-48.
 - A single bottom dovetail is a hinge under torsion; two rail pairs ~17 mm apart give ~2.5× stiffness *(worked example)* — CC-120/123.
 - A "part not fitted" yaml flag must also reach the mesh check (the CAD 3D model still carries the solid): flag → `board_stl.ignore` component; "0 components matched = WARN" — mech/case v3.11.
