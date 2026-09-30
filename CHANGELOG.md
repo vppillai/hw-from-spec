@@ -1,5 +1,31 @@
 # CHANGELOG — hw-from-spec
 
+## 0.7.0 — 2026-09-30 — project scope: ee, mech or both
+
+Owner's directive (2026-09-29): "the skill should be able to do ee only, mechanical only or both together."
+
+### Added
+- **Kickoff A0 Scope**, asked alone before batch 1 (`references/kickoff-questionnaire.md`): `ee` (PCB / PCBA only), `mech` (enclosure /
+  printed / CNC parts only, from a brief or an imported board STEP / envelope), `both` (the previous flow; RECOMMENDED when a board is designed
+  and housed). Every question carries its scopes (`[ee, both]` / `[mech, both]` / none); a question outside the scope is not asked and reads
+  `n/a (scope)` in KICKOFF_ANSWERS; a batch with nothing applicable is skipped.
+- **Phase / gate model per scope** (SKILL.md §1): ee = G0 → G1 → G2 → fab DFM → order → cuts; mech = G0 mechanical spec → **M1** geometry
+  approved → **M2** first article / fit print approved → case order → cuts; both unchanged. `templates/GATES.md` carries the M1 / M2 rows.
+- **Scope tags on template lines** (`{{ee,both}}`, `{{mech,both}}`, `{{mech}}`, `{{ee}}`, `{{both}}`) in `templates/project.yaml`, `CLAUDE.md`,
+  `GATES.md`, `SPEC.md`, `production_cut.yaml`, `design/traceability.yaml` — one template set, resolved in place by
+  **`scripts/project.py scaffold --scope <A0>`**; the existing `grep -rn '{{'` proves the tags are gone.
+- **Record id per scope**: `Project.scope()`, `Project.record_md5()` and the CLI verbs `scope` / `record` in `scripts/project.py`;
+  `paths.mech_record` (the STL set of record) is the md5 in mech scope. `release_report` identity, `collect_renders` folder and
+  `handoff_header` read it; `skill_retro` / `traceability` never assumed a board.
+- SKILL.md §0 lists what each scope creates; board-only / case-only sections carry a heading tag (§6, §7, §9 `[ee, both]`; §8, §8.1, the
+  `case_dfm` role `[mech, both]`); §8 names the mech fit input (imported STEP / envelope with source md5 + [V] / [K]).
+- `evals/evals.json` #11 (a mech-only bracket from a board STEP) and #12 (an ee-only sensor board with no case); smoke: scaffold + gate grep
+  for each of the three scopes; `docs/reviews/blind_review_0.7.0_scope.md`.
+
+### Not done
+- No separate SKILL.md per scope, no scope-aware reader beyond `record_md5` — the templates and the questionnaire carry the branching.
+- `both` keeps its gate set (no M1 / M2 rows); the case order row remains its case gate.
+
 ## 0.6.1 — 2026-09-29 — fab remark for two readers
 
 ### Added

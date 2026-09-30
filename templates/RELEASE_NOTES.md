@@ -1,24 +1,27 @@
 # RELEASE_NOTES — {{PROJECT}} rev {{REV}} ({{DATE}})
 
-> **State at this release (generated facts):** board `{{BOARD_PATH}}` md5 `{{MD5}}` (content signature `{{SIG}}`), package `{{PACKAGE_DIR}}`,
-> case `{{CASE_VERSION}}`, decisions md5 `{{DECISIONS_MD5}}`, tag `{{TAG}}`. Every number below names the file it was read from; a value a
+> **State at this release (generated facts):** record `{{BOARD_PATH_OR_STL_SET}}` md5 `{{MD5}}` (`scripts/project.py record`; content signature `{{SIG}}`),
+> package `{{PACKAGE_DIR}}`, {{ee,both}}
+> case `{{CASE_VERSION}}`, {{mech,both}}
+> decisions md5 `{{DECISIONS_MD5}}`, tag `{{TAG}}`. Every number below names the file it was read from; a value a
 > concurrent agent is still producing is written `[FINAL: …]` rather than copied early.
 
 ## What this is
 {{two paragraphs: purpose, form factor, what is in the box}}
 
 ## What is being ordered / built
-- PCB: {{layers, thickness, copper, finish, mask}} — `{{PACKAGE_DIR}}/ORDER_PARAMETERS.md`
-- Assembly: {{sides, part count}} BOM `{{n}}` lines / CPL `{{n}}` rows — `{{PACKAGE_DIR}}/bom.csv`, `cpl.csv`
-- Case: `{{CASE_VERSION}}` {{pieces, process, material}} — `{{ORDER_SHEET}}`
+- PCB: {{layers, thickness, copper, finish, mask}} — `{{PACKAGE_DIR}}/ORDER_PARAMETERS.md` {{ee,both}}
+- Assembly: {{sides, part count}} BOM `{{n}}` lines / CPL `{{n}}` rows — `{{PACKAGE_DIR}}/bom.csv`, `cpl.csv` {{ee,both}}
+- Case: `{{CASE_VERSION}}` {{pieces, process, material}} — `{{ORDER_SHEET}}` {{mech,both}}
 - Owner-supplied parts: {{list}} — `docs/parts/PROCUREMENT.md`
 
 ## Gates at this release
 | Gate | State | Evidence |
 |---|---|---|
-| DRC (classes enforced, canary ×1) | {{0 err / 0 unconnected / parity 0}} | `{{PACKAGE_DIR}}/drc_summary.md` |
-| Fab DFM mirror | {{0 open}} | `out/dfm.json` |
-| Route quality | {{0 HIGH}} | `{{path}}` |
+| DRC (classes enforced, canary ×1) | {{0 err / 0 unconnected / parity 0}} | `{{PACKAGE_DIR}}/drc_summary.md` | {{ee,both}}
+| Fab DFM mirror | {{0 open}} | `out/dfm.json` | {{ee,both}}
+| Route quality | {{0 HIGH}} | `{{path}}` | {{ee,both}}
+| Census `--gate-dir` per preset + vendor DFM | {{0 unaccepted FAIL; DFM_ROUND verdict}} | `out/mechanical/case/<preset>/census/`, `docs/quotes/<date>/DFM_ROUND.md` | {{mech,both}}
 | Traceability | {{VERIFIED n / FAILED 0 / unmapped none}} | `docs/governance/TRACEABILITY.md` |
 | Blind reviews | {{rounds, last merged report}} | `docs/reviews/{{merged}}` |
 | Adopt + clone gate | green at `{{sha}}` | `scripts/adopt_gates.sh` transcript in DECISIONS {{row}} |

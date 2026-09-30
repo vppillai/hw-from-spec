@@ -15,7 +15,7 @@ No mtimes; no absolute paths (`{PY}` printed unexpanded); no live HEAD; dates on
 sort; hash the LAST-written file last. Test: run twice from two checkout locations and diff.
 
 ## 3. Order of the chain after a copper change
-Everything downstream is keyed on the board md5, so:
+Everything downstream is keyed on the record md5 (`scripts/project.py record`: the board in ee / both, the STL set in mech), so:
 1. drawing / FEA (long) → 2. `collect_renders` (grades composites) → 3. commit → 4. `clone_gate.sh --regen` (reports from HEAD inputs only) →
 5. commit the reports. DECISIONS / KNOWN_ISSUES / traceability records are report inputs: write them BEFORE step 4 or the cycle re-opens. Start the
 chain only after the last board-touching workflow of the round (a silk-only merge changes the md5 and orphans everything).

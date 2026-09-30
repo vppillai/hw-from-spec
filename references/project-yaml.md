@@ -9,6 +9,8 @@ top level** — the shell gates (`adopt_gates.sh`, `clone_gate.sh`) archive HEAD
 project:
   name: <short name>                      # used in generated headers
   description: <one line>
+  scope: both                             # kickoff A0: ee (PCB / PCBA only) | mech (enclosure / printed / CNC parts only) | both — SKILL.md §1;
+                                          # `scripts/project.py scaffold --scope` resolves the templates' {{ee,both}} / {{mech,both}} / {{mech}} line tags
 skill: {repo: <url>, commit: <sha>, version: <SKILL.md version>}   # the hw-from-spec commit + version the project follows; scripts/skill_retro.py reports drift
 kickoff: docs/governance/KICKOFF_ANSWERS.md   # the owner's kickoff answers (references/kickoff-questionnaire.md) — D rows before any CAD
 ids:
@@ -38,13 +40,14 @@ paths:
   reviews_dir: docs/reviews                # hand-offs, per-round reports, merged reports
   quotes_dir: docs/quotes                  # <date>/ fab evidence (quotes, DFM exports, review mails, order screenshots) — never inside a package
   production_dir: docs/production          # <md5-8>/ the production cut
-  board: kicad/<board>/<board>.kicad_pcb  # the board of record; its md5 keys packages, collateral, reports
+  board: kicad/<board>/<board>.kicad_pcb  # ee / both: the board of record; its md5 keys packages, collateral, reports (`scripts/project.py record`)
+  mech_record: "out/mechanical/case/*/stl/*.stl"   # mech: the STL set of record; record md5 = md5 of the sorted "<relpath> <md5>" lines (moves when any STL moves)
   netlist: out/<board>.xml                # kicadxml netlist for netlist_net checks (optional)
   fab_dir: out/fab                        # packages <date>_<md5-8>/ each with board_id.txt (keys: board, md5, commit, built, + counts)
   release_dir: docs/release
   collateral_dir: docs/release/collateral # <md5-8>/renders/ from scripts/collect_renders.py
   case_yaml: design/case.yaml             # optional; `case.version` is read by handoff_header / collect_renders
-  mesh_provenance: out/mechanical/board.stl.provenance.json   # optional; {board_md5, board_commit, mesh_md5, facets}
+  mesh_provenance: out/mechanical/board.stl.provenance.json   # optional; {board_md5, board_commit, mesh_md5, facets} (both) or, for an imported STEP / envelope (mech), {source, source_md5, tag: V|K}
 tools:
   python: .venv/bin/python                # {PY} in traceability commands; a leading "." makes it root-relative
   kicad_cli: /Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli   # {KICAD_CLI} — the key names are HISTORICAL: put your CAD's CLI here whatever the CAD
@@ -156,7 +159,10 @@ Every `docs/…` path in SKILL.md / references / templates spells this layout. C
   WALL / VOID / WEDGE-band / OPPOSING cluster below its gate that no dated `accepted` entry covers) plus a PURE `--gate-dir <census dir>` for
   `gates.adopt` (md5 of the STL beside the record + empty `fails` + every accepted entry still dated with evidence); `skill_retro` reads a
   project's learnings and decisions and drafts the skill's next changes (no --check);
-  `handoff_header.py` prints a header (nothing to check); `project.py` is the reader.
+  `handoff_header.py` prints a header (nothing to check); `project.py` is the reader (+ `scope`, `record` = the record label and md5 per scope,
+  `scaffold --scope` = the one write it does: resolving template scope tags in place on copied files).
+- **Record md5 per scope** (`Project.record_md5()`; used by `release_report` identity, `collect_renders` folder, `handoff_header`, the cut id):
+  ee / both → md5 of the board file's raw bytes; mech → the `paths.mech_record` set. MISSING (None) until the artefact exists.
 - Every `--check` is read-only on the tree (`adopt_gates.sh` fails when `git status --porcelain` changes across the gates); every `--selftest`
   works in a temp dir only.
 

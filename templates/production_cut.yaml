@@ -1,37 +1,40 @@
 # templates/production_cut.yaml — the production-cut deliverable set, read by the project's cut generator (references/release-and-cut.md §7).
-# Placeholders expanded by the generator: {md5} = 8-hex board md5 of the board of record, {pkg} = fab package dir of that board,
+# Placeholders expanded by the generator: {md5} = 8-hex md5 of the record of record (`scripts/project.py record`: the board in ee / both scope, the
+# STL set paths.mech_record in mech scope), {pkg} = fab package dir of that board (ee / both),
 # {case_tag} = case version up to the minor number, {root} = the package folder.
 # kind: generated (a gen/ script owns it) | hand-written (prose of record) | template (records skeleton, filled by the owner) | collected (file of record copied by reference)
 # path: the file of record; a glob is allowed (≥ 1 match = EXISTS). check: command run from the repo root; exit ≠ 0 -> STALE (the owner generator's own --check).
 # inputs: files whose md5 is stamped in MANIFEST.json (globs allowed). required: true = must exist now | release = once the owner's release line exists.
 # owner_placeholders: allowed (templates; `[OWNER: …]` fields are counted, never filled by an agent) | forbidden (a RELEASED cut fails --check on one).
-case_yaml: design/case.yaml
+# Scope tags {{ee,both}} / {{mech,both}}: `scripts/project.py scaffold --scope <A0> templates/production_cut.yaml` keeps your scope's rows.
+case_yaml: design/case.yaml {{mech,both}}
 package_root: docs/production            # -> docs/production/{md5}/
 records_dir: records                     # docs/production/{md5}/records/ — THE records folder (photos, press logs, first-article caliper table, test results, calibration, order captures); RELEASE_NOTES points here
 doc_id_prefix: {{PRODUCT}}               # <product>-<type>-<nnn>
 
 deliverables:
-  - {id: pcb_design_report, doc_id: DR-001, title: PCB design report, kind: generated, path: docs/release/PCB_DESIGN_REPORT.md,
-     check: "$PY scripts/release_report.py --check", inputs: [docs/governance/GATES.md, docs/governance/DECISIONS.md, "{pkg}/board_id.txt"], required: true, owner_placeholders: forbidden}
-  - {id: case_design_report, doc_id: DR-002, title: Case design report, kind: generated, path: docs/release/CASE_DESIGN_REPORT.md,
-     check: "$PY scripts/release_report.py --check", inputs: [docs/governance/GATES.md, design/case.yaml], required: true, owner_placeholders: forbidden}
-  - {id: pcb_drawing, doc_id: DWG-001, title: PCB drawing + board STEP, kind: generated, path: out/drawings/PCB_DRAWING.pdf, check: "{{PCB_DRAWING_CHECK}}", inputs: [out/drawings/PCB_DRAWING.json], required: true, owner_placeholders: forbidden}
-  - {id: case_drawing, doc_id: DWG-002, title: Case drawing + piece / assembly STEPs, kind: generated, path: out/drawings/CASE_DRAWING.pdf, check: "{{CASE_DRAWING_CHECK}}", inputs: [out/drawings/CASE_DRAWING.json], required: true, owner_placeholders: forbidden}
-  - {id: case_stl, doc_id: MECH-001, title: Case STL set of record + sidecar, kind: collected, path: "out/mechanical/case/{case_tag}*/stl/*.stl", inputs: ["out/mechanical/case/*/RENDERS.json"], required: true, owner_placeholders: forbidden}
-  - {id: fea_case, doc_id: AN-001, title: Case FEA report, kind: collected, path: "out/mechanical/case/*/fea/FEA_REPORT.md", required: true, owner_placeholders: forbidden}
-  - {id: fea_pcb, doc_id: AN-002, title: PCB + assembly FEA report, kind: collected, path: out/mechanical/pcb_fea/PCB_FEA_REPORT.md, required: true, owner_placeholders: forbidden}
-  - {id: fab_package, doc_id: MFG-001, title: Fab package of record, kind: collected, path: "{pkg}/MANIFEST.md", check: "{{FAB_PACKAGE_CHECK}}", required: true, owner_placeholders: forbidden}
+  - {id: pcb_design_report, doc_id: DR-001, title: PCB design report, kind: generated, path: docs/release/PCB_DESIGN_REPORT.md, {{ee,both}}
+     check: "$PY scripts/release_report.py --check", inputs: [docs/governance/GATES.md, docs/governance/DECISIONS.md, "{pkg}/board_id.txt"], required: true, owner_placeholders: forbidden} {{ee,both}}
+  - {id: case_design_report, doc_id: DR-002, title: Case design report, kind: generated, path: docs/release/CASE_DESIGN_REPORT.md, {{mech,both}}
+     check: "$PY scripts/release_report.py --check", inputs: [docs/governance/GATES.md, design/case.yaml], required: true, owner_placeholders: forbidden} {{mech,both}}
+  - {id: pcb_drawing, doc_id: DWG-001, title: PCB drawing + board STEP, kind: generated, path: out/drawings/PCB_DRAWING.pdf, check: "{{PCB_DRAWING_CHECK}}", inputs: [out/drawings/PCB_DRAWING.json], required: true, owner_placeholders: forbidden} {{ee,both}}
+  - {id: case_drawing, doc_id: DWG-002, title: Case drawing + piece / assembly STEPs, kind: generated, path: out/drawings/CASE_DRAWING.pdf, check: "{{CASE_DRAWING_CHECK}}", inputs: [out/drawings/CASE_DRAWING.json], required: true, owner_placeholders: forbidden} {{mech,both}}
+  - {id: case_stl, doc_id: MECH-001, title: Case STL set of record + sidecar, kind: collected, path: "out/mechanical/case/{case_tag}*/stl/*.stl", inputs: ["out/mechanical/case/*/RENDERS.json"], required: true, owner_placeholders: forbidden} {{mech,both}}
+  - {id: fea_case, doc_id: AN-001, title: Case FEA report, kind: collected, path: "out/mechanical/case/*/fea/FEA_REPORT.md", required: true, owner_placeholders: forbidden} {{mech,both}}
+  - {id: fea_pcb, doc_id: AN-002, title: PCB + assembly FEA report, kind: collected, path: out/mechanical/pcb_fea/PCB_FEA_REPORT.md, required: true, owner_placeholders: forbidden} {{ee,both}}
+  - {id: fab_package, doc_id: MFG-001, title: Fab package of record, kind: collected, path: "{pkg}/MANIFEST.md", check: "{{FAB_PACKAGE_CHECK}}", required: true, owner_placeholders: forbidden} {{ee,both}}
   - {id: collateral, doc_id: MFG-002, title: Fab collateral (DFM export, quote captures, renders index), kind: collected, path: "docs/release/collateral/{md5}/renders/RENDERS.md", required: true, owner_placeholders: forbidden}
   - {id: reviews, doc_id: REV-001, title: Blind reviews + verify files + merged reports, kind: collected, path: "docs/reviews/*_merged.md", required: true, owner_placeholders: forbidden}
   - {id: traceability, doc_id: REQ-001, title: Requirement -> evidence matrix, kind: generated, path: docs/governance/TRACEABILITY.md, check: "$PY scripts/traceability.py --check", required: true, owner_placeholders: forbidden}
   - {id: known_issues, doc_id: REQ-002, title: Known issues index, kind: generated, path: docs/governance/KNOWN_ISSUES.md, check: "$PY scripts/known_issues.py --check", required: true, owner_placeholders: forbidden}
-  - {id: manufacturing_spec, doc_id: MFG-003, title: Manufacturing specification (PCB fab, PCBA, press-fit, case incl. material rating UL94/Tg per print target, post-process, build orientation, label / mark placement), kind: hand-written, path: "{root}/MANUFACTURING_SPEC.md", inputs: ["{pkg}/ORDER_PARAMETERS.md"], required: release, owner_placeholders: forbidden}
+  - {id: manufacturing_spec, doc_id: MFG-003, title: Manufacturing specification (PCB fab, PCBA, press-fit, case incl. material rating UL94/Tg per print target, post-process, build orientation, label / mark placement), kind: hand-written, path: "{root}/MANUFACTURING_SPEC.md", inputs: ["{pkg}/ORDER_PARAMETERS.md"], required: release, owner_placeholders: forbidden} {{ee,both}}
+  - {id: manufacturing_spec, doc_id: MFG-003, title: Manufacturing specification (print / CNC process per target incl. material rating UL94/Tg, post-process, build orientation, inserts / hardware, label / mark placement), kind: hand-written, path: "{root}/MANUFACTURING_SPEC.md", inputs: [design/case.yaml], required: release, owner_placeholders: forbidden} {{mech}}
   - {id: product_manual, doc_id: MAN-001, title: Product manual, kind: hand-written, path: "{root}/PRODUCT_MANUAL.md", required: release, owner_placeholders: forbidden}
-  - {id: developer_manual, doc_id: MAN-002, title: Developer manual (guards, overrides, record trail), kind: hand-written, path: "{root}/DEVELOPER_MANUAL.md", required: release, owner_placeholders: forbidden}
-  - {id: technician_manual, doc_id: MAN-003, title: Technician manual + quick card (reason-code table generated), kind: hand-written, path: "{root}/TECHNICIAN_MANUAL.md", check: "{{CODE_TABLE_CHECK}}", required: release, owner_placeholders: forbidden}
-  - {id: assembly_sop, doc_id: SOP-001, title: Assembly SOP (photos per step, fixture, insert temp/time, torque), kind: template, path: "{root}/ASSEMBLY_SOP.md", required: release, owner_placeholders: allowed}
-  - {id: visual_assembly_guide, doc_id: VG-001, title: Illustrated assembly guide (one render per step; the words with the numbers stay in SOP-001), kind: generated, path: "{root}/VISUAL_ASSEMBLY_GUIDE.md", check: "$PY scripts/assembly_guide.py --check", inputs: [design/assembly_guide.yaml, "{root}/guide/guide.json"], required: release, owner_placeholders: forbidden}
-  - {id: incoming_inspection, doc_id: SOP-002, title: Incoming-inspection SOP (criteria file by name + sha256), kind: template, path: "{root}/INCOMING_INSPECTION_SOP.md", required: release, owner_placeholders: allowed}
+  - {id: developer_manual, doc_id: MAN-002, title: Developer manual (guards, overrides, record trail), kind: hand-written, path: "{root}/DEVELOPER_MANUAL.md", required: release, owner_placeholders: forbidden} {{ee,both}}
+  - {id: technician_manual, doc_id: MAN-003, title: Technician manual + quick card (reason-code table generated), kind: hand-written, path: "{root}/TECHNICIAN_MANUAL.md", check: "{{CODE_TABLE_CHECK}}", required: release, owner_placeholders: forbidden} {{ee,both}}
+  - {id: assembly_sop, doc_id: SOP-001, title: Assembly SOP (photos per step, fixture, insert temp/time, torque), kind: template, path: "{root}/ASSEMBLY_SOP.md", required: release, owner_placeholders: allowed} {{mech,both}}
+  - {id: visual_assembly_guide, doc_id: VG-001, title: Illustrated assembly guide (one render per step; the words with the numbers stay in SOP-001), kind: generated, path: "{root}/VISUAL_ASSEMBLY_GUIDE.md", check: "$PY scripts/assembly_guide.py --check", inputs: [design/assembly_guide.yaml, "{root}/guide/guide.json"], required: release, owner_placeholders: forbidden} {{mech,both}}
+  - {id: incoming_inspection, doc_id: SOP-002, title: Incoming-inspection SOP (acceptance criteria — test_criteria.yaml by name + sha256 in ee / both, the first-article caliper table in mech / both), kind: template, path: "{root}/INCOMING_INSPECTION_SOP.md", required: release, owner_placeholders: allowed}
   - {id: analysis_index, doc_id: AN-000, title: Analysis bundle index with dispositions, kind: generated, path: "{root}/ANALYSIS_INDEX.md", required: release, owner_placeholders: forbidden}
   - {id: compliance, doc_id: CMP-001, title: Compliance statements (RoHS table from live pages; no DoC claimed), kind: hand-written, path: "{root}/COMPLIANCE.md", required: release, owner_placeholders: forbidden}
   - {id: records, doc_id: REC-001, title: Records (photos, press logs, test results, calibration, order captures), kind: template, path: "{root}/records/*.md", required: release, owner_placeholders: allowed}

@@ -41,6 +41,9 @@ def header(P, pkg=None):
         rows.append(("HEAD board md5 check", f"`git show HEAD:{board} | md5` = `{head_md5}` → " + ("**MATCH**" if head_md5 == bid.get("md5") else
                      f"**MISMATCH — HEAD carries another board; freeze the review worktree at a commit whose board is `{str(bid.get('md5'))[:8]}` (`git log --format=%h -- {board}`) or stop and tell the coordinator**")))
         rows.append(("Fab package", f"`{os.path.relpath(pkg, P.root)}/`"))
+    elif P.scope() == "mech":
+        label, m = P.record_md5()   # the STL set of record; the clean-tree row below makes it the HEAD set
+        rows.append(("Mechanical record", f"{label} md5 **`{m}`**" if m else f"**MISSING** — no file matches `{P.get('paths.mech_record')}`; expected before M1"))
     else:
         rows.append(("Board of record", f"**MISSING** — no package under `{P.get('paths.fab_dir')}` carries board_id.txt for the HEAD board `{head_md5[:8]}`" if head_md5
                      else f"**MISSING** — no board in HEAD (`{board}`); expected before G1 (spec review: the briefing is SPEC.md, see references/schematic-phase.md)"))
@@ -53,7 +56,10 @@ def header(P, pkg=None):
         t = git(P.root, "show", f"HEAD:{mp}").decode("utf-8", "replace")
         if t:
             prov = json.loads(t)
-            rows.append(("Board mesh provenance", f"board md5 `{prov.get('board_md5', '?')[:8]}` @ {prov.get('board_commit')}, mesh md5 `{prov.get('mesh_md5', '?')[:8]}`, {prov.get('facets')} facets"))
+            if "source" in prov:   # mech scope: an imported STEP / envelope {source, source_md5, tag: V|K}
+                rows.append(("Fit input of record", f"`{prov.get('source')}` md5 `{str(prov.get('source_md5', '?'))[:8]}` [{prov.get('tag', 'K')}]"))
+            else:
+                rows.append(("Board mesh provenance", f"board md5 `{prov.get('board_md5', '?')[:8]}` @ {prov.get('board_commit')}, mesh md5 `{prov.get('mesh_md5', '?')[:8]}`, {prov.get('facets')} facets"))
         else:
             rows.append(("Board mesh provenance", f"**MISSING** `{mp}` in HEAD"))
     rows.append(("Working tree at hand-off", "**clean** (`git status --short --untracked-files=no` empty — frozen-worktree rule)" if not dirty else

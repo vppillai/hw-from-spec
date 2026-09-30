@@ -1,8 +1,11 @@
 # project.yaml — the one file the hw-from-spec scripts read (schema: references/project-yaml.md; filled example: smoke/project.yaml).
 # Day-1 version: the gate lists hold only what exists before a board. Uncomment the G1/G2 blocks as the artefacts appear.
+# Scope tags: a line ending in {{ee,both}} / {{mech,both}} / {{mech}} belongs to those scopes only — `scripts/project.py scaffold --scope <A0> <files>`
+# keeps the lines of your scope and strips the tags; afterwards `grep -rn '{{'` must print nothing.
 project:
   name: {{PROJECT}}
   description: {{ONE_LINE_DESCRIPTION}}
+  scope: {{SCOPE}}                            # kickoff A0: ee (PCB/PCBA only) | mech (enclosure / printed / CNC parts only) | both (a housed board) — SKILL.md §1
 skill: {repo: {{SKILL_REPO_URL}}, commit: {{SKILL_COMMIT}}, version: {{SKILL_VERSION}}}   # the hw-from-spec commit + SKILL.md version this project follows; scripts/skill_retro.py reads `version`
 kickoff: docs/governance/KICKOFF_ANSWERS.md   # the owner's answers to references/kickoff-questionnaire.md (D rows); written before any CAD
 ids: {owner_prefix: D, agent_prefix: CC, blocker_prefix: B}
@@ -20,58 +23,61 @@ paths:
   test_plan: docs/design/TEST_PLAN.md
   traceability_yaml: design/traceability.yaml
   traceability_out: docs/governance/TRACEABILITY.md
-  board: kicad/{{BOARD}}/{{BOARD}}.kicad_pcb  # the board of record once it exists (G1+); until then handoff_header says "no board in HEAD"
-  netlist: out/{{BOARD}}.xml
-  fab_dir: out/fab
+  board: kicad/{{BOARD}}/{{BOARD}}.kicad_pcb  # the board of record once it exists (G1+); until then handoff_header says "no board in HEAD" {{ee,both}}
+  netlist: out/{{BOARD}}.xml {{ee,both}}
+  fab_dir: out/fab {{ee,both}}
+  mech_record: "out/mechanical/case/*/stl/*.stl"   # mech scope: the STL set of record; its md5 (scripts/project.py record) keys collateral, reports and the cut {{mech}}
+  mesh_provenance: out/mechanical/board.stl.provenance.json   # the fit input: {board_md5, board_commit, mesh_md5, facets} (both) or {source, source_md5, tag: V|K} for an imported STEP / envelope (mech) {{mech,both}}
   release_dir: docs/release
   collateral_dir: docs/release/collateral
-  case_yaml: design/case.yaml                 # optional; delete the line if the project has no enclosure
+  case_yaml: design/case.yaml {{mech,both}}
   # learnings / erc_waivers / env / parts_verification / datasheet_notes / reviews_dir / quotes_dir / production_dir default to the docs/ layout (references/project-yaml.md)
 tools:
   python: .venv/bin/python
-  kicad_cli: {{CAD_CLI_PATH}}                 # the key names are historical: put YOUR CAD's CLI here ({KICAD_CLI} in commands), whatever the CAD
-  kicad_python: {{CAD_PYTHON_PATH}}           # the CAD's own Python ({KPY}); python3 when the CAD has none
-fab_dfm:                                      # the board's fab-DFM mirror (references/fab-dfm.md; the old block name `dfm:` is still read)
-  thresholds: design/dfm_thresholds.json      # the fab's numbers with source URL + date
-  items: out/dfm_items.json                   # written by the project's measurer (G2)
-  accept: design/{{BOARD}}_board.yaml         # key dfm_accepted: [{check, refs, reason, date, evidence}]
-  report: out/dfm.json
-  bar: {open: 0, warnings_fail: true, accepted_requires: [reason, date, evidence]}   # owner decision {{D-BAR}}: 0 Danger / 0 Warning; an acceptance without all three fields does not count
-print_targets:                                # every printed body is censused against ONE named target; no number lives in a script (references/dfm-printed-enclosure.md)
-  {{VENDOR_TARGET}}:                          # e.g. jlc_mjf
-    vendor: {{VENDOR}}                        # e.g. JLC3DP
-    process: {{PROCESS}}                      # MJF | SLA | FDM | CNC
-    material: {{MATERIAL}}                    # e.g. PA12-HP
-    wall_gate: {{WALL_GATE}}                  # the checker's grey line (JLC3DP 2026-09-28: 1.2)         [checker]
-    void_gate: {{VOID_GATE}}                  # slots / slits / engraved strokes (1.2)                    [checker]
-    red_line: {{RED_LINE}}                    # the checker's red band (0.5)                              [checker]
-    design_margin: {{DESIGN_MARGIN}}          # walls drawn at wall_gate + margin (0.1)                   [owner bar]
-    wedge_band: 1.5                           # a wedge whose sub-gate band is wider FAILs unless accepted [convention]
-    tolerance: {{TOLERANCE}}                  # the vendor's published dimensional tolerance (MJF PA12 ±0.3 or ±0.3 %); replaced by the first-article spread
-    tolerance_source: {{URL_AND_DATE}}
-    max_bbox_for_rule: {{MAX_BBOX_MM}}        # the largest part dimension the length-dependent rule was calibrated at (147)
-    checker_url: {{CHECKER_URL}}              # the vendor's quote / DFM page
-    checker_date: {{DATE}}                    # when checker_url and the numbers above were last read
-    samples_per_mm2: 10                       # census density (a fixed count under-samples a large part)
-    post_process: none                        # dye | bead-blast | vapour-smooth | paint — subtracted in the margin, printed on the order sheet
-    rating: {ul94: {{UL94}}, tg_c: {{TG}}, source: {{TDS_URL}}}   # printed on the order sheet; owner row "engineering sample" if unrated
-    accepted: []                              # [{class: wall|void|wedge|opp, bbox: [x0,y0,z0,x1,y1,z1], reason, date, evidence}] — the only way a FAIL cluster passes
-  home_fdm:                                   # the home printer preset (printer-first; mirrors every vendor DFM decision the same day)
-    vendor: home
-    process: FDM
-    material: {{FILAMENT}}                    # PLA | PETG
-    printer: {{PRINTER_AND_NOZZLE}}           # e.g. "Bambu Lab P2S, 0.4 nozzle, 0.20 mm"
-    wall_gate: 1.6                            # 4 perimeters at 0.4                                       [owner bar]
-    rib_gate: 1.2
-    void_gate: 1.0
-    red_line: 0.5
-    design_margin: 0.0
-    wedge_band: 1.5
-    tolerance: 0.2                            # hole shrink 0.1..0.3 until the coupon says otherwise
-    samples_per_mm2: 10
-    post_process: none
-    rating: {ul94: unrated, tg_c: 55, source: {{TDS_URL}}}
-    accepted: []
+  kicad_cli: {{CAD_CLI_PATH}}                 # the key names are historical: put YOUR CAD's CLI here ({KICAD_CLI} in commands), whatever the CAD (mech: openscad) {{ee,both}}
+  kicad_cli: openscad                         # mech scope: the geometry CLI ({KICAD_CLI} in render commands) {{mech}}
+  kicad_python: {{CAD_PYTHON_PATH}}           # the CAD's own Python ({KPY}); python3 when the CAD has none {{ee,both}}
+fab_dfm:                                      # the board's fab-DFM mirror (references/fab-dfm.md; the old block name `dfm:` is still read) {{ee,both}}
+  thresholds: design/dfm_thresholds.json      # the fab's numbers with source URL + date {{ee,both}}
+  items: out/dfm_items.json                   # written by the project's measurer (G2) {{ee,both}}
+  accept: design/{{BOARD}}_board.yaml         # key dfm_accepted: [{check, refs, reason, date, evidence}] {{ee,both}}
+  report: out/dfm.json {{ee,both}}
+  bar: {open: 0, warnings_fail: true, accepted_requires: [reason, date, evidence]}   # owner decision {{D-BAR}}: 0 Danger / 0 Warning; an acceptance without all three fields does not count {{ee,both}}
+print_targets:                                # every printed body is censused against ONE named target; no number lives in a script (references/dfm-printed-enclosure.md) {{mech,both}}
+  {{VENDOR_TARGET}}:                          # e.g. jlc_mjf {{mech,both}}
+    vendor: {{VENDOR}}                        # e.g. JLC3DP {{mech,both}}
+    process: {{PROCESS}}                      # MJF | SLA | FDM | CNC {{mech,both}}
+    material: {{MATERIAL}}                    # e.g. PA12-HP {{mech,both}}
+    wall_gate: {{WALL_GATE}}                  # the checker's grey line (JLC3DP 2026-09-28: 1.2)         [checker] {{mech,both}}
+    void_gate: {{VOID_GATE}}                  # slots / slits / engraved strokes (1.2)                    [checker] {{mech,both}}
+    red_line: {{RED_LINE}}                    # the checker's red band (0.5)                              [checker] {{mech,both}}
+    design_margin: {{DESIGN_MARGIN}}          # walls drawn at wall_gate + margin (0.1)                   [owner bar] {{mech,both}}
+    wedge_band: 1.5                           # a wedge whose sub-gate band is wider FAILs unless accepted [convention] {{mech,both}}
+    tolerance: {{TOLERANCE}}                  # the vendor's published dimensional tolerance (MJF PA12 ±0.3 or ±0.3 %); replaced by the first-article spread {{mech,both}}
+    tolerance_source: {{URL_AND_DATE}} {{mech,both}}
+    max_bbox_for_rule: {{MAX_BBOX_MM}}        # the largest part dimension the length-dependent rule was calibrated at (147) {{mech,both}}
+    checker_url: {{CHECKER_URL}}              # the vendor's quote / DFM page {{mech,both}}
+    checker_date: {{DATE}}                    # when checker_url and the numbers above were last read {{mech,both}}
+    samples_per_mm2: 10                       # census density (a fixed count under-samples a large part) {{mech,both}}
+    post_process: none                        # dye | bead-blast | vapour-smooth | paint — subtracted in the margin, printed on the order sheet {{mech,both}}
+    rating: {ul94: {{UL94}}, tg_c: {{TG}}, source: {{TDS_URL}}}   # printed on the order sheet; owner row "engineering sample" if unrated {{mech,both}}
+    accepted: []                              # [{class: wall|void|wedge|opp, bbox: [x0,y0,z0,x1,y1,z1], reason, date, evidence}] — the only way a FAIL cluster passes {{mech,both}}
+  home_fdm:                                   # the home printer preset (printer-first; mirrors every vendor DFM decision the same day) {{mech,both}}
+    vendor: home {{mech,both}}
+    process: FDM {{mech,both}}
+    material: {{FILAMENT}}                    # PLA | PETG {{mech,both}}
+    printer: {{PRINTER_AND_NOZZLE}}           # e.g. "Bambu Lab P2S, 0.4 nozzle, 0.20 mm" {{mech,both}}
+    wall_gate: 1.6                            # 4 perimeters at 0.4                                       [owner bar] {{mech,both}}
+    rib_gate: 1.2 {{mech,both}}
+    void_gate: 1.0 {{mech,both}}
+    red_line: 0.5 {{mech,both}}
+    design_margin: 0.0 {{mech,both}}
+    wedge_band: 1.5 {{mech,both}}
+    tolerance: 0.2                            # hole shrink 0.1..0.3 until the coupon says otherwise {{mech,both}}
+    samples_per_mm2: 10 {{mech,both}}
+    post_process: none {{mech,both}}
+    rating: {ul94: unrated, tg_c: 55, source: {{TDS_URL}}} {{mech,both}}
+    accepted: [] {{mech,both}}
 renders: []                                   # G2+: see references/project-yaml.md `renders:`
 # reorg:                                      # only when the layout changes: decision row first, then scripts/reorg_paths.py --plan/--apply/--check/--proof
 #   moves: {docs/OLD.md: docs/<folder>/OLD.md}
@@ -86,10 +92,14 @@ renders: []                                   # G2+: see references/project-yaml
 #   render_cmd: "openscad -o {OUT} --camera={CAMERA} --imgsize={SIZE} --colorscheme=Tomorrow {DEFS} out/mechanical/case/<preset>/case.scad"
 #   size: '1920,1440'
 reports:
-  - name: PCB_DESIGN_REPORT
-    title: {{PROJECT}} PCB design report
-    sections: [banner, identity, decisions, known_issues, package, traceability, dfm, renders, inventory]
-    extra_sources: []
+  - name: PCB_DESIGN_REPORT {{ee,both}}
+    title: {{PROJECT}} PCB design report {{ee,both}}
+    sections: [banner, identity, decisions, known_issues, package, traceability, dfm, renders, inventory] {{ee,both}}
+    extra_sources: [] {{ee,both}}
+  - name: CASE_DESIGN_REPORT {{mech,both}}
+    title: {{PROJECT}} case design report {{mech,both}}
+    sections: [banner, identity, decisions, known_issues, traceability, renders, inventory]   # identity = the record md5 (board, or the STL set in mech scope) {{mech,both}}
+    extra_sources: [design/case.yaml] {{mech,both}}
 gates:
   quiet_regex: 'Fontconfig|wxApp|Debug:'
   adopt:                                      # day 1 (G0): selftests + the records that exist; exit 1 on the first failure
@@ -100,20 +110,23 @@ gates:
     - "$PY scripts/known_issues.py --check"
     - "$PY scripts/traceability.py --check"
     - "$PY scripts/release_report.py --check"
-    # G1 (schematic exists): add the project's generators and the ERC gate (references/schematic-phase.md §2)
-    # - "$PY gen/build_sch.py --selftest"
-    # - "$PY gen/build_sch.py --check"
-    # - "$PY gen/check_maps.py --check"
-    # G2 (routed board): DRC census / parity / route quality / DFM mirror / renders (references/pcb-layout-dfm.md §1, SKILL §6)
-    # - "$PY gen/drc_gate.py --check"          # DRC 0 errors / 0 unconnected / 0 warnings-or-waived + canary fires once + parity 0
-    # - "$PY gen/route_quality.py"
-    # - "$PY scripts/dfm_check.py --check"
+    # G1 (schematic exists): add the project's generators and the ERC gate (references/schematic-phase.md §2) {{ee,both}}
+    # - "$PY gen/build_sch.py --selftest" {{ee,both}}
+    # - "$PY gen/build_sch.py --check" {{ee,both}}
+    # - "$PY gen/check_maps.py --check" {{ee,both}}
+    # G2 (routed board): DRC census / parity / route quality / DFM mirror / renders (references/pcb-layout-dfm.md §1, SKILL §6) {{ee,both}}
+    # - "$PY gen/drc_gate.py --check"          # DRC 0 errors / 0 unconnected / 0 warnings-or-waived + canary fires once + parity 0 {{ee,both}}
+    # - "$PY gen/route_quality.py" {{ee,both}}
+    # - "$PY scripts/dfm_check.py --check" {{ee,both}}
     # - "$PY scripts/collect_renders.py --check"
-    # Case (every printed body, every preset): the PURE census gate
-    # - "$PY scripts/thin_wall_census.py --gate-dir out/<board>/mechanical/case/<preset>/census"
+    # Case / M1 (every printed body, every preset): the PURE census gate + the geometry generator's --check {{mech,both}}
+    # - "$PY gen/case.py --check" {{mech,both}}
+    # - "$PY scripts/thin_wall_census.py --gate-dir out/mechanical/case/<preset>/census" {{mech,both}}
   clone:                                      # run inside `git archive HEAD`
     - "$PY scripts/known_issues.py --check"
     - "$PY scripts/release_report.py --check"
   regen:
     - "$PY scripts/release_report.py"
-  regen_copy_back: [docs/release/PCB_DESIGN_REPORT.md]
+  regen_copy_back: [docs/release/PCB_DESIGN_REPORT.md] {{ee}}
+  regen_copy_back: [docs/release/CASE_DESIGN_REPORT.md] {{mech}}
+  regen_copy_back: [docs/release/PCB_DESIGN_REPORT.md, docs/release/CASE_DESIGN_REPORT.md] {{both}}
