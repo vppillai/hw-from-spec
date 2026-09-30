@@ -90,8 +90,11 @@ def scalars(d, prefix=""):
 
 
 def board_md5(ctx, P):
+    """md5 of the record of record: the board file (ee / both; raw bytes, no text round trip) or the STL set (mech: Project.record_md5)."""
+    if P.scope() == "mech":
+        return P.record_md5()[1]
     rel = P.get("paths.board")
-    return ctx.seen[rel][0] if rel and ctx.read(rel) is not None else None   # md5 of the raw bytes (no text round trip)
+    return ctx.seen[rel][0] if rel and ctx.read(rel) is not None else None
 
 
 def pkg_for_board(ctx, P, md5=None):
@@ -119,8 +122,9 @@ def section_banner(ctx, P, rep):
 def section_identity(ctx, P, rep):
     md5 = board_md5(ctx, P)
     rel, bid = pkg_for_board(ctx, P)   # recorded identity only — never the live git HEAD (the commit that adds this report would make it stale)
-    L = ["## Identity", "", f"- Board `{P.get('paths.board')}` md5 **`{md5 or 'MISSING'}`**",
-         f"- Built at commit `{bid.get('commit', 'MISSING')}` (recorded in `{rel}/board_id.txt`)" if rel else "- Built at commit: MISSING (no package of record)"]
+    L = ["## Identity", "", f"- {P.record_md5()[0][0].upper() + P.record_md5()[0][1:]} md5 **`{md5 or 'MISSING'}`**"]
+    if P.scope() != "mech":   # the fab package is a board artefact; a mech project keys on the STL set alone
+        L.append(f"- Built at commit `{bid.get('commit', 'MISSING')}` (recorded in `{rel}/board_id.txt`)" if rel else "- Built at commit: MISSING (no package of record)")
     L += [f"- {s}" for s in ctx.src(P.get("paths.decisions"), P.get("paths.gates"), *(rep.get("extra_sources") or []))]
     for rel in rep.get("extra_sources") or []:
         d = ctx.yaml(rel) if rel.endswith((".yaml", ".yml")) else None

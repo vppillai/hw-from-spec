@@ -2,8 +2,10 @@
 
 | Tool | Version (command that printed it) | Path | Date |
 |---|---|---|---|
-| CAD CLI | `{{CAD_CLI_PATH}} version` → {{CAD_CLI_VERSION}} | `{{CAD_CLI_PATH}}` | {{DATE}} |
-| CAD Python | `{{CAD_PYTHON_PATH}} -c 'import pcbnew; print(pcbnew.GetBuildVersion())'` → … | `{{CAD_PYTHON_PATH}}` | {{DATE}} |
+| CAD CLI | `{{CAD_CLI_PATH}} version` → {{CAD_CLI_VERSION}} | `{{CAD_CLI_PATH}}` | {{DATE}} | {{ee,both}}
+| CAD Python | `{{CAD_PYTHON_PATH}} -c 'import pcbnew; print(pcbnew.GetBuildVersion())'` → … | `{{CAD_PYTHON_PATH}}` | {{DATE}} | {{ee,both}}
+| Geometry CLI | `openscad --version` → … | `{{CAD_CLI_PATH}}` | {{DATE}} | {{mech,both}}
+| Slicer CLI | `{{SLICER_CLI_PATH}} --version` → … (home FDM preset) | `{{SLICER_CLI_PATH}}` | {{DATE}} | {{mech,both}}
 | Project venv | `.venv/bin/python --version` → … ; packages: {{VENV_PACKAGES}} | `.venv/` | {{DATE}} |
 | hw-from-spec | commit `{{SKILL_COMMIT}}` (`git -C {{SKILL_PATH}} rev-parse --short HEAD`) | `{{SKILL_PATH}}` | {{DATE}} |
 | git, bash | `git --version`, `bash --version` (the shell gates need bash ≥ 3.2) | | {{DATE}} |
@@ -16,4 +18,4 @@
 ## File-format versions seen
 | File kind | Version string | First seen |
 |---|---|---|
-| _(run the CAD CLI once on a trivial file and record the header)_ | | |
+| _(run the CAD / geometry CLI once on a trivial file and record the header)_ | | |

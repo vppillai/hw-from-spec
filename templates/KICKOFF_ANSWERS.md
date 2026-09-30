@@ -1,12 +1,14 @@
 # KICKOFF_ANSWERS.md — {{PROJECT}} — the owner's answers to `references/kickoff-questionnaire.md` ({{DATE}})
 
-Asked in nine batches with the recommended answer listed first; every row below is an owner decision (D row quoted verbatim) written BEFORE any
+Asked in up to ten batches (A0 first; batches outside the scope are skipped) with the recommended answer listed first; every row below is an owner decision (D row quoted verbatim) written BEFORE any
 CAD. `Answer` is the option chosen; `Rec.` = the recommended default was accepted (`yes`) or overridden (`no` — the owner's reason is in the D
 row). A deferred question is `OPEN` here and in the decision log and blocks the phase named in the questionnaire's batch table. Re-asking an
-answered question is a defect; changing an answer is a new D row that supersedes the old one and a new line here.
+answered question is a defect; changing an answer is a new D row that supersedes the old one and a new line here. A question outside the scope
+(questionnaire tags `[ee, both]` / `[mech, both]`) is not asked: its row reads `n/a (scope)`.
 
 | Q | Question | Answer | Rec. | D row | Written to |
 |---|---|---|---|---|---|
+| A0 | scope | {{SCOPE}} | yes | D-{{nn}} | `project.scope`; CLAUDE.md; GATES.md rows |
 | A1 | product class | {{engineering sample}} | yes | D-{{nn}} | `kickoff.product_class`; SPEC §1 |
 | A2 | quantity / horizon | {{5 first article, design for 50}} | yes | D-{{nn}} | `kickoff.quantity` |
 | A3 | board fab / assembler | {{fab}} | yes | D-{{nn}} | `kickoff.fab` |

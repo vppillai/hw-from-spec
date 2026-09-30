@@ -14,10 +14,11 @@ _(G0 round: board, package and case rows read MISSING by design — the artefact
 | Path | What | md5 |
 |---|---|---|
 | `SPEC.md` | the specification (revision {{SPEC_REV}}) — the artefact at G0 | `{{md5}}` |
-| `design/<board>.yaml` | schematic source (G1+) | `{{md5}}` |
-| `kicad/<board>/<board>.kicad_pcb` | board of record | `{{md5}}` |
-| `out/fab/<date>_<md5-8>/` | fab package of record | `{{md5 of MANIFEST}}` |
-| `design/case.yaml` / `out/.../case/<preset>/stl/*.stl` | case of record | `{{version}}` |
+| `design/<board>.yaml` | schematic source (G1+) | `{{md5}}` | {{ee,both}}
+| `kicad/<board>/<board>.kicad_pcb` | board of record | `{{md5}}` | {{ee,both}}
+| `out/fab/<date>_<md5-8>/` | fab package of record | `{{md5 of MANIFEST}}` | {{ee,both}}
+| `design/case.yaml` / `out/.../case/<preset>/stl/*.stl` | case of record (record md5 = `scripts/project.py record` in mech) | `{{version}}` | {{mech,both}}
+| the fit input (`paths.mesh_provenance`: STEP / envelope) | what the case must fit, [V] / [K] | `{{source_md5}}` | {{mech}}
 | `docs/governance/DECISIONS.md` rows D-… / CC-… | decision trail for this round | |
 
 ## 3. Known / open items with dispositions (from KNOWN_ISSUES.md — generated; do not add prose here)
@@ -35,8 +36,8 @@ _(G0 round: board, package and case rows read MISSING by design — the artefact
 {{WAIVER_LIST}}
 
 ## 6. How to check things
-CAD Python `{{CAD_PYTHON}}` for parsing board/schematic files; `grep` for YAML/docs; the Read tool for images (renders under `{{RENDERS_DIR}}`,
+CAD Python `{{CAD_PYTHON}}` for parsing board/schematic files (ee / both), `trimesh` for the STLs (mech / both); `grep` for YAML/docs; the Read tool for images (renders under `{{RENDERS_DIR}}`,
 tiles under `{{TILES_DIR}}`). Coordinates: {{FRAME_NOTE: board frame vs CAD frame}}.
 
 ## 7. Severity
-BLOCKER = would make the board not work or not build · MAJOR = real functional/robustness/DFM risk before ordering · MINOR = worth fixing · NOTE = observation.
+BLOCKER = would make the artefact (board / part) not work, not fit or not build · MAJOR = real functional/robustness/DFM risk before ordering · MINOR = worth fixing · NOTE = observation.

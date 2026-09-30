@@ -1,10 +1,10 @@
 # hw-from-spec
 
-A Claude Code skill that takes a board + enclosure from a written spec to a production cut:
+A Claude Code skill that takes a board, an enclosure, or both from a written spec to a production cut:
 owner-gated phases, generated-only artefacts, a zero-warning manufacturability bar, blind reviews,
 and a retro that folds every project's learnings back into the skill.
 
-`version 0.6.1` · MIT · `SKILL.md` is the procedure, everything else is reference, template or tool.
+`version 0.7.0` · MIT · `SKILL.md` is the procedure, everything else is reference, template or tool.
 
 ## Quick start
 
@@ -16,12 +16,13 @@ uv pip install --python .venv/bin/python pyyaml numpy trimesh scipy shapely
 vendor/hw-from-spec/smoke/run_smoke.sh
 ```
 
-Then `SKILL.md` §0: templates, the kickoff questionnaire, first records — before any CAD.
+(`numpy trimesh scipy shapely` serve the mesh scripts: mech / both only.) Then `SKILL.md` §0: templates, the kickoff questionnaire, first records — before any CAD.
 
 ## What you get
 
-- A gate model (G0 spec → G1 schematic → G2 layout → order → release → production cut) where the
-  owner writes every approval and agents never do.
+- Three scopes chosen at kickoff (A0): `ee` (G0 spec → G1 schematic → G2 layout → order), `mech`
+  (G0 mechanical spec → M1 geometry → M2 first article → case order), `both`; one template set,
+  `scripts/project.py scaffold --scope` keeps your scope's lines; the owner writes every approval.
 - A kickoff questionnaire: every owner decision a board + enclosure project needs, asked up front
   with a recommended answer (`references/kickoff-questionnaire.md`).
 - A manufacturability bar enforced by scripts: DRC 0 / 0 / 0 warnings, fab DFM 0 Danger / 0 Warning,
@@ -46,7 +47,7 @@ Then `SKILL.md` §0: templates, the kickoff questionnaire, first records — bef
 | `scripts/` | 15 generic tools driven by `project.yaml` (`references/project-yaml.md` lists which are generators, graders, gates) |
 | `workflows/` | four blind-review workflow templates + how to instantiate them |
 | `smoke/` | the automated dry run (`run_smoke.sh`) |
-| `evals/` | ten skill evals (start, review, release, vendor mail, re-layout, first DFM round, census-blind flag, kickoff, retro, AMS mark plate) |
+| `evals/` | twelve skill evals (start, review, release, vendor mail, re-layout, first DFM round, census-blind flag, kickoff, retro, AMS mark plate, mech-only bracket, ee-only board) |
 | `docs/retro/` | retro reports, one per project fed back into the skill |
 | `CHANGELOG.md` | what changed per version and what was deliberately not done |
 
@@ -103,12 +104,16 @@ mkdir -p docs/governance docs/design docs/parts docs/reviews docs/release docs/q
 mkdir -p docs/production design
 cp "$T/CLAUDE.md" "$T/.gitignore" "$T/project.yaml" "$T/SPEC.md" .
 cp "$T"/{DECISIONS,STATUS,GATES,KNOWN_ISSUES}.md docs/governance/
-cp "$T"/{LEARNINGS_LOG,BLOCKERS,ENV,ERC_WAIVERS,KICKOFF_ANSWERS}.md docs/governance/
-cp "$T/PARTS_VERIFICATION.md" "$T/parts/PROCUREMENT.md" docs/parts/
+cp "$T"/{LEARNINGS_LOG,BLOCKERS,ENV,KICKOFF_ANSWERS}.md docs/governance/
+cp "$T/PARTS_VERIFICATION.md" docs/parts/
 cp "$T/TEST_PLAN.md" "$T/design/VERIFY.md" docs/design/
-cp "$T/design/SOFTWARE_ARCHITECTURE.md" docs/design/
 cp -R "$T/datasheet_notes" docs/
-cp "$T/design/traceability.yaml" design/
+cp "$T/design/traceability.yaml" "$T/production_cut.yaml" design/
+cp "$T/ERC_WAIVERS.md" docs/governance/                 # ee, both
+cp "$T/design/SOFTWARE_ARCHITECTURE.md" docs/design/     # ee, both
+cp "$T/parts/PROCUREMENT.md" docs/parts/                 # mech, both
+scripts/project.py scaffold --scope "$A0" CLAUDE.md SPEC.md project.yaml \
+  docs/governance/*.md design/*.yaml                  # A0=ee | mech | both
 grep -rn '{{' CLAUDE.md project.yaml SPEC.md docs design
 ```
 
@@ -122,9 +127,9 @@ silk, case, drawings, FEA measurer) stay in the project's `gen/`, read constants
 
 ## The kickoff questionnaire
 
-Before the spec is read, the agent asks every decision class up front — product, PCB build,
-enclosure architecture, the manufacturability bar, verification, bought parts, software, release,
-identity — in ten `AskUserQuestion` batches, each question with a marked RECOMMENDED answer and the
+Before the spec is read, the agent asks the scope (A0), then every decision class that scope needs
+— product, PCB build, enclosure architecture, the manufacturability bar, verification, bought parts,
+software, release, identity — in up to ten `AskUserQuestion` batches, each question with a marked RECOMMENDED answer and the
 alternatives' consequences. Answers become owner rows in `DECISIONS.md`, values in `project.yaml`
 (`kickoff`, `board`, `fab_dfm.bar`, `print_targets`) and `docs/governance/KICKOFF_ANSWERS.md`.
 Detail: `references/kickoff-questionnaire.md`, `SKILL.md` §0.1.

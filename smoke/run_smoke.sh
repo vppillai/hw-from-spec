@@ -52,7 +52,7 @@ grep -q '^fab_dfm:' "$SKILL/templates/project.yaml" || { echo "FAIL: templates/p
 grep -q 'accepted_requires' "$SKILL/templates/project.yaml" || { echo "FAIL: templates/project.yaml lost the DFM bar"; exit 1; }
 grep -q '^## Quick start' "$SKILL/README.md" && grep -q '^## The retro loop' "$SKILL/README.md" && grep -q '^## The kickoff questionnaire' "$SKILL/README.md" || { echo "FAIL: README lost a required section"; exit 1; }
 awk '/^```/{f=!f; next} f && length($0) > 90 {bad=1} END {exit bad}' "$SKILL/README.md" || { echo "FAIL: a fenced README line is over 90 characters (GitHub scrolls)"; exit 1; }
-grep -q '^version: 0.6.1' "$SKILL/SKILL.md" && grep -q '^## 0.6.1' "$SKILL/CHANGELOG.md" || { echo "FAIL: SKILL.md version and CHANGELOG entry disagree"; exit 1; }
+grep -q '^version: 0.7.0' "$SKILL/SKILL.md" && grep -q '^## 0.7.0' "$SKILL/CHANGELOG.md" || { echo "FAIL: SKILL.md version and CHANGELOG entry disagree"; exit 1; }
 grep -q 'numpy trimesh scipy shapely' "$SKILL/README.md" || { echo "FAIL: README lost the mesh-library install line (C-06)"; exit 1; }
 grep -q 'vendor/hw-from-spec/.venv' "$SKILL/README.md" || { echo "FAIL: README lost the one install block (C-02 / C-12)"; exit 1; }
 test -f "$SKILL/references/kickoff-questionnaire.md" || { echo "FAIL: references/kickoff-questionnaire.md missing"; exit 1; }
@@ -64,6 +64,48 @@ grep -q -E 'p2s|presets\.P2S|AEC-CT2|lap\.ring_down' "$SKILL/SKILL.md" "$SKILL/R
 grep -q '^## 13. Retro' "$SKILL/SKILL.md" || { echo "FAIL: SKILL.md lost the retro phase (§13)"; exit 1; }
 "$PY" scripts/thin_wall_census.py --selftest
 "$PY" scripts/skill_retro.py --selftest
+say "0b scope: A0 asked first, every scope scaffolds from ONE template set and gets its own gate rows"
+grep -q '^\*\*A0 Project scope' "$SKILL/references/kickoff-questionnaire.md" && grep -q '^| A0 | scope' "$SKILL/templates/KICKOFF_ANSWERS.md" || { echo "FAIL: kickoff A0 (scope) missing"; exit 1; }
+grep -q '^## 1. Phase / gate model (per scope)' "$SKILL/SKILL.md" && grep -q '^## 6. Layout phase and the adopt rule \[ee, both\]' "$SKILL/SKILL.md" && grep -q '^## 8. Case pipeline and FEA \[mech, both\]' "$SKILL/SKILL.md" || { echo "FAIL: SKILL.md lost the scope model / heading tags"; exit 1; }
+"$PY" scripts/project.py --selftest
+for sc in ee mech both; do
+  S=$T/scope_$sc; mkdir -p $S; cp "$SKILL/templates"/{project.yaml,CLAUDE.md,GATES.md,SPEC.md,STATUS.md,KICKOFF_ANSWERS.md,ENV.md,production_cut.yaml,REVIEW_HANDOFF.md,RELEASE_NOTES.md} "$SKILL/templates/design/traceability.yaml" $S/
+  "$PY" scripts/project.py scaffold --scope $sc $S/* >/dev/null
+  grep -l '{{\(ee\|mech\|both\)\(,\(ee\|mech\|both\)\)*}}' $S/* && { echo "FAIL: a scope tag survived scaffold --scope $sc"; exit 1; }
+  G=$(grep -o '^| \*\*[A-Za-z0-9 ()]*\*\*' $S/GATES.md | tr -d '*|' | tr -s ' \n' ' ')
+  case $sc in
+    ee)   [[ "$G" == " G0 G1 G2 Order (board) Release " ]] || { echo "FAIL: ee gates = '$G'"; exit 1; }
+          grep -q '^print_targets:' $S/project.yaml && { echo "FAIL: ee project.yaml carries print_targets"; exit 1; };;
+    mech) [[ "$G" == " G0 M1 M2 Case order Release " ]] || { echo "FAIL: mech gates = '$G'"; exit 1; }
+          grep -q '^fab_dfm:\|^  board:' $S/project.yaml && { echo "FAIL: mech project.yaml carries board paths / fab_dfm"; exit 1; }
+          grep -q 'mech_record' $S/project.yaml || { echo "FAIL: mech project.yaml lost paths.mech_record"; exit 1; }
+          grep -q 'ERC\|pcbnew\|parts_seed' $S/CLAUDE.md $S/ENV.md && { echo "FAIL: mech CLAUDE.md / ENV.md still names ERC / pcbnew / a parts seed"; exit 1; }
+          grep -v '^#' $S/production_cut.yaml | grep -q '{pkg}\|technician_manual\|developer_manual' && { echo "FAIL: mech production_cut.yaml keeps a fab-package input or a software-track / board deliverable"; exit 1; };;
+    ee)   grep -q 'assembly_sop\|case_stl\|fea_case' $S/production_cut.yaml && { echo "FAIL: ee production_cut.yaml keeps a case deliverable"; exit 1; };;
+    both) [[ "$G" == " G0 G1 G2 Order (board) Case order Release " ]] || { echo "FAIL: both gates = '$G'"; exit 1; };;
+  esac
+  sed 's/{{[A-Za-z0-9_ -]*}}/X/g' $S/project.yaml | "$PY" -c 'import sys,yaml; yaml.safe_load(sys.stdin)' || { echo "FAIL: scaffolded project.yaml ($sc) is not valid yaml"; exit 1; }
+done
+# the ee scaffold must have dropped the same lines the ee grep above checks; a stray `ee`-only or `both`-only tag is caught by the tag grep
+say "0c mech scope end to end: the STL set is the record id (report identity, collateral, hand-off), no fab-package line, the fit input printed"
+M=$T/mech; mkdir -p $M/out/mechanical/case/v1/stl $M/out/mechanical $M/design $M/docs/governance $M/vendor/hw-from-spec; ln -s "$SKILL/scripts" $M/vendor/hw-from-spec/scripts; ln -s vendor/hw-from-spec/scripts $M/scripts
+printf 'solid a\nendsolid a\n' > $M/out/mechanical/case/v1/stl/bracket.stl; printf '{"source": "in/board.step", "source_md5": "abcdef0123456789", "tag": "V"}\n' > $M/out/mechanical/board.stl.provenance.json
+printf 'case: {version: v1}\n' > $M/design/case.yaml; printf '# GATES\n| Gate | Meaning | Prerequisites | Owner approval |\n|---|---|---|---|\n' > $M/docs/governance/GATES.md
+printf '# D\n| ID | Date | Status | Topic | Proposal | Reason |\n|---|---|---|---|---|---|\n| **D-01** | 2026-01-01 | **APPROVED** | start | owner | word |\n' > $M/docs/governance/DECISIONS.md
+cat > $M/project.yaml <<YAML
+project: {name: mech_smoke, scope: mech}
+paths: {case_yaml: design/case.yaml, mesh_provenance: out/mechanical/board.stl.provenance.json, collateral_dir: docs/release/collateral}
+renders: [{name: case_iso, kind: copy, src: "out/mechanical/case/{CASE_VERSION}/iso.png", sub: case}]
+reports: [{name: CASE_DESIGN_REPORT, title: mech case report, sections: [banner, identity, decisions, renders, inventory], extra_sources: [design/case.yaml]}]
+YAML
+printf 'PNG-stub-------------------------------------------------------------------\n' > $M/out/mechanical/case/v1/iso.png
+(cd $M && git init -q && git add -A && git -c user.name=smoke -c user.email=s@s commit -qm mech >/dev/null
+ REC=$("$PY" scripts/project.py record); echo "$REC"; [[ "$REC" == mechanical\ record*md5\ [0-9a-f]* ]] || { echo "FAIL: mech record id is not the STL set"; exit 1; }
+ M8=$(echo "$REC" | sed 's/.*md5 //' | cut -c1-8)
+ "$PY" scripts/collect_renders.py >/dev/null && test -f docs/release/collateral/$M8/renders/RENDERS.md || { echo "FAIL: mech collateral not keyed on the STL-set md5"; exit 1; }
+ "$PY" scripts/release_report.py >/dev/null; grep -q "Mechanical record .* md5 \*\*\`" docs/release/CASE_DESIGN_REPORT.md || { echo "FAIL: mech report identity is not the mechanical record"; exit 1; }
+ grep -q 'no package of record' docs/release/CASE_DESIGN_REPORT.md && { echo "FAIL: mech report carries a fab-package line"; exit 1; }
+ H=$("$PY" scripts/handoff_header.py); echo "$H" | grep -q 'Fit input of record.*in/board.step.*\[V\]' && echo "$H" | grep -q 'Mechanical record' || { echo "FAIL: mech hand-off header lacks the fit input / mechanical record rows"; exit 1; })
 say "1 fab package of record keyed on the board md5"
 MD5=$(md5of kicad/smoke/smoke.kicad_pcb); PKG=out/fab/2026-01-03_${MD5:0:8}; mkdir -p $PKG
 printf 'board kicad/smoke/smoke.kicad_pcb\nmd5 %s\ncommit %s\nbuilt 2026-01-03\nsegments 1\nvias 0\n' $MD5 $(git rev-parse --short HEAD) > $PKG/board_id.txt

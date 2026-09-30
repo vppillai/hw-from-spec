@@ -14,7 +14,11 @@ design/case.yaml ──> OpenSCAD source (generated) ──> renders (views) ─
 Everything under `out/<board>/mechanical/case/<preset>/` is generated; `ASSEMBLY.md` and print sheets are generated with spliced blocks
 (`<!-- gen:BEGIN name -->…<!-- gen:END -->`) so prose survives regeneration.
 
-## Board mesh of record
+## Board mesh of record (both) / fit input of record (mech)
+- **mech scope**: there is no CAD project to export from. The fit input is the imported board STEP (converted to a mesh once, e.g. `trimesh`
+  / FreeCAD, canonical STL) or the owner's envelope (a box + hole pattern drawn from the dimensions); its sidecar `paths.mesh_provenance` is
+  `{source, source_md5, tag: V|K}` — [V] when measured or from the vendor drawing, [K] when owner-stated; a [K] input is a KNOWN_ISSUES §2 item
+  until a first article measures it. The `out/<board>/` folder level in the paths below is absent in mech (`out/mechanical/case/<preset>/`).
 - Export the board mesh from HEAD (`--export-board --board-ref HEAD`), including tracks and zones, with the as-built 3D models; write a **provenance
   sidecar** `{board_md5, board_commit, exported, mesh_md5, facets, ignore: [...]}` next to it. The mesh itself is untracked (100+ MB); the sidecar is
   tracked and is what gates assert (`md5_in` on the board md5).

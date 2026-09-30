@@ -152,6 +152,39 @@
         "FAIL-gated geometry rows with thresholds are listed (recess span, enclosed island, colour-region width, edge margin, whole-layer depth, chirality) and a mark coupon is first on the plate",
         "the plate report states minutes, grams per filament, filament changes and the purge share, and says which check is printer-dependent (the coupon) and which is guaranteed by geometry"
       ]
+    },
+    {
+      "id": 11,
+      "name": "mech-only-bracket-from-a-board-step",
+      "prompt": "I have a STEP file of a customer's board (board.step, 80 x 50 mm, four M3 holes) and a one-page brief for a printed mounting bracket with a snap-on cable clip, MJF at a print service plus my home FDM printer. No electronics work at all — the board is theirs. Set the project up and take it to the first geometry gate.",
+      "expected_output": "Asks A0 first and records scope mech (project.scope, D row); asks only the mech-scope batches (product / process, enclosure architecture C1-C9, the bar incl. D3, verification incl. E3, bought hardware F1-F2, release H1-H4, identity I1 / I2 / I4) and never a PCB build question (B1-B8), software (G1-G2) or debug access (I3); scaffolds with scripts/project.py scaffold --scope mech so GATES.md carries G0 / M1 / M2 / Case order / Release and no G1 / G2 / board order, project.yaml has print_targets, case_yaml and paths.mech_record but no paths.board / fab_dfm; the STEP becomes the fit input of record with its md5 and a [V]/[K] tag in SPEC section 4 and paths.mesh_provenance; hardware (inserts, clip) is verified [V] on manufacturer pages; the G0 round (role set spec) runs on the mechanical spec; after G0 the geometry is generated from design/case.yaml, censused per preset, rendered on six faces, clearance rows against the STEP, vendor DFM read from the API, then the agent asks the owner for the M1 cell and does not write it; the record id printed by scripts/project.py record is the STL set's md5, not a board md5.",
+      "files": [],
+      "assertions": [
+        "A0 scope is asked first and recorded as project.scope: mech plus an owner D row before any other question",
+        "no PCB build (B1-B8), software (G1-G2) or debug-access (I3) question is asked; KICKOFF_ANSWERS marks them n/a (scope)",
+        "docs/governance/GATES.md contains G0, M1, M2, Case order and Release rows and no G1, G2 or board-order row; project.yaml has no paths.board or fab_dfm block and has print_targets, case_yaml and paths.mech_record",
+        "the board STEP is recorded as the fit input of record with md5 and a [V] or [K] tag (SPEC section 4 and paths.mesh_provenance), never treated as a board to route",
+        "no KiCad, ERC, DRC, fab DFM mirror or electronics parts seed is created or mentioned as a prerequisite; hardware parts are still verified [V] with URL and date",
+        "the M1 prerequisites (census per preset, six face renders, clearance rows, slicer log, vendor DFM by API, hardware [V], merged review) are named and the agent asks for the M1 cell instead of writing it",
+        "scripts/project.py record (or the equivalent) names the STL set md5 as the record id for collateral / reports / the cut",
+        "the scaffolded ENV.md, CLAUDE.md and production_cut.yaml name no KiCad module (pcbnew), electronics parts seed, fab package input or software-track manual"
+      ]
+    },
+    {
+      "id": 12,
+      "name": "ee-only-sensor-board-without-a-case",
+      "prompt": "Spec for a bare 4-layer I2C sensor breakout (USB-C powered, 30 x 20 mm) that ships as a bare PCBA to be plugged into the customer's fixture. No enclosure ever. KiCad + JLCPCB. Set the project up and take it through the gates.",
+      "expected_output": "Asks A0 first and records scope ee; asks the PCB batches (B1-B8), the bar (D1-D2, not D3), verification (E1, E2, E4, not E3), parts, software, release, identity (not the enclosure batches C1-C9, not the brand-mark question); scaffolds with scripts/project.py scaffold --scope ee so GATES.md has G0 / G1 / G2 / Order (board) / Release and no Case order, M1 or M2 row; project.yaml has no print_targets, case_yaml or mech_record; no case pipeline, census, print DFM, vendor 3D-print quote, coupon or FEA-on-case step is scheduled; the flow is G0 spec round -> G1 schematic (ERC 0) -> G2 layout (DRC 0/0/0, fab DFM mirror 0/0) -> fab DFM on the board and panel -> the owner's order click -> release cut -> production cut keyed on the board md5; the production cut yaml carries no case deliverables.",
+      "files": [],
+      "assertions": [
+        "A0 scope is asked first and recorded as project.scope: ee plus an owner D row",
+        "no enclosure question (C1-C9), design-margin question (D3) or coupon question (E3) is asked; the PCB build questions B1-B8 are asked with recommended answers",
+        "docs/governance/GATES.md has G0, G1, G2, Order (board) and Release rows and no Case order, M1 or M2 row; project.yaml has no print_targets, case_yaml or paths.mech_record",
+        "no case pipeline, thin-wall census, print-service DFM, coupon, board dummy or case FEA step appears in the plan or the gates",
+        "the phase chain named is G0 -> G1 -> G2 -> fab DFM (board and panel) -> order -> release cut -> production cut, all keyed on the board md5",
+        "the production cut deliverable list carries no case report, case drawing, STL set or case FEA row",
+        "the scaffolded production_cut.yaml carries no OpenSCAD-rendered assembly guide, insert / torque assembly SOP or case manufacturing-spec row"
+      ]
     }
   ]
 }
