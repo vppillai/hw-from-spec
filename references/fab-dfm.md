@@ -57,6 +57,15 @@ first quote and make it part of the adopt rule.
   format column × row, precision outline, "confirm production file". The first two PCBA quotes were both wrong.
 - The order remark is GENERATED from the rule file + board (copper minimums, solder-free holes, THT neighbours); only the vendor-drawing paragraph is
   static. Typed remarks rotted twice.
+- The remark has TWO readers. The generated technical block (refdes, hole sizes, distances) is for the engineer; the fab's customer-service desk
+  reads it first and cannot parse it ("we cannot understand it very well" cost a three-mail loop, 2026-09-29). Put a PLAIN-WORDS paragraph ahead of
+  the table, one sentence per item, verbs and functions instead of refdes and numbers: "the connector is placed and reflowed normally; the two
+  larger unplated holes under it are for its own locating pegs, the twelve small plated holes are for a cage we press on after delivery - leave all
+  fourteen without paste or solder"; "the one through-hole header is hand-soldered after reflow - do NOT wave solder, the other side is fully SMT";
+  "the USB shell legs reflow with the SMT side, partial slot fill accepted". Pre-empt the questions the desk always asks: which PART a hole belongs
+  to (say "holes in the PCB"), wave soldering for any THT part on a two-sided SMT board (say no, explicitly), and the fallback ("ship that part loose
+  in the bag"). Expect one to three clarification mails; answer each with the vendor drawing's picture of the feature. Their screenshots arrive as
+  links to the fab's message-file API, not attachments - download and file them the same day, the links are session-bound.
 - Driven browser: session expires within hours; a fresh tab on the orders URL is the decisive signed-in check (redirect = out); reload the quote tab
   after re-sign-in. Vue tiles ignore `element.click()` from a script — use real input events; the hidden file input needs its `hide` class defeated;
   material lists re-order after finish changes — click by text, never by position (a positional click bought the wrong laminate at 2× the price).
