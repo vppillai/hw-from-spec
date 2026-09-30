@@ -4,7 +4,7 @@ A Claude Code skill that takes a board + enclosure from a written spec to a prod
 owner-gated phases, generated-only artefacts, a zero-warning manufacturability bar, blind reviews,
 and a retro that folds every project's learnings back into the skill.
 
-`version 0.6.0` · MIT · `SKILL.md` is the procedure, everything else is reference, template or tool.
+`version 0.6.1` · MIT · `SKILL.md` is the procedure, everything else is reference, template or tool.
 
 ## Quick start
 

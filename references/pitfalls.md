@@ -298,3 +298,4 @@ printer's model name). Grouped by domain.
 - "Software of record = `git log -1 -- tools/`" moves the stamp in seven documents on a README fix: stamp the md5 of the files that matter — 2026-09-22 [docs/provenance].
 - Markdown → PDF for a document set with wide tables and Ω / ≤ / ✓: a headless browser + CSS beat the installed TeX; `overflow-wrap: anywhere` breaks part numbers mid-word — 2026-09-22 [tooling/pdf].
 - The JLC / LCSC part-page JSON carries RoHS (`isRohsCert` + certificate URLs) and MSL fields: a compliance table is fetched at cut time from those, no declaration claimed — 2026-09-22 [parts/compliance].
+- A generated fab remark written for engineers is unreadable to the fab's customer-service desk: a plain-words paragraph (functions, not refdes) ahead of the table, an explicit "no wave soldering" whenever THT meets a two-sided SMT board, and the "ship the part loose" fallback close the loop in one mail instead of three - 2026-09-29 [fab/order].

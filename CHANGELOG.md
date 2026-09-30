@@ -1,5 +1,13 @@
 # CHANGELOG — hw-from-spec
 
+## 0.6.1 — 2026-09-29 — fab remark for two readers
+
+### Added
+- `references/fab-dfm.md` §5: the order remark has two readers - a plain-words paragraph (functions, not refdes) ahead of the generated technical
+  block; pre-empt the customer-service questions (which part a hole belongs to, wave soldering of THT on a two-sided SMT board, the ship-loose
+  fallback); file the desk's screenshot links the same day. Source: a PCBA order clarification thread, three mails, 2026-09-29.
+- `references/pitfalls.md`: one line.
+
 ## 0.6.0 — 2026-09-29 — FDM brand marks (ironed top face / AMS bed layers), dust caps, Bambu CLI facts, one worktree per agent
 
 Second retro on the source project (`docs/retro/aec-tester_2026-09-29.md`: 19 learnings, 15 NEW, 5 costly). The owner's directive: "push the
