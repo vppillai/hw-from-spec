@@ -27,6 +27,7 @@ answered question is a defect; changing an answer is a new D row that supersedes
 | C6 | fan / vents | {{passive vents}} | yes | D-{{nn}} | `kickoff.enclosure.fan` |
 | C7 | light pipes / windows | {{holes, pipe on the backlog}} | yes | D-{{nn}} | `kickoff.enclosure.light_pipe` |
 | C8 | two targets, per-preset fits | {{yes}} | yes | D-{{nn}} | `kickoff.enclosure.targets` |
+| C9 | brand marks on FDM parts | {{ironed top-face feature}} | yes | D-{{nn}} | `kickoff.enclosure.marks`; slicer plate profile (`ironing_type: top`) |
 | D1 | the manufacturability bar | {{zero errors / zero warnings / no waivers}} | yes | D-{{nn}} = `{{D-BAR}}` | `fab_dfm.bar`; GATES.md; CLAUDE.md rule 9 |
 | D2 | what may be waived | {{nothing}} | yes | D-{{nn}} | `print_targets.*.accepted: []`, `dfm_accepted: []` |
 | D3 | design margin / tolerance source | {{+0.1 MJF; first article replaces the vendor sheet}} | yes | D-{{nn}} | `print_targets.*.design_margin / tolerance` |

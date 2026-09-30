@@ -1,6 +1,6 @@
 ---
 name: hw-from-spec
-version: 0.5.0
+version: 0.6.0
 description: Run a hardware project (PCB + printed or CNC enclosure, contract fab such as JLCPCB) from a written specification to a production cut with an owner-gated, generated-only, blind-reviewed workflow — a kickoff questionnaire that asks every owner decision up front with recommended answers, a zero-warning manufacturability bar, and a retro that folds each project's learnings back into the skill. Use this whenever someone starts a board or enclosure project from a spec, asks to set up gates, a decision log, generators, part verification, a fab DFM mirror, a case pipeline, FEA, blind reviews, a release report or a production cut for one, or resumes such a project, or wants the skill improved from a finished project — even if they only say "new KiCad board", "order this at JLC", "review the layout", "cut the release" or "what did we learn".
 ---
 
@@ -47,7 +47,7 @@ when you reach that step, not before. Nothing here is specific to one board: pro
 Before the spec is read and before any CAD, ask the owner **every decision class a board + enclosure project needs**, grouped by phase and asked
 in ten batches with the **`AskUserQuestion` tool** (≤ 4 questions per call): product / process / material / quantity; PCB build (layers, copper,
 impedance, finish, min part size + link policy, assembly sides, test points, panel); enclosure architecture (pieces, retention = screws + inserts /
-magnets / none, coupling, feet, labelling = deboss / plate / badge, fan, vents, light pipe, two targets); the manufacturability bar per target and
+magnets / none, coupling, feet, labelling = deboss / plate / badge, fan, vents, light pipe, two targets, brand marks = ironed top-face feature / flush AMS colour body); the manufacturability bar per target and
 what may be waived (default: zero / zero / nothing); verification (coupons, dummies, review rounds per gate, visual inspections, vendor API read
 before the order, FEA); bought parts (acceptable verification sources, the blocked-source rule, stock floor); software / test posture; release /
 cut / CI / the retro; identity, envelope and delegation. **Every question lists its RECOMMENDED answer first (marked) and two or three alternatives with a one-line consequence**;
@@ -270,7 +270,8 @@ checker (2026-09-28, ~150 mm parts) and a 0.4-nozzle FDM printer — substitute 
    asserted defined per preset; duplicate yaml keys gated): coupons (text, walls, fits, insert + torque) and a board dummy (two-piece AND one-piece
    at final dimensions — the one-piece nose on a break-away shim the README calls out as a removable "PCB lip"; section symmetric difference 0 mm²
    between the two) before the part; walls ≥ 1.6 / ribs 1.2 / voids 1.0 at 0.4 nozzle, min feature 2 × line width, elephant foot, hole shrink and
-   seam handled as per-preset `fits` knobs; raised legends cap 4 / stroke 1.0 / 0.6; fan bosses = fan holes; hood roof-down by `rotate()`, never
+   seam handled as per-preset `fits` knobs; raised legends cap 4 / stroke 1.0 / 0.6; brand marks = a top-face feature under `ironing_type: top` or a flush AMS colour body in the bed
+   layers, never a bed-face or vertical-wall deboss, mark coupon first, FAIL-gated mark rows (`dfm-printed-enclosure.md` §8.1, owner C9); fan bosses = fan holes; hood roof-down by `rotate()`, never
    `mirror()`; slicer projects with project-named presets + `different_settings_to_system`; floating-region warning = FAIL; supports read from the
    g-code, not the intent; auto-orientation. **Every vendor DFM decision is mirrored into this preset the same day** in the same yaml under its own
    version key; its census + slicer log clean; ONE kit folder = pieces + coupons + BOTH dummies + READMEs.
@@ -357,7 +358,7 @@ CHANGELOG entry from the draft, blind-review the skill (a cold-user lens and a D
 | part tags, verification table | `references/part-verification.md` |
 | fab rules, panel, quote form, DFM export | `references/fab-dfm.md` |
 | case yaml → STL → checks → quotes | `references/case-pipeline.md` |
-| printed-enclosure DFM: MJF / FDM / SLA rules tagged checker / vendor / physics / owner, inserts + magnets, post-processing, tolerance stack, census gate, heat-map procedure, probes, coupons, dummies, post-mortem | `references/dfm-printed-enclosure.md` |
+| printed-enclosure DFM: MJF / FDM / SLA rules tagged checker / vendor / physics / owner, inserts + magnets, post-processing, tolerance stack, census gate, heat-map procedure, probes, coupons, dummies, brand marks (ironed top face / AMS bed layers), dust caps, Bambu CLI facts, post-mortem | `references/dfm-printed-enclosure.md` |
 | machined enclosure: corner radii, walls, threads, anodising, quote page, case-order gate | `references/cnc-enclosure.md` |
 | bought hardware: line schema, hardware classes (inserts, magnets, feet, labels), adhesive on PA12 | `references/part-verification.md` |
 | meshing, solving, caches, reporting | `references/fea-stage.md` |

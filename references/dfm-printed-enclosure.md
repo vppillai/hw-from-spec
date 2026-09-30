@@ -231,7 +231,7 @@ numbers are **[owner bar]** for a 0.4 nozzle at 0.20 mm and live in `print_targe
 - **Layer anisotropy**: a tab or boss loaded across layers is 30–50 % weaker; boss walls shear along layers — orient bosses so the load is in-plane
   where possible, and read the FEA with the anisotropy factor.
 - **Legends RAISED**: cap 4 / stroke ≥ 1.0 / height 0.6 on a face-up top (a 0.4-deep, 0.45-wide debossed void at cap 2.2 is illegible on a 0.4
-  nozzle); raised text cannot print face-down — a face-down face gets debosses or flush colour bodies. A fit filter keeps a legend only where it
+  nozzle); raised text cannot print face-down — a face-down face gets a flush colour body (§8.1 option b), never a deboss (its recess ceiling is a bridge underside). A fit filter keeps a legend only where it
   fits its land and LISTS what it dropped.
 - No rigid bump on a slit tab (it blocks, F ∝ t³); screws + heat-set inserts in ≥ 1.6 boss walls, or magnets (§1.1), instead of snap tabs where the
   arm cannot be long enough.
@@ -260,6 +260,103 @@ numbers are **[owner bar]** for a 0.4 nozzle at 0.20 mm and live in `print_targe
   one** — the analysis must read the file it names (md5 in the sidecar checked before any forensics).
 - Hand over ONE kit folder: case pieces + coupons + BOTH board dummies (each with its 3MF) + every project file + READMEs; a moved folder keeps a
   `README_MOVED.md` pointer; a stale kit folder is named for deletion in the record.
+
+### 8.1 Brand marks / logos on FDM parts — an OWNER choice at kickoff (questionnaire C9); worked example: a filled chevron mark 10–18 mm wide, three marks on one product, 2026-09-29
+The finish of a mark is decided by WHICH FACE carries it and HOW that face is built, not by the slicer profile. Two options are first-class
+(owner: "ironed surface and bottom ams are both viable options"); pick one per product, or ship both as plates when the printer has an AMS:
+- **(a) TOP-face feature under ironing.** The mark is a deboss 0.6 deep (= 3 whole layers at 0.20, measured on the mesh) or a raised body 0.6
+  high on a face that is a TOP face of the print, and the plate profile irons **ALL top surfaces: `ironing_type: top` — never `topmost`**
+  (`topmost` irons only the highest face and skips the recess floor, which recreates the very texture mismatch the option exists to avoid).
+  **Top shell ≥ recess depth + 1.0** (worked example: `top_shell_layers 7` = 1.4 under a 0.6 recess) so no sparse infill shows through the
+  recess floor; floor and face are then both topmost solid surfaces built by the same pass. **Orient the part so the marked face IS a top
+  face**: a cap prints mouth down (blind pocket rising from the bed, flange on the bed, the closed end = the marked top face, §8.2); a plate
+  prints face-up. The mark is read directly, not mirrored. Cost: one filament, ironing adds ~5 min on a small plate.
+- **(b) BOTTOM-face flush AMS colour body in the bed layers.** The marked face goes ON THE BED and the mark is a separate solid body in the second
+  filament occupying the first N layers of that face — flush, no recess, no bridge, no ironing: both colours are bed contact and the colour
+  boundary is a first-layer perimeter in XY, the crispest mark FDM can make. **The mark is mirrored in the model** (proved by a render from −Z
+  against the artwork as drawn). **Default 2 layers = 0.4** (a dark mark on a dark body is opaque at two layers; only layer 1 is ever seen);
+  **3 layers for a light mark on a dark body**. Cost = 2 filament changes per 2 colour layers + purge (worked example: the third layer = +2
+  swaps, +0.66 g purge, +3 min); it scales with the coloured layer count, not with the mark area — keep the count a knob, slice every variant.
+- **NEVER:** a **bed-face deboss** (the recess ceiling is a bridge underside — strands beside a glossy bed-contact face: the "webbing" people
+  remember on debossed logos); a **vertical-wall deboss** (stair-steps every horizontal edge at the layer height); **webs / discs / closing
+  fillets that alter the artwork** to satisfy a land rule (they read as dimples — fix the rule set to the artwork, never the artwork to the rule
+  set: point contacts stay point contacts and fuse over one line width, which is the artwork's own look).
+- **The mark must sit on a bed face and there is no AMS → a separate face-up printed PLATE glued into a keyed rebate** (worked example: plate
+  41 × 22 × 1.6, rebate 0.4 deep + 0.2/side clearance leaving ≥ the wall gate of roof, one chamfered corner = rotation key, glued chamfer to
+  chamfer). A bed-face rebate on a roof-down body is a bridge ceiling even when hidden: **split any rebate span > 10 mm with full-height lands
+  that double as glue lands** (worked example: 22.4 mm split by two 2.0 lands into three 6.1 mm bridges) instead of filing a covered-face
+  exemption — an unsplit span sags into the rebate and rocks the plate.
+- **All marks on one product share the reader orientation of the legends** — rotate, never mirror; prove each with a render against the
+  artwork as drawn (proper-vs-improper rigid-match row: proper ≈ 0, mirror ≫ 0). "Apply the rule to the other marks too" is an AUDIT, not a
+  patch: list EVERY instance of the feature class across every body and preset, state each verdict in a FAIL-gated row, then change.
+
+**Mark geometry rows (FAIL-gated; measured on the same 2D polygon the CAD imports and on the exported mesh).** "Minimum gap" of a filled mark is
+ill-posed (a chord through a boundary point is ~0; the medial axis reaches every convex vertex with width → 0; hull minus ink adds slivers) —
+measure the FAILURE MODE instead:
+
+| Row | Gate | Failure it guards |
+|---|---|---|
+| recess span = largest inscribed circle of each recessed region | ≤ 6.0 mm wherever the recess ceiling is a bridge; kept on an ironed top-face recess (a compact recess irons flat) — reduce the mark width, never the depth | bridge sag / an un-ironed floor |
+| enclosed first-layer island (a solid region the recess or the colour body encloses), inscribed Ø | ≥ 2.5 mm, else close the recess over it | the island joins the body only above the recess |
+| colour-region width, EITHER colour (option b) | ≥ 0.84 mm = two 0.42 first-layer lines; separate lobes touching at points are fine (a colour region is not a void) | a one-line region does not print |
+| point-contact necks | INFO: they fuse over ~one line width at the print | the artwork's own look |
+| mark to every edge of its face (and to a lug root) | ≥ 1.5 mm (≥ 1.0 to a lug) | the face's perimeter lines |
+| depth / height | whole layers on the MESH (0.6 = 3.00 × 0.20) | a partial layer is a slicer guess |
+| material behind a recess | ≥ the target's `rib_gate` (1.2) AND ≥ the profile's top shell | strength; infill show-through |
+| chirality | proper rigid match ≈ 0 against the artwork; mirror ≫ 0 | a mirrored brand |
+
+A mesh footprint measured from facet CENTROIDS under-reads the extent (11.66 vs 12.53 on a rounded rectangle) — every bbox row uses the
+VERTICES of the selected facets. **A mark COUPON prints first on the plate** — the marked face alone (worked example: the cap's 2.0 mm closed
+end with the identical mark). It checks the PRINTER-dependent part (first-layer squish, ironing quality / recess-floor finish, colour opacity);
+the geometry rows guarantee the rest — the report says which is which.
+
+### 8.2 Dust caps / protective covers (worked example: a QSFP-DD plug cap, 2026-09-29)
+- **No through-hole may open into the protected cavity** — a lanyard hole is a dust path. Tether = an **external lug outside the cavity**,
+  support-free: standing on the bed, hole axis vertical, wall around the hole ≥ the wall gate (1.6) outboard and inboard to the mouth.
+- **Print MOUTH DOWN**: the lip flange flat on the bed, mouth chamfer ≤ 45°, **ribs / crush beads start ≥ 1.0 above the bed** so elephant foot
+  never widens a fit surface, the pocket tip face is the ONLY bridge (≤ 10 mm; sag lands in the tip gap); profile: elephant-foot compensation
+  0.15 + 0.5 mm first-layer lines, thin-wall detection on for the mouth rim, thick bridges off. FAIL rows: chamfer angle, lip footprint = the
+  full lip (vertex extents), rib start Z, bridge span, material under the mark (§8.1).
+- The pocket corner radius comes from the mating part's DRAWING, not a print rule of thumb (a module corner R 0.15 is clipped by a pocket
+  R > 0.66); ribs bear on the faces the drawing shows SOLID (a QSFP-DD module is open at its bottom leading edge and recessed on top).
+- The README states the first-print knobs, one per print (fit clearance OR rib proud), with the expected calliper readings.
+
+### 8.3 Bambu Studio CLI facts (02.08.x, 2026-09-29 — verify on your build)
+- `sparse_infill_density: 100%` is **rejected by the validator (rc -18 "Invalid parameter value(s)")** with any pattern; 90 % passes. Force a
+  solid column with `top_shell_layers` / `bottom_shell_layers` (or their thickness keys) instead.
+- A **two-filament slice with the prime tower on SEGFAULTS (rc -11 / 133, no result.json, log ends "no filament colors found in projects")**
+  unless every filament profile carries `filament_colour`: write **one filament JSON per slot with its colour** (or `--filament-colour
+  '#RRGGBB;#RRGGBB'`, undocumented in `--help`). One filament, or two without the tower, slice fine. Bisect a crash or a rejected 3MF on the
+  temp inputs (5 s per run), one variable / key group per run, before touching the generator.
+- **Multi-material = ONE multi-part object with a per-part `extruder`.** The CLI has no flag for it but loads a Bambu-style 3MF (the source
+  project's `write_ams_3mf`; copy the package layout from a file Studio exported, ids are global):
+  ```
+  [Content_Types].xml, _rels/.rels                 standard OPC
+  3D/3dmodel.model         <model … xmlns:p="…/3dmanufacturing/production/2015/06" requiredextensions="p">
+                             <resources><object id="O" type="model"><components>
+                               <component p:path="/3D/Objects/object_n.model" objectid="P1" transform="1 0 0 0 1 0 0 0 1 0 0 0"/>
+                               <component p:path="/3D/Objects/object_n.model" objectid="P2" …/></components></object></resources>
+                             <build><item objectid="O" transform="1 0 0 0 1 0 0 0 1 x y z"/></build></model>
+  3D/Objects/object_n.model   <object id="P1" type="model"><mesh>…</mesh></object>  one per part (body, mark)
+  3D/_rels/3dmodel.model.rels one Relationship per object file
+  Metadata/model_settings.config
+      <config><object id="O"><metadata key="extruder" value="1"/>
+        <part id="P1" subtype="normal_part"><metadata key="extruder" value="1"/></part>
+        <part id="P2" subtype="normal_part"><metadata key="extruder" value="2"/></part></object>
+      <plate><metadata key="plater_id" value="1"/><model_instance><metadata key="object_id" value="O"/>
+        <metadata key="instance_id" value="0"/></model_instance></plate></config>
+  ```
+  Slice with `--arrange 0` (the parts stay where the layout put them). Alternative route: pre-placed part STLs with `--load-filament-ids 1,2
+  --assemble --arrange 0` — same colour requirement.
+- **Report filament per colour and purge per plate**: per-filament grams from `Metadata/slice_info.config`, filament changes from the g-code
+  (`M620 S..A`). Purge + tower mass is NOT in the header — derive it as used − (part volume × density) **only for a SOLID part** (the 2–3 layer
+  colour mark); a 20 % infill body gives a negative "purge" — report the mark filament's share and say the body's cannot be separated.
+- The CLI takes the same STL path N times as N objects (`--arrange 1`) — a "four caps" plate needs no multi-body STL; the object count comes
+  from the CLI's `objects` list, not from the (deduplicated) inputs.
+- `different_settings_to_system` lists only keys whose value differs from the flattened system preset: a project value equal to the system
+  default is embedded but not listed — prove a setting from the embedded value, not from the list.
+- State per plate in the kit README: minutes, grams per filament, filament changes, purge — ironing adds ~5 min on a small plate; each extra
+  coloured layer adds swaps + purge + minutes.
 
 ## 9. Two versions from one yaml (vendor MJF + home FDM)
 Presets `base + overrides` deep-merged before any module reads the yaml (`references/case-pipeline.md` §Presets); the geometry may differ wherever
