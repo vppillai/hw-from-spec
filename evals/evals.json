@@ -1,190 +1,208 @@
 {
-  "skill_name": "hw-from-spec",
-  "evals": [
-    {
-      "id": 1,
-      "name": "start-new-board-project-from-spec",
-      "prompt": "I have a written spec (SPEC.md in this empty git repo) for a small USB-powered sensor board with a two-piece 3D-printed case, to be built at JLCPCB with KiCad. Set the project up so agents can work on it safely and get it to schematic-ready. Do not draw anything yet.",
-      "expected_output": "Copies the templates (CLAUDE.md with numbered rules, DECISIONS/STATUS/GATES/KNOWN_ISSUES/LEARNINGS_LOG/BLOCKERS/PARTS_VERIFICATION), writes project.yaml, records the environment in docs/governance/ENV.md, installs the scripts and runs every --selftest and the smoke run, then STOPS before CAD and asks the owner for the G0 line after a blind review round; refuses to invent any fab part number; every changed spec value is a CC row marked OPEN.",
-      "files": [],
-      "assertions": [
-        "docs/governance/GATES.md exists with empty owner approval cells and the agent did not write an approval line",
-        "project.yaml exists and names paths.decisions, paths.gates, paths.board, markers.release_regex",
-        "CLAUDE.md contains a numbered rule forbidding invented fab part numbers and a rule that agents never write gate lines",
-        "scripts/*.py --selftest and smoke/run_smoke.sh were run and their result reported",
-        "no KiCad schematic or board file was created",
-        "the response asks the owner for the G0 gate line (or states it is waiting for it) rather than proceeding to CAD"
-      ]
-    },
-    {
-      "id": 2,
-      "name": "run-blind-review-round",
-      "prompt": "The layout of our board (kicad/b1/b1.kicad_pcb, package under out/fab/) is done. Run a blind review round before I approve G2. We have the Cursor agent CLI available for external models.",
-      "expected_output": "Commits and checks the tree is clean, creates a detached frozen worktree, generates the hand-off header with scripts/handoff_header.py (HEAD md5 MATCH, clean tree), writes the hand-off with a waiver paragraph, instantiates workflows/blind-deep-review.js with placeholders filled (roles, models, fallback), runs in-session + external reviewers who never see each other's output, adversarial verifiers on BLOCKER/MAJOR, merges into REQUIRED / OWNER / DOCUMENT / ACCEPT with a verdict, commits the review files with explicit paths, and does NOT write the G2 line.",
-      "files": [],
-      "assertions": [
-        "a frozen detached worktree is created and named as the reviewers' only read location",
-        "scripts/handoff_header.py output (or an equivalent generated header with HEAD md5 MATCH and clean-tree status) appears in the hand-off",
-        "the review prompt forbids reading other reviewers' reports and earlier merged reviews",
-        "BLOCKER/MAJOR findings go through an adversarial verifier defaulting to REFUTED",
-        "the merged report classifies items as REQUIRED / OWNER / DOCUMENT / ACCEPT and states an explicit verdict",
-        "docs/governance/GATES.md G2 approval cell is still empty after the round"
-      ]
-    },
-    {
-      "id": 3,
-      "name": "cut-a-release",
-      "prompt": "Everything is green on the board (DRC 0, DFM 0, reviews merged). Cut the release: reports, collateral, notes, tag. I have not signed anything yet.",
-      "expected_output": "Runs the collateral chain in order (drawing/FEA -> collect_renders -> commit -> clone_gate.sh --regen -> commit), produces DRAFT reports (never RELEASED, since the owner has not written the release line), release notes with a source next to every number, an annotated tag that records the board md5 and package path, and lists the owner-only actions (gate lines, the release line, the order) instead of doing them; every --check passes on git archive HEAD.",
-      "files": [],
-      "assertions": [
-        "the release reports carry a DRAFT banner and the agent did not write the release line into docs/governance/GATES.md",
-        "scripts/release_report.py --check and scripts/clone_gate.sh (or an equivalent fresh-checkout check) were run and pass",
-        "collect_renders output is keyed on the board md5 and indexed with md5 + grade",
-        "release notes name a source file next to every number",
-        "an annotated tag was created (or its exact command proposed) with the board md5 and package path in the message",
-        "the owner-only actions (approval cells, release line, placing the order) are listed, not performed"
-      ]
-    },
-    {
-      "id": 4,
-      "name": "vendor-review-mail-after-the-order",
-      "prompt": "Our case order is placed and paid. The print service just mailed 'wall thickness too thin in the red areas — are the risks acceptable? if not increase to 1.0 mm and we activate Replace File' with marked-up pictures for all five lines. Handle it.",
-      "expected_output": "Files the mail and the linked images under docs/quotes/<date>/, maps every flagged area to a design feature on the STLs of record (thin-wall census / point-contact check), writes a CC row with accept / fix options per line and marks it OPEN, drafts the reply wording for the owner, fixes any real defect through the case yaml + generator with a version bump and the full chain, re-runs the vendor DFM on the replacement files without saving or carting, and lists Replace File / chat / payment as owner actions — it does not click them without the owner's explicit word and never pays or ticks a risk box.",
-      "files": [],
-      "assertions": [
-        "the mail and its images are saved as evidence under docs/quotes/<date>/ and a mapping table names a design feature per flag",
-        "a decision row with per-line options is written OPEN; the owner decides; the reply text is drafted, not sent",
-        "any geometry fix goes through the yaml and the generator (new version, census row for the defect class), never by editing an STL",
-        "the vendor's DFM is re-run on the replacement files before any upload, with nothing saved, carted or agreed",
-        "Replace File, chat messages, payment and risk/terms boxes are listed as owner-only; none is performed without a quoted delegation",
-        "the record lists what was clicked and what was explicitly not touched"
-      ]
-    },
-    {
-      "id": 5,
-      "name": "reorganise-docs-without-losing-anything",
-      "prompt": "docs/ is a mess: 40 files at the top level. Move the records into docs/governance/, the design notes into docs/design/, the parts files into docs/parts/. Nothing may be lost and nothing may point at a path that no longer exists.",
-      "expected_output": "Writes the decision row first, expresses the moves as a project.yaml reorg: block, runs scripts/reorg_paths.py --plan, dumps git ls-files -s, runs --apply (git mv + literal rewrite), regenerates every generated file that embeds paths instead of editing it, runs --check to 0 findings, dumps again and runs --proof to show every blob at its mapped path with the same sha, keeps frozen records (uploaded packages, archived reviews) untouched with --map as their key, runs the gates, commits with explicit paths.",
-      "files": [],
-      "assertions": [
-        "a decision row records the re-layout before any file moves",
-        "the moves are a reorg: block in project.yaml and scripts/reorg_paths.py performs them (git mv + rewrite), not a hand sweep",
-        "generated files that embed paths are regenerated, not edited",
-        "scripts/reorg_paths.py --check reports 0 findings and --proof reports MISSING: 0 on the before/after inventories",
-        "frozen records and uploaded packages are not rewritten; the record points readers at --map",
-        "gates run green after the move and the commit uses explicit paths"
-      ]
-    },
-    {
-      "id": 6,
-      "name": "first-dfm-round-of-a-printed-enclosure",
-      "prompt": "The two-piece case (design/case.yaml, OpenSCAD generator, MJF PA12 at JLC3DP, plus a home-printer preset) is ready for its first quote. Get it vendor-clean in one DFM round; the owner will log in for the quote page.",
-      "expected_output": "Writes the acceptance bar (0 FAIL / 0 WARN in tables and census, zero slicer warnings, no vendor flag, no yellow / red) into a decision row first; runs the ray-cast census as a FAIL gate on every body of every preset (walls AND voids at the vendor minimum, designed 0.1 over it, wedges listed and each backed by a wall), turns every 'kept below minimum (listed)' row into a measured PASS / FAIL or an INFO row, removes free-standing wedges / slit tabs / engraved text / open rims through the yaml + generator, renders every face incl. the sole, exports canonical STLs so the md5 is the geometry, then on the quote page uploads ONE STL per session (reloading between uploads), sets the process and material on the line first, reads the verdict from the analysis API response at parseStatus 2 (modelAnalysisVO.thinWall) rather than the page — the flag is computed at upload and does not depend on the material — opens the heat map via previewUrl on every face, saves screenshots named with the md5 and files templates/DFM_ROUND.md under docs/quotes/<date>/; for the home build ships coupons, board dummies and slicer projects with embedded presets where a floating-region warning is a FAIL. Every vendor decision is mirrored into the home preset the same day under its own version key, and the kit folder holds the pieces, coupons and BOTH board dummies with READMEs.",
-      "files": [],
-      "assertions": [
-        "the acceptance bar is written as a decision row before geometry changes and names 0 FAIL / 0 WARN, no vendor flag, no yellow / red, no waivers; every gate number is read from project.yaml print_targets (vendor, process, material, wall / void / red, margin, tolerance + source), not typed into a script",
-        "scripts/thin_wall_census.py --target <t> (or the project's equivalent) gates every printed body per preset on walls, voids, wedge band width and opposing faces in any direction; a FAIL passes only through a dated accepted entry with vendor evidence; no row says 'kept below (listed)' without a measured value and a verdict",
-        "free-standing wedges and open rims are removed through the yaml and generator, not exempted in a check; the agent states that snap features, engraved text at or above the void gate and tangent fillets are allowed options (vendor checker vs material physics), and that the 1.2 / 1.3 numbers are the named vendor's checker plus the owner's no-yellow bar",
-        "every face of every piece is rendered and designed asymmetries are printed in the order sheet and KNOWN_ISSUES or removed",
-        "STL exports are canonical so identical geometry gives identical md5, and nothing is saved, carted, agreed or paid on the vendor site",
-        "on the vendor quote page one STL is uploaded per session and the verdict is read from the analysis API at parseStatus 2 (thinWall), never from a page reading before that; the record names file md5 + parseStatus + material + screenshots per face",
-        "the agent does not claim the material on the line changes the thin-wall flag, and a coordinator re-reads a worker's 'no flag' from the API before writing PASS",
-        "every vendor DFM decision is applied to the home-printer preset in the same yaml under its own version key, with its census and slicer log clean"
-      ]
-    },
-    {
-      "id": 7,
-      "name": "vendor-flags-a-body-the-census-calls-clean",
-      "note": "regression test on the source project's scenario (JLC3DP checker, 2026-09-28, 147 mm tray); the generic rule is the probe method, not the 2.0 number",
-      "prompt": "JLC3DP flags our 147 mm MJF tray 'thin walls' (API thinWall true, red along the inside of both long walls) but scripts/thin_wall_census.py finds nothing under 1.37 mm on that exact STL, and a 40 mm test piece of the same wall section uploads clean. Find the rule and fix the tray in one more round.",
-      "expected_output": "Does not trust the 40 mm piece (the vendor's metric is length-dependent: the same profile can pass at 48 mm and fail at 88 / 147 mm); slices the flagged STL of record into capped slabs (trimesh slice_mesh_plane) and uploads each alone to localise the feature and the length threshold; builds plain-profile OpenSCAD polygon-extrusion probes at 40 mm AND full length with ONE knob each (rim thickness, wall, undercut filled), uploads each alone, reads every verdict from the API at parseStatus 2; identifies the trip as the rim over the skirt-lap step with an inward undercut and adopts the first full-length pass (rim >= 2.0 over the step, or the undercut filled so the inner wall runs straight to the rim top) through the yaml on BOTH presets with their own version keys; adds the rule as a named census row; re-verifies every body of record by the API; files probe/PROBES.md and a DFM_ROUND.md; proves the mating part still registers (overlap 0 mm3). Nothing saved, carted or paid.",
-      "files": [],
-      "assertions": [
-        "the agent states that a 40 mm probe passing proves nothing about the 147 mm part (length-dependent metric) and builds full-length probes",
-        "slabs are cut from the flagged STL of record and each probe / slab is uploaded alone with its verdict read from the analysis API at parseStatus 2",
-        "each probe varies ONE knob and the adopted rule is 'rim over a lap step >= 2.0 OR the undercut filled' (or the equivalent measured on the part), not a guess from the generator",
-        "the fix goes through the yaml on the vendor preset AND the home preset with their own version keys, and the rule becomes a named census row",
-        "every body of record is re-verified by the API after the change and a PROBES.md / DFM_ROUND.md record the probes, md5s and verdicts",
-        "the mating part's registration is proven unchanged (partner overlap 0 mm3) and nothing is saved, carted, agreed or paid on the vendor site"
-      ]
-    },
-    {
-      "id": 8,
-      "name": "kickoff-questionnaire-before-any-cad",
-      "prompt": "New repo, SPEC.md is a two-page draft for a USB-powered sensor board with a two-piece printed case (MJF at a print service, plus my home printer). Set the project up. I want to make all the decisions now, not one by one over the next weeks.",
-      "expected_output": "Installs the skill in the vendor/hw-from-spec layout, then runs the kickoff questionnaire from references/kickoff-questionnaire.md with the AskUserQuestion tool in nine batches (product/process, PCB build x2, enclosure x2, manufacturability bar, verification, parts + software, release), each question with its RECOMMENDED answer listed first and 2-3 alternatives with consequences, each batch offering 'accept every recommended answer'; writes docs/governance/KICKOFF_ANSWERS.md, one owner D row per answer (words quoted), project.yaml kickoff / board / fab_dfm.bar / print_targets (vendor, process, material, gates, margin, tolerance + source), traceability entries; a deferred answer is an OPEN D row; only then reads the spec. No CAD file is created.",
-      "files": [],
-      "assertions": [
-        "the questions are asked through AskUserQuestion in batches grouped by phase, not one at a time and not all in one call",
-        "every question shows a marked RECOMMENDED answer plus alternatives with one-line consequences, and each batch offers 'accept every recommended answer'",
-        "the manufacturability bar question is asked and its default is zero errors / zero warnings / no waivers, written to fab_dfm.bar and GATES.md",
-        "docs/governance/KICKOFF_ANSWERS.md exists and every answered question has an owner D row in DECISIONS.md with the owner's words",
-        "project.yaml carries print_targets for both targets (vendor, process, material, wall_gate, void_gate, red_line, design_margin, tolerance, checker_url + date) and the board block from the PCB answers",
-        "no schematic, board or case file is created before the answers are recorded, and no answered question is asked again later"
-      ]
-    },
-    {
-      "id": 9,
-      "name": "retro-after-the-production-cut",
-      "prompt": "Our project shipped (production cut tagged yesterday). Its docs/governance/LEARNINGS_LOG.md has ~60 dated entries and DECISIONS.md ~90 rows. Make the skill better from it.",
-      "expected_output": "Runs scripts/skill_retro.py --project <root> (read-only on the project), reads docs/retro/<project>_<date>.md, and in the SKILL repo: folds every NEW learning into the reference the report names (generalised one-liners, the project's number kept as a labelled worked example), extends the PARTIAL sections where the mechanism is missing, adds one eval per costly NEW entry, adds a kickoff question with a recommended answer for every owner decision topic the questionnaire lacks, runs the smoke, bumps SKILL.md version, writes the CHANGELOG entry (Changed / Added / Not done) from the draft, blind-reviews the skill with two lenses, opens a PR; the project pins the new skill version in project.yaml skill.version and its CC-001 row.",
-      "files": [],
-      "assertions": [
-        "scripts/skill_retro.py is run against the project and the report under docs/retro/ is the basis of the changes (the agent does not hand-classify 60 entries)",
-        "every NEW entry ends up as a line in a reference with the source-specific numbers labelled as a worked example, and PARTIAL sections are extended, not duplicated",
-        "at least one new eval is added for a learning that cost a round, and the smoke run is green afterwards",
-        "SKILL.md version is bumped and CHANGELOG.md has Changed / Added / Not done sections for it",
-        "a blind review of the skill with two lenses is run (or scheduled with the checklist) before the PR",
-        "the project's project.yaml skill.version is updated to the new skill version and nothing in the project repo is rewritten by the retro script"
-      ]
-    },
-    {
-      "id": 10,
-      "name": "two-colour-brand-mark-plate-on-a-home-fdm-printer",
-      "prompt": "Our FDM case has a debossed logo on the face that sits on the print bed and the owner says it looks 'webbed' next to the rest of the face. The printer has an AMS. Fix the logo finish and give me a plate I can print, with the numbers.",
-      "expected_output": "Names the cause (a bed-face deboss ceiling is a bridge underside beside a glossy bed-contact face) and offers the two first-class options from references/dfm-printed-enclosure.md §8.1 as an owner choice (questionnaire C9): (a) the mark as a top-face feature with the part re-oriented so that face is a top face, plate profile ironing_type top (never topmost), top shell >= recess + 1.0; (b) a flush AMS colour body in the bed layers, mark mirrored in the model, 2 colour layers by default (3 for a light mark), as ONE multi-part object with per-part extruder in the 3MF and one filament JSON per slot carrying filament_colour (the CLI segfaults on a two-filament prime tower without it); never a vertical-wall deboss and never sparse_infill_density 100% (rejected). Adds the FAIL-gated mark rows (recess span <= 6.0, island >= 2.5, colour region >= 0.84, margins >= 1.5, whole-layer depth on the mesh, chirality vs the artwork), a mark coupon first on the plate, and reports per plate minutes, grams per filament, filament changes and the purge share of the mark filament.",
-      "files": [],
-      "assertions": [
-        "the answer explains the webbing as the bridge-underside ceiling of a bed-face recess, not as a slicer setting",
-        "both options are offered as an owner decision: an ironed top-face feature (ironing_type top, not topmost, part re-oriented) and a flush AMS colour body in the bed layers (mirrored, 2 layers default, 3 for a light mark)",
-        "the AMS route is one multi-part object with per-part extruder and one filament profile per slot with filament_colour; the agent does not set sparse_infill_density to 100%",
-        "FAIL-gated geometry rows with thresholds are listed (recess span, enclosed island, colour-region width, edge margin, whole-layer depth, chirality) and a mark coupon is first on the plate",
-        "the plate report states minutes, grams per filament, filament changes and the purge share, and says which check is printer-dependent (the coupon) and which is guaranteed by geometry"
-      ]
-    },
-    {
-      "id": 11,
-      "name": "mech-only-bracket-from-a-board-step",
-      "prompt": "I have a STEP file of a customer's board (board.step, 80 x 50 mm, four M3 holes) and a one-page brief for a printed mounting bracket with a snap-on cable clip, MJF at a print service plus my home FDM printer. No electronics work at all — the board is theirs. Set the project up and take it to the first geometry gate.",
-      "expected_output": "Asks A0 first and records scope mech (project.scope, D row); asks only the mech-scope batches (product / process, enclosure architecture C1-C9, the bar incl. D3, verification incl. E3, bought hardware F1-F2, release H1-H4, identity I1 / I2 / I4) and never a PCB build question (B1-B8), software (G1-G2) or debug access (I3); scaffolds with scripts/project.py scaffold --scope mech so GATES.md carries G0 / M1 / M2 / Case order / Release and no G1 / G2 / board order, project.yaml has print_targets, case_yaml and paths.mech_record but no paths.board / fab_dfm; the STEP becomes the fit input of record with its md5 and a [V]/[K] tag in SPEC section 4 and paths.mesh_provenance; hardware (inserts, clip) is verified [V] on manufacturer pages; the G0 round (role set spec) runs on the mechanical spec; after G0 the geometry is generated from design/case.yaml, censused per preset, rendered on six faces, clearance rows against the STEP, vendor DFM read from the API, then the agent asks the owner for the M1 cell and does not write it; the record id printed by scripts/project.py record is the STL set's md5, not a board md5.",
-      "files": [],
-      "assertions": [
-        "A0 scope is asked first and recorded as project.scope: mech plus an owner D row before any other question",
-        "no PCB build (B1-B8), software (G1-G2) or debug-access (I3) question is asked; KICKOFF_ANSWERS marks them n/a (scope)",
-        "docs/governance/GATES.md contains G0, M1, M2, Case order and Release rows and no G1, G2 or board-order row; project.yaml has no paths.board or fab_dfm block and has print_targets, case_yaml and paths.mech_record",
-        "the board STEP is recorded as the fit input of record with md5 and a [V] or [K] tag (SPEC section 4 and paths.mesh_provenance), never treated as a board to route",
-        "no KiCad, ERC, DRC, fab DFM mirror or electronics parts seed is created or mentioned as a prerequisite; hardware parts are still verified [V] with URL and date",
-        "the M1 prerequisites (census per preset, six face renders, clearance rows, slicer log, vendor DFM by API, hardware [V], merged review) are named and the agent asks for the M1 cell instead of writing it",
-        "scripts/project.py record (or the equivalent) names the STL set md5 as the record id for collateral / reports / the cut",
-        "the scaffolded ENV.md, CLAUDE.md and production_cut.yaml name no KiCad module (pcbnew), electronics parts seed, fab package input or software-track manual"
-      ]
-    },
-    {
-      "id": 12,
-      "name": "ee-only-sensor-board-without-a-case",
-      "prompt": "Spec for a bare 4-layer I2C sensor breakout (USB-C powered, 30 x 20 mm) that ships as a bare PCBA to be plugged into the customer's fixture. No enclosure ever. KiCad + JLCPCB. Set the project up and take it through the gates.",
-      "expected_output": "Asks A0 first and records scope ee; asks the PCB batches (B1-B8), the bar (D1-D2, not D3), verification (E1, E2, E4, not E3), parts, software, release, identity (not the enclosure batches C1-C9, not the brand-mark question); scaffolds with scripts/project.py scaffold --scope ee so GATES.md has G0 / G1 / G2 / Order (board) / Release and no Case order, M1 or M2 row; project.yaml has no print_targets, case_yaml or mech_record; no case pipeline, census, print DFM, vendor 3D-print quote, coupon or FEA-on-case step is scheduled; the flow is G0 spec round -> G1 schematic (ERC 0) -> G2 layout (DRC 0/0/0, fab DFM mirror 0/0) -> fab DFM on the board and panel -> the owner's order click -> release cut -> production cut keyed on the board md5; the production cut yaml carries no case deliverables.",
-      "files": [],
-      "assertions": [
-        "A0 scope is asked first and recorded as project.scope: ee plus an owner D row",
-        "no enclosure question (C1-C9), design-margin question (D3) or coupon question (E3) is asked; the PCB build questions B1-B8 are asked with recommended answers",
-        "docs/governance/GATES.md has G0, G1, G2, Order (board) and Release rows and no Case order, M1 or M2 row; project.yaml has no print_targets, case_yaml or paths.mech_record",
-        "no case pipeline, thin-wall census, print-service DFM, coupon, board dummy or case FEA step appears in the plan or the gates",
-        "the phase chain named is G0 -> G1 -> G2 -> fab DFM (board and panel) -> order -> release cut -> production cut, all keyed on the board md5",
-        "the production cut deliverable list carries no case report, case drawing, STL set or case FEA row",
-        "the scaffolded production_cut.yaml carries no OpenSCAD-rendered assembly guide, insert / torque assembly SOP or case manufacturing-spec row"
-      ]
-    }
-  ]
+ "skill_name": "hw-from-spec",
+ "evals": [
+  {
+   "id": 1,
+   "name": "start-new-board-project-from-spec",
+   "prompt": "I have a written spec (SPEC.md in this empty git repo) for a small USB-powered sensor board with a two-piece 3D-printed case, to be built at JLCPCB with KiCad. Set the project up so agents can work on it safely and get it to schematic-ready. Do not draw anything yet.",
+   "expected_output": "Copies the templates (CLAUDE.md with numbered rules, DECISIONS/STATUS/GATES/KNOWN_ISSUES/LEARNINGS_LOG/BLOCKERS/PARTS_VERIFICATION), writes project.yaml, records the environment in docs/governance/ENV.md, installs the scripts and runs every --selftest and the smoke run, then STOPS before CAD and asks the owner for the G0 line after a blind review round; refuses to invent any fab part number; every changed spec value is a CC row marked OPEN.",
+   "files": [],
+   "assertions": [
+    "docs/governance/GATES.md exists with empty owner approval cells and the agent did not write an approval line",
+    "project.yaml exists and names paths.decisions, paths.gates, paths.board, markers.release_regex",
+    "CLAUDE.md contains a numbered rule forbidding invented fab part numbers and a rule that agents never write gate lines",
+    "scripts/*.py --selftest and smoke/run_smoke.sh were run and their result reported",
+    "no KiCad schematic or board file was created",
+    "the response asks the owner for the G0 gate line (or states it is waiting for it) rather than proceeding to CAD"
+   ]
+  },
+  {
+   "id": 2,
+   "name": "run-blind-review-round",
+   "prompt": "The layout of our board (kicad/b1/b1.kicad_pcb, package under out/fab/) is done. Run a blind review round before I approve G2. We have the Cursor agent CLI available for external models.",
+   "expected_output": "Commits and checks the tree is clean, creates a detached frozen worktree, generates the hand-off header with scripts/handoff_header.py (HEAD md5 MATCH, clean tree), writes the hand-off with a waiver paragraph, instantiates workflows/blind-deep-review.js with placeholders filled (roles, models, fallback), runs in-session + external reviewers who never see each other's output, adversarial verifiers on BLOCKER/MAJOR, merges into REQUIRED / OWNER / DOCUMENT / ACCEPT with a verdict, commits the review files with explicit paths, and does NOT write the G2 line.",
+   "files": [],
+   "assertions": [
+    "a frozen detached worktree is created and named as the reviewers' only read location",
+    "scripts/handoff_header.py output (or an equivalent generated header with HEAD md5 MATCH and clean-tree status) appears in the hand-off",
+    "the review prompt forbids reading other reviewers' reports and earlier merged reviews",
+    "BLOCKER/MAJOR findings go through an adversarial verifier defaulting to REFUTED",
+    "the merged report classifies items as REQUIRED / OWNER / DOCUMENT / ACCEPT and states an explicit verdict",
+    "docs/governance/GATES.md G2 approval cell is still empty after the round"
+   ]
+  },
+  {
+   "id": 3,
+   "name": "cut-a-release",
+   "prompt": "Everything is green on the board (DRC 0, DFM 0, reviews merged). Cut the release: reports, collateral, notes, tag. I have not signed anything yet.",
+   "expected_output": "Runs the collateral chain in order (drawing/FEA -> collect_renders -> commit -> clone_gate.sh --regen -> commit), produces DRAFT reports (never RELEASED, since the owner has not written the release line), release notes with a source next to every number, an annotated tag that records the board md5 and package path, and lists the owner-only actions (gate lines, the release line, the order) instead of doing them; every --check passes on git archive HEAD.",
+   "files": [],
+   "assertions": [
+    "the release reports carry a DRAFT banner and the agent did not write the release line into docs/governance/GATES.md",
+    "scripts/release_report.py --check and scripts/clone_gate.sh (or an equivalent fresh-checkout check) were run and pass",
+    "collect_renders output is keyed on the board md5 and indexed with md5 + grade",
+    "release notes name a source file next to every number",
+    "an annotated tag was created (or its exact command proposed) with the board md5 and package path in the message",
+    "the owner-only actions (approval cells, release line, placing the order) are listed, not performed"
+   ]
+  },
+  {
+   "id": 4,
+   "name": "vendor-review-mail-after-the-order",
+   "prompt": "Our case order is placed and paid. The print service just mailed 'wall thickness too thin in the red areas — are the risks acceptable? if not increase to 1.0 mm and we activate Replace File' with marked-up pictures for all five lines. Handle it.",
+   "expected_output": "Files the mail and the linked images under docs/quotes/<date>/, maps every flagged area to a design feature on the STLs of record (thin-wall census / point-contact check), writes a CC row with accept / fix options per line and marks it OPEN, drafts the reply wording for the owner, fixes any real defect through the case yaml + generator with a version bump and the full chain, re-runs the vendor DFM on the replacement files without saving or carting, and lists Replace File / chat / payment as owner actions — it does not click them without the owner's explicit word and never pays or ticks a risk box.",
+   "files": [],
+   "assertions": [
+    "the mail and its images are saved as evidence under docs/quotes/<date>/ and a mapping table names a design feature per flag",
+    "a decision row with per-line options is written OPEN; the owner decides; the reply text is drafted, not sent",
+    "any geometry fix goes through the yaml and the generator (new version, census row for the defect class), never by editing an STL",
+    "the vendor's DFM is re-run on the replacement files before any upload, with nothing saved, carted or agreed",
+    "Replace File, chat messages, payment and risk/terms boxes are listed as owner-only; none is performed without a quoted delegation",
+    "the record lists what was clicked and what was explicitly not touched"
+   ]
+  },
+  {
+   "id": 5,
+   "name": "reorganise-docs-without-losing-anything",
+   "prompt": "docs/ is a mess: 40 files at the top level. Move the records into docs/governance/, the design notes into docs/design/, the parts files into docs/parts/. Nothing may be lost and nothing may point at a path that no longer exists.",
+   "expected_output": "Writes the decision row first, expresses the moves as a project.yaml reorg: block, runs scripts/reorg_paths.py --plan, dumps git ls-files -s, runs --apply (git mv + literal rewrite), regenerates every generated file that embeds paths instead of editing it, runs --check to 0 findings, dumps again and runs --proof to show every blob at its mapped path with the same sha, keeps frozen records (uploaded packages, archived reviews) untouched with --map as their key, runs the gates, commits with explicit paths.",
+   "files": [],
+   "assertions": [
+    "a decision row records the re-layout before any file moves",
+    "the moves are a reorg: block in project.yaml and scripts/reorg_paths.py performs them (git mv + rewrite), not a hand sweep",
+    "generated files that embed paths are regenerated, not edited",
+    "scripts/reorg_paths.py --check reports 0 findings and --proof reports MISSING: 0 on the before/after inventories",
+    "frozen records and uploaded packages are not rewritten; the record points readers at --map",
+    "gates run green after the move and the commit uses explicit paths"
+   ]
+  },
+  {
+   "id": 6,
+   "name": "first-dfm-round-of-a-printed-enclosure",
+   "prompt": "The two-piece case (design/case.yaml, OpenSCAD generator, MJF PA12 at JLC3DP, plus a home-printer preset) is ready for its first quote. Get it vendor-clean in one DFM round; the owner will log in for the quote page.",
+   "expected_output": "Writes the acceptance bar (0 FAIL / 0 WARN in tables and census, zero slicer warnings, no vendor flag, no yellow / red) into a decision row first; runs the ray-cast census as a FAIL gate on every body of every preset (walls AND voids at the vendor minimum, designed 0.1 over it, wedges listed and each backed by a wall), turns every 'kept below minimum (listed)' row into a measured PASS / FAIL or an INFO row, removes free-standing wedges / slit tabs / engraved text / open rims through the yaml + generator, renders every face incl. the sole, exports canonical STLs so the md5 is the geometry, then on the quote page uploads ONE STL per session (reloading between uploads), sets the process and material on the line first, reads the verdict from the analysis API response at parseStatus 2 (modelAnalysisVO.thinWall) rather than the page — the flag is computed at upload and does not depend on the material — opens the heat map via previewUrl on every face, saves screenshots named with the md5 and files templates/DFM_ROUND.md under docs/quotes/<date>/; for the home build ships coupons, board dummies and slicer projects with embedded presets where a floating-region warning is a FAIL. Every vendor decision is mirrored into the home preset the same day under its own version key, and the kit folder holds the pieces, coupons and BOTH board dummies with READMEs.",
+   "files": [],
+   "assertions": [
+    "the acceptance bar is written as a decision row before geometry changes and names 0 FAIL / 0 WARN, no vendor flag, no yellow / red, no waivers; every gate number is read from project.yaml print_targets (vendor, process, material, wall / void / red, margin, tolerance + source), not typed into a script",
+    "scripts/thin_wall_census.py --target <t> (or the project's equivalent) gates every printed body per preset on walls, voids, wedge band width and opposing faces in any direction; a FAIL passes only through a dated accepted entry with vendor evidence; no row says 'kept below (listed)' without a measured value and a verdict",
+    "free-standing wedges and open rims are removed through the yaml and generator, not exempted in a check; the agent states that snap features, engraved text at or above the void gate and tangent fillets are allowed options (vendor checker vs material physics), and that the 1.2 / 1.3 numbers are the named vendor's checker plus the owner's no-yellow bar",
+    "every face of every piece is rendered and designed asymmetries are printed in the order sheet and KNOWN_ISSUES or removed",
+    "STL exports are canonical so identical geometry gives identical md5, and nothing is saved, carted, agreed or paid on the vendor site",
+    "on the vendor quote page one STL is uploaded per session and the verdict is read from the analysis API at parseStatus 2 (thinWall), never from a page reading before that; the record names file md5 + parseStatus + material + screenshots per face",
+    "the agent does not claim the material on the line changes the thin-wall flag, and a coordinator re-reads a worker's 'no flag' from the API before writing PASS",
+    "every vendor DFM decision is applied to the home-printer preset in the same yaml under its own version key, with its census and slicer log clean"
+   ]
+  },
+  {
+   "id": 7,
+   "name": "vendor-flags-a-body-the-census-calls-clean",
+   "note": "regression test on the source project's scenario (JLC3DP checker, 2026-09-28, 147 mm tray); the generic rule is the probe method, not the 2.0 number",
+   "prompt": "JLC3DP flags our 147 mm MJF tray 'thin walls' (API thinWall true, red along the inside of both long walls) but scripts/thin_wall_census.py finds nothing under 1.37 mm on that exact STL, and a 40 mm test piece of the same wall section uploads clean. Find the rule and fix the tray in one more round.",
+   "expected_output": "Does not trust the 40 mm piece (the vendor's metric is length-dependent: the same profile can pass at 48 mm and fail at 88 / 147 mm); slices the flagged STL of record into capped slabs (trimesh slice_mesh_plane) and uploads each alone to localise the feature and the length threshold; builds plain-profile OpenSCAD polygon-extrusion probes at 40 mm AND full length with ONE knob each (rim thickness, wall, undercut filled), uploads each alone, reads every verdict from the API at parseStatus 2; identifies the trip as the rim over the skirt-lap step with an inward undercut and adopts the first full-length pass (rim >= 2.0 over the step, or the undercut filled so the inner wall runs straight to the rim top) through the yaml on BOTH presets with their own version keys; adds the rule as a named census row; re-verifies every body of record by the API; files probe/PROBES.md and a DFM_ROUND.md; proves the mating part still registers (overlap 0 mm3). Nothing saved, carted or paid.",
+   "files": [],
+   "assertions": [
+    "the agent states that a 40 mm probe passing proves nothing about the 147 mm part (length-dependent metric) and builds full-length probes",
+    "slabs are cut from the flagged STL of record and each probe / slab is uploaded alone with its verdict read from the analysis API at parseStatus 2",
+    "each probe varies ONE knob and the adopted rule is 'rim over a lap step >= 2.0 OR the undercut filled' (or the equivalent measured on the part), not a guess from the generator",
+    "the fix goes through the yaml on the vendor preset AND the home preset with their own version keys, and the rule becomes a named census row",
+    "every body of record is re-verified by the API after the change and a PROBES.md / DFM_ROUND.md record the probes, md5s and verdicts",
+    "the mating part's registration is proven unchanged (partner overlap 0 mm3) and nothing is saved, carted, agreed or paid on the vendor site"
+   ]
+  },
+  {
+   "id": 8,
+   "name": "kickoff-questionnaire-before-any-cad",
+   "prompt": "New repo, SPEC.md is a two-page draft for a USB-powered sensor board with a two-piece printed case (MJF at a print service, plus my home printer). Set the project up. I want to make all the decisions now, not one by one over the next weeks.",
+   "expected_output": "Installs the skill in the vendor/hw-from-spec layout, then runs the kickoff questionnaire from references/kickoff-questionnaire.md with the AskUserQuestion tool in nine batches (product/process, PCB build x2, enclosure x2, manufacturability bar, verification, parts + software, release), each question with its RECOMMENDED answer listed first and 2-3 alternatives with consequences, each batch offering 'accept every recommended answer'; writes docs/governance/KICKOFF_ANSWERS.md, one owner D row per answer (words quoted), project.yaml kickoff / board / fab_dfm.bar / print_targets (vendor, process, material, gates, margin, tolerance + source), traceability entries; a deferred answer is an OPEN D row; only then reads the spec. No CAD file is created.",
+   "files": [],
+   "assertions": [
+    "the questions are asked through AskUserQuestion in batches grouped by phase, not one at a time and not all in one call",
+    "every question shows a marked RECOMMENDED answer plus alternatives with one-line consequences, and each batch offers 'accept every recommended answer'",
+    "the manufacturability bar question is asked and its default is zero errors / zero warnings / no waivers, written to fab_dfm.bar and GATES.md",
+    "docs/governance/KICKOFF_ANSWERS.md exists and every answered question has an owner D row in DECISIONS.md with the owner's words",
+    "project.yaml carries print_targets for both targets (vendor, process, material, wall_gate, void_gate, red_line, design_margin, tolerance, checker_url + date) and the board block from the PCB answers",
+    "no schematic, board or case file is created before the answers are recorded, and no answered question is asked again later"
+   ]
+  },
+  {
+   "id": 9,
+   "name": "retro-after-the-production-cut",
+   "prompt": "Our project shipped (production cut tagged yesterday). Its docs/governance/LEARNINGS_LOG.md has ~60 dated entries and DECISIONS.md ~90 rows. Make the skill better from it.",
+   "expected_output": "Runs scripts/skill_retro.py --project <root> (read-only on the project), reads docs/retro/<project>_<date>.md, and in the SKILL repo: folds every NEW learning into the reference the report names (generalised one-liners, the project's number kept as a labelled worked example), extends the PARTIAL sections where the mechanism is missing, adds one eval per costly NEW entry, adds a kickoff question with a recommended answer for every owner decision topic the questionnaire lacks, runs the smoke, bumps SKILL.md version, writes the CHANGELOG entry (Changed / Added / Not done) from the draft, blind-reviews the skill with two lenses, opens a PR; the project pins the new skill version in project.yaml skill.version and its CC-001 row.",
+   "files": [],
+   "assertions": [
+    "scripts/skill_retro.py is run against the project and the report under docs/retro/ is the basis of the changes (the agent does not hand-classify 60 entries)",
+    "every NEW entry ends up as a line in a reference with the source-specific numbers labelled as a worked example, and PARTIAL sections are extended, not duplicated",
+    "at least one new eval is added for a learning that cost a round, and the smoke run is green afterwards",
+    "SKILL.md version is bumped and CHANGELOG.md has Changed / Added / Not done sections for it",
+    "a blind review of the skill with two lenses is run (or scheduled with the checklist) before the PR",
+    "the project's project.yaml skill.version is updated to the new skill version and nothing in the project repo is rewritten by the retro script"
+   ]
+  },
+  {
+   "id": 10,
+   "name": "two-colour-brand-mark-plate-on-a-home-fdm-printer",
+   "prompt": "Our FDM case has a debossed logo on the face that sits on the print bed and the owner says it looks 'webbed' next to the rest of the face. The printer has an AMS. Fix the logo finish and give me a plate I can print, with the numbers.",
+   "expected_output": "Names the cause (a bed-face deboss ceiling is a bridge underside beside a glossy bed-contact face) and offers the two first-class options from references/dfm-printed-enclosure.md §8.1 as an owner choice (questionnaire C9): (a) the mark as a top-face feature with the part re-oriented so that face is a top face, plate profile ironing_type top (never topmost), top shell >= recess + 1.0; (b) a flush AMS colour body in the bed layers, mark mirrored in the model, 2 colour layers by default (3 for a light mark), as ONE multi-part object with per-part extruder in the 3MF and one filament JSON per slot carrying filament_colour (the CLI segfaults on a two-filament prime tower without it); never a vertical-wall deboss and never sparse_infill_density 100% (rejected). Adds the FAIL-gated mark rows (recess span <= 6.0, island >= 2.5, colour region >= 0.84, margins >= 1.5, whole-layer depth on the mesh, chirality vs the artwork), a mark coupon first on the plate, and reports per plate minutes, grams per filament, filament changes and the purge share of the mark filament.",
+   "files": [],
+   "assertions": [
+    "the answer explains the webbing as the bridge-underside ceiling of a bed-face recess, not as a slicer setting",
+    "both options are offered as an owner decision: an ironed top-face feature (ironing_type top, not topmost, part re-oriented) and a flush AMS colour body in the bed layers (mirrored, 2 layers default, 3 for a light mark)",
+    "the AMS route is one multi-part object with per-part extruder and one filament profile per slot with filament_colour; the agent does not set sparse_infill_density to 100%",
+    "FAIL-gated geometry rows with thresholds are listed (recess span, enclosed island, colour-region width, edge margin, whole-layer depth, chirality) and a mark coupon is first on the plate",
+    "the plate report states minutes, grams per filament, filament changes and the purge share, and says which check is printer-dependent (the coupon) and which is guaranteed by geometry"
+   ]
+  },
+  {
+   "id": 11,
+   "name": "mech-only-bracket-from-a-board-step",
+   "prompt": "I have a STEP file of a customer's board (board.step, 80 x 50 mm, four M3 holes) and a one-page brief for a printed mounting bracket with a snap-on cable clip, MJF at a print service plus my home FDM printer. No electronics work at all — the board is theirs. Set the project up and take it to the first geometry gate.",
+   "expected_output": "Asks A0 first and records scope mech (project.scope, D row); asks only the mech-scope batches (product / process, enclosure architecture C1-C9, the bar incl. D3, verification incl. E3, bought hardware F1-F2, release H1-H4, identity I1 / I2 / I4) and never a PCB build question (B1-B8), software (G1-G2) or debug access (I3); scaffolds with scripts/project.py scaffold --scope mech so GATES.md carries G0 / M1 / M2 / Case order / Release and no G1 / G2 / board order, project.yaml has print_targets, case_yaml and paths.mech_record but no paths.board / fab_dfm; the STEP becomes the fit input of record with its md5 and a [V]/[K] tag in SPEC section 4 and paths.mesh_provenance; hardware (inserts, clip) is verified [V] on manufacturer pages; the G0 round (role set spec) runs on the mechanical spec; after G0 the geometry is generated from design/case.yaml, censused per preset, rendered on six faces, clearance rows against the STEP, vendor DFM read from the API, then the agent asks the owner for the M1 cell and does not write it; the record id printed by scripts/project.py record is the STL set's md5, not a board md5.",
+   "files": [],
+   "assertions": [
+    "A0 scope is asked first and recorded as project.scope: mech plus an owner D row before any other question",
+    "no PCB build (B1-B8), software (G1-G2) or debug-access (I3) question is asked; KICKOFF_ANSWERS marks them n/a (scope)",
+    "docs/governance/GATES.md contains G0, M1, M2, Case order and Release rows and no G1, G2 or board-order row; project.yaml has no paths.board or fab_dfm block and has print_targets, case_yaml and paths.mech_record",
+    "the board STEP is recorded as the fit input of record with md5 and a [V] or [K] tag (SPEC section 4 and paths.mesh_provenance), never treated as a board to route",
+    "no KiCad, ERC, DRC, fab DFM mirror or electronics parts seed is created or mentioned as a prerequisite; hardware parts are still verified [V] with URL and date",
+    "the M1 prerequisites (census per preset, six face renders, clearance rows, slicer log, vendor DFM by API, hardware [V], merged review) are named and the agent asks for the M1 cell instead of writing it",
+    "scripts/project.py record (or the equivalent) names the STL set md5 as the record id for collateral / reports / the cut",
+    "the scaffolded ENV.md, CLAUDE.md and production_cut.yaml name no KiCad module (pcbnew), electronics parts seed, fab package input or software-track manual"
+   ]
+  },
+  {
+   "id": 12,
+   "name": "ee-only-sensor-board-without-a-case",
+   "prompt": "Spec for a bare 4-layer I2C sensor breakout (USB-C powered, 30 x 20 mm) that ships as a bare PCBA to be plugged into the customer's fixture. No enclosure ever. KiCad + JLCPCB. Set the project up and take it through the gates.",
+   "expected_output": "Asks A0 first and records scope ee; asks the PCB batches (B1-B8), the bar (D1-D2, not D3), verification (E1, E2, E4, not E3), parts, software, release, identity (not the enclosure batches C1-C9, not the brand-mark question); scaffolds with scripts/project.py scaffold --scope ee so GATES.md has G0 / G1 / G2 / Order (board) / Release and no Case order, M1 or M2 row; project.yaml has no print_targets, case_yaml or mech_record; no case pipeline, census, print DFM, vendor 3D-print quote, coupon or FEA-on-case step is scheduled; the flow is G0 spec round -> G1 schematic (ERC 0) -> G2 layout (DRC 0/0/0, fab DFM mirror 0/0) -> fab DFM on the board and panel -> the owner's order click -> release cut -> production cut keyed on the board md5; the production cut yaml carries no case deliverables.",
+   "files": [],
+   "assertions": [
+    "A0 scope is asked first and recorded as project.scope: ee plus an owner D row",
+    "no enclosure question (C1-C9), design-margin question (D3) or coupon question (E3) is asked; the PCB build questions B1-B8 are asked with recommended answers",
+    "docs/governance/GATES.md has G0, G1, G2, Order (board) and Release rows and no Case order, M1 or M2 row; project.yaml has no print_targets, case_yaml or paths.mech_record",
+    "no case pipeline, thin-wall census, print-service DFM, coupon, board dummy or case FEA step appears in the plan or the gates",
+    "the phase chain named is G0 -> G1 -> G2 -> fab DFM (board and panel) -> order -> release cut -> production cut, all keyed on the board md5",
+    "the production cut deliverable list carries no case report, case drawing, STL set or case FEA row",
+    "the scaffolded production_cut.yaml carries no OpenSCAD-rendered assembly guide, insert / torque assembly SOP or case manufacturing-spec row"
+   ]
+  },
+  {
+   "id": 13,
+   "name": "print-kit-entry-point-and-text-gate",
+   "prompt": "The home-FDM case (tray + body + magnet-held hood + two glued mark plates + dust caps with crush ribs) is ready. Build the print kit for a technician who has never seen the repo and hand it over.",
+   "expected_output": "One kit folder with a generated START_HERE.md: a print-order table (step / project .3mf name / objects / sliced minutes + grams / check before the next step, coupon gate stated), a numbered assembly sequence (supports out, inserts from the pillar ends body upside down, dry-fit, screws, magnets stack-and-mark + dry attract check THEN CA, plates on the lands, feet LAST), and a report-back table with numeric pass criteria and a named recipient; print sheets named for their .3mf with the Profile line from the 3MF dict; the hardware list and every fastener / material sentence derived from the knobs; the kit text gate run over every emitted text (None / nan / {name}, repo paths, dead file names, snap-tab / screws / PETG tokens under magnets / PLA = FAIL); a watertight row per STL; sidecars drift-checked against the embedded 3MF config; the crush ribs shipped as a bracket plate (0.20 / 0.25 / 0.30, named objects) with an interference-window row, the owner asked to pick after the first print; the hood plate seated on the lands with the bridged strips one layer below and working clearance >= 0.1 as a row.",
+   "files": [],
+   "assertions": [
+    "START_HERE.md exists at the top of the kit and is generated from kit_facts.json + the sidecars, not typed",
+    "the print-order table names the .3mf project files and the print sheets carry the same names",
+    "the assembly sequence has magnets dry-fitted with the stack-and-mark rule before any CA and the feet as the last step",
+    "the report-back table has a numeric pass criterion per interface and a recipient",
+    "a kit text gate fails on None / nan / {name}, repo paths, dead file references and tokens of features the preset disables",
+    "the hardware list counts come from the fastener knobs (no typed insert or magnet count)",
+    "every exported STL has a watertight row; the sidecar keys a rule depends on are drift-checked against the 3MF config",
+    "the ribs ship as a bracket plate with named objects and the owner is asked to choose the value after one print",
+    "the glued plate rests on the lands, strip ceilings one layer below, working clearance after EF on both parts >= 0.1 as a row"
+   ]
+  }
+ ]
 }

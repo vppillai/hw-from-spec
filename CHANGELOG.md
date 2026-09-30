@@ -1,5 +1,33 @@
 # CHANGELOG — hw-from-spec
 
+## 0.7.1 — 2026-09-30 — the print kit as a deliverable: START_HERE, kit text gate, plate seat datum, bracket plate
+
+Third retro on the source project (`docs/retro/aec-tester_2026-09-30.md`: 8 learnings, 3 NEW / 5 PARTIAL, from the two blind reviews of the
+P2S kit — a technician persona on the kit as received and an FDM DFM persona on the meshes, CC-211 / CC-212).
+
+### Added
+- **`references/print-kit.md`** (new, short): the kit's ONE generated entry point (`START_HERE.md`: print-order table step / project file /
+  objects / time + mass / check-before-next, assembly sequence, report-back table with numeric pass criteria and a recipient), every kit text from
+  the knobs; the **kit text gate** (`None` / `nan` / `{name}` residue, repo paths, dead file references, tokens of features the preset disables —
+  snap tab / screws under magnets, PETG under PLA — = FAIL); hardware lists derived from the fastener knobs; print-sheet names = project-file
+  names; the magnet procedure (stack-and-mark polarity, asymmetric boss keying, dry attract check before CA, magnets before glue, feet last);
+  coupon → ONE part → plate; watertight row per STL; sidecars carrying and drift-checking every slicer key a rule depends on.
+- **`references/dfm-printed-enclosure.md` §8.4** glued plates in rebates on a bed face: the lands are the datum, bridged strips one layer BELOW
+  (sag gap 0.2), clearance 0.3 for a glued plate, rebate footprint fixed while the plate shrinks (the rebate lip is a census wall: +0.1/side took
+  1.6 to 1.53), thin the plate rather than the roof, working clearance after EF on both parts ≥ 0.1 as a row. **§8.5** snug-fit features: bracket
+  plate at three values with named objects and an interference-window row (part ± 0.1, print ± 0.15), the owner picks after one print; a face at
+  exactly 45.0° is at the limit — orientation-dependent knob (50° where it is an overhang) + a measured steepest-overhang row per orientation.
+- `references/release-and-cut.md` §7: the kit is a deliverable row whose `check` is the text gate + the mirror md5 list; ASSEMBLY / QA prose
+  generated from the preset. `references/agent-ops.md` §4 the review pairing that worked (technician on the kit as received + FDM DFM on the
+  meshes, parallel, merged, one author in two phases); §5 kernel panics under load → small commits, incremental review reports, one worktree per
+  agent. Kickoff **C10** (kit hand-over recipient, who picks the fit knob). SKILL.md §8 step 5 and the Where-to-look row. 11 pitfall lines.
+  `evals/evals.json` #13 (print kit entry point and text gate); smoke greps for the new rules.
+
+### Not done
+- No generic `kit_text_gate.py` in `scripts/` — the gate is five token classes over a folder and each project's emitter knows its knobs; add it
+  when a second project needs the same tokens. No `print_targets.home_fdm.kit` yaml block (recipient + fit decider live in `kickoff.enclosure`).
+- No blind review of the skill this version (a one-topic retro); the next full retro reviews 0.6.0 … 0.7.1 with both lenses.
+
 ## 0.7.0 — 2026-09-30 — project scope: ee, mech or both
 
 Owner's directive (2026-09-29): "the skill should be able to do ee only, mechanical only or both together."

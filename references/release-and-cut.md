@@ -81,6 +81,11 @@ orderable state and does not substitute for the owner's gate cells.
 - Requirement family for the deliverables gets its own prefix after a prefix census of the spec (a collision happened once).
 - Retention: the cut folder, the fab package of record and the records folder are kept; superseded packages are dropped when every consumer selects
   by md5 and the evidence lives outside them.
+- **The home-FDM print kit is a deliverable row** (`kind: generated`, `check` = the kit text gate + the mirror md5 list): `START_HERE.md`, print
+  sheets named for their `.3mf`, READMEs, sidecars, the generated ASSEMBLY.md — all from the knobs (`references/print-kit.md`). A kit text that
+  carries `None` / `nan` / a `{name}` brace, a repo path, a dead file reference or a token of a feature the preset disables (snap tab / screws
+  under `fastener: magnets`, PETG under PLA) fails the cut like a placeholder in a `forbidden` document. The ASSEMBLY / QA prose is generated from
+  the preset like the geometry (a hand-kept SOP said "0 magnets, PETG, snap tabs" three fastener changes later).
 - A PLACED order's package is frozen: notes may be re-derived (`--refresh-notes`), fab files / panel / board_id never rebuilt; its stock gate reads
   the frozen order-day records (`references/fab-dfm.md` §8).
 - After the order the vendor's engineering review may arrive: `references/vendor-review.md` (agents never pay / agree / cart; Replace File only on

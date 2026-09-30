@@ -258,8 +258,10 @@ numbers are **[owner bar]** for a 0.4 nozzle at 0.20 mm and live in `print_targe
   into the STL. One material knob (PLA / PETG) read by the 3MF builder, the print sheets and every README, with the material caveat printed
   (§1.3). **A generator that refuses to overwrite its artefact on a failed run leaves the OLD 3MF on disk while the sidecar describes the new
   one** — the analysis must read the file it names (md5 in the sidecar checked before any forensics).
-- Hand over ONE kit folder: case pieces + coupons + BOTH board dummies (each with its 3MF) + every project file + READMEs; a moved folder keeps a
-  `README_MOVED.md` pointer; a stale kit folder is named for deletion in the record.
+- Hand over ONE kit folder: case pieces + coupons + BOTH board dummies (each with its 3MF) + every project file + READMEs **+ a generated
+  `START_HERE.md`** (print order with the project-file names, assembly sequence, numeric report-back with a recipient) and the **kit text gate**
+  over every emitted text — `references/print-kit.md`; a moved folder keeps a `README_MOVED.md` pointer; a stale kit folder is named for deletion
+  in the record.
 
 ### 8.1 Brand marks / logos on FDM parts — an OWNER choice at kickoff (questionnaire C9); worked example: a filled chevron mark 10–18 mm wide, three marks on one product, 2026-09-29
 The finish of a mark is decided by WHICH FACE carries it and HOW that face is built, not by the slicer profile. Two options are first-class
@@ -357,6 +359,30 @@ the geometry rows guarantee the rest — the report says which is which.
   default is embedded but not listed — prove a setting from the embedded value, not from the list.
 - State per plate in the kit README: minutes, grams per filament, filament changes, purge — ironing adds ~5 min on a small plate; each extra
   coloured layer adds swaps + purge + minutes.
+
+### 8.4 Glued plates in rebates on a bed face (worked example: hood mark plate 40.8 × 21.8 × 1.4 in a 41.4 × 22.4 rebate, 2026-09-30)
+- **The lands are the datum, the bridged strips sit one layer BELOW them.** A plate whose grooves rest on the land tops while its underside
+  touches the bridge ceilings stands on the sag humps (0.1..0.3 at a 6 mm span) and rocks. Strip ceiling = land top − `sag_gap` (0.2 = one layer)
+  under the part, so sag cannot lift the plate; FAIL rows: seat datum (gap 0.20), proud height (1.2), **working clearance after elephant-foot
+  compensation on BOTH parts ≥ 0.1** (0.3 − 2 × 0.1 EF … measured on the meshes, not the yaml).
+- **Clearance for a glued plate: 0.3 per side** (CA fills; 0.2 was a 0.0..0.1 working fit after EF). **Widen the PLATE's clearance by shrinking
+  the plate, never by widening the rebate**: the rebate lip to the roof fillet is a census wall — +0.1 per side took a 1.6 lip to 1.53 = FAIL. The
+  rebate footprint stays where the census approved it (41.4 × 22.4); the plate went 41 × 22 → 40.8 × 21.8.
+- If deepening the strips would thin the roof under the span below the wall gate (1.4 under 6 × 41 mm), **thin the PLATE instead** (1.6 → 1.4
+  keeps proud 1.2 and the skin over a groove = the rib floor 1.2). No waiver: the equivalent geometry with the same datum logic.
+- One chamfered corner = the rotation key; "a rotated plate stands on the corner — do not force" is on the sheet; CA on the lands only.
+
+### 8.5 Snug-fit features (crush ribs, press lips) and the 45° limit (worked example: QSFP-DD cap ribs, 2026-09-30)
+- **Ship a bracket plate, let the owner pick after one print**: the fit knob at three values (rib proud 0.20 / 0.25 / 0.30), one object each,
+  named by its value in the 3MF; START_HERE: bracket → coupon → plate (`references/print-kit.md` §4). An **interference-window row per variant**:
+  rib-to-rib vs the mating part's tolerance (module 18.35 ± 0.1) AND the print tolerance (± 0.15) → per-side interference nominal ± 0.125; a
+  window that reaches 0 or a knife edge at either end is a FAIL, not a note.
+- **A face at exactly 45.0° is AT the overhang limit, not under it**, and the same face changes class with the orientation: a lip cone faces UP
+  on the mouth-down cap (harmless) and DOWN on the closed-end-down AMS cap (a visible overhang). **Orientation-dependent knob** (`lip.cone_deg_ams`
+  50 where it is an overhang, 45 where it is not) plus a **measured steepest-overhang row per print orientation** (bridges and the deliberate side
+  debosses excluded). A rib lead-in taper scales with the rib height (a fixed 0.30 taper on a 0.30 rib was exactly 45.0°).
+- **Watertight row per exported STL** and a `legend_edge` margin for raised legend items (§ print-kit.md §5): a slicer drops or fills a
+  non-manifold sliver silently and still says "clean".
 
 ## 9. Two versions from one yaml (vendor MJF + home FDM)
 Presets `base + overrides` deep-merged before any module reads the yaml (`references/case-pipeline.md` §Presets); the geometry may differ wherever

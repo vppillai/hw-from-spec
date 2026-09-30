@@ -37,6 +37,13 @@ grep -q '^## 11. SLA' "$REF" || { echo "FAIL: $REF lost the SLA rule set (B-09)"
 grep -q 'ironing_type: top` — never `topmost`' "$REF" && grep -q 'flush AMS colour body in the bed layers' "$REF" || { echo "FAIL: $REF lost the brand-mark options (§8.1)"; exit 1; }
 grep -q 'filament_colour' "$REF" && grep -q 'No through-hole may open into the protected cavity' "$REF" || { echo "FAIL: $REF lost the Bambu CLI / dust-cap rules (§8.2 / §8.3)"; exit 1; }
 grep -q '^\*\*C9 Brand marks' "$SKILL/references/kickoff-questionnaire.md" || { echo "FAIL: the questionnaire lost C9 (brand marks)"; exit 1; }
+grep -q '^\*\*C10 Print kit' "$SKILL/references/kickoff-questionnaire.md" || { echo "FAIL: the questionnaire lost C10 (print kit)"; exit 1; }
+KIT="$SKILL/references/print-kit.md"; test -f "$KIT" || { echo "FAIL: references/print-kit.md missing"; exit 1; }
+grep -q 'Stack-and-mark polarity rule' "$KIT" && grep -q 'Dry attract check before any CA' "$KIT" && grep -q 'feet LAST' "$KIT" || { echo "FAIL: print-kit.md lost the magnet / feet sequence"; exit 1; }
+grep -q '`None`, `nan`, a `{name}` brace' "$KIT" && grep -q 'Print-sheet names = project-file names' "$KIT" && grep -q 'Watertight row per exported STL' "$KIT" || { echo "FAIL: print-kit.md lost the kit text gate / naming / watertight rules"; exit 1; }
+grep -q 'bridged strips sit one layer BELOW them' "$REF" && grep -q 'exactly 45.0° is AT the overhang limit' "$REF" && grep -q 'Ship a bracket plate' "$REF" || { echo "FAIL: $REF lost §8.4 / §8.5 (plate seat, 45° limit, bracket plate)"; exit 1; }
+grep -q 'print kit is a deliverable row' "$SKILL/references/release-and-cut.md" || { echo "FAIL: release-and-cut.md lost the kit deliverable row"; exit 1; }
+grep -q 'The machine can panic under load' "$SKILL/references/agent-ops.md" || { echo "FAIL: agent-ops.md lost the small-commits rule"; exit 1; }
 grep -q 'parseStatus == 2' "$SKILL/SKILL.md" || { echo "FAIL: SKILL.md §8.1 lost the API-verdict rule"; exit 1; }
 grep -q 'length-dependent' "$SKILL/SKILL.md" || { echo "FAIL: SKILL.md §8.1 lost the length-dependence rule"; exit 1; }
 grep -q 'Zero errors, zero warnings, no waivers' "$SKILL/SKILL.md" || { echo "FAIL: SKILL.md lost the manufacturability bar (§1.2)"; exit 1; }
@@ -52,7 +59,7 @@ grep -q '^fab_dfm:' "$SKILL/templates/project.yaml" || { echo "FAIL: templates/p
 grep -q 'accepted_requires' "$SKILL/templates/project.yaml" || { echo "FAIL: templates/project.yaml lost the DFM bar"; exit 1; }
 grep -q '^## Quick start' "$SKILL/README.md" && grep -q '^## The retro loop' "$SKILL/README.md" && grep -q '^## The kickoff questionnaire' "$SKILL/README.md" || { echo "FAIL: README lost a required section"; exit 1; }
 awk '/^```/{f=!f; next} f && length($0) > 90 {bad=1} END {exit bad}' "$SKILL/README.md" || { echo "FAIL: a fenced README line is over 90 characters (GitHub scrolls)"; exit 1; }
-grep -q '^version: 0.7.0' "$SKILL/SKILL.md" && grep -q '^## 0.7.0' "$SKILL/CHANGELOG.md" || { echo "FAIL: SKILL.md version and CHANGELOG entry disagree"; exit 1; }
+grep -q '^version: 0.7.1' "$SKILL/SKILL.md" && grep -q '^## 0.7.1' "$SKILL/CHANGELOG.md" || { echo "FAIL: SKILL.md version and CHANGELOG entry disagree"; exit 1; }
 grep -q 'numpy trimesh scipy shapely' "$SKILL/README.md" || { echo "FAIL: README lost the mesh-library install line (C-06)"; exit 1; }
 grep -q 'vendor/hw-from-spec/.venv' "$SKILL/README.md" || { echo "FAIL: README lost the one install block (C-02 / C-12)"; exit 1; }
 test -f "$SKILL/references/kickoff-questionnaire.md" || { echo "FAIL: references/kickoff-questionnaire.md missing"; exit 1; }
