@@ -57,6 +57,12 @@
   limit, unversioned); packet ceiling ≈ 440 kB (observed: the CLI returns 0 bytes above it); rotate two vendors per role; an EMPTY report is a
   failure → retry once with the fallback model, note the substitution, else write the failure into the report and return zero findings. macOS has
   no `timeout`: background + PID + until-loop within the §5 ceiling.
+- **Pairing that worked for a print kit (2026-09-30):** a **technician persona on the kit folders AS RECEIVED** (no repo, no git, unzips the
+  3MFs, measures the STLs; "print the fit-check set and tell the engineer whether it fits") in parallel with an **FDM DFM persona measuring the
+  meshes** (orientation, overhang angles, seat datums, slicer keys from the embedded config, not the sidecars); merged; fixed by ONE author agent
+  in two phases (generators, then outputs + kits) with small commits. The technician found the two BLOCKERs (an un-instructed irreversible step, a
+  hardware list into the wrong pocket) that every mesh check had passed; the DFM persona found the seat that rocked. Trust the reviewer's
+  measurements, re-measure only where the geometry changed, and state every deviation from a disposition openly in the decision row.
 - Adversarial verifier per specialty on every BLOCKER/MAJOR: default REFUTED; open the cited files; a number about copper carries the script that
   produced it (a disputed clearance is one `Collide` bisection); convert coordinate frames before calling a site "missing".
 - Merge: verifier verdicts applied (REFUTED → rejected table with reason), dedupe by defect, corroboration matrix, REQUIRED / OWNER (proposed row
@@ -73,6 +79,10 @@
   `until grep -q '^EXIT' a.log && grep -q '^EXIT' b.log; do sleep 30; done` per ≤ 600 s call; a non-zero EXIT line stops the chain.
 - Keep the machine awake (`caffeinate -dimsu` in a background shell) while agents run overnight; agents die on sleep and on API 500s — resume by
   message with the MEASURED state (board md5, counts, last commit), never from memory.
+- **The machine can panic under load** (two macOS kernel watchdog panics on one review day: slicer + mesh checks + several agents): commit small
+  and often (one commit per generator change, one per regenerated output set), write review reports INCREMENTALLY to their file (a finding at a
+  time, not at the end), one worktree per agent, never two mesh / slicer pools at once. After a panic: resume from the MEASURED state (`git status`,
+  last commit, the report file on disk), never from memory.
 - Parallel router JVMs SIGTERM each other; one JVM at a time, `-mt 1` for determinism.
 - Owner offline: list owner-only items (orders, gate cells, hardware records) at the pause point, never attempt them; kill a long chain early when an
   owner addition arrives through the coordinator.

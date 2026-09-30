@@ -122,6 +122,13 @@ second colour, at 2 filament changes per 2 layers + purge; needs an AMS. *Alt:* 
 first print. *Alt:* a face-up printed plate glued into a keyed rebate (spans > 10 mm split by glue lands) when the mark must sit on a bed face
 without an AMS. *Never:* a bed-face deboss (bridge-ceiling "webbing"), a vertical-wall deboss (stair-steps), webs / discs that alter the artwork.
 
+**C10 Print kit hand-over and snug fits** [mech, both] (`references/print-kit.md`). **RECOMMENDED: a generated `START_HERE.md` (print order with the
+project-file names, assembly sequence, numeric report-back) with the report-back recipient named here; every kit text from the knobs through the
+kit text gate; snug-fit features (crush ribs, press lips) ship as a bracket plate at three values and the owner picks the knob after the first
+print** — the technician needs no repo, the irreversible steps (magnets, CA) are instructed. *Alt:* READMEs only — the technician reconstructs the
+order from the sheets. *Alt:* the engineer picks the fit value from the tolerance row alone — no bracket, one reprint if it binds.
+**Owner inputs:** the recipient for the report-back (a chat, a name); who decides the fit knob after the bracket print (RECOMMENDED: the owner).
+
 ## D. The manufacturability bar (SKILL §1.2) — the owner confirms the default explicitly
 **D1 The bar.** **RECOMMENDED: zero errors, zero warnings, no waivers** — board: DRC 0 / 0 / 0 warnings, fab DFM 0 Danger / 0 Warning; printed
 enclosure: census 0 unaccepted FAIL, slicer log clean, vendor checker no flag by API read, no yellow / red; CNC: vendor DFM clean; recorded as
@@ -203,7 +210,7 @@ window and lists every action taken.
 | A0 | `project.scope` | CLAUDE.md scope line, GATES.md rows (scaffold), KICKOFF_ANSWERS `n/a (scope)` rows |
 | A1–A4 | `kickoff.product_class`, `kickoff.quantity`, `kickoff.fab`, `print_targets.<t>` (vendor, process, material, rating) | SPEC §1, §8; D rows |
 | B1–B8 | `board.layers / thickness / copper / stackup_template / impedance / finish / mask / silk / min_package / link_parts / sides / test_points / panel` | SPEC §4–§6 (R-M01…), `design/<board>_board.yaml`, `design/dfm_thresholds.json` (source + date) |
-| C1–C9 | `kickoff.enclosure` (pieces, retention, coupling, feet, labelling, fan, light_pipe, targets, marks) | SPEC §8, `design/case.yaml` presets + `fits` knobs |
+| C1–C10 | `kickoff.enclosure` (pieces, retention, coupling, feet, labelling, fan, light_pipe, targets, marks, kit_recipient, fit_decider) | SPEC §8, `design/case.yaml` presets + `fits` knobs; START_HERE report-back recipient |
 | D1–D3 | `fab_dfm.bar`, `print_targets.<t>.design_margin / tolerance / accepted` | GATES.md `{{D-BAR}}` row id, CLAUDE.md rule 9 |
 | E1–E4 | `kickoff.verification` (rounds, external_models, coupons, fea) | GATES prerequisites, `workflows/` model list |
 | F1–F2 | `kickoff.sourcing` (sources, stock_floor, attrition) | PARTS_VERIFICATION header, BLOCKERS |

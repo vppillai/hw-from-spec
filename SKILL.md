@@ -1,6 +1,6 @@
 ---
 name: hw-from-spec
-version: 0.7.0
+version: 0.7.1
 description: Run a hardware project (a PCB, a printed or CNC enclosure, or both — scope chosen at kickoff; contract fab such as JLCPCB) from a written specification to a production cut with an owner-gated, generated-only, blind-reviewed workflow — a kickoff questionnaire that asks every owner decision up front with recommended answers, a zero-warning manufacturability bar, and a retro that folds each project's learnings back into the skill. Use this whenever someone starts a board or enclosure project from a spec, asks to set up gates, a decision log, generators, part verification, a fab DFM mirror, a case pipeline, FEA, blind reviews, a release report or a production cut for one, or resumes such a project, or wants the skill improved from a finished project — even if they only say "new KiCad board", "order this at JLC", "review the layout", "cut the release" or "what did we learn".
 ---
 
@@ -303,7 +303,11 @@ checker (2026-09-28, ~150 mm parts) and a 0.4-nozzle FDM printer — substitute 
    layers, never a bed-face or vertical-wall deboss, mark coupon first, FAIL-gated mark rows (`dfm-printed-enclosure.md` §8.1, owner C9); fan bosses = fan holes; hood roof-down by `rotate()`, never
    `mirror()`; slicer projects with project-named presets + `different_settings_to_system`; floating-region warning = FAIL; supports read from the
    g-code, not the intent; auto-orientation. **Every vendor DFM decision is mirrored into this preset the same day** in the same yaml under its own
-   version key; its census + slicer log clean; ONE kit folder = pieces + coupons + BOTH dummies + READMEs.
+   version key; its census + slicer log clean; ONE kit folder = pieces + coupons + BOTH dummies + READMEs **+ a generated START_HERE** (print
+   order with the project-file names, assembly sequence with magnets-dry-then-CA and feet-last, numeric report-back with a recipient), every kit
+   text from the knobs through the **kit text gate** (`None` / `nan` / `{name}`, repo paths, dead file names, tokens of disabled features = FAIL);
+   glued plates rest on the LANDS with the bridged strips one layer below (§8.4); snug fits ship as a bracket plate the owner picks from (§8.5);
+   watertight row per STL; sidecars drift-checked against the 3MF config (`references/print-kit.md`, questionnaire C10).
 6. **When a vendor reports a cracked part**: measure the RECEIVED part (caliper table → the target's tolerance), photo protocol, fractography
    basics, then the ORDERED STL (sections + census with span and class), separate design intent from defect with the vendor-fault table, draft the
    reply from the template for the owner, then apply the learning design-wide (every body, every preset), not to the failed feature
@@ -392,6 +396,7 @@ CHANGELOG entry from the draft, blind-review the skill (a cold-user lens and a D
 | fab rules, panel, quote form, DFM export | `references/fab-dfm.md` |
 | case yaml → STL → checks → quotes | `references/case-pipeline.md` |
 | printed-enclosure DFM: MJF / FDM / SLA rules tagged checker / vendor / physics / owner, inserts + magnets, post-processing, tolerance stack, census gate, heat-map procedure, probes, coupons, dummies, brand marks (ironed top face / AMS bed layers), dust caps, Bambu CLI facts, post-mortem | `references/dfm-printed-enclosure.md` |
+| the print kit as a deliverable: START_HERE, kit text gate, hardware from the knobs, magnet procedure, bracket plate, watertight / sidecar rows | `references/print-kit.md` |
 | machined enclosure: corner radii, walls, threads, anodising, quote page, case-order gate | `references/cnc-enclosure.md` |
 | bought hardware: line schema, hardware classes (inserts, magnets, feet, labels), adhesive on PA12 | `references/part-verification.md` |
 | meshing, solving, caches, reporting | `references/fea-stage.md` |

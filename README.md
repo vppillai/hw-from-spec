@@ -4,7 +4,7 @@ A Claude Code skill that takes a board, an enclosure, or both from a written spe
 owner-gated phases, generated-only artefacts, a zero-warning manufacturability bar, blind reviews,
 and a retro that folds every project's learnings back into the skill.
 
-`version 0.7.0` · MIT · `SKILL.md` is the procedure, everything else is reference, template or tool.
+`version 0.7.1` · MIT · `SKILL.md` is the procedure, everything else is reference, template or tool.
 
 ## Quick start
 
@@ -42,12 +42,12 @@ vendor/hw-from-spec/smoke/run_smoke.sh
 | Path | What |
 |---|---|
 | `SKILL.md` | the procedure: setup + kickoff, gates, generated-only, decisions, parts, reviews, layout, DFM, case, software, release, agents, retro |
-| `references/` | detail per topic, read on demand (project-yaml, kickoff-questionnaire, schematic-phase, pcb-layout-dfm, fab-dfm, case-pipeline, dfm-printed-enclosure, cnc-enclosure, fea-stage, part-verification, software-track, release-and-cut, vendor-review, agent-ops, pitfalls) |
+| `references/` | detail per topic, read on demand (project-yaml, kickoff-questionnaire, schematic-phase, pcb-layout-dfm, fab-dfm, case-pipeline, dfm-printed-enclosure, print-kit, cnc-enclosure, fea-stage, part-verification, software-track, release-and-cut, vendor-review, agent-ops, pitfalls) |
 | `templates/` | CLAUDE.md, project.yaml, SPEC / VERIFY / KICKOFF_ANSWERS / governance records, review hand-off, DFM round, vendor review, census rows, production cut yaml, CI workflows |
 | `scripts/` | 15 generic tools driven by `project.yaml` (`references/project-yaml.md` lists which are generators, graders, gates) |
 | `workflows/` | four blind-review workflow templates + how to instantiate them |
 | `smoke/` | the automated dry run (`run_smoke.sh`) |
-| `evals/` | twelve skill evals (start, review, release, vendor mail, re-layout, first DFM round, census-blind flag, kickoff, retro, AMS mark plate, mech-only bracket, ee-only board) |
+| `evals/` | thirteen skill evals (start, review, release, vendor mail, re-layout, first DFM round, census-blind flag, kickoff, retro, AMS mark plate, mech-only bracket, ee-only board, print kit) |
 | `docs/retro/` | retro reports, one per project fed back into the skill |
 | `CHANGELOG.md` | what changed per version and what was deliberately not done |
 
