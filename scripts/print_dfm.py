@@ -24,8 +24,11 @@ Rules (each a row: process parameter + physical reason; verdict FLAG / PASS / IN
   V  void: g < detail_min anywhere (an engraved stroke / slit narrower than the smallest detail closes); detail_min <= g < void_min over
      >= slender x void_min (a long narrow slot: powder / resin does not clear)
   H  hole: a closed void (normals all round) with g < hole_min
-  O  overhang (FDM): down-facing faces steeper than overhang_max_deg from vertical, not the bed, not a ceiling
-  B  bridge (FDM): a horizontal ceiling above the bed longer than bridge_max
+  M  manifold: the mesh is watertight with consistent winding and holds exactly the expected number of bodies (--bodies N, default 1) — an open
+     mesh (a STEP->STL export with gaps, two un-unioned solids) has no inside; a stray shell or a split part prints as pieces
+  O  overhang (FDM): down-facing faces steeper than overhang_max_deg from vertical, not the bed, not a ceiling; PLUS every horizontal ceiling with
+     fewer than two supported ends (a CANTILEVER is a 90 deg overhang, not a bridge) longer than two line widths
+  B  bridge (FDM): a horizontal ceiling above the bed with BOTH ends on material, longer than bridge_max
   S  size: bbox against part_min / build_max
   L  INFO: regions inside legend land boxes (the coupon rule owns them) and slivers under sliver_area (a tangency / boolean remnant)
   Y  INFO: wall-class surface between wall_min and wall_reco (the vendor's grey line = the design margin; the census gate owns it)
@@ -34,7 +37,7 @@ voids narrower than void_min dark red — six orthographic faces + two isos, the
 
 CLI (paths default to the project root = the nearest parent holding project.yaml, else the cwd; the process table falls back to the skill's
 `templates/design/dfm_processes.yaml` when the project has none yet):
-  scripts/print_dfm.py --process <row> <mesh.stl>... [--out DIR] [--piece NAME] [--render] [--samples N] [--land x0 y0 x1 y1 ...]
+  scripts/print_dfm.py --process <row> <mesh.stl>... [--out DIR] [--piece NAME] [--render] [--samples N] [--land x0 y0 x1 y1 ...] [--bodies N]
       one record per body (DIR/<piece>.json [+ DIR/<piece>_<view>.png]); prints one line per rule; exit 1 when any body FLAGs
   scripts/print_dfm.py --list                                 the process rows and their thresholds
   scripts/print_dfm.py --gate <dfm_dir>... [--open <tag>/<piece>=<decision id> ...]
@@ -63,7 +66,7 @@ except ImportError as e:  # the generic scripts need pyyaml only; this one needs
     sys.exit(2)
 
 HERE = os.path.dirname(os.path.realpath(__file__))   # realpath: in a project `scripts` is a symlink into vendor/hw-from-spec — the template table must resolve through it
-VERSION = "0.8.0"        # rule-set version stamped into every record (the validation cache is keyed on it); bump when a rule or a measure changes
+VERSION = "0.9.0"        # rule-set version stamped into every record (the validation cache is keyed on it); bump when a rule or a measure changes
 WALL_DEG = 30.0          # limiting face within 30 deg of parallel = wall / neck / root; otherwise wedge (census convention)
 COS_OPP = 0.7            # a face 'opposes' the sample when its normal is within ~45 deg of the inverse normal (a 45 deg ramp under a skin counts, a 90 deg side face does not)
 NOISE_N = 5              # a region of fewer samples is sampling noise (a tessellation sliver), not a feature
@@ -223,7 +226,7 @@ def _where(rs, k="vmin", n=5):
     return "; ".join(f"{r.get('cls', '')} {r['area']} mm2 x {r['extent']} mm, min {r[k]} med {r['vmed']}, box {r['bbox']}" for r in rs[:n])
 
 
-def analyse(path, process, n_s=None, seed=0, lands=None, out_dir=None, piece=None, render=False):
+def analyse(path, process, n_s=None, seed=0, lands=None, out_dir=None, piece=None, render=False, bodies_expected=1):
     """One body -> the record (dict; written to out_dir/<piece>.json and, with render, out_dir/<piece>_<view>.png)."""
     t0 = time.time()
     table, table_path = processes()
@@ -249,6 +252,16 @@ def analyse(path, process, n_s=None, seed=0, lands=None, out_dir=None, piece=Non
     rows = []
     def row(rule, value, limit, verdict, where, why, fix=""):
         rows.append(dict(rule=rule, value=value, limit=limit, verdict=verdict, where=where, why=why, fix=fix))
+    n_bodies = len(m.split(only_watertight=False)); mp = []
+    if not m.is_watertight:
+        mp.append("not watertight (open edges: a STEP->STL export with gaps, or two un-unioned solids)")
+    if not m.is_winding_consistent:
+        mp.append("inconsistent winding (flipped faces)")
+    if n_bodies != bodies_expected:
+        mp.append(f"{n_bodies} bodies, expected {bodies_expected}")
+    row("M manifold", f"watertight {bool(m.is_watertight)}, winding consistent {bool(m.is_winding_consistent)}, {n_bodies} body/bodies", f"watertight, consistent, bodies = {bodies_expected}", "FLAG" if mp else "PASS", "; ".join(mp),
+        "a slicer or vendor cannot tell inside from outside on an open mesh (every thickness below is unreliable); an unexpected body count is a split part or a stray shell that prints as pieces",
+        "union the solids and close the open edges in the CAD, re-export; pass --bodies N only when the file intentionally holds N parts")
     walls = [r for r in thin if r["cls"] == "wall"]
     W = [r for r in walls if r["extent"] >= S * max(r["vmed"], 0.1)]
     Rt = [r for r in W if r["ray_med"] >= wall_min]
@@ -292,16 +305,27 @@ def analyse(path, process, n_s=None, seed=0, lands=None, out_dir=None, piece=Non
     Lg = [r for r in thin + voids if inland(r)]; Sl = [r for r in walls + wedges + voids if not inland(r) and r["area"] < SLV and r not in W]
     if Lg or Sl or land_necks:
         row("L legend lands / slivers (INFO)", f"{len(Lg)} sub-minimum region(s) and {len(land_necks)} point contact(s) inside legend land boxes; {len(Sl)} sliver(s) under {SLV} mm2 outside them", "listed - the coupon rule / census legend rows own the lands; a sliver fills or vanishes without loss", "INFO", _where(Lg, n=6) + (" || contacts: " + "; ".join(f"{r['kind']} {r['width']} at ({r['x']}, {r['y']})" for r in land_necks[:4]) if land_necks else "") + (" || slivers: " + _where(Sl, n=6) if Sl else ""), "raised / debossed legend glyphs are wedges and sub-line gaps by construction (the coupon decides); a tangency or boolean remnant below the process' detail cell has nothing to lose")
-    O = B = []
+    O = B = C = []
     if pr.get("overhang_max_deg") is not None:
         zmin = m.bounds[0][2]; down = nrm[:, 2] < -np.sin(np.radians(pr["overhang_max_deg"])); ceiling = nrm[:, 2] < -0.985; bed = pts[:, 2] < zmin + 0.2
         O = regions(pts, -nrm[:, 2], down & ~ceiling & ~bed, link, a_per, lambda s: dict(cls="overhang", deg=round(float(np.degrees(np.arcsin(-nrm[s, 2].mean()))), 0)))
-        B = [r for r in regions(pts, pts[:, 2], ceiling & ~bed, link, a_per, lambda s: dict(cls="ceiling")) if r["extent"] > pr["bridge_max"]]
+        def supported_ends(r):                                                   # a horizontal ray from just under each end of the ceiling, outward along its long axis, must hit material within reach: 2 hits = bridge, fewer = cantilever
+            s = r["_s"]; P = pts[s]; a = int(np.argmax(np.ptp(np.asarray(P)[:, :2], axis=0))); n = 0
+            for end, sign in ((P[np.argmin(P[:, a])], -1.0), (P[np.argmax(P[:, a])], 1.0)):
+                d = np.zeros(3); d[a] = sign; o = end.copy(); o[2] -= 0.3; o[a] -= sign * 0.5
+                loc, ir, _ = m.ray.intersects_location(o[None], d[None], multiple_hits=False)
+                n += bool(len(ir)) and float(np.linalg.norm(loc[0] - o)) <= max(3.0, 2 * link)
+            return n
+        C = regions(pts, pts[:, 2], ceiling & ~bed, link, a_per, lambda s: dict(cls="ceiling", _s=s))
+        for r in C:
+            r["supports_n"] = supported_ends(r); r["cls"] = "bridge" if r["supports_n"] >= 2 else "cantilever"; del r["_s"]
+        B = [r for r in C if r["cls"] == "bridge" and r["extent"] > pr["bridge_max"]]
+        Ct = [r for r in C if r["cls"] == "cantilever" and r["extent"] > 2 * fmin]
         hard = pr.get("supports") == "none"
-        row("O overhang (FDM)", f"{len(O)} down-facing region(s) steeper than {pr['overhang_max_deg']} deg from vertical (not the bed, not a ceiling)", "none when supports = none; listed otherwise", ("FLAG" if O else "PASS") if hard else "INFO", _where(O, k="deg"),
-            "an FDM layer needs the layer below it: beyond ~45..60 deg from vertical it sags or needs support (Prusa: 45..60 deg)", "re-orient the part, add a 45 deg lead-in, or allow supports there")
-        row("B bridge (FDM)", f"{len(B)} horizontal ceiling(s) above the bed longer than bridge_max {pr['bridge_max']}", "none when supports = none; listed otherwise", ("FLAG" if B else "PASS") if hard else "INFO", _where(B, k="extent"),
-            "an unsupported horizontal span longer than the process' bridge limit droops", f"split the span below {pr['bridge_max']} with a rib, or allow interior supports")
+        row("O overhang (FDM)", f"{len(O)} down-facing region(s) steeper than {pr['overhang_max_deg']} deg from vertical (not the bed, not a ceiling); {len(Ct)} horizontal cantilever(s) (a ceiling with < 2 supported ends) longer than two line widths ({2 * fmin} mm)", "none when supports = none; listed otherwise", ("FLAG" if (O or Ct) else "PASS") if hard else "INFO", _where(O, k="deg") + (" || cantilevers: " + _where(Ct, k="extent") if Ct else ""),
+            "an FDM layer needs the layer below it: beyond ~45..60 deg from vertical it sags or needs support (Prusa: 45..60 deg); a horizontal face with one supported edge is a 90 deg overhang — only a span with material at BOTH ends is a bridge", "re-orient the part, add a 45 deg lead-in, or allow supports there")
+        row("B bridge (FDM)", f"{len(B)} horizontal ceiling(s) above the bed with both ends supported, longer than bridge_max {pr['bridge_max']}", "none when supports = none; listed otherwise", ("FLAG" if B else "PASS") if hard else "INFO", _where(B, k="extent"),
+            "an unsupported horizontal span between two supports longer than the process' bridge limit droops", f"split the span below {pr['bridge_max']} with a rib, or allow interior supports")
     sz = []
     if pr.get("part_min"):
         srt = sorted(ext); pm = sorted(pr["part_min"])
@@ -315,10 +339,10 @@ def analyse(path, process, n_s=None, seed=0, lands=None, out_dir=None, piece=Non
     fin = np.isfinite(t)
     flagged = [r["rule"] for r in rows if r["verdict"] == "FLAG"]
     rec = dict(tool="scripts/print_dfm.py (hw-from-spec, vendor-independent)", version=VERSION, stl=os.path.relpath(os.path.abspath(path), ROOT), stl_md5=md5(path), process=process, piece=piece or os.path.splitext(os.path.basename(path))[0],
-               faces=int(len(m.faces)), watertight=bool(m.is_watertight), area_mm2=round(area, 1), bbox=np.round(ext, 2).tolist(), samples=int(n_s), spacing=round(spacing, 3), link=round(link, 3),
+               faces=int(len(m.faces)), watertight=bool(m.is_watertight), bodies=n_bodies, bodies_expected=bodies_expected, area_mm2=round(area, 1), bbox=np.round(ext, 2).tolist(), samples=int(n_s), spacing=round(spacing, 3), link=round(link, 3),
                thresholds={k: pr.get(k) for k in ("wall_min", "wall_reco", "feature_min", "detail_min", "void_min", "hole_min", "neck_max", "slender", "overhang_max_deg", "bridge_max", "supports", "legend_land_min", "legend_void_min")},
                frac_below={str(b): round(float((t < b).mean()), 5) for b in (fmin, wall_min, reco)}, area_below={str(b): round(float((t < b).sum() * a_per), 1) for b in (fmin, wall_min, reco)},
-               t_min=round(float(t[fin].min()), 3) if fin.any() else None, thin=thin[:40], voids=voids[:40], necks=necks[:40], overhangs=O[:20], ceilings=B[:20],
+               t_min=round(float(t[fin].min()), 3) if fin.any() else None, thin=thin[:40], voids=voids[:40], necks=necks[:40], overhangs=O[:20], ceilings=C[:20],
                verdict="FLAG" if flagged else "PASS", flagged=flagged, rows=rows, seconds=round(time.time() - t0, 1), lands=[list(map(float, b)) for b in (lands or [])])
     if out_dir:
         os.makedirs(out_dir, exist_ok=True)
@@ -480,6 +504,20 @@ def selftest():
         assert "S size" not in r["flagged"], r["rows"]
         p5 = os.path.join(d, "tiny.stl"); trimesh.creation.box((1.0, 5.0, 12.0)).export(p5)
         assert "S size" in analyse(p5, "jlc_sla_9600", n_s=5000)["flagged"]
+        # review 0.8.0 F8: rule M — an open mesh and a two-body file FLAG; --bodies 2 accepts the pair
+        bx = trimesh.creation.box((20.0, 20.0, 5.0)); bx.faces = bx.faces[2:]; p6 = os.path.join(d, "open.stl"); bx.export(p6)
+        assert "M manifold" in analyse(p6, "jlc_mjf_pa12", n_s=5000)["flagged"], "an open mesh must FLAG M"
+        a2 = trimesh.creation.box((20.0, 20.0, 2.0)); b2 = trimesh.creation.box((20.0, 20.0, 2.0)); b2.apply_translation((40.0, 0, 0)); p7 = os.path.join(d, "two.stl"); trimesh.util.concatenate([a2, b2]).export(p7)
+        assert "M manifold" in analyse(p7, "jlc_mjf_pa12", n_s=5000)["flagged"] and "M manifold" not in analyse(p7, "jlc_mjf_pa12", n_s=5000, bodies_expected=2)["flagged"], "two bodies FLAG unless expected"
+        # review 0.8.0 F25: a T-section's 18 mm free arms are cantilevers (O), an upside-down U's 32 mm roof is a bridge (B)
+        from shapely.geometry import Polygon
+        rotx = trimesh.transformations.rotation_matrix(np.pi / 2, [1, 0, 0])
+        tee = trimesh.creation.extrude_polygon(Polygon([(-2, 0), (2, 0), (2, 15), (20, 15), (20, 18), (-20, 18), (-20, 15), (-2, 15)]), 10.0); tee.apply_transform(rotx); p8 = os.path.join(d, "tee.stl"); tee.export(p8)
+        r = analyse(p8, "home_fdm_04", n_s=20000); ro = next(x for x in r["rows"] if x["rule"].startswith("O")); rb = next(x for x in r["rows"] if x["rule"].startswith("B"))
+        assert "2 horizontal cantilever(s)" in ro["value"] and rb["value"].startswith("0 horizontal"), (ro["value"], rb["value"])
+        pi_ = trimesh.creation.extrude_polygon(Polygon([(-20, 0), (-16, 0), (-16, 15), (16, 15), (16, 0), (20, 0), (20, 18), (-20, 18)]), 10.0); pi_.apply_transform(rotx); p9 = os.path.join(d, "pi.stl"); pi_.export(p9)
+        r = analyse(p9, "home_fdm_04", n_s=20000); ro = next(x for x in r["rows"] if x["rule"].startswith("O")); rb = next(x for x in r["rows"] if x["rule"].startswith("B"))
+        assert "0 horizontal cantilever(s)" in ro["value"] and rb["value"].startswith("1 horizontal"), (ro["value"], rb["value"])
         # the gate: FLAG fails, --open names it, a changed STL fails, a census record without a dfm record fails
         import contextlib, io
         def quiet(*a):
@@ -501,13 +539,13 @@ def selftest():
         assert v["looser"] == [p4] and v["cm"] == {"FLAG->FLAG": 1, "FLAG->PASS": 1, "PASS->PASS": 1}, v["cm"]
         doc = open(PATHS["val_doc"]).read(); assert "RULE DEFECT" in doc and "<!-- hand: begin -->" in doc
         assert _label_verdict(dict(vendor=None)) is None and _label_verdict(dict(verdict="n/a")) is None
-    print("selftest OK: 0.8 plate -> W FLAG only (ray reads 0.8), 0.6 x 60 rib -> W only, 2.0 plate -> PASS (no convex-edge artefact), 0.5 root under a 2.0 rim x 90 -> W + R FLAG, root 1.3 -> PASS, SLA size rule, gate (FLAG / --open / md5 / orphan census), validate (RULE DEFECT, both label schemas)")
+    print("selftest OK: 0.8 plate -> W FLAG only (ray reads 0.8), 0.6 x 60 rib -> W only, 2.0 plate -> PASS (no convex-edge artefact), 0.5 root under a 2.0 rim x 90 -> W + R FLAG, root 1.3 -> PASS, SLA size rule, M (open mesh / two bodies / --bodies 2), O cantilever vs B bridge, gate (FLAG / --open / md5 / orphan census), validate (RULE DEFECT, both label schemas)")
 
 
 def main():
     ap = argparse.ArgumentParser(description="vendor-independent print manufacturability check (hw-from-spec); see references/print-dfm.md")
     ap.add_argument("stl", nargs="*"); ap.add_argument("--process", help="row of the process table (--list shows them)"); ap.add_argument("--out", help="record dir (DIR/<piece>.json)"); ap.add_argument("--piece"); ap.add_argument("--render", action="store_true", help="heat maps beside the record (matplotlib)")
-    ap.add_argument("--samples", type=int); ap.add_argument("--land", nargs=4, type=float, action="append", metavar=("X0", "Y0", "X1", "Y1"), help="legend land box (repeatable)")
+    ap.add_argument("--samples", type=int); ap.add_argument("--bodies", type=int, default=1, help="expected body count (rule M; default 1)"); ap.add_argument("--land", nargs=4, type=float, action="append", metavar=("X0", "Y0", "X1", "Y1"), help="legend land box (repeatable)")
     ap.add_argument("--processes", help=f"process table (default {os.path.relpath(DEFAULTS['processes'])}, else the skill template)"); ap.add_argument("--list", action="store_true")
     ap.add_argument("--gate", nargs="+", metavar="DFM_DIR"); ap.add_argument("--open", nargs="*", default=[], metavar="TAG/PIECE=ID")
     ap.add_argument("--validate", action="store_true"); ap.add_argument("--verdicts", help=f"default {os.path.relpath(DEFAULTS['verdicts'])}"); ap.add_argument("--val-dir"); ap.add_argument("--val-doc"); ap.add_argument("--render-validation", nargs="*", default=[], metavar="SUBSTR")
@@ -539,7 +577,7 @@ def main():
         print(f"print_dfm: no such file: {', '.join(missing)}", file=sys.stderr); return 2
     rc = 0
     for p in a.stl:
-        r = analyse(p, a.process, n_s=a.samples, lands=a.land, out_dir=a.out, piece=a.piece, render=a.render)
+        r = analyse(p, a.process, n_s=a.samples, lands=a.land, out_dir=a.out, piece=a.piece, render=a.render, bodies_expected=a.bodies)
         print(f"{p}: {r['verdict']} ({a.process}) faces {r['faces']} watertight {r['watertight']} area {r['area_mm2']} mm2 samples {r['samples']} t_min {r['t_min']} {r['seconds']} s  [rows: verdict rule: measured | limit | where (box = xmin ymin zmin xmax ymax zmax) | fix]")
         for row in r["rows"]:
             print(f"  {row['verdict']:5s} {row['rule']}: {row['value']} | {row['limit']} | {row['where'][:300]}" + (f" | fix: {row['fix']}" if row["verdict"] == "FLAG" and row.get("fix") else ""))
