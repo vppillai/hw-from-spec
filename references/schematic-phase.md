@@ -18,12 +18,12 @@ board:
   notes: |                          # the root NOTES block (intent, key values, rework links, test points, checklist) — a review reads it
 sheets:                             # one entry per sheet; refdes = sheet × 100 + n; a fragment may be instantiated more than once ({P} prefix)
   - {no: 1, name: power,  file: design/sheets/power.yaml}
-  - {no: 2, name: port_a, file: design/sheets/port.yaml, prefix: PA_}
-  - {no: 3, name: port_b, file: design/sheets/port.yaml, prefix: PB_}
+  - {no: 2, name: channel_a, file: design/sheets/channel.yaml, prefix: CA_}   # one fragment instantiated twice = two generated sheet files
+  - {no: 3, name: channel_b, file: design/sheets/channel.yaml, prefix: CB_}
 nets: {}                            # root-level connections between sheets (hierarchical labels), by REF.PIN: NET
 
 # design/sheets/<sheet>.yaml — one sheet or a reusable fragment
-title: "{P}port"                    # {P} = instance prefix; nets without {P} are shared between instances
+title: "{P}channel"                 # {P} = instance prefix; nets without {P} are shared between instances
 groups: [ic, passives, connectors]  # placement groups for the drawer
 components:
   - {ref: U1, group: ic, part: <MPN>}                           # part row supplies symbol/footprint/fields
