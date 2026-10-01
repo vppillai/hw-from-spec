@@ -33,7 +33,7 @@ from decimal import Decimal, ROUND_HALF_UP
 
 import yaml
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 from project import Project  # noqa: E402
 
 TOL = 5e-4

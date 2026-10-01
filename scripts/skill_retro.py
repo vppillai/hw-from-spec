@@ -273,7 +273,7 @@ def run(project_arg, skill, out_dir, since, threshold, today=None):
     learn = os.path.join(root, "docs", "governance", "LEARNINGS_LOG.md"); dec = os.path.join(root, "docs", "governance", "DECISIONS.md")
     if os.path.exists(os.path.join(root, "project.yaml")):
         try:
-            sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+            sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
             from project import Project
             P = Project(os.path.join(root, "project.yaml")); learn = P.path("learnings") or learn; dec = P.path("decisions") or dec
         except Exception:  # noqa: BLE001 — fall back to the default layout
@@ -350,7 +350,7 @@ def selftest():
 
 def main(argv):
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--project", help="project root or its project.yaml (default: cwd)"); ap.add_argument("--skill", default=os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    ap.add_argument("--project", help="project root or its project.yaml (default: cwd)"); ap.add_argument("--skill", default=os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
     ap.add_argument("--out"); ap.add_argument("--since"); ap.add_argument("--threshold", type=float, default=0.5); ap.add_argument("--selftest", action="store_true")
     a = ap.parse_args(argv[1:])
     if a.selftest:

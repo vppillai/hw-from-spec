@@ -16,8 +16,6 @@ CLI (for shell scripts):
 """
 import glob, hashlib, os, re, sys
 
-import yaml
-
 SCOPES = ("ee", "mech", "both")
 SCOPE_TAG = re.compile(r"\{\{((?:ee|mech|both)(?:,(?:ee|mech|both))*)\}\}")
 
@@ -43,6 +41,7 @@ class Project:
     def __init__(self, path):
         self.file = os.path.abspath(path)
         self.root = os.path.dirname(self.file)
+        import yaml  # lazy: `scaffold` / `slots` run on a stock python3 before any venv exists (blind review 0.8.0 F2)
         with open(self.file, encoding="utf-8") as f:
             self.cfg = yaml.safe_load(f) or {}
 

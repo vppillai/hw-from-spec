@@ -19,7 +19,7 @@ import argparse, hashlib, json, os, re, shlex, subprocess, sys, tempfile
 
 import yaml
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 from project import Project  # noqa: E402
 
 

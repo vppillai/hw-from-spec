@@ -15,7 +15,7 @@ may cite an agent row whose status starts APPROVED / CONFIRMED / CLOSED / SUPERS
 """
 import os, re, sys, tempfile
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 from project import Project, split_row  # noqa: E402
 
 
