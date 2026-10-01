@@ -90,6 +90,7 @@ gates:
     - "$PY scripts/dfm_check.py --check"
     - "$PY scripts/collect_renders.py --check"
     - "$PY scripts/release_report.py --check"
+    - "true # DRC stand-in: the smoke board is a stub with no CAD; a real project lists its gen/drc_gate.py --check here (project.py gates-required demands a DRC line once paths.board exists)"
   clone:                                      # run on `git archive HEAD` — what a fresh clone sees
     - "$PY scripts/known_issues.py --check"
     - "$PY scripts/release_report.py --check"

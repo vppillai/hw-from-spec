@@ -417,12 +417,15 @@ def selftest():
     assert run(os.path.join(d, "nowhere"), skill, out, None, 0.5) == 2
     # --apply: pitfalls lines + the NEW process row (validated_on reset) + a CHANGELOG stub, idempotent
     open(os.path.join(skill, "references", "pitfalls.md"), "w").write("# pitfalls\n- old line\n"); open(os.path.join(skill, "CHANGELOG.md"), "w").write("# CHANGELOG\n\n## 1.0.0\n- x\n")
-    assert run(proj, skill, out, "2026-09-02", 0.5, today="2026-09-28", apply=True) == 0
+    import contextlib, io
+    with contextlib.redirect_stdout(io.StringIO()):
+        assert run(proj, skill, out, "2026-09-02", 0.5, today="2026-09-28", apply=True) == 0
     pit = open(os.path.join(skill, "references", "pitfalls.md")).read(); tpl = open(os.path.join(skill, "templates", "design", "dfm_processes.yaml")).read(); ch = open(os.path.join(skill, "CHANGELOG.md")).read()
     assert "## Retro proj 2026-09-28" in pit and "PyYAML keeps the LAST" in pit and pit.count("- ") >= 3, pit
     assert "  acme_sls:" in tpl and "    wall_min: 0.8" in tpl and tpl.count("validated_on: []") == 2 and "validated_on: [{" not in tpl, tpl
     assert ch.startswith("# CHANGELOG\n\n## UNRELEASED — retro proj (2026-09-28)") and "## 1.0.0" in ch, ch
-    assert run(proj, skill, out, "2026-09-02", 0.5, today="2026-09-28", apply=True) == 0
+    with contextlib.redirect_stdout(io.StringIO()):
+        assert run(proj, skill, out, "2026-09-02", 0.5, today="2026-09-28", apply=True) == 0
     assert open(os.path.join(skill, "references", "pitfalls.md")).read() == pit and open(os.path.join(skill, "CHANGELOG.md")).read() == ch and open(os.path.join(skill, "templates", "design", "dfm_processes.yaml")).read() == tpl, "idempotent"
     # the default --skill resolves through a symlinked scripts/ (review 0.8.0 F4): run the real script via a project-style link
     import subprocess
