@@ -14,6 +14,20 @@
     "scripts/*.py --selftest and smoke/run_smoke.sh were run and their result reported",
     "no KiCad schematic or board file was created",
     "the response asks the owner for the G0 gate line (or states it is waiting for it) rather than proceeding to CAD"
+   ],
+   "checks": [
+    {
+     "name": "template GATES.md ships empty approval cells and no release phrase in a cell",
+     "run": "test \"$(grep -c \"_not yet approved_\" \"$SKILL\"/templates/GATES.md)\" -ge 3 && ! grep -q \"| clear to build\" \"$SKILL\"/templates/GATES.md"
+    },
+    {
+     "name": "CLAUDE.md template: never invent a part number, agents never write gate cells",
+     "run": "grep -q \"Never invent a fab or distributor part number\" \"$SKILL\"/templates/CLAUDE.md && grep -q \"Agents never write approval cells\" \"$SKILL\"/templates/CLAUDE.md"
+    },
+    {
+     "name": "gate_check selftest (cells read by script, release line author = owner)",
+     "run": "\"$PY\" \"$SKILL\"/scripts/gate_check.py --selftest"
+    }
    ]
   },
   {
@@ -91,6 +105,16 @@
     "on the vendor quote page one STL is uploaded per session and the verdict is read from the analysis API at parseStatus 2 (thinWall), never from a page reading before that; the record names file md5 + parseStatus + material + screenshots per face",
     "the agent does not claim the material on the line changes the thin-wall flag, and a coordinator re-reads a worker's 'no flag' from the API before writing PASS",
     "every vendor DFM decision is applied to the home-printer preset in the same yaml under its own version key, with its census and slicer log clean"
+   ],
+   "checks": [
+    {
+     "name": "census selftest: walls / voids / wedge band / opposing faces, accepted entries need reason + date + evidence",
+     "run": "\"$PY\" \"$SKILL\"/scripts/thin_wall_census.py --selftest"
+    },
+    {
+     "name": "print_targets numbers live in project.yaml, none in a script",
+     "run": "grep -q \"^print_targets:\" \"$SKILL\"/templates/project.yaml && ! grep -E \"wall_gate *= *[0-9]\" \"$SKILL\"/scripts/thin_wall_census.py"
+    }
    ]
   },
   {
@@ -122,6 +146,16 @@
     "docs/governance/KICKOFF_ANSWERS.md exists and every answered question has an owner D row in DECISIONS.md with the owner's words",
     "project.yaml carries print_targets for both targets (vendor, process, material, wall_gate, void_gate, red_line, design_margin, tolerance, checker_url + date) and the board block from the PCB answers",
     "no schematic, board or case file is created before the answers are recorded, and no answered question is asked again later"
+   ],
+   "checks": [
+    {
+     "name": "questionnaire: no batch above four questions, C10 placed, A4 within four options",
+     "run": "\"$PY\" - <<EOF2\nimport re\nt=open(\"$SKILL/references/kickoff-questionnaire.md\").read()\nrows=[l for l in t.splitlines() if re.match(r\"^\\| \\d+ \", l)]\nfor l in rows:\n    q=l.split(\"|\")[2]; ids=re.findall(r\"[A-I]\\d+[a-z]?\", q); rng=re.findall(r\"([A-I])(\\d+)[–-]([A-I])?(\\d+)\", q)\n    n=sum(int(b)-int(a)+1 for a,_,_,b in [(m[1],0,0,m[3]) for m in rng]) + len([i for i in ids if not any(i in r for r in [m[0]+m[1] for m in rng]+[ (m[2] or m[0])+m[3] for m in rng])])\n    assert n<=4, (l, n)\nassert any(\"C10\" in l for l in rows), \"C10 in no batch\"\na4=t.split(\"**A4 \")[1].split(\"**B1\")[0]; assert a4.count(\"*Alt:*\")<=3, a4.count(\"*Alt:*\")\nprint(\"batches ok\", len(rows))\nEOF2"
+    },
+    {
+     "name": "project.py kickoff --check exists and its selftest passes",
+     "run": "\"$PY\" \"$SKILL\"/scripts/project.py --selftest | grep -q \"kickoff check\""
+    }
    ]
   },
   {
@@ -137,6 +171,12 @@
     "SKILL.md version is bumped and CHANGELOG.md has Changed / Added / Not done sections for it",
     "a blind review of the skill with two lenses is run (or scheduled with the checklist) before the PR",
     "the project's project.yaml skill.version is updated to the new skill version and nothing in the project repo is rewritten by the retro script"
+   ],
+   "checks": [
+    {
+     "name": "skill_retro selftest (classifier, unparsed bullets listed, --apply idempotent)",
+     "run": "\"$PY\" \"$SKILL\"/scripts/skill_retro.py --selftest"
+    }
    ]
   },
   {
@@ -161,13 +201,27 @@
    "files": [],
    "assertions": [
     "A0 scope is asked first and recorded as project.scope: mech plus an owner D row before any other question",
-    "no PCB build (B1-B8), software (G1-G2) or debug-access (I3) question is asked; KICKOFF_ANSWERS marks them n/a (scope)",
+    "no PCB build (B1-B8), software (G1-G2) or debug-access (I3) question is asked; their KICKOFF_ANSWERS rows are absent after `scaffold --scope mech` (or read n/a (scope) when kept by hand)",
     "docs/governance/GATES.md contains G0, M1, M2, Case order and Release rows and no G1, G2 or board-order row; project.yaml has no paths.board or fab_dfm block and has print_targets, case_yaml and paths.mech_record",
     "the board STEP is recorded as the fit input of record with md5 and a [V] or [K] tag (SPEC section 4 and paths.mesh_provenance), never treated as a board to route",
     "no KiCad, ERC, DRC, fab DFM mirror or electronics parts seed is created or mentioned as a prerequisite; hardware parts are still verified [V] with URL and date",
     "the M1 prerequisites (census per preset, six face renders, clearance rows, slicer log, vendor DFM by API, hardware [V], merged review) are named and the agent asks for the M1 cell instead of writing it",
     "scripts/project.py record (or the equivalent) names the STL set md5 as the record id for collateral / reports / the cut",
     "the scaffolded ENV.md, CLAUDE.md and production_cut.yaml name no KiCad module (pcbnew), electronics parts seed, fab package input or software-track manual"
+   ],
+   "checks": [
+    {
+     "name": "mech scaffold: G0 M1 M2 Case-order Release rows only",
+     "run": "mkdir -p docs/governance design && cp \"$SKILL\"/templates/{project.yaml,CLAUDE.md,GATES.md,SPEC.md,STATUS.md,KICKOFF_ANSWERS.md,ENV.md,production_cut.yaml} . && cp \"$SKILL\"/templates/design/traceability.yaml design/ && \"$PY\" \"$SKILL\"/scripts/project.py scaffold --scope mech project.yaml CLAUDE.md GATES.md SPEC.md STATUS.md KICKOFF_ANSWERS.md ENV.md production_cut.yaml design/traceability.yaml >/dev/null && G=$(grep -o \"^| \\*\\*[A-Za-z0-9 ()]*\\*\\*\" GATES.md | tr -d \"*|\" | tr -s \" \\n\" \" \") && [ \"$G\" = \" G0 M1 M2 Case order Release \" ]"
+    },
+    {
+     "name": "mech scaffold: project.yaml has print_targets / case_yaml / mech_record and no board / fab_dfm / board: block",
+     "run": "mkdir -p docs/governance design && cp \"$SKILL\"/templates/{project.yaml,CLAUDE.md,GATES.md,SPEC.md,STATUS.md,KICKOFF_ANSWERS.md,ENV.md,production_cut.yaml} . && cp \"$SKILL\"/templates/design/traceability.yaml design/ && \"$PY\" \"$SKILL\"/scripts/project.py scaffold --scope mech project.yaml CLAUDE.md GATES.md SPEC.md STATUS.md KICKOFF_ANSWERS.md ENV.md production_cut.yaml design/traceability.yaml >/dev/null && grep -q \"^print_targets:\" project.yaml && grep -q \"case_yaml:\" project.yaml && grep -q \"mech_record\" project.yaml && ! grep -q \"^fab_dfm:\\|^  board:\\|^board:\" project.yaml"
+    },
+    {
+     "name": "mech scaffold: no PCB-build / software / debug-access kickoff row; no pcbnew / ERC / parts seed / fab package / software manual in CLAUDE, ENV, production_cut",
+     "run": "mkdir -p docs/governance design && cp \"$SKILL\"/templates/{project.yaml,CLAUDE.md,GATES.md,SPEC.md,STATUS.md,KICKOFF_ANSWERS.md,ENV.md,production_cut.yaml} . && cp \"$SKILL\"/templates/design/traceability.yaml design/ && \"$PY\" \"$SKILL\"/scripts/project.py scaffold --scope mech project.yaml CLAUDE.md GATES.md SPEC.md STATUS.md KICKOFF_ANSWERS.md ENV.md production_cut.yaml design/traceability.yaml >/dev/null && ! grep -q \"^| B[0-9]\\|^| G[0-9]\\|^| I3\" KICKOFF_ANSWERS.md && ! grep -q \"ERC\\|pcbnew\\|parts_seed\" CLAUDE.md ENV.md && ! grep -v \"^#\" production_cut.yaml | grep -q \"{pkg}\\|technician_manual\\|developer_manual\""
+    }
    ]
   },
   {
@@ -184,6 +238,20 @@
     "the phase chain named is G0 -> G1 -> G2 -> fab DFM (board and panel) -> order -> release cut -> production cut, all keyed on the board md5",
     "the production cut deliverable list carries no case report, case drawing, STL set or case FEA row",
     "the scaffolded production_cut.yaml carries no OpenSCAD-rendered assembly guide, insert / torque assembly SOP or case manufacturing-spec row"
+   ],
+   "checks": [
+    {
+     "name": "ee scaffold: G0 G1 G2 Order(board) Release rows only",
+     "run": "mkdir -p docs/governance design && cp \"$SKILL\"/templates/{project.yaml,CLAUDE.md,GATES.md,SPEC.md,STATUS.md,KICKOFF_ANSWERS.md,ENV.md,production_cut.yaml} . && cp \"$SKILL\"/templates/design/traceability.yaml design/ && \"$PY\" \"$SKILL\"/scripts/project.py scaffold --scope ee project.yaml CLAUDE.md GATES.md SPEC.md STATUS.md KICKOFF_ANSWERS.md ENV.md production_cut.yaml design/traceability.yaml >/dev/null && G=$(grep -o \"^| \\*\\*[A-Za-z0-9 ()]*\\*\\*\" GATES.md | tr -d \"*|\" | tr -s \" \\n\" \" \") && [ \"$G\" = \" G0 G1 G2 Order (board) Release \" ]"
+    },
+    {
+     "name": "ee scaffold: no print_targets / case_yaml / mech_record; board: block present",
+     "run": "mkdir -p docs/governance design && cp \"$SKILL\"/templates/{project.yaml,CLAUDE.md,GATES.md,SPEC.md,STATUS.md,KICKOFF_ANSWERS.md,ENV.md,production_cut.yaml} . && cp \"$SKILL\"/templates/design/traceability.yaml design/ && \"$PY\" \"$SKILL\"/scripts/project.py scaffold --scope ee project.yaml CLAUDE.md GATES.md SPEC.md STATUS.md KICKOFF_ANSWERS.md ENV.md production_cut.yaml design/traceability.yaml >/dev/null && ! grep -q \"^print_targets:\\|case_yaml:\\|mech_record\" project.yaml && grep -q \"^board:\" project.yaml"
+    },
+    {
+     "name": "ee scaffold: no enclosure / D3 / E3 kickoff row; no case deliverable in production_cut; CLAUDE.md names no census / M1",
+     "run": "mkdir -p docs/governance design && cp \"$SKILL\"/templates/{project.yaml,CLAUDE.md,GATES.md,SPEC.md,STATUS.md,KICKOFF_ANSWERS.md,ENV.md,production_cut.yaml} . && cp \"$SKILL\"/templates/design/traceability.yaml design/ && \"$PY\" \"$SKILL\"/scripts/project.py scaffold --scope ee project.yaml CLAUDE.md GATES.md SPEC.md STATUS.md KICKOFF_ANSWERS.md ENV.md production_cut.yaml design/traceability.yaml >/dev/null && ! grep -q \"^| C[0-9]\\|^| D3\\|^| E3\" KICKOFF_ANSWERS.md && ! grep -q \"assembly_sop\\|case_stl\\|fea_case\\|case incl\" production_cut.yaml && ! grep -q \"census\\|M1 geometry\" CLAUDE.md"
+    }
    ]
   },
   {
@@ -202,6 +270,12 @@
     "every exported STL has a watertight row; the sidecar keys a rule depends on are drift-checked against the 3MF config",
     "the ribs ship as a bracket plate with named objects and the owner is asked to choose the value after one print",
     "the glued plate rests on the lands, strip ceilings one layer below, working clearance after EF on both parts >= 0.1 as a row"
+   ],
+   "checks": [
+    {
+     "name": "print-kit reference: START_HERE, text gate tokens, magnet sequence, bracket plate",
+     "run": "grep -q \"START_HERE\" \"$SKILL\"/references/print-kit.md && grep -q \"{name}\" \"$SKILL\"/references/print-kit.md && grep -q \"Dry attract check before any CA\" \"$SKILL\"/references/print-kit.md && grep -q \"feet LAST\" \"$SKILL\"/references/print-kit.md && grep -q \"bracket plate\" \"$SKILL\"/references/dfm-printed-enclosure.md"
+    }
    ]
   },
   {
@@ -217,6 +291,12 @@
     "no upload before the PASS; the vendor's own PASS is called necessary, not sufficient (length-tolerant checker)",
     "the records carry the STL md5 and the gate line joins gates.adopt; the fix is a generator change with a decision row",
     "the vendor's later verdict is appended to dfm_verdicts.yaml and --validate is run; a vendor FLAG on a body we pass would be a RULE DEFECT, not a threshold tweak"
+   ],
+   "checks": [
+    {
+     "name": "print_dfm selftest: 0.5 root under a rim FLAGs W + R, 1.3 passes, M manifold, gate enforcement",
+     "run": "needs-mesh: \"$PY\" \"$SKILL\"/scripts/print_dfm.py --selftest"
+    }
    ]
   }
  ]
