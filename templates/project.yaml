@@ -48,6 +48,7 @@ print_targets:                                # every printed body is censused a
     vendor: {{VENDOR}}                        # e.g. JLC3DP {{mech,both}}
     process: {{PROCESS}}                      # MJF | SLA | FDM | CNC {{mech,both}}
     material: {{MATERIAL}}                    # e.g. PA12-HP {{mech,both}}
+    dfm_process: {{DFM_PROCESS}}              # row of design/dfm_processes.yaml scripts/print_dfm.py gates this target on (kickoff C8a; e.g. jlc_mjf_pa12) {{mech,both}}
     wall_gate: {{WALL_GATE}}                  # the checker's grey line (JLC3DP 2026-09-28: 1.2)         [checker] {{mech,both}}
     void_gate: {{VOID_GATE}}                  # slots / slits / engraved strokes (1.2)                    [checker] {{mech,both}}
     red_line: {{RED_LINE}}                    # the checker's red band (0.5)                              [checker] {{mech,both}}
@@ -67,6 +68,7 @@ print_targets:                                # every printed body is censused a
     process: FDM {{mech,both}}
     material: {{FILAMENT}}                    # PLA | PETG {{mech,both}}
     printer: {{PRINTER_AND_NOZZLE}}           # e.g. "Bambu Lab P2S, 0.4 nozzle, 0.20 mm" {{mech,both}}
+    dfm_process: home_fdm_04                  # the printability floor row (walls 0.9 / one perimeter 0.45); the DESIGN rule is wall_gate below {{mech,both}}
     wall_gate: 1.6                            # 4 perimeters at 0.4                                       [owner bar] {{mech,both}}
     rib_gate: 1.2 {{mech,both}}
     void_gate: 1.0 {{mech,both}}
@@ -122,6 +124,8 @@ gates:
     # Case / M1 (every printed body, every preset): the PURE census gate + the geometry generator's --check {{mech,both}}
     # - "$PY gen/case.py --check" {{mech,both}}
     # - "$PY scripts/thin_wall_census.py --gate-dir out/mechanical/case/<preset>/census" {{mech,both}}
+    # - "$PY scripts/print_dfm.py --gate out/mechanical/case/<preset>/dfm"   # printability floor on the MESH: every censused body has a PASS record of the same md5 (references/print-dfm.md) {{mech,both}}
+    # - "$PY scripts/scad_lint.py out/mechanical/case/<preset>/*.scad"        # no statement hidden behind a `//` in generated SCAD {{mech,both}}
   clone:                                      # run inside `git archive HEAD`
     - "$PY scripts/known_issues.py --check"
     - "$PY scripts/release_report.py --check"

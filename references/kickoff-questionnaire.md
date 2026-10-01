@@ -113,6 +113,10 @@ piece or a clear resin part.
 **C8 Two print targets and their fits** [mech, both]. **RECOMMENDED: one yaml, presets `base + overrides`, every fit clearance a per-preset knob decided by a
 coupon, every vendor DFM decision mirrored into `home_fdm` the same day** — two versions, one geometry of record. *Alt:* vendor target only — no
 mock-up before the order. *Alt:* separate generators — divergence nobody diffs.
+**C8a — which `design/dfm_processes.yaml` row each target gates on** (`print_targets.<t>.dfm_process`; `references/print-dfm.md`). Selectable rows of
+the shipped table: `jlc_mjf_pa12` · `jlc_sla_9600` · `jlc_fdm` · `xometry_mjf_pa12` · `protolabs_mjf_pa12` · `home_fdm_04` (`hp_mjf_guide` is BLOCKED
+until its page is fetched). **RECOMMENDED: the vendor's own row for the vendor target + `home_fdm_04` for `home_fdm`.** *Alt:* a vendor not in the
+table — ONE new row with its published minimums `[V]` (URL + date) and `validated_on: []` before the first upload; the retro carries it to the skill.
 
 **C9 Brand marks / logos on FDM parts** [mech, both] (`references/dfm-printed-enclosure.md` §8.1). **RECOMMENDED: a TOP-face feature (deboss or raised
 0.6 = 3 layers) under `ironing_type: top` (never `topmost`), top shell ≥ recess + 1.0, the part oriented so the marked face is a top face, one

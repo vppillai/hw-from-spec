@@ -59,8 +59,8 @@ grep -q '^fab_dfm:' "$SKILL/templates/project.yaml" || { echo "FAIL: templates/p
 grep -q 'accepted_requires' "$SKILL/templates/project.yaml" || { echo "FAIL: templates/project.yaml lost the DFM bar"; exit 1; }
 grep -q '^## Quick start' "$SKILL/README.md" && grep -q '^## The retro loop' "$SKILL/README.md" && grep -q '^## The kickoff questionnaire' "$SKILL/README.md" || { echo "FAIL: README lost a required section"; exit 1; }
 awk '/^```/{f=!f; next} f && length($0) > 90 {bad=1} END {exit bad}' "$SKILL/README.md" || { echo "FAIL: a fenced README line is over 90 characters (GitHub scrolls)"; exit 1; }
-grep -q '^version: 0.7.1' "$SKILL/SKILL.md" && grep -q '^## 0.7.1' "$SKILL/CHANGELOG.md" || { echo "FAIL: SKILL.md version and CHANGELOG entry disagree"; exit 1; }
-grep -q 'numpy trimesh scipy shapely' "$SKILL/README.md" || { echo "FAIL: README lost the mesh-library install line (C-06)"; exit 1; }
+grep -q '^version: 0.8.0' "$SKILL/SKILL.md" && grep -q '^## 0.8.0' "$SKILL/CHANGELOG.md" || { echo "FAIL: SKILL.md version and CHANGELOG entry disagree"; exit 1; }
+grep -q 'numpy trimesh scipy shapely rtree networkx mapbox-earcut' "$SKILL/README.md" || { echo "FAIL: README lost the mesh-library install line (C-06 / 0.8.0 print DFM deps)"; exit 1; }
 grep -q 'vendor/hw-from-spec/.venv' "$SKILL/README.md" || { echo "FAIL: README lost the one install block (C-02 / C-12)"; exit 1; }
 test -f "$SKILL/references/kickoff-questionnaire.md" || { echo "FAIL: references/kickoff-questionnaire.md missing"; exit 1; }
 grep -q 'AskUserQuestion' "$SKILL/SKILL.md" && grep -q '^### 0.1 The kickoff questionnaire' "$SKILL/SKILL.md" || { echo "FAIL: SKILL.md lost the kickoff step (§0.1)"; exit 1; }
@@ -71,6 +71,36 @@ grep -q -E 'p2s|presets\.P2S|AEC-CT2|lap\.ring_down' "$SKILL/SKILL.md" "$SKILL/R
 grep -q '^## 13. Retro' "$SKILL/SKILL.md" || { echo "FAIL: SKILL.md lost the retro phase (§13)"; exit 1; }
 "$PY" scripts/thin_wall_census.py --selftest
 "$PY" scripts/skill_retro.py --selftest
+say "0d print DFM: the loop is in SKILL.md as commands, the table and verdict record ship as templates, the tool and the SCAD lint selftest, eval 14's pair flags / passes through the CLI"
+PD="$SKILL/references/print-dfm.md"; test -f "$PD" || { echo "FAIL: references/print-dfm.md missing"; exit 1; }
+grep -q 'RULE DEFECT' "$PD" && grep -q '^## 3. The loop' "$PD" && grep -q 'read the MESH, never the yaml' "$PD" || { echo "FAIL: print-dfm.md lost the loop / RULE DEFECT / mesh-not-yaml rules"; exit 1; }
+grep -q 'print_dfm.py --validate' "$SKILL/SKILL.md" && grep -q 'RULE DEFECT' "$SKILL/SKILL.md" && grep -q 'scad_lint.py' "$SKILL/SKILL.md" || { echo "FAIL: SKILL.md §8.1 lost the print-DFM loop commands"; exit 1; }
+grep -q '^\*\*C8a' "$SKILL/references/kickoff-questionnaire.md" && grep -q '^| C8a |' "$SKILL/templates/KICKOFF_ANSWERS.md" && grep -q 'dfm_process:' "$SKILL/templates/project.yaml" || { echo "FAIL: kickoff C8a (print-DFM process row) missing"; exit 1; }
+"$PY" - "$SKILL" <<'PYEOF'
+import sys, yaml, re
+t = yaml.safe_load(open(sys.argv[1] + "/templates/design/dfm_processes.yaml"))["processes"]; txt = open(sys.argv[1] + "/templates/design/dfm_processes.yaml").read()
+assert all(r.get("validated_on") == [] for r in t.values()), "every template row ships validated_on: []"
+assert {"jlc_mjf_pa12", "home_fdm_04", "xometry_mjf_pa12"} <= set(t), sorted(t)
+for row, r in t.items():
+    for k in ("wall_min", "feature_min", "detail_min", "hole_min"):
+        if r.get(k) is not None:
+            line = [l for l in txt.splitlines() if re.match(rf"^\s+{k}:", l)]
+            assert line, (row, k)
+assert len(re.findall(r"\[V\]", txt)) >= 15 and "BLOCKED" in txt, "citations: [V] with URL + date, BLOCKED rows kept null"
+v = yaml.safe_load(open(sys.argv[1] + "/templates/docs/quotes/dfm_verdicts.yaml")); assert v == {"verdicts": []}, v
+print("templates: dfm_processes.yaml rows", len(t), "all validated_on: []; dfm_verdicts.yaml schema OK")
+PYEOF
+"$PY" scripts/scad_lint.py --selftest
+"$PY" scripts/print_dfm.py --selftest
+"$PY" - <<'PYEOF'
+import sys, os; sys.path.insert(0, "scripts"); import trimesh, print_dfm
+trimesh.creation.extrude_polygon(print_dfm.rim_profile(0.5), 90.0).export("out/eval14_root05.stl"); trimesh.creation.extrude_polygon(print_dfm.rim_profile(1.3), 90.0).export("out/eval14_root13.stl")
+PYEOF
+if "$PY" scripts/print_dfm.py --process jlc_mjf_pa12 --samples 40000 out/eval14_root05.stl > out/eval14_flag.txt; then echo "FAIL: the 0.5 root under a 2.0 rim must FLAG (exit 1)"; cat out/eval14_flag.txt; exit 1; fi
+grep -q '^  FLAG  R root under a rim' out/eval14_flag.txt && grep -q '^  FLAG  W wall' out/eval14_flag.txt || { echo "FAIL: eval 14 FLAG lacks the W + R rows"; cat out/eval14_flag.txt; exit 1; }
+"$PY" scripts/print_dfm.py --process jlc_mjf_pa12 --samples 40000 out/eval14_root13.stl | grep -q 'eval14_root13.stl: PASS' || { echo "FAIL: the same geometry at root 1.3 must PASS"; exit 1; }
+"$PY" scripts/print_dfm.py --list | grep -q 'xometry_mjf_pa12' || { echo "FAIL: --list must show the template rows outside a project table"; exit 1; }
+rm -f out/eval14_*
 say "0b scope: A0 asked first, every scope scaffolds from ONE template set and gets its own gate rows"
 grep -q '^\*\*A0 Project scope' "$SKILL/references/kickoff-questionnaire.md" && grep -q '^| A0 | scope' "$SKILL/templates/KICKOFF_ANSWERS.md" || { echo "FAIL: kickoff A0 (scope) missing"; exit 1; }
 grep -q '^## 1. Phase / gate model (per scope)' "$SKILL/SKILL.md" && grep -q '^## 6. Layout phase and the adopt rule \[ee, both\]' "$SKILL/SKILL.md" && grep -q '^## 8. Case pipeline and FEA \[mech, both\]' "$SKILL/SKILL.md" || { echo "FAIL: SKILL.md lost the scope model / heading tags"; exit 1; }

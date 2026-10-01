@@ -4,7 +4,7 @@ A Claude Code skill that takes a board, an enclosure, or both from a written spe
 owner-gated phases, generated-only artefacts, a zero-warning manufacturability bar, blind reviews,
 and a retro that folds every project's learnings back into the skill.
 
-`version 0.7.1` · MIT · `SKILL.md` is the procedure, everything else is reference, template or tool.
+`version 0.8.0` · MIT · `SKILL.md` is the procedure, everything else is reference, template or tool.
 
 ## Quick start
 
@@ -12,11 +12,24 @@ and a retro that folds every project's learnings back into the skill.
 git submodule add https://github.com/vppillai/hw-from-spec.git vendor/hw-from-spec
 ln -s vendor/hw-from-spec/scripts scripts
 uv venv .venv
-uv pip install --python .venv/bin/python pyyaml numpy trimesh scipy shapely
+uv pip install --python .venv/bin/python pyyaml numpy trimesh scipy shapely \
+  rtree networkx mapbox-earcut
 vendor/hw-from-spec/smoke/run_smoke.sh
 ```
 
-(`numpy trimesh scipy shapely` serve the mesh scripts: mech / both only.) Then `SKILL.md` §0: templates, the kickoff questionnaire, first records — before any CAD.
+(The mesh libraries serve `print_dfm.py` and the two thin-wall scripts: mech / both only.) Then `SKILL.md` §0: templates, the kickoff questionnaire, first records — before any CAD.
+
+No project yet, just a bracket STL and a vendor in mind? Clone, one venv, one command:
+
+```sh
+git clone https://github.com/vppillai/hw-from-spec.git && cd hw-from-spec
+uv venv .venv && uv pip install --python .venv/bin/python pyyaml numpy trimesh scipy \
+  shapely rtree networkx mapbox-earcut
+.venv/bin/python scripts/print_dfm.py --list                 # the process rows
+.venv/bin/python scripts/print_dfm.py --process xometry_mjf_pa12 ~/bracket.stl
+```
+
+Exit 0 = PASS, 1 = FLAG with one line per rule (measured | limit | where | fix): `references/print-dfm.md`.
 
 ## What you get
 
@@ -27,6 +40,9 @@ vendor/hw-from-spec/smoke/run_smoke.sh
   with a recommended answer (`references/kickoff-questionnaire.md`).
 - A manufacturability bar enforced by scripts: DRC 0 / 0 / 0 warnings, fab DFM 0 Danger / 0 Warning,
   printed-enclosure census 0 unaccepted FAIL, vendor checker no flag by API read — no prose waivers.
+- A vendor-independent print DFM check (`scripts/print_dfm.py`): walls, roots under rims, knife
+  edges, point contacts, voids, holes, FDM overhangs, size from physics + cited process rows, on
+  the mesh before every upload; vendor verdicts feed `--validate` (a vendor flag we pass = rule defect).
 - Build rules tagged checker / fab capability / physics / owner choice for the PCB
   (`references/pcb-layout-dfm.md`) and for MJF / FDM / SLA / CNC enclosures.
 - Generic, `project.yaml`-driven scripts with `--selftest` and read-only `--check`: decision log
@@ -42,19 +58,20 @@ vendor/hw-from-spec/smoke/run_smoke.sh
 | Path | What |
 |---|---|
 | `SKILL.md` | the procedure: setup + kickoff, gates, generated-only, decisions, parts, reviews, layout, DFM, case, software, release, agents, retro |
-| `references/` | detail per topic, read on demand (project-yaml, kickoff-questionnaire, schematic-phase, pcb-layout-dfm, fab-dfm, case-pipeline, dfm-printed-enclosure, print-kit, cnc-enclosure, fea-stage, part-verification, software-track, release-and-cut, vendor-review, agent-ops, pitfalls) |
-| `templates/` | CLAUDE.md, project.yaml, SPEC / VERIFY / KICKOFF_ANSWERS / governance records, review hand-off, DFM round, vendor review, census rows, production cut yaml, CI workflows |
-| `scripts/` | 15 generic tools driven by `project.yaml` (`references/project-yaml.md` lists which are generators, graders, gates) |
+| `references/` | detail per topic, read on demand (project-yaml, kickoff-questionnaire, schematic-phase, pcb-layout-dfm, fab-dfm, case-pipeline, dfm-printed-enclosure, print-dfm, print-kit, cnc-enclosure, fea-stage, part-verification, software-track, release-and-cut, vendor-review, agent-ops, pitfalls) |
+| `templates/` | CLAUDE.md, project.yaml, SPEC / VERIFY / KICKOFF_ANSWERS / governance records, review hand-off, DFM round, vendor review, census rows, print-DFM process table + verdict record, production cut yaml, CI workflows |
+| `scripts/` | 16 generic tools driven by `project.yaml` (`references/project-yaml.md` lists which are generators, graders, gates) |
 | `workflows/` | four blind-review workflow templates + how to instantiate them |
 | `smoke/` | the automated dry run (`run_smoke.sh`) |
-| `evals/` | thirteen skill evals (start, review, release, vendor mail, re-layout, first DFM round, census-blind flag, kickoff, retro, AMS mark plate, mech-only bracket, ee-only board, print kit) |
+| `evals/` | fourteen skill evals (start, review, release, vendor mail, re-layout, first DFM round, census-blind flag, kickoff, retro, AMS mark plate, mech-only bracket, ee-only board, print kit, print DFM root under a rim) |
 | `docs/retro/` | retro reports, one per project fed back into the skill |
 | `CHANGELOG.md` | what changed per version and what was deliberately not done |
 
 ## Install
 
 Requirements: git, bash ≥ 3.2, Python ≥ 3.11, `uv` (or `python3 -m venv` + `pip`). The generic
-scripts need `pyyaml`; the two mesh scripts need `numpy trimesh scipy shapely`. CAD, OpenSCAD, FEA
+scripts need `pyyaml`; the mesh scripts (`print_dfm.py`, `thin_wall_census.py`, `thin_wall_check.py`)
+need `numpy trimesh scipy shapely rtree networkx mapbox-earcut` (`matplotlib` for heat-map PNGs). CAD, OpenSCAD, FEA
 and browser tooling belong to the project and are recorded in its `docs/governance/ENV.md`.
 
 The skill lives in ONE place inside a project: a submodule at `vendor/hw-from-spec` with a relative
@@ -75,14 +92,15 @@ git submodule add https://github.com/vppillai/hw-from-spec.git vendor/hw-from-sp
 ln -s vendor/hw-from-spec/scripts scripts
 ```
 
-2. Two virtual environments, both gitignored. Without `uv`: `python3 -m venv <dir>` then
-`<dir>/bin/pip install …` with the same packages.
+2. Two virtual environments, both gitignored (the skill venv takes the mesh libraries too so
+the smoke can run the print-DFM selftest). Without `uv`: `python3 -m venv` + `pip install`.
 
 ```sh
+MESH="numpy trimesh scipy shapely rtree networkx mapbox-earcut"
 uv venv vendor/hw-from-spec/.venv
-uv pip install --python vendor/hw-from-spec/.venv/bin/python pyyaml
+uv pip install --python vendor/hw-from-spec/.venv/bin/python pyyaml $MESH
 uv venv .venv
-uv pip install --python .venv/bin/python pyyaml numpy trimesh scipy shapely
+uv pip install --python .venv/bin/python pyyaml $MESH
 ```
 
 3. Prove the toolchain before reading the spec:
@@ -109,6 +127,8 @@ cp "$T/PARTS_VERIFICATION.md" docs/parts/
 cp "$T/TEST_PLAN.md" "$T/design/VERIFY.md" docs/design/
 cp -R "$T/datasheet_notes" docs/
 cp "$T/design/traceability.yaml" "$T/production_cut.yaml" design/
+cp "$T/design/dfm_processes.yaml" design/                # mech, both
+cp "$T/docs/quotes/dfm_verdicts.yaml" docs/quotes/       # mech, both
 cp "$T/ERC_WAIVERS.md" docs/governance/                 # ee, both
 cp "$T/design/SOFTWARE_ARCHITECTURE.md" docs/design/     # ee, both
 cp "$T/parts/PROCUREMENT.md" docs/parts/                 # mech, both

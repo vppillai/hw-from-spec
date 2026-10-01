@@ -1,0 +1,133 @@
+# design/dfm_processes.yaml — process rows for scripts/print_dfm.py, the vendor-independent manufacturability check for printed bodies.
+# Every number is a published process minimum or a physical limit, cited: [V] = fetched (URL + date), [K] = known, source named, not fetched.
+# A value line WITHOUT a tag repeats the value of the first tagged occurrence of the same key above it (search upward) — tag it when it differs.
+# NOTHING here is fitted to a vendor's verdicts: the verdicts (docs/quotes/dfm_verdicts.yaml) are the VALIDATION set (`print_dfm.py --validate`).
+# A new vendor or process = ONE new row: its published minimums [V] and `validated_on: []`; the retro (scripts/skill_retro.py) carries new rows and
+# changed numbers back to the skill's template. Re-fetch the [V] numbers before the first order (design-guide pages move; a 404 = BLOCKED, keep the
+# value null and the row refuses to gate — never fill a blank from memory).
+#
+# Fields (rule letter in scripts/print_dfm.py):
+#   wall_min      W/R  smallest wall the process forms and survives post-processing (a wall-class region with median t below it and extent >= slender x t)
+#   wall_reco     Y    the vendor's recommended / heat-map grey line (INFO only; the design margin belongs to print_targets.<t>.wall_gate + the census gate)
+#   feature_min   F/K  smallest formable feature: a short sub-minimum feature or the thin end of a taper below it does not form / breaks off
+#   detail_min    V    smallest engraved / embossed detail width: a void narrower than it closes
+#   void_min      V    a slot narrower than this and longer than slender x void_min does not clear powder / resin (FDM: cannot be extruded cleanly)
+#   hole_min      H    smallest hole that clears
+#   neck_max      P    point contact: two surfaces closer than this on a section plane = one line of contact (arrives as pieces) [K: 0.05 = below any process' resolution; the 0.01 contacts a vendor's engineer refused]
+#   sliver_area   F/K/V/H  a sub-minimum region smaller than this (mm2) is a tangency / boolean sliver or a cosmetic notch at the size of the process'
+#                 detail cell: it fills or vanishes without functional loss — listed in row L, not flagged [K judgment: 5 mm2 = a 2 x 2 patch; a designed pin / rib end / glyph is larger]
+#   slender       W/K/V  thin-plate boundary L/t (Kirchhoff plate criterion: a plate is thin when its span exceeds ~10 x its thickness) [K textbook]
+#   overhang_max_deg / bridge_max / supports   O/B (FDM only): overhang from vertical, unsupported horizontal span, where supports are allowed
+#                 (`none` -> O / B FLAG; `interior` / `any` -> O / B INFO, the slicer g-code check owns the visible faces)
+#   part_min / build_max   S   the vendor's minimum part size and build volume (sorted extents compared)
+#   legend_land_min / legend_void_min   inside legend land boxes (`--land x0 y0 x1 y1`, the FDM coupon rule) — absent = legends are walls like any other
+#   published     free-text figures the rules do not use yet (tolerance, gaps, escape holes) — kept with their tag for the order sheet
+#   validated_on  [] until a vendor verdict on a body of THIS process is on record; then one entry per round: {date, bodies, rules, evidence}
+processes:
+  jlc_mjf_pa12:
+    vendor: JLC3DP
+    process: MJF PA12-HP (Nylon)
+    wall_min: 1.0       # [V] "Minimum wall thickness 1.0 mm" https://jlc3dp.com/3d-printing/multi-jet-fusion (2026-09-30); [K] JLC3DP engineer mail 2026-09-22 "nylon >= 1.0 mm (2.0 better)"
+    wall_reco: 1.2      # [K] the quote-page heat map's grey line (grey >= 1.2, yellow 0.5..1.2, red < 0.5; read 2026-09-28)
+    feature_min: 0.5    # [V] Protolabs MJF "minimum feature size 0.020 in (0.5 mm)", "raised text and cosmetic features smaller than 0.5 mm might not survive post-processing" https://www.protolabs.com/resources/design-tips/how-to-use-multi-jet-fusion-for-functional-3d-printed-parts/ (2026-09-30); [V] Xometry MJF "0.020 in (0.040 in recommended)" https://www.xometry.com/capabilities/3d-printing-service/hp-multi-jet-fusion/ (2026-09-30); = the JLC map's red line
+    detail_min: 0.8     # [V] JLC3DP MJF "embossed & engraved details 0.8 mm deep & 0.8 mm wide" (same page); [V] Hubs SLS PA12 pins / protrusions >= 0.8 https://www.hubs.com/knowledge-base/how-design-parts-sls-3d-printing/ (2026-09-30)
+    void_min: 0.8       # [K] powder escape from a slot: no published number for a slot; the detail minimum is used (JLC assembled-part gap 0.2..0.4, moving parts 0.6 [V] are clearance figures, not slots)
+    hole_min: 1.5       # [V] JLC3DP MJF "minimum hole 1.5 mm"; [V] Hubs SLS "holes larger than 1.5 mm"
+    neck_max: 0.05      # [K] a traced-outline logo whose arms met at 0.01 mm contacts: the vendor's engineer refused the plate its automatic check had passed (2026-09-22)
+    slender: 10         # [K] Kirchhoff thin-plate criterion L/t >= 10
+    sliver_area: 5.0    # [K] see the header
+    build_max: [370, 276, 360]   # [V] JLC3DP PA12-HP build 370 x 276 x 360
+    published: {tolerance: "+/-0.3 mm or 0.4 % [V JLC]", gap_assembled: "0.2..0.4 [V JLC]", gap_moving: "0.6 [V JLC]", escape_hole: "3.5 mm [V Hubs SLS]", text_height: ">= 2 mm [V Hubs SLS]", engraving_depth: "1.0 [V Hubs SLS]"}
+    validated_on: []    # the skill's reference (references/print-dfm.md §4) records the source project's 32-verdict validation: W / R / K validated, P by the engineer, F / V / H / S not decidable
+  jlc_sla_9600:
+    vendor: JLC3DP
+    process: SLA 9600 / 8001 resin
+    wall_min: 0.8       # [K] JLC3DP engineer mail 2026-09-22 "resin >= 0.8 mm (1.5 better)"; Formlabs design specs NOT fetched (formlabs.com 404, 2026-09-30) — fetch before an SLA body relies on it
+    wall_reco: 1.2      # [K] the same upload-time heat map (the flag is material-independent at JLC3DP)
+    feature_min: 0.5    # [K] the map's red line; SLA resolves finer (Formlabs supported-wall figures not fetched)
+    detail_min: 0.5     # [K] not fetched; the map's red line
+    void_min: 1.0       # [K] the resin-drain minimum used as the slot floor; no published number
+    hole_min: 1.0       # [K] as void_min
+    neck_max: 0.05
+    slender: 10
+    sliver_area: 5.0
+    part_min: [2, 2, 10]         # [K] JLC3DP quote-page refusal "9600 Resin is unavailable ... (Min: 2x2x10mm)" (2026-09-21)
+    validated_on: []
+  jlc_fdm:
+    vendor: JLC3DP
+    process: FDM 0.4 nozzle (PLA / ABS / ASA)
+    wall_min: 0.9       # [V] Prusa "2 perimeters 0.9 mm; walls thinner than two perimeters are not printable" https://help.prusa3d.com/article/modeling-with-3d-printing-in-mind_164135 (2026-09-30); [V] Hubs "all 3D printers print walls > 0.8 mm"
+    wall_reco: 1.2      # [K] the JLC upload-time map's grey line
+    feature_min: 0.45   # [V] Prusa one perimeter 0.45 mm (nothing thinner prints)
+    detail_min: 0.45
+    void_min: 1.0       # [K] a 0.4 nozzle clears a 1.0 slot (2.5 line widths; the home-FDM void gate)
+    hole_min: 1.0       # [K]
+    neck_max: 0.05
+    slender: 10
+    sliver_area: 5.0
+    overhang_max_deg: 45   # [V] Prusa "45 to 60 degrees" — the conservative end
+    bridge_max: 10         # [K] visible-bridge rule of the home-FDM preset (Prusa: "short bridges", no number)
+    supports: any          # JLC prints with supports -> O / B are INFO
+    part_min: [30, 30, 10] # [K] JLC3DP quote-page refusal "ASA is unavailable for ... (Min: 30x30x10mm)" (2026-09-21)
+    validated_on: []
+  home_fdm_04:
+    vendor: in-house FDM printer
+    process: FDM PLA / PETG 0.4 nozzle (the home_fdm print target)
+    wall_min: 0.9       # [V] Prusa two perimeters 0.9 — the printability floor; the DESIGN rule (walls 1.6 / ribs 1.2) is print_targets.home_fdm + the census gate
+    wall_reco: 1.2      # [K] the rib gate of the home-FDM preset
+    feature_min: 0.45   # [V] one perimeter
+    detail_min: 0.45
+    void_min: 1.0       # [K] a 0.4 nozzle clears a 1.0 slot
+    hole_min: 1.0
+    neck_max: 0.05
+    slender: 10
+    sliver_area: 5.0
+    legend_land_min: 0.45   # [K] coupon rule: a debossed legend's lands may be one line wide, raised strokes 1.0 (references/dfm-printed-enclosure.md §8)
+    legend_void_min: 0.4    # [K] letter counters one nozzle width
+    overhang_max_deg: 45    # [V] Prusa 45..60 (design the lead-ins at 45 deg; exactly 45.0 is AT the limit, §8.5)
+    bridge_max: 10          # [K] visible bridge <= 10, interior <= 20 (the interior gets slicer supports)
+    supports: interior      # [K] interior supports allowed, none on a visible face -> O / B rows are INFO (the slicer g-code check owns the visible faces)
+    validated_on: []        # no vendor verdict exists for a home printer; the slicer + the first prints are the validation (KNOWN_ISSUES)
+  xometry_mjf_pa12:
+    vendor: Xometry
+    process: HP MJF PA12
+    wall_min: 1.0       # [K] no explicit wall figure on the page; the recommended feature size is used — [V] Xometry "minimum feature 0.020 in (0.040 in = 1.0 mm recommended)" https://www.xometry.com/capabilities/3d-printing-service/hp-multi-jet-fusion/ (2026-09-30)
+    wall_reco: 1.2      # [K] the JLC grey line kept as the design margin
+    feature_min: 0.5    # [V] Xometry 0.020 in
+    detail_min: 0.8     # [K] as JLC / Hubs SLS
+    void_min: 0.8
+    hole_min: 1.5       # [K] Hubs SLS
+    neck_max: 0.05
+    slender: 10
+    sliver_area: 5.0
+    build_max: [356, 279, 330]   # [V] Xometry usable build 14 x 11 x 13 in (machine 15 x 11 x 15 in = 381 x 279 x 381); the usable volume gates
+    published: {tolerance_prototype: "+/-0.70 mm under 30 mm .. +/-1.75 % over 80 mm [V]", tolerance_reviewed: "XY +/-0.25 / Z +/-0.42 mm under 30 mm [V]", layer: "80 um [V]"}
+    validated_on: []    # no Xometry verdict on record anywhere yet — the first one validates this row
+  protolabs_mjf_pa12:
+    vendor: Protolabs
+    process: Multi Jet Fusion PA12
+    wall_min: 0.5       # [V] Protolabs "wall thickness 0.020 in (0.5 mm)" https://www.protolabs.com/services/3d-printing/multi-jet-fusion/ (2026-09-30); "walls 2.5..12.7 mm are ideal" [V design tip]
+    wall_reco: 1.2      # [K] the JLC grey line kept as the design margin
+    feature_min: 0.5    # [V] Protolabs minimum feature 0.5 mm
+    detail_min: 0.5     # [V] "raised text / cosmetic features smaller than 0.5 mm might not survive post-processing"
+    void_min: 0.8       # [K] as JLC
+    hole_min: 1.5       # [K] Hubs SLS
+    neck_max: 0.05
+    slender: 10
+    sliver_area: 5.0
+    build_max: [343, 264, 348]   # [V] Protolabs individual part maximum 13.5 x 10.4 x 13.7 in
+    published: {tolerance: "+/-0.012 in (0.30 mm) plus 0.1 % of nominal [V]", layer: "80 um [V]"}
+    validated_on: []
+  hp_mjf_guide:
+    vendor: HP (process owner)
+    process: HP MJF design guide
+    wall_min: null      # BLOCKED: https://www.hp.com/us-en/printers/3d-printers/learning-center/design-guidelines.html returned 404 (2026-09-30); the guide's wall-vs-aspect-ratio table is the one source that would replace the [K] slender = 10 by a published number — the row refuses to gate until filled
+    wall_reco: 1.2      # [K] every value below copies the jlc_mjf_pa12 row until the guide is fetched; the row cannot gate (wall_min null)
+    feature_min: 0.5
+    detail_min: 0.8
+    void_min: 0.8
+    hole_min: 1.5
+    neck_max: 0.05
+    slender: 10
+    sliver_area: 5.0
+    validated_on: []
