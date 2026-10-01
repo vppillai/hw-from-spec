@@ -1,5 +1,23 @@
 # CHANGELOG — hw-from-spec
 
+## UNRELEASED — retro of the first mechanical-only project (wankel, 2026-09-30): census memory, legend geometry, curved-exit holes, concurrency ceiling
+
+Source: `docs/retro/wankel_2026-09-30.md` — a hand-crank Wankel engine model (11 bodies, 3 P2S plates) built under scope `mech` from 0.6.1 and
+moved to 0.8.0 / 0.9.0; 15 learnings, 10 NEW / 5 PARTIAL. Two host restarts and three census rounds paid for these lines.
+
+### Changed
+- **`scripts/thin_wall_census.py`**: opposing-face rows honour `--boxes` legend lands (`in_box_frac`, gate = `--box-min` inside a land) — a 1.3 mm
+  raised stroke is two faces 1.3 apart, not a thin wall; the WALL / VOID rows already did this. Selftest case added.
+- **README / SKILL §0 install**: `embreex` joins the mesh stack — trimesh's rtree ray engine needs > 12 GB for a 15 000 mm² body at 10 samples/mm²
+  (it took a 24 GB host down); with Embree the same census runs in 2.7 s at 755 MB.
+- **`references/agent-ops.md` §5**: a concurrency ceiling for geometry pipelines (≤ 3 CAD exports, sequential mesh checks and renders, background
+  chains with an `EXIT` line).
+- **`references/dfm-printed-enclosure.md` §8**: legend geometry meets the void gate (closing at the gate after placement, inter-letter gap row,
+  letters along a curved band anchored by polar angle); **`references/pitfalls.md`**: 12 lines (legend fonts, curved-exit feather edges →
+  flat flange blocks, ring-shaped wedge clusters and the `band` metric, concave-bore floor margin, hairline junction notches → closing +
+  `simplify(0.02)`, census memory, process-table exhaustion, arc anchoring on a concave waist, tip-limited internal gears → running-clearance
+  row, the eccentric-shaft inequality, full-height flank dishes).
+
 ## 0.9.2 — 2026-09-30 — self-documenting coupons
 
 ### Added

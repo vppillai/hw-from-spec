@@ -17,7 +17,7 @@ reference when you reach that step, not before. Nothing here is specific to one 
 1. **Install — ONE layout, ONE block (README "Install")**: the skill is a submodule at `vendor/hw-from-spec` with a RELATIVE symlink `scripts ->
    vendor/hw-from-spec/scripts` (or a copy of `scripts/`); a personal clone under `~/.claude/skills/` is for skill discovery only and never the
    project's scripts source; never a submodule AT `scripts/`. **One venv**, the project's `.venv` (gitignored): pyyaml + `numpy trimesh scipy
-   shapely rtree networkx mapbox-earcut` in every scope (the smoke runs the print-DFM selftest; the mesh scripts `print_dfm.py` / `thin_wall_census.py`
+   shapely rtree networkx mapbox-earcut embreex` in every scope (the smoke runs the print-DFM selftest; the mesh scripts `print_dfm.py` / `thin_wall_census.py`
    / `thin_wall_check.py` / `step2stl.py` need them in mech / both) — `uv venv` + `uv pip install`, or `python3 -m venv` + `pip` when `uv` is absent.
    `tools.python`, the step-5 loop, the smoke and `evals/run_evals.py` use it (the smoke takes the caller's project `.venv` first, the skill's own
    `.venv` only when run from the skill repo, and skips the mesh section with a NOTE when the libraries are absent); the shell gates take the first
