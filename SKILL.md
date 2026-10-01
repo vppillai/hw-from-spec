@@ -19,9 +19,11 @@ reference when you reach that step, not before. Nothing here is specific to one 
    project's scripts source; never a submodule AT `scripts/`. **One venv**, the project's `.venv` (gitignored): pyyaml + `numpy trimesh scipy
    shapely rtree networkx mapbox-earcut` in every scope (the smoke runs the print-DFM selftest; the mesh scripts `print_dfm.py` / `thin_wall_census.py`
    / `thin_wall_check.py` / `step2stl.py` need them in mech / both) — `uv venv` + `uv pip install`, or `python3 -m venv` + `pip` when `uv` is absent.
-   `tools.python`, the step-5 loop and the smoke use it (the smoke falls back from the skill's own `.venv` to the project's and skips the mesh section
-   with a NOTE when the libraries are absent); the shell gates take the first interpreter that imports yaml and print which. Every `scripts/*` is
-   executable: `scripts/<tool>.py …` and `.venv/bin/python scripts/<tool>.py …` are the same command.
+   `tools.python`, the step-5 loop, the smoke and `evals/run_evals.py` use it (the smoke takes the caller's project `.venv` first, the skill's own
+   `.venv` only when run from the skill repo, and skips the mesh section with a NOTE when the libraries are absent); the shell gates take the first
+   interpreter that imports yaml and print which. **Every Python command in this document that reads `project.yaml` is run as `.venv/bin/python
+   scripts/<tool>.py …`** — the scripts are executable, but their shebang is the system `python3`, which has no pyyaml on a stock machine; only
+   `scripts/project.py scaffold | slots`, `step2stl.py`, `scad_lint.py`, the two `thin_wall_*` selftests and the `.sh` gates run bare.
    **Then the kickoff questionnaire (§0.1)** — A0 scope first, then every owner decision the scope needs, asked up front with recommended
    defaults, written into `project.yaml` and `docs/governance/DECISIONS.md` before any CAD.
 2. **Copy the templates and resolve the scope** — the one copy block, runnable from the project root, is README "Use in a new project" step 4
@@ -47,14 +49,15 @@ reference when you reach that step, not before. Nothing here is specific to one 
 4. **docs/governance/ENV.md**: tool versions, the CAD CLI paths, which endpoints answer (verify each by running it); run the CAD CLI once on a trivial
    file and note the file-format version. Put every tool path behind the `tools:` block — twenty generators with hard-coded paths cost a CI day
    later (`references/pitfalls.md` ci/tooling).
-5. **Prove the toolchain**: `for s in scripts/*.py; do .venv/bin/python $s --selftest; done; scripts/clone_gate.sh --selftest;
+5. **Prove the toolchain**: `export PYTHONDONTWRITEBYTECODE=1; for s in scripts/*.py; do .venv/bin/python $s --selftest; done; scripts/clone_gate.sh --selftest;
    scripts/adopt_gates.sh --selftest; vendor/hw-from-spec/smoke/run_smoke.sh; .venv/bin/python vendor/hw-from-spec/evals/run_evals.py` — all green
    before the spec is read (the smoke's enforcement section proves with negative cases that a tampered record, an uncensused body, a commented
    gate line and a non-owner release line all FAIL).
-6. **First records** (the smoke's sequence, in a new project): `scripts/known_issues.py` → `scripts/traceability.py` (**exit 1 = a decision row
-   without a traceability entry or a FAILED check; every D-/CC- row — the kickoff rows included — needs an entry in `design/traceability.yaml`,
-   add it and rerun**) → `scripts/release_report.py` (DRAFT, record MISSING — correct before G1 / M1) → commit → `scripts/adopt_gates.sh` (day-1 list +
-   clone gate) green → `scripts/project.py kickoff --check` green (every answered kickoff row landed in project.yaml with a real D row) → fill the
+6. **First records** (the smoke's sequence, in a new project; `PY=.venv/bin/python`): fill the slots of CLAUDE.md / project.yaml / the records
+   first (`$PY scripts/project.py slots` names them; an unfilled `project.yaml` is not valid YAML and every reader says so) → `$PY scripts/known_issues.py`
+   → `$PY scripts/traceability.py` (**exit 1 = a decision row without a traceability entry or a FAILED check; every D-/CC- row — the kickoff rows
+   included — needs an entry in `design/traceability.yaml`, add it and rerun**) → `$PY scripts/release_report.py` (DRAFT, record MISSING — correct
+   before G1 / M1) → commit → `scripts/adopt_gates.sh` (day-1 list + clone gate) green → `$PY scripts/project.py kickoff --check` green (every answered kickoff row landed in project.yaml with a real D row) → fill the
    CC-001 evidence cell and the first STATUS paragraph → commit. Only now read the spec; fill SPEC.md / VERIFY / traceability; `scripts/project.py
    slots` reads 0 before the G0 ask (§1.1 says what happens at G0).
 7. **CI (optional, when the repo has a remote)**: `templates/ci/` holds pr-check / nightly / release workflows with `{{PROJECT_*}}` placeholders;
@@ -98,7 +101,8 @@ The release cut = reports RELEASED, collateral, tag; the production cut = docume
 
 - The owner writes the gate line; agents never do. `docs/governance/GATES.md` approval cells and the release line (`markers.release_regex`, in the
   Release row's approval cell) are owner text. **`scripts/gate_check.py <gate>`** reads a cell (exit 1 while empty) and **`--release`** the release
-  cell plus its git author, which must be `project.owner`; reports read the Release cell and say **DRAFT** until it exists (`scripts/release_report.py`).
+  cell plus its git author, which must be `project.owner`; the report banner reads the same function and says **DRAFT** until the owner's committed
+  cell exists — a cell an agent wrote or committed stays DRAFT (`scripts/release_report.py`; the clone gate blames the line in the real checkout).
 - Do not start the next phase's CAD before the gate line exists: every project generator of the next phase calls `scripts/gate_check.py <gate>` first
   and refuses while it is 1 (the placement script before G1, the case geometry before G0 / M1, the fab package before G2). If the owner delegates
   ("proceed, I retro-approve"), quote the instruction in `docs/governance/GATES.md` under the table and keep the approval cells empty.

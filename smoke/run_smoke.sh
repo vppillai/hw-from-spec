@@ -8,7 +8,7 @@ T=$(mktemp -d /tmp/hwfs_smoke_XXXX); [[ "$1" == "--keep" ]] || trap 'rm -rf $T' 
 R=$T/smoke; cp -R "$HERE" "$R"; rm -f "$R/run_smoke.sh"
 mkdir -p "$R/vendor/hw-from-spec"; ln -s "$SKILL/scripts" "$R/vendor/hw-from-spec/scripts"; ln -s vendor/hw-from-spec/scripts "$R/scripts"
 # interpreter: the skill's .venv, else the caller's project .venv (README Quick start runs the smoke from the project root), else python3 — the first with pyyaml
-VENV=""; for c in "$SKILL/.venv" "$CALLER/.venv"; do [[ -x "$c/bin/python" ]] && "$c/bin/python" -c 'import yaml' 2>/dev/null && { VENV=$c; break; }; done
+VENV=""; for c in "$CALLER/.venv" "$SKILL/.venv"; do [[ -x "$c/bin/python" ]] && "$c/bin/python" -c 'import yaml' 2>/dev/null && { VENV=$c; break; }; done
 if [[ -n "$VENV" ]]; then ln -s "$VENV" "$R/.venv"; export PY="$R/.venv/bin/python"; echo "python: $VENV/bin/python"
 else echo "NOTE: no .venv with pyyaml at $SKILL or $CALLER — using python3 from PATH"; export PY=python3; fi
 export PYTHON="$PY"                                       # the shell gates (adopt_gates.sh / clone_gate.sh) honour $PYTHON first
@@ -123,7 +123,7 @@ grep -q '^  FLAG  R root under a rim' out/eval14_flag.txt && grep -q '^  FLAG  W
 # row than the target's, --open with a non-OPEN id, an open mesh — each must FAIL the gate / the check
 E=$T/enf; mkdir -p $E/out/mechanical/case/pre/stl $E/out/mechanical/case/pre/dfm $E/docs/governance; ln -s "$SKILL/scripts" $E/scripts
 printf 'project: {name: enf, scope: mech}\npaths: {mech_record: "out/mechanical/case/*/stl/*.stl"}\nprint_targets: {pre: {dfm_process: jlc_mjf_pa12}}\n' > $E/project.yaml
-printf '| ID | Date | Status | Topic | P | R |\n|---|---|---|---|---|---|\n| **D-07** | d | **OPEN** | widen the root | p | r |\n| CC-010 | d | APPLIED | x | p | r |\n' > $E/docs/governance/DECISIONS.md
+printf '| ID | Date | Status | Topic | P | R |\n|---|---|---|---|---|---|\n| **D-07** | d | **OPEN** | thicken plate08 | p | r |\n| **D-08** | d | **OPEN** | another body | p | r |\n| CC-010 | d | APPLIED | x | p | r |\n' > $E/docs/governance/DECISIONS.md
 "$PY" - "$E" <<'PYEOF'
 import sys, trimesh
 E = sys.argv[1]; trimesh.creation.box((30.0, 30.0, 2.0)).export(f"{E}/out/mechanical/case/pre/stl/plate2.stl"); trimesh.creation.box((30.0, 30.0, 0.8)).export(f"{E}/out/mechanical/case/pre/stl/plate08.stl")
@@ -137,6 +137,7 @@ PYEOF
  "$PY" scripts/print_dfm.py --process jlc_mjf_pa12 --samples 20000 --out out/mechanical/case/pre/dfm out/mechanical/case/pre/stl/plate08.stl >/dev/null && { echo "FAIL: the 0.8 plate must FLAG"; exit 1; }
  "$PY" scripts/print_dfm.py --gate out/mechanical/case/pre/dfm --open pre/plate08=WHATEVER >/dev/null && { echo "FAIL (F7): --open with a free string passed"; exit 1; }
  "$PY" scripts/print_dfm.py --gate out/mechanical/case/pre/dfm --open pre/plate08=CC-010 >/dev/null && { echo "FAIL (F7): --open with an APPLIED row passed"; exit 1; }
+ "$PY" scripts/print_dfm.py --gate out/mechanical/case/pre/dfm --open pre/plate08=D-08 >/dev/null && { echo "FAIL (N2 0.9.0): an OPEN row that does not name plate08 passed"; exit 1; }
  "$PY" scripts/print_dfm.py --gate out/mechanical/case/pre/dfm --open pre/plate08=D-07 >/dev/null || { echo "FAIL: --open with the OPEN row D-07 must pass"; exit 1; }
  sed -i.bak 's/"verdict": "FLAG"/"verdict": "PASS"/' out/mechanical/case/pre/dfm/plate08.json
  "$PY" scripts/print_dfm.py --gate out/mechanical/case/pre/dfm >/dev/null && { echo "FAIL (F28): a record edited FLAG->PASS by hand passed the gate"; exit 1; }
@@ -184,15 +185,17 @@ K=$T/kick; mkdir -p $K/docs/governance $K/design; ln -s "$SKILL/scripts" $K/scri
 cp "$SKILL/templates"/{project.yaml,CLAUDE.md,SPEC.md,STATUS.md} $K/; cp "$SKILL/templates"/{GATES,KICKOFF_ANSWERS,DECISIONS}.md $K/docs/governance/; cp "$SKILL/templates/design/traceability.yaml" $K/design/
 (cd $K
  "$PY" scripts/project.py scaffold --scope ee project.yaml CLAUDE.md SPEC.md STATUS.md docs/governance/*.md design/*.yaml >/dev/null
+ grep -q '{{SCOPE}}' project.yaml CLAUDE.md SPEC.md docs/governance/*.md && { echo "FAIL (0.9.0 F4): scaffold --scope must fill the {{SCOPE}} slot"; exit 1; }
+ grep -q '^  scope: ee' project.yaml || { echo "FAIL (0.9.0 F4): project.scope not set by scaffold"; exit 1; }
  "$PY" scripts/project.py slots >/dev/null && { echo "FAIL (F24): a fresh scaffold has slots; the counter must exit 1"; exit 1; }
  { "$PY" scripts/project.py slots || true; } | tail -1 | grep -q 'unfilled in' || { echo "FAIL (F24): slots must print the per-file count"; exit 1; }
- "$PY" scripts/project.py kickoff --check >/dev/null && { echo "FAIL (F10): template kickoff rows (slots, D-{{nn}}) passed the kickoff check"; exit 1; }
+ out=$("$PY" scripts/project.py kickoff --check 2>&1 || true); echo "$out" | grep -q 'not valid YAML.*slots' || { echo "FAIL (0.9.0 F3): an unfilled project.yaml must name the slots as the cause, not traceback"; echo "$out" | tail -3; exit 1; }
  for f in project.yaml CLAUDE.md SPEC.md STATUS.md docs/governance/*.md design/*.yaml; do sed -i.bak 's/{{[^{}]*}}/X/g' "$f"; rm -f "$f.bak"; done
- sed -i.bak 's/^  scope: X/  scope: ee/' project.yaml; rm -f project.yaml.bak
  { "$PY" scripts/project.py slots || true; } | tail -1 | grep -q '^slots: 0 unfilled' || { echo "FAIL (F24): a trivially filled project must show zero slots"; "$PY" scripts/project.py slots | tail -3 || true; exit 1; }
+ out=$("$PY" scripts/project.py kickoff --check 2>&1 || true); echo "$out" | grep -q '^KICKOFF: .*no D row id\|^KICKOFF: .*is not in' || { echo "FAIL (F10): kickoff rows with D-X ids passed the kickoff check"; echo "$out" | tail -3; exit 1; }
  printf '| **D-02** | d | **APPROVED** | kickoff | owner | words |\n' >> docs/governance/DECISIONS.md; sed -i.bak 's/D-X/D-02/g' docs/governance/KICKOFF_ANSWERS.md
  "$PY" scripts/project.py kickoff --check >/dev/null || { echo "FAIL (F10): a filled ee project must pass the kickoff check"; "$PY" scripts/project.py kickoff --check | tail -5 || true; exit 1; }
- echo "slots: fresh ee scaffold -> exit 1 with counts; trivially filled -> 0; kickoff --check: template rows FAIL, filled rows pass")
+ echo "slots: fresh ee scaffold -> exit 1 with counts; trivially filled -> 0; kickoff --check: unfilled yaml names the slots, D-X rows FAIL, filled rows pass")
 say "0b scope: A0 asked first, every scope scaffolds from ONE template set and gets its own gate rows"
 grep -q '^\*\*A0 Project scope' "$SKILL/references/kickoff-questionnaire.md" && grep -q '^| A0 | scope' "$SKILL/templates/KICKOFF_ANSWERS.md" || { echo "FAIL: kickoff A0 (scope) missing"; exit 1; }
 grep -q '^## 1. Phase / gate model (per scope)' "$SKILL/SKILL.md" && grep -q '^## 6. Layout phase and the adopt rule \[ee, both\]' "$SKILL/SKILL.md" && grep -q '^## 8. Case pipeline and FEA \[mech, both\]' "$SKILL/SKILL.md" || { echo "FAIL: SKILL.md lost the scope model / heading tags"; exit 1; }
@@ -255,11 +258,17 @@ say "9 adopt gates incl. the clone gate on git archive HEAD"; scripts/adopt_gate
 say "10 the owner's line in the Release row flips the banner; --check catches the stale report; gate_check --release wants the owner's commit"
 printf 'A sentence that quotes the words clear to build must not flip anything.\n' >> docs/governance/STATUS.md
 printf '| **Release** | Reports RELEASED | the owner line below | clear to build — owner, 2026-01-04, board %s |\n' ${MD5:0:8} >> docs/governance/GATES.md
-if $PY scripts/release_report.py --check >/dev/null; then echo "FAIL: --check missed the stale report"; exit 1; fi
-$PY scripts/release_report.py | grep -q RELEASED || { echo "FAIL: not RELEASED"; exit 1; }
+$PY scripts/release_report.py | grep -q DRAFT || { echo "FAIL (0.9.0 F2): an UNCOMMITTED release cell must stay DRAFT"; exit 1; }
 $PY scripts/gate_check.py --release >/dev/null && { echo "FAIL: an uncommitted release line passed gate_check"; exit 1; }
+git add -A; git -c user.name=agent -c user.email=a@a commit -qm "an agent commits the owner's cell"
+$PY scripts/release_report.py | grep -q DRAFT || { echo "FAIL (0.9.0 F2): a release cell committed by a non-owner must stay DRAFT"; exit 1; }
+printf '| **Release** | Reports RELEASED | the owner line below | clear to build — owner, 2026-01-05, board %s |\n' ${MD5:0:8} >> docs/governance/GATES.md
 git add -A; git -c user.name=smoke -c user.email=s@s commit -qm "owner release line"
+if $PY scripts/release_report.py --check >/dev/null; then echo "FAIL: --check missed the stale report"; exit 1; fi
+$PY scripts/release_report.py | grep -q RELEASED || { echo "FAIL: not RELEASED after the owner's commit"; exit 1; }
 $PY scripts/gate_check.py --release || { echo "FAIL: the owner's committed release line must pass"; exit 1; }
+HWFS_PROJECT=$PWD/project.yaml scripts/clone_gate.sh --regen >/dev/null || { echo "FAIL: the clone gate must regenerate RELEASED from the archive (HWFS_GIT_ROOT blame)"; exit 1; }
+grep -q '^\*\*STATUS: RELEASED' docs/release/PCB_DESIGN_REPORT.md || { echo "FAIL: the archive regen lost the RELEASED banner"; exit 1; }
 $PY scripts/gate_check.py G0 >/dev/null && { echo "FAIL: G0 has no owner cell in the smoke and must read NOT approved"; exit 1; }
 say "SMOKE OK — DRAFT report was $R/docs/release/PCB_DESIGN_REPORT.md (RELEASED after the owner line); traceability census:"
 grep -A4 '^## Census' docs/governance/TRACEABILITY.md | tail -3

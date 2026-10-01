@@ -11,7 +11,7 @@ CLI (for shell scripts):
   scripts/project.py scope                    # ee | mech | both (project.scope, default both)
   scripts/project.py record                   # "<label> <md5>" of the record of record: the board (ee/both) or the STL set paths.mech_record (mech)
   scripts/project.py scaffold --scope S FILE...   # resolve the {{ee,both}}-style scope tags of copied templates in place: a tagged line stays only
-                                              # when S is in its list (tag removed); untagged lines stay. Then `grep -rn '{{'` must print nothing.
+                                              # when S is in its list (tag removed); untagged lines stay; the {{SCOPE}} slot becomes S. Then `slots`.
   scripts/project.py gates-required           # exit 1 when an artefact exists (schematic, board, the STL set) and gates.adopt has no gate line for it
   scripts/project.py slots [FILE|DIR ...]     # the unfilled {{...}} slots per file (default: CLAUDE.md SPEC.md project.yaml docs design); lines between
                                               # `<!-- skeleton: begin -->` / `<!-- skeleton: end -->` are skipped; exit 1 while any slot remains
@@ -51,7 +51,10 @@ class Project:
         self.root = os.path.dirname(self.file)
         import yaml  # lazy: `scaffold` / `slots` run on a stock python3 before any venv exists (blind review 0.8.0 F2)
         with open(self.file, encoding="utf-8") as f:
-            self.cfg = yaml.safe_load(f) or {}
+            try:
+                self.cfg = yaml.safe_load(f) or {}
+            except yaml.YAMLError as e:
+                sys.exit(f"{self.file}: not valid YAML ({str(e).splitlines()[0]}) — unfilled {{{{…}}}} slots? run `scripts/project.py slots` and fill them first")
 
     @classmethod
     def find(cls, start=None, arg=None):
@@ -130,6 +133,7 @@ def scaffold(scope, files):
             tags = SCOPE_TAG.findall(line)
             if tags and not any(scope in t.split(",") for t in tags):
                 dropped += 1; continue
+            line = line.replace("{{SCOPE}}", scope)
             out.append(SCOPE_TAG.sub("", line).rstrip() + "\n" if tags else line)
         open(f, "w", encoding="utf-8").write("".join(out))
     return dropped
@@ -146,7 +150,8 @@ def verify_sig(rec, version):
 
 
 def open_decisions(path):
-    """{id: topic} of the decision-log rows whose status cell starts with OPEN (bold stripped) — the only ids `--open` may name."""
+    """{id: topic + proposal text} of the decision-log rows whose status cell starts with OPEN (bold stripped) — the only ids `--open` may name;
+    the gate also requires the row's text to name the piece (any OPEN row is not a licence for every body)."""
     out = {}
     for line in open(path, encoding="utf-8") if os.path.exists(path) else []:
         if not line.startswith("|"):
@@ -155,7 +160,7 @@ def open_decisions(path):
         if len(c) >= 4 and re.sub(r"\*", "", c[2]).strip().upper().startswith("OPEN"):
             m = re.search(r"\b([A-Z]+-\d+[a-z]?)\b", c[0])
             if m:
-                out[m.group(1)] = re.sub(r"\*", "", c[3]).strip()
+                out[m.group(1)] = re.sub(r"\*", "", " ".join(c[3:])).strip()
     return out
 
 
@@ -168,7 +173,7 @@ def required_gate_lines(P):
     if sch and os.path.exists(sch) and "erc_gate.py" not in lines:
         bad.append(f"schematic {P.get('paths.schematic')} exists but gates.adopt has no `scripts/erc_gate.py` line")
     board = P.path("board")
-    if board and os.path.exists(board) and not re.search(r"drc", lines, re.I):
+    if board and os.path.exists(board) and not re.search(r"\bdrc", lines, re.I):   # ponytail: a token starting with drc (drc_gate.py, DRC); a named gates.drc key if a project games it
         bad.append(f"board {P.get('paths.board')} exists but gates.adopt has no DRC gate line")
     pat = P.get("paths.mech_record")
     if pat and glob.glob(os.path.join(P.root, pat)):
@@ -212,8 +217,8 @@ KEY_RE = re.compile(r"`((?:project|kickoff|board|print_targets|fab_dfm)\.[A-Za-z
 def kickoff_check(P):
     """Every answered row of the kickoff answers file names project.yaml keys in `Written to`; each must exist (print_targets.<t>.x / .*.x = some
     target has x). A row whose answer or D-row cell is still a slot, or whose D row is not in the decision log, is a problem. -> problem list."""
-    path = P.path("kickoff.answers") if isinstance(P.get("kickoff"), dict) else None
-    path = path or os.path.join(P.root, "docs", "governance", "KICKOFF_ANSWERS.md")
+    ans = P.get("kickoff.answers") if isinstance(P.get("kickoff"), dict) else None
+    path = os.path.join(P.root, ans) if ans else os.path.join(P.root, "docs", "governance", "KICKOFF_ANSWERS.md")
     if not os.path.exists(path):
         return [f"kickoff answers file missing: {os.path.relpath(path, P.root)}"]
     dec_ids = set()
@@ -288,12 +293,12 @@ def selftest():
     P.cfg["project"] = {"scope": "mech"}
     lbl, m = P.record_md5(); assert m and "1 files" in lbl and P.scope() == "mech"
     open(f"{d}/out/mechanical/case/v1/stl/b.stl", "wb").write(b"B"); assert P.record_md5()[1] != m, "a new STL moves the mech record md5"
-    open(f"{d}/t.md", "w").write("all\n| G1 | {{ee,both}}\n| M1 | {{mech}}\n{{ee,both}}{{mech}} either\n")
-    assert scaffold("mech", [f"{d}/t.md"]) == 1 and open(f"{d}/t.md").read() == "all\n| M1 |\n either\n", open(f"{d}/t.md").read()
+    open(f"{d}/t.md", "w").write("all {{SCOPE}}\n| G1 | {{ee,both}}\n| M1 | {{mech}}\n{{ee,both}}{{mech}} either\n")
+    assert scaffold("mech", [f"{d}/t.md"]) == 1 and open(f"{d}/t.md").read() == "all mech\n| M1 |\n either\n", open(f"{d}/t.md").read()
     # record signing, OPEN rows, required gate lines
     r = dict(a=1, b=[1.5, "x"]); r["sig"] = record_sig(r, "1.0"); assert verify_sig(r, "1.0") and not verify_sig(dict(r, a=2), "1.0") and not verify_sig(r, "1.1")
     open(f"{d}/D.md", "w").write("| ID | Date | Status | Topic | P | R |\n|---|---|---|---|---|---|\n| **D-07** | d | **OPEN** | widen root | p | r |\n| CC-010 | d | APPLIED | x | p | r |\n| CC-011 | d | OPEN (owner) | y | p | r |\n")
-    assert open_decisions(f"{d}/D.md") == {"D-07": "widen root", "CC-011": "y"}, open_decisions(f"{d}/D.md")
+    assert open_decisions(f"{d}/D.md") == {"D-07": "widen root p r", "CC-011": "y p r"}, open_decisions(f"{d}/D.md")
     P.cfg["paths"] = {"mech_record": "out/mechanical/case/*/stl/*.stl", "schematic": "k/k.kicad_sch"}; P.cfg["gates"] = {"adopt": ["$PY scripts/known_issues.py --check"]}
     bad = required_gate_lines(P); assert len(bad) == 2 and "--gate-dir" in bad[0] and "print_dfm.py --gate" in bad[1], bad
     P.cfg["gates"]["adopt"] += ["$PY scripts/thin_wall_census.py --gate-dir out/x/census", "$PY scripts/print_dfm.py --gate out/x/dfm"]

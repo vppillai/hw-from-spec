@@ -15,7 +15,7 @@ HERE = os.path.dirname(os.path.realpath(__file__)); SKILL = os.path.dirname(HERE
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0]); ap.add_argument("--only"); ap.add_argument("--python")
     a = ap.parse_args()
-    py = a.python or (os.path.join(SKILL, ".venv", "bin", "python") if os.path.exists(os.path.join(SKILL, ".venv", "bin", "python")) else sys.executable)
+    py = a.python or sys.executable          # run it with the project's .venv/bin/python (README step 3); the skill's own venv is for developing the skill
     mesh = subprocess.run([py, "-c", "import numpy, trimesh, scipy, shapely"], capture_output=True).returncode == 0
     evals = json.load(open(os.path.join(HERE, "evals.json")))["evals"]
     only = set(a.only.split(",")) if a.only else None

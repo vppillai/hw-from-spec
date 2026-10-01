@@ -135,11 +135,11 @@ renders: []                                   # G2+: see references/project-yaml
 #   size: '1920,1440'
 reports:
   - name: PCB_DESIGN_REPORT {{ee,both}}
-    title: {{PROJECT}} PCB design report {{ee,both}}
+    title: "{{PROJECT}} PCB design report" {{ee,both}}
     sections: [banner, identity, decisions, known_issues, package, traceability, dfm, renders, inventory] {{ee,both}}
     extra_sources: [] {{ee,both}}
   - name: CASE_DESIGN_REPORT {{mech,both}}
-    title: {{PROJECT}} case design report {{mech,both}}
+    title: "{{PROJECT}} case design report" {{mech,both}}
     sections: [banner, identity, decisions, known_issues, traceability, renders, inventory]   # identity = the record md5 (board, or the STL set in mech scope) {{mech,both}}
     extra_sources: [design/case.yaml] {{mech,both}}
 gates:

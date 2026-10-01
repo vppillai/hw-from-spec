@@ -13,7 +13,11 @@ project:
   scope: both                             # kickoff A0: ee (PCB / PCBA only) | mech (enclosure / printed / CNC parts only) | both — SKILL.md §1;
                                           # `scripts/project.py scaffold --scope` resolves the templates' {{ee,both}} / {{mech,both}} / {{mech}} line tags
 skill: {repo: <url>, commit: <sha>, version: <SKILL.md version>}   # the hw-from-spec commit + version the project follows; scripts/skill_retro.py reports drift
-kickoff: docs/governance/KICKOFF_ANSWERS.md   # the owner's kickoff answers (references/kickoff-questionnaire.md) — D rows before any CAD
+kickoff:                                  # the owner's kickoff answers, machine-readable (templates/project.yaml carries every class as a slot;
+  answers: docs/governance/KICKOFF_ANSWERS.md   #   `scripts/project.py kickoff --check` proves each answered row landed): product_class, quantity, fab,
+  product_class: engineering sample       #   enclosure{pieces … fit_decider}, verification{rounds, visual, fea}, coupons, sourcing{…}, software{…},
+  # …                                     #   release{…}, identity{envelope, branding, delegation}, debug_access
+board: {layers: 4, thickness_mm: 1.6, copper: "1 oz / 0.5 oz", …}   # ee / both: the PCB build from kickoff B1–B8 (SPEC R-M01 cites it)
 ids:
   owner_prefix: D                         # owner decision rows  D-nn
   agent_prefix: CC                        # agent rows           CC-nnn (three digits)

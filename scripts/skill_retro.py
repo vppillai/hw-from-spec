@@ -214,7 +214,7 @@ def row_block(table_path, row):
     """The verbatim text block of `row` in a process table (its comment lines = the citations), validated_on reset to []."""
     lines = open(table_path, encoding="utf-8").read().splitlines(); out = []; on = False
     for ln in lines:
-        if re.match(rf"^  {re.escape(row)}:\s*$", ln):
+        if re.match(rf"^  {re.escape(row)}:\s*(#.*)?$", ln):
             on = True
         elif on and re.match(r"^  \S", ln):
             break
@@ -236,6 +236,8 @@ def apply_folds(project, root, skill, new, dfm, today, table_rel):
             blk = row_block(pp, d["row"])
             if blk:
                 open(tp, "a", encoding="utf-8").write(f"  # retro {project} {today}: row carried from the project table with its citations\n" + blk); done.append(f"process row {d['row']} -> templates/design/dfm_processes.yaml")
+            else:
+                print(f"skill_retro --apply: WARNING process row {d['row']} not found as a 2-space key in {pp} — not folded")
     ch = os.path.join(skill, "CHANGELOG.md")
     if new and os.path.exists(ch) and marker not in open(ch, encoding="utf-8").read():
         txt = open(ch, encoding="utf-8").read(); by_file = {}
@@ -339,6 +341,11 @@ def run(project_arg, skill, out_dir, since, threshold, today=None, apply=False):
         if not os.path.exists(p):
             print(f"skill_retro: MISSING {p}"); return 2
     project = os.path.basename(root)
+    try:
+        import yaml
+        project = str((yaml.safe_load(open(os.path.join(root, "project.yaml"), encoding="utf-8")) or {}).get("project", {}).get("name") or project) if os.path.exists(os.path.join(root, "project.yaml")) else project
+    except Exception:  # noqa: BLE001 — the directory name stands in
+        pass
     sections, idf = index_skill(skill)
     unparsed = []
     entries = read_entries(learn, since, unparsed); decisions = read_decisions(dec, owner_prefix)
@@ -369,7 +376,7 @@ def selftest():
     open(os.path.join(proj, "project.yaml"), "w").write("project: {name: proj}\nskill: {version: 1.0.0}\n")
     os.makedirs(os.path.join(proj, "design"))
     open(os.path.join(proj, "design", "dfm_processes.yaml"), "w").write("processes:\n  jlc_mjf_pa12:\n    wall_min: 1.0\n    hole_min: 2.0   # [V] vendor page 2026-01-01\n    validated_on: [{date: 2026-01-02, bodies: 3}]\n"
-                                                                        "  acme_sls:\n    vendor: Acme\n    process: SLS PA12\n    wall_min: 0.8\n    hole_min: 1.5\n    validated_on: []\n")
+                                                                        "  acme_sls:   # NEW vendor row (a trailing comment on the row line; review 0.9.0 F7)\n    vendor: Acme\n    process: SLS PA12\n    wall_min: 0.8\n    hole_min: 1.5\n    validated_on: []\n")
     open(os.path.join(proj, "docs", "governance", "LEARNINGS_LOG.md"), "w").write(
         "# log\n\n## 2026-09-28\n"
         "- 2026-09-28 [dfm/census] A ray-cast census that clusters thin samples below the gate must classify each cluster wall versus wedge by the opposite-face angle; walls FAIL, wedges are listed — CC-205.\n"
