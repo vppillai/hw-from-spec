@@ -108,6 +108,10 @@ owner addition arrives. Budget the bump before promising "full release pipeline"
 - Guard rows: "board md5 = recorded, mesh md5 = recorded" must be OK or the whole check is about another board.
 - Every envelope (connector housings, cage, heat sink, fan, inserts, screws) is a yaml box; the census asserts each is either inside a piece or in
   a declared cut-out.
+- Planar linkages (mech): the body levels are a graph colouring — sweep every body pair over the full cycle, edge = an in-plane crossing, levels =
+  chromatic number (a triangle → three levels: Jansen leg c–k–T1, retro beest 2026-10-01); compute it before drawing a link.
+- Sweep 360 steps of every body PAIR per level with pins / pegs / caps as discs; min distance and overlap area per pair as a CHECKS row (`contacts = 0`).
+  A bar-only sweep or any single-pose render misses touching bosses and a peg grazing a bar.
 
 ## Drawings
 Silhouettes + sections from the STLs of record (trimesh/shapely), dimension lines carry the yaml numbers (so a yaml change moves the number and the
@@ -121,3 +125,7 @@ geometry together), per-piece and assembly STEP (OCP/cadquery), `--check` = md5 
   TDS), insert type / bore / temperature per material (from the insert TDS, `dfm-printed-enclosure.md` §1.1), and the insert temperature/time and
   screw torque `[OWNER: …]` placeholders until the insert + torque coupon measured them.
 - Debug dumps under `out/**/scratch/` (gitignored), never the repo root.
+- OpenSCAD `--backend=Manifold` (2026 snapshot, `tools.openscad_args`) exports a body in < 0.1 s against minutes under CGAL — a 360-step sweep and a
+  walking GIF become affordable and the concurrency ceiling (agent-ops §5) moves to the mesh checks. Two Manifold constructs that break watertightness:
+  `hull()` of two thin slabs (a solid wedge / bevelled cut instead) and a standing D-shaft as D-extrude + cylinder + ramp unions (13 shells — ONE
+  cylinder minus bevelled flat cuts); the watertight row per STL catches both (retro beest 2026-10-01).

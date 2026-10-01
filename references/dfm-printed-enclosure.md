@@ -238,6 +238,8 @@ numbers are **[owner bar]** for a 0.4 nozzle at 0.20 mm and live in `print_targe
   nozzle); raised text cannot print face-down — a face-down face gets a flush colour body (§8.1 option b), never a deboss (its recess ceiling is a bridge underside). A fit filter keeps a legend only where it
   fits its land and LISTS what it dropped.
 - **Legend geometry, not font choice, meets the void gate**: every font's crotches (A K N W) and counters (e 4 R) fall below 1.0 at a cap that fits a 10–12 mm band — CLOSE the glyph polygons at the void gate (buffer +g/2 / −g/2, mitre) after placement, gate the inter-letter gap as a row, and on a curved band set letters one by one along the band's offset curve anchored by POLAR ANGLE (nearest-point anchoring lands on a lobe when the waist is concave). Strokes ≥ the wall gate until the census's opposing-face rows honour legend lands (0.8.1) — worked example: Arial Bold cap 7, pad 0.5, spacing 1.6, closing 1.0, 0 census FAIL (retro wankel 2026-09-30).
+- **Legend at a small cap (worked example: STRANDBEEST on a 6 mm rail, DIN Alternate Bold cap 4.0, retro beest 2026-10-01)**: `text(size=)` is NOT the cap height — render one H per font, measure it, derive the size (DIN: cap = 0.72 × size); pick the font by MEASUREMENT at that cap (erode for strokes ≥ 1.0, inscribe for counters ≥ 0.45 after padding — Arial / Helvetica / Futura counters close, a condensed DIN survives); glyph polygons from the SVG path with holes classified by ring COVERAGE (a point test put a D's outer ring inside its own counter and dropped the letter); morphology OPEN (tips) → CLOSE (gaps) → neck thickening, never the other order (an opening after the closing reopens every filled slit); fill gaps ~0.05 over the gate because the mesh tools read under the polygon (0.7 for a 0.45 gate on a 0.6 body). Rows: thin regions < 1.0 longer than 1.2 mm = 0 (an erosion AREA ratio penalises corners, not strokes), gaps < 0.45 = 0, one body per character, every label inside its face.
+- **Colour bodies are their own print target** (`home_fdm_colour` → template row `home_fdm_04_colour_body`, own STL set, own census): the wall gate is the body's THICKNESS (0.6 = 3 layers), strokes are gated on the polygon and by print_dfm W; censused against the host's 1.6 gate a colour body FAILs on itself.
 - No rigid bump on a slit tab (it blocks, F ∝ t³); screws + heat-set inserts in ≥ 1.6 boss walls, or magnets (§1.1), instead of snap tabs where the
   arm cannot be long enough.
 - **Fan boss count = fan hole count** (consumer 30 mm fans have 4 holes even when one SKU drawing shows 3); any point set drawn in two places is
@@ -368,6 +370,10 @@ the geometry rows guarantee the rest — the report says which is which.
   from the CLI's `objects` list, not from the (deduplicated) inputs.
 - `different_settings_to_system` lists only keys whose value differs from the flattened system preset: a project value equal to the system
   default is embedded but not listed — prove a setting from the embedded value, not from the list.
+- **Arranger vs pre-placement** (retro beest 2026-10-01): the arranger nests CONCAVE outlines (triangles with windows) into each other and the slice aborts with
+  "gcode path conflicts" — pre-place such plates (your own shelf packing, `--arrange 0`); a self-placed MULTI-colour plate collides with the fixed
+  wipe-tower position, so plates with filament changes stay on `--arrange 1`. `result.json` lists no objects for a pre-placed plate — the kit table
+  falls back to the input object list. Count the filament changes (`M620`) against the DESIGNED number per plate (one legend = its colour layers × changes), not only report them.
 - State per plate in the kit README: minutes, grams per filament, filament changes, purge — ironing adds ~5 min on a small plate; each extra
   coloured layer adds swaps + purge + minutes.
 
