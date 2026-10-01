@@ -1,6 +1,6 @@
 ---
 name: hw-from-spec
-version: 0.10.1
+version: 0.10.2
 description: Run a hardware project (a PCB, a printed or CNC enclosure, or both — scope chosen at kickoff; contract fab such as JLCPCB) from a written specification to a production cut with an owner-gated, generated-only, blind-reviewed workflow — a kickoff questionnaire that asks every owner decision up front with recommended answers, a zero-warning manufacturability bar, and a retro that folds each project's learnings back into the skill. Use this whenever someone starts a board or enclosure project from a spec, asks to set up gates, a decision log, generators, part verification, a fab DFM mirror, a case pipeline, FEA, blind reviews, a release report or a production cut for one, or resumes such a project, or wants the skill improved from a finished project — even if they only say "new KiCad board", "order this at JLC", "review the layout", "cut the release" or "what did we learn".
 ---
 
@@ -17,7 +17,7 @@ reference when you reach that step, not before. Nothing here is specific to one 
 1. **Install — ONE layout, ONE block (README "Install")**: the skill is a submodule at `vendor/hw-from-spec` with a RELATIVE symlink `scripts ->
    vendor/hw-from-spec/scripts` (or a copy of `scripts/`); a personal clone under `~/.claude/skills/` is for skill discovery only and never the
    project's scripts source; never a submodule AT `scripts/`. **One venv**, the project's `.venv` (gitignored): pyyaml + `numpy trimesh scipy
-   shapely rtree networkx mapbox-earcut` in every scope (the smoke runs the print-DFM selftest; the mesh scripts `print_dfm.py` / `thin_wall_census.py`
+   shapely rtree networkx mapbox-earcut embreex` in every scope (the smoke runs the print-DFM selftest; the mesh scripts `print_dfm.py` / `thin_wall_census.py`
    / `thin_wall_check.py` / `step2stl.py` need them in mech / both) — `uv venv` + `uv pip install`, or `python3 -m venv` + `pip` when `uv` is absent.
    `tools.python`, the step-5 loop, the smoke and `evals/run_evals.py` use it (the smoke takes the caller's project `.venv` first, the skill's own
    `.venv` only when run from the skill repo, and skips the mesh section with a NOTE when the libraries are absent); the shell gates take the first

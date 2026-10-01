@@ -15,7 +15,7 @@
       rail flank a wide one), and OPPOSING faces — the nearest face with an opposing normal in ANY direction (a ledge underside beside a step top,
       the root of a rim ring set inboard of its wall: invisible to normal rays, coloured by the vendor). A FAIL cluster passes only when an
       `accepted` entry {class, bbox, reason, date, evidence} covers it (bbox ± 1 mm, same class, all three text fields present).
-      A cluster mostly inside a --boxes rectangle (legend lands, [[x0, y0, x1, y1], ...]) gates at --box-min instead.
+      A cluster mostly inside a --boxes rectangle (legend lands, [[x0, y0, x1, y1], ...]) gates at --box-min instead — wall, void AND opposing-face rows.
       Samples default to --samples-per-mm2 x surface area (a fixed count under-samples a large part). Prints the rows, writes --json, exit 1 on
       any unaccepted FAIL. Needs numpy + trimesh + scipy at run time.
   scripts/thin_wall_census.py --gate-dir DIR [DIR ...]
@@ -127,15 +127,15 @@ def void_rows(points, gaps, cell=3.0, boxes=None):
     return rows
 
 
-def opp_rows(points, dists, kinds, cell=3.0):
-    """Opposing-face samples (normal rays clean, nearest opposing face below its gate) -> rows {n, dmin, dmed, kind, span, bbox}."""
+def opp_rows(points, dists, kinds, cell=3.0, boxes=None):
+    """Opposing-face samples (normal rays clean, nearest opposing face below its gate) -> rows {n, dmin, dmed, kind, span, bbox, in_box_frac}."""
     rows = []
     for idx in grid_groups(points, cell):
         pp = [points[i] for i in idx]; dd = sorted(dists[i] for i in idx)
         kind = "void" if sum(kinds[i] for i in idx) * 2 > len(idx) else "wall"
         lo, hi, ext = _extent(pp)
         rows.append(dict(n=len(idx), dmin=round(dd[0], 3), dmed=round(dd[len(dd) // 2], 2), kind=kind, span=round(ext[0], 1),
-                         bbox=[round(x, 1) for x in lo + hi]))
+                         bbox=[round(x, 1) for x in lo + hi], in_box_frac=round(in_box_frac(pp, boxes), 2)))
     rows.sort(key=lambda r: -r["n"])
     return rows
 
@@ -172,6 +172,8 @@ def gate_rows(clusters, voids, gate, void_gate, box_min=None, wedge_band=None, o
             emit("void", v["bbox"], f"VOID {v['gmed']:.2f} (min {v['gmin']:.2f}) < {g} span {v['span']} bbox {v['bbox']}")
     for o in opps or []:
         g = void_gate if o["kind"] == "void" else gate
+        if box_min is not None and o.get("in_box_frac", 0) >= 0.5:    # a legend stroke IS two opposing faces box_min apart: the land rule owns it
+            g = box_min
         if o["dmin"] < g - 1e-9:                 # the root WIDTH is the minimum (exact point-to-face distance, no sampling noise); the median grows with the band
             emit("opp", o["bbox"], f"OPP {o['dmin']:.2f} (med {o['dmed']:.2f}) < {g} ({o['kind']}, opposing faces in any direction) span {o['span']} bbox {o['bbox']}")
     return fails, acc
@@ -216,7 +218,13 @@ def pure_gate(dirs):
             if not verify_sig(r, VERSION):
                 bad.append(f"{jp}: signature does not verify — edited after it was written, or written by another census version (rerun thin_wall_census {VERSION})"); continue
             stl = r.get("stl", "")
-            cand = [stl, os.path.join(os.path.dirname(jp), stl), os.path.join(P.root, stl) if P else ""]
+            # the STL of record is the sibling stl/<basename> of THIS tree, then a project-relative path; an absolute path stored by an older
+            # census is honoured only inside this project's root (a gate run from another checkout must never read another tree's STLs)
+            root = os.path.abspath(P.root) if P else None
+            cand = [os.path.join(parent, "stl", os.path.basename(stl)),
+                    os.path.join(root, stl) if root and not os.path.isabs(stl) else "",
+                    os.path.join(os.path.dirname(jp), stl) if not os.path.isabs(stl) else "",
+                    stl if os.path.isabs(stl) and (root is None or os.path.abspath(stl).startswith(root + os.sep)) else ""]
             path = next((p for p in cand if p and os.path.exists(p)), None)
             if path is None:
                 bad.append(f"{jp}: STL {stl!r} not found"); continue
@@ -337,10 +345,12 @@ def census(stl, samples, gate, void_gate, cell, self_hit, red, boxes, box_min, o
     voids = void_rows([P[i] for i in vt], [G[i] for i in vt], cell, boxes)
     # opposing faces: only where the normal rays are clean (otherwise the wall / void row already carries the finding)
     ot = [i for i in range(samples) if T[i] >= thr and G[i] >= void_gate and D[i] < ((void_gate if K[i] else gate) - CLUSTER_MARGIN)]   # normal rays clean, opposing face not
-    opps = opp_rows([P[i] for i in ot], [D[i] for i in ot], [K[i] for i in ot], cell)
+    opps = opp_rows([P[i] for i in ot], [D[i] for i in ot], [K[i] for i in ot], cell, boxes)
     fails, acc = gate_rows(clusters, voids, gate, void_gate, box_min if boxes else None, wedge_band, opps, accepted)
     wall = ang < WALL_DEG
-    r = dict(version=VERSION, stl=stl, stl_md5=md5_of(stl), target=target, faces=int(len(m.faces)), watertight=bool(m.is_watertight),
+    _, Pr = _project_targets(os.path.dirname(os.path.abspath(stl)))
+    stl_rec = os.path.relpath(os.path.abspath(stl), os.path.abspath(Pr.root)) if Pr else stl   # project-relative in the record: the gate resolves it in ITS tree
+    r = dict(version=VERSION, stl=stl_rec, stl_md5=md5_of(stl), target=target, faces=int(len(m.faces)), watertight=bool(m.is_watertight),
              bodies=int(len(m.split(only_watertight=False))), bbox=np.round(m.bounds, 2).tolist(), vol_cm3=round(float(m.volume) / 1000, 3),
              area_mm2=round(area, 1), signature=dict(vol=round(float(m.volume), 3), area=round(area, 3), bbox=np.round(m.bounds, 3).tolist(), faces=int(len(m.faces))),
              samples=samples, density_per_mm2=round(samples / area, 2), gate=gate, void_gate=void_gate, red=red, wedge_band=wedge_band, thr=thr,
@@ -397,6 +407,9 @@ def selftest():
     # legend boxes: a 1.0 raised stroke inside a box gates at box_min
     boxed = cluster_rows(plate, [1.0] * 900, [0.0] * 900, boxes=[[-1, -1, 31, 31]])
     assert boxed[0]["in_box_frac"] == 1.0 and gate_rows(boxed, [], 1.6, 1.0, box_min=1.0)[0] == [] and gate_rows(boxed, [], 1.6, 1.0)[0], "legend land rule"
+    # an opposing-face pair inside a legend land gates at box_min too (a 1.3 raised stroke is two faces 1.3 apart, not a thin wall)
+    lopp = opp_rows([(10.0, 10.0, 6.3), (10.0, 11.3, 6.3)], [1.3, 1.3], [0, 0], boxes=[[0, 0, 30, 30]])
+    assert gate_rows([], [], 1.6, 1.0, box_min=1.0, opps=lopp)[0] == [] and gate_rows([], [], 1.6, 1.0, opps=lopp)[0], "legend land rule applies to opposing-face rows"
     assert histogram([0.1, 1.19, 5.0, math.inf])["1.0-1.2"] == 1 and histogram([math.inf])["2.0-inf"] == 1
     # the pure gate: matching md5 + no fails passes; a wrong md5, a FAIL list, an undated acceptance, a tampered record, a withdrawn acceptance
     # and an uncensused STL of the record set are named (review 0.8.0 F5 / F28)
@@ -417,6 +430,15 @@ def selftest():
         put(good); open(os.path.join(d, "stl", "q_body.stl"), "wb").write(b"solid q\nendsolid q\n")
         assert any("without a census record" in b for b in pure_gate([C])), "an uncensused STL beside the records fails"
         os.remove(os.path.join(d, "stl", "q_body.stl"))
+        # the record's stl path is resolved in THIS tree: an absolute path into another checkout (same name, other content) must not be read
+        with tempfile.TemporaryDirectory() as other:
+            os.makedirs(os.path.join(other, "stl")); open(os.path.join(other, "stl", "p_body.stl"), "wb").write(b"solid other\nendsolid other\n")
+            put(dict(good, stl=os.path.join(other, "stl", "p_body.stl"))); assert pure_gate([C]) == [], "the sibling stl/ of the record set wins over a stored absolute path"
+            put(dict(good, stl=os.path.join(other, "stl", "p_body.stl"), stl_md5=md5_of(os.path.join(other, "stl", "p_body.stl"))))
+            assert any("STL of record" in b for b in pure_gate([C])), "a record of another tree's body fails against this tree's STL"
+            put(dict(good, stl=os.path.join(other, "stl", "zz_body.stl"))); assert any("not found" in b for b in pure_gate([C])), "an absolute path outside the tree with no sibling is not found"
+        put(dict(good, stl="stl/p_body.stl")); assert pure_gate([C]) == [], "a project-relative path resolves from the record set's parent"
+        put(good)
         assert any("no census JSON" in b for b in pure_gate([os.path.join(d, "none")]))
         # with a project (needs pyyaml): the acceptance must still be in print_targets.<t>.accepted; the mech_record glob widens the STL set
         try:
@@ -430,7 +452,7 @@ def selftest():
             assert any("withdrawn" in b for b in pure_gate([C])), "an acceptance deleted from the yaml un-passes the body"
             t = target_settings("t", os.path.join(d, "project.yaml"))
             assert t["gate"] == 1.2 and t["wedge_band"] == 1.5 and t["density"] == 10 and t["accepted"] == [], t
-    msg = "selftest OK (pure core: wall / wedge classification, wedge band, opposing rows, accepted matching, void + legend-box gating, pure --gate-dir incl. signature / withdrawn acceptance / uncensused STL, target settings"
+    msg = "selftest OK (pure core: wall / wedge classification, wedge band, opposing rows, accepted matching, void + legend-box gating, pure --gate-dir incl. signature / withdrawn acceptance / uncensused STL / foreign-tree path, target settings"
     try:
         import numpy, trimesh, scipy, shapely  # noqa: F401
     except ImportError:

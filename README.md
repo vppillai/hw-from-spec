@@ -4,7 +4,7 @@ A Claude Code skill that takes a board, an enclosure, or both from a written spe
 owner-gated phases, generated-only artefacts, a zero-warning manufacturability bar, blind reviews with
 a record-reading verifier, and a retro that folds every project's learnings back into the skill.
 
-`version 0.10.1` · MIT · `SKILL.md` is the procedure; everything else is reference, template or tool.
+`version 0.10.2` · MIT · `SKILL.md` is the procedure; everything else is reference, template or tool.
 What changed per version: `CHANGELOG.md` (its first section is the current state).
 
 ## Quick start
@@ -14,7 +14,7 @@ git submodule add https://github.com/vppillai/hw-from-spec.git vendor/hw-from-sp
 ln -s vendor/hw-from-spec/scripts scripts
 uv venv .venv
 uv pip install --python .venv/bin/python pyyaml numpy trimesh scipy shapely \
-  rtree networkx mapbox-earcut
+  rtree networkx mapbox-earcut embreex
 vendor/hw-from-spec/smoke/run_smoke.sh
 ```
 
@@ -26,7 +26,7 @@ No project yet, just a bracket STL and a vendor in mind? Clone, one venv, one co
 ```sh
 git clone https://github.com/vppillai/hw-from-spec.git && cd hw-from-spec
 uv venv .venv && uv pip install --python .venv/bin/python pyyaml numpy trimesh scipy \
-  shapely rtree networkx mapbox-earcut
+  shapely rtree networkx mapbox-earcut embreex
 .venv/bin/python scripts/print_dfm.py --list                 # the process rows
 .venv/bin/python scripts/print_dfm.py --process xometry_mjf_pa12 ~/bracket.stl
 ```
@@ -65,7 +65,7 @@ Exit 0 = PASS, 1 = FLAG with one line per rule (measured | limit | where | fix):
 ## Install
 
 Requirements: git, bash ≥ 3.2, Python ≥ 3.11, `uv` (or `python3 -m venv` + `pip`); `pyyaml` for every
-script, `numpy trimesh scipy shapely rtree networkx mapbox-earcut` for the mesh scripts (`matplotlib`
+script, `numpy trimesh scipy shapely rtree networkx mapbox-earcut embreex` for the mesh scripts (`matplotlib`
 for heat-map PNGs). CAD, OpenSCAD, FEA and browser tooling belong to the project (`docs/governance/ENV.md`).
 The skill lives in ONE place inside a project: a submodule at `vendor/hw-from-spec` with a relative
 symlink `scripts -> vendor/hw-from-spec/scripts`; a personal clone under `~/.claude/skills/` is for
@@ -91,7 +91,7 @@ commands in `SKILL.md` that read `project.yaml` are written `.venv/bin/python sc
 ```sh
 uv venv .venv
 uv pip install --python .venv/bin/python pyyaml numpy trimesh scipy shapely \
-  rtree networkx mapbox-earcut
+  rtree networkx mapbox-earcut embreex
 ```
 
 3. Prove the toolchain before reading the spec:

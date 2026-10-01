@@ -109,6 +109,10 @@ owner addition arrives. Budget the bump before promising "full release pipeline"
 - Guard rows: "board md5 = recorded, mesh md5 = recorded" must be OK or the whole check is about another board.
 - Every envelope (connector housings, cage, heat sink, fan, inserts, screws) is a yaml box; the census asserts each is either inside a piece or in
   a declared cut-out.
+- Planar linkages (mech): the body levels are a graph colouring — sweep every body pair over the full cycle, edge = an in-plane crossing, levels =
+  chromatic number (a triangle in the conflict graph → three levels, however the bars are drawn); compute it before drawing a link.
+- Sweep 360 steps of every body PAIR per level with pins / pegs / caps as discs; min distance and overlap area per pair as a CHECKS row (`contacts = 0`).
+  A bar-only sweep or any single-pose render misses touching bosses and a peg grazing a bar.
 
 ## Drawings
 Silhouettes + sections from the STLs of record (trimesh/shapely), dimension lines carry the yaml numbers (so a yaml change moves the number and the
@@ -123,3 +127,9 @@ geometry together), per-piece and assembly STEP (OCP/cadquery), `--check` = md5 
   TDS), insert type / bore / temperature per material (from the insert TDS, `dfm-printed-enclosure.md` §1.1), and the insert temperature/time and
   screw torque `[OWNER: …]` placeholders until the insert + torque coupon measured them.
 - Debug dumps under `out/**/scratch/` (gitignored), never the repo root.
+- The fast engine (`--backend=Manifold` on a snapshot build, `tools.openscad_args`) exports a body in well under a second where the release
+  kernel takes minutes: a 360-step sweep and an animation become affordable as PREVIEWS, and the pool's slots go to the mesh checks and the slicer
+  (`references/agent-ops.md` §8 items 1 / 6). STL exports of record stay on the preset's `engine:` — the one that passes the mesh gates. Two
+  constructs that break watertightness under Manifold: `hull()` of two thin slabs (draw a solid wedge or a bevelled cut instead) and a standing
+  D-shaft as D-extrude + cylinder + ramp unions (many shells — ONE cylinder minus bevelled flat cuts is manifold by construction); the watertight
+  row per STL catches both, which is what the engine rule gates on.
