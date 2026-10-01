@@ -48,11 +48,20 @@ def release_cell(P, text):
     return cell if cell and re.search(P.get("markers.release_regex"), cell, re.I) else None
 
 
-def line_author(path, lineno):
-    """(name, email) of the committed line per `git blame`, or None when uncommitted / no git."""
-    try:
-        out = subprocess.run(["git", "blame", "-L", f"{lineno},{lineno}", "--porcelain", "--", os.path.basename(path)], cwd=os.path.dirname(path), capture_output=True, text=True, check=True).stdout
-    except (subprocess.CalledProcessError, FileNotFoundError):
+def line_author(path, lineno, root=None):
+    """(name, email) of the committed line per `git blame`, or None when uncommitted / no git. Inside a `git archive` copy (the clone gate) there is
+    no .git: `$HWFS_GIT_ROOT` (exported by clone_gate.sh) names the real checkout and the same relative file is blamed there (HEAD content = the archive)."""
+    cands = [(os.path.dirname(path), os.path.basename(path))]
+    g = os.environ.get("HWFS_GIT_ROOT")
+    if g and root:
+        cands.append((g, os.path.relpath(path, root)))
+    out = None
+    for cwd, rel in cands:
+        try:
+            out = subprocess.run(["git", "blame", "-L", f"{lineno},{lineno}", "--porcelain", "--", rel], cwd=cwd, capture_output=True, text=True, check=True).stdout; break
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            continue
+    if out is None:
         return None
     if "Not Committed Yet" in out or out.startswith("0" * 40):
         return None
@@ -69,17 +78,24 @@ def owner_matches(P, author):
     return bool(hit), f"author {author!r} vs project.owner {sorted(names)}"
 
 
-def check_release(P):
-    text = open(P.path("gates"), encoding="utf-8").read() if os.path.exists(P.path("gates")) else ""
+def release_ok(P, text=None):
+    """(released: bool, reason) — the Release cell carries the phrase AND its committed git author is project.owner. release_report's banner reads this."""
+    if text is None:
+        text = open(P.path("gates"), encoding="utf-8").read() if os.path.exists(P.path("gates")) else ""
     cell = release_cell(P, text)
     if not cell:
-        print(f"gate_check: no release phrase in the Release row's approval cell of {P.get('paths.gates')}"); return 1
+        return False, f"no release phrase in the Release row's approval cell of {P.get('paths.gates')}"
     n = next(v[0] for k, v in gate_rows(text).items() if k.lower() == "release")
-    author = line_author(P.path("gates"), n)
+    author = line_author(P.path("gates"), n, P.root)
     if author is None:
-        print(f"gate_check: the release line ({P.get('paths.gates')}:{n}) is not committed, or there is no git history here — the owner commits it; run in the working tree"); return 1
+        return False, f"the release line ({P.get('paths.gates')}:{n}) is not committed, or there is no git history here — the owner commits it; run in the working tree (the clone gate exports HWFS_GIT_ROOT)"
     ok, why = owner_matches(P, author)
-    print(f"gate_check: release line `{cell}` — {why} -> {'OWNER' if ok else 'NOT the owner'}")
+    return ok, f"release line `{cell}` — {why} -> {'OWNER' if ok else 'NOT the owner'}"
+
+
+def check_release(P):
+    ok, why = release_ok(P)
+    print("gate_check:", why)
     return 0 if ok else 1
 
 

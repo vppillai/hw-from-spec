@@ -9,7 +9,7 @@ by their D row, not re-stated.
 ## 1. Purpose and product class
 {{one paragraph: what it is, who uses it, engineering sample / product; D row for the product class}}
 
-Scope {{SCOPE}} (kickoff A0): sections tagged {{ee,both}} / {{mech,both}} are dropped by `scripts/project.py scaffold`; in mech scope the
+Scope {{SCOPE}} (kickoff A0): the sections of the other scopes were dropped by `scripts/project.py scaffold --scope`; in mech scope the
 fit input (a board STEP / mesh or dimensions) is a row in §4 tagged [V] (measured / vendor drawing) or [K] (owner-stated, unverified).
 
 ## 2. Interfaces (connectors, buses, power in / out)

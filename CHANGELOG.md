@@ -40,6 +40,13 @@ and 0d carry the negative cases as permanent checks).
 | F27 | NOTE | evals not executed | FIXED — `evals/run_evals.py` runs `checks:` (8 evals carry them), lists 6 as manual |
 | F28 | NOTE | pure gates trust the JSON | FIXED — every record carries `sig = sha256(canonical body \| VERSION)`; both gates refuse a record that fails it (tampered FLAG→PASS = FAIL) |
 
+### Blind review of 0.9.0 (`docs/reviews/blind_review_0.9.0.md`, one cold EE-user + enforcement-sceptic lens, 10 findings + 6 notes, all reproduced)
+Both MAJORs fixed before the tag: SKILL §0 step 6 was written as bare `scripts/<tool>.py` while the shebang is the system python (now `.venv/bin/python …`
+everywhere a script reads project.yaml); the RELEASED banner flipped on a release cell an agent had committed (now the banner reads `gate_check.release_ok()`
+— cell + git author = owner; the clone gate exports `HWFS_GIT_ROOT` so the archive regen can blame). Also: an unfilled project.yaml says "run `slots`" instead
+of a YAML traceback, `scaffold` fills `{{SCOPE}}`, the smoke prefers the caller's `.venv`, `--apply` folds rows whose name line carries a comment, the DRC
+token is word-start, `kickoff.answers` is read, `--open` rows must name the piece, no `__pycache__` in the submodule. Dispositions per finding in the review file.
+
 ### Added
 - `scripts/gate_check.py`, `scripts/erc_gate.py`, `scripts/step2stl.py`, `evals/run_evals.py`, `templates/design/erc_accept.yaml`,
   `templates/ci/{setup_linux,nightly,release_archive}.sh`; `scripts/project.py` `slots` / `kickoff --check` / `gates-required` + `record_sig` /

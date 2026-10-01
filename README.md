@@ -95,8 +95,9 @@ git submodule add https://github.com/vppillai/hw-from-spec.git vendor/hw-from-sp
 ln -s vendor/hw-from-spec/scripts scripts
 ```
 
-2. ONE venv, the project's `.venv` (gitignored), with pyyaml and the mesh libraries; the smoke and
-every gate use it (a `vendor/hw-from-spec/.venv` is for developing the skill only). Without `uv`:
+2. ONE venv, the project's `.venv` (gitignored), with pyyaml and the mesh libraries; the smoke, the
+evals and every gate use it (a `vendor/hw-from-spec/.venv` is for developing the skill only); Python
+commands in `SKILL.md` that read `project.yaml` are written `.venv/bin/python scripts/<tool>.py`. Without `uv`:
 `python3 -m venv` + `pip install`.
 
 ```sh
@@ -108,6 +109,7 @@ uv pip install --python .venv/bin/python pyyaml numpy trimesh scipy shapely \
 3. Prove the toolchain before reading the spec:
 
 ```sh
+export PYTHONDONTWRITEBYTECODE=1   # no __pycache__ written into the submodule
 for s in scripts/*.py; do .venv/bin/python "$s" --selftest; done
 scripts/clone_gate.sh --selftest
 scripts/adopt_gates.sh --selftest
@@ -138,8 +140,8 @@ cp "$T/design/SOFTWARE_ARCHITECTURE.md" docs/design/     # ee, both
 cp "$T/parts/PROCUREMENT.md" docs/parts/                 # mech, both
 scripts/project.py scaffold --scope "$A0" CLAUDE.md SPEC.md project.yaml \
   docs/governance/*.md design/*.yaml                  # A0=ee | mech | both
-scripts/project.py slots                              # the count to drive to 0
-```
+scripts/project.py slots                              # the count to drive to 0 (fill
+```                                                   #  project.yaml before any reader runs)
 
 5. Follow `SKILL.md` §0: the kickoff questionnaire, ENV record, first records, adopt gates, then
 G0. Scripts find `project.yaml` by walking up from the cwd (or `HWFS_PROJECT=…`); the shell gates

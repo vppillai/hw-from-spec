@@ -405,10 +405,13 @@ def gate(dfm_dirs, open_findings=(), target=None):
         dec = P.path("decisions") if P else None; rows = open_decisions(dec) if dec else {}
         for e in open_findings:
             k, _, did = e.partition("=")
-            if did in rows:
-                opn[k] = f"{did} ({rows[did][:60]})"
-            else:
+            piece = k.rsplit("/", 1)[-1]
+            if did not in rows:
                 bad.append(f"--open {e}: {did!r} is not an OPEN row of {P.get('paths.decisions') if P else 'the decision log (no project.yaml found)'} — a finding stays open only under an OPEN decision")
+            elif piece.lower() not in rows[did].lower():
+                bad.append(f"--open {e}: OPEN row {did} does not name the piece '{piece}' in its topic / proposal — one row per body, not a blanket")
+            else:
+                opn[k] = f"{did} ({rows[did][:60]})"
     targets = (P.cfg.get("print_targets") or {}) if P else {}
     for d in dfm_dirs:
         d = d.rstrip("/"); parent = os.path.dirname(os.path.abspath(d)); tag = target or os.path.basename(parent); census = os.path.join(parent, "census")
@@ -582,9 +585,10 @@ def selftest():
         tag = os.path.basename(d); G = [os.path.join(d, "dfm")]
         assert quiet(G) == 1, "FLAG must fail"
         assert quiet(G, [f"{tag}/root05=D-00"]) == 1, "--open without a project / decision log must fail"
-        os.makedirs(os.path.join(d, "docs", "governance")); open(os.path.join(d, "docs", "governance", "DECISIONS.md"), "w").write("| ID | Date | Status | Topic | P | R |\n|---|---|---|---|---|---|\n| **D-07** | d | **OPEN** | widen the root | p | r |\n| CC-010 | d | APPLIED | x | p | r |\n")
+        os.makedirs(os.path.join(d, "docs", "governance")); open(os.path.join(d, "docs", "governance", "DECISIONS.md"), "w").write("| ID | Date | Status | Topic | P | R |\n|---|---|---|---|---|---|\n| **D-07** | d | **OPEN** | widen the root of root05 | p | r |\n| CC-010 | d | APPLIED | x | p | r |\n")
         open(os.path.join(d, "project.yaml"), "w").write(f"project: {{name: t, scope: mech}}\npaths: {{mech_record: 'stl/*.stl'}}\nprint_targets: {{{tag}: {{dfm_process: jlc_mjf_pa12}}}}\n")
         assert quiet(G, [f"{tag}/root05=WHATEVER"]) == 1 and quiet(G, [f"{tag}/root05=CC-010"]) == 1, "a free string or an APPLIED row is not an OPEN decision"
+        assert quiet(G, [f"{tag}/root13=D-07"]) == 1, "an OPEN row that does not name the piece is not its licence (blind review 0.9.0 N2)"
         assert quiet(G, [f"{tag}/root05=D-07"]) == 0, "an OPEN row names the finding"
         rj = os.path.join(d, "dfm", "root13.json"); e = json.load(open(rj)); e["verdict"] = "FLAG"; json.dump(e, open(rj, "w")); assert quiet(G, [f"{tag}/root05=D-07"]) == 1, "a hand-edited record fails the signature"
         e["verdict"] = "PASS"; json.dump(e, open(rj, "w")); assert quiet(G, [f"{tag}/root05=D-07"]) == 0, "restored body verifies again"

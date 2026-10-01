@@ -47,7 +47,7 @@ mkdir -p "$A"; git archive HEAD | tar -x -C "$A"
 for d in scripts .venv; do
   [[ -e "$ROOT/$d" ]] && { rm -rf "$A/$d"; ln -sfn "$ROOT/$d" "$A/$d"; }
 done
-export HWFS_PROJECT="$A/project.yaml"
+export HWFS_PROJECT="$A/project.yaml" HWFS_GIT_ROOT="$ROOT"   # the archive has no .git: gate_check blames the release line in the real checkout (HEAD = the archive)
 if [[ "$1" == "--regen" ]]; then
   while IFS= read -r c; do [[ -n $c ]] || continue; echo "== regen: $c"; (cd "$A" && eval "$c"); done < <(get gates.regen)
   while IFS= read -r f; do [[ -n $f ]] || continue; mkdir -p "$ROOT/$(dirname "$f")"; cp "$A/$f" "$ROOT/$f"; echo "   copied back: $f"; done < <(get gates.regen_copy_back)

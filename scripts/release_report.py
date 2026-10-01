@@ -24,7 +24,7 @@ import yaml
 
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 from project import Project, split_row  # noqa: E402
-from gate_check import release_cell  # noqa: E402
+from gate_check import release_ok  # noqa: E402
 
 VOLATILE = re.compile(r"^Generated .*$", re.M)
 
@@ -115,9 +115,9 @@ def pkg_for_board(ctx, P, md5=None):
 # ---------------------------------------------------------------- sections
 def section_banner(ctx, P, rep):
     gates = ctx.read(P.get("paths.gates")) or ""
-    released = release_cell(P, gates)                        # the Release row's approval cell only — the phrase anywhere else in the file counts for nothing
-    return [f"**STATUS: {'RELEASED (the owner release line is in the Release row of ' + P.get('paths.gates') + ')' if released else 'DRAFT'}** — {rep.get('title', rep['name'])}. "
-            f"The banner turns RELEASED only when the owner writes the release line into the Release row's approval cell of `{P.get('paths.gates')}` (regex `{P.get('markers.release_regex')}`; its git author is checked by `scripts/gate_check.py --release`); agents never write it.", ""]
+    released, _ = release_ok(P, gates)                      # the Release row's approval cell, committed by project.owner — the phrase anywhere else, or anyone else's commit, counts for nothing
+    return [f"**STATUS: {'RELEASED (the owner release line is in the Release row of ' + P.get('paths.gates') + ', committed by the owner)' if released else 'DRAFT'}** — {rep.get('title', rep['name'])}. "
+            f"The banner turns RELEASED only when the owner writes the release line into the Release row's approval cell of `{P.get('paths.gates')}` (regex `{P.get('markers.release_regex')}`) and commits it as `project.owner` (`scripts/gate_check.py --release`); agents never write it.", ""]
 
 
 def section_identity(ctx, P, rep):
@@ -232,7 +232,9 @@ def selftest():
     d = tempfile.mkdtemp(prefix="hwfs_rr_")
     for sub in ("docs/governance", "kicad/b", "out/fab/2026-01-01_x", "design"):
         os.makedirs(f"{d}/{sub}")
-    open(f"{d}/project.yaml", "w").write("project: {name: t}\npaths: {board: kicad/b/b.kicad_pcb}\nreports:\n  - {name: R, title: test report, sections: [banner, identity, decisions, known_issues, package, traceability, dfm, renders, inventory], extra_sources: [design/case.yaml]}\n")
+    import subprocess
+    subprocess.run(["git", "init", "-q"], cwd=d, check=True)
+    open(f"{d}/project.yaml", "w").write("project: {name: t, owner: {name: owner, email: o@o}}\npaths: {board: kicad/b/b.kicad_pcb}\nreports:\n  - {name: R, title: test report, sections: [banner, identity, decisions, known_issues, package, traceability, dfm, renders, inventory], extra_sources: [design/case.yaml]}\n")
     open(f"{d}/kicad/b/b.kicad_pcb", "wb").write(b"(kicad_pcb)\n\xe9\r\n")   # a non-UTF-8 byte and a CRLF: the md5 is of the raw bytes
     md5 = hashlib.md5(b"(kicad_pcb)\n\xe9\r\n").hexdigest()
     open(f"{d}/out/fab/2026-01-01_x/board_id.txt", "w").write(f"board kicad/b/b.kicad_pcb\nmd5 {md5}\ncommit abc\n")
@@ -252,7 +254,12 @@ def selftest():
     open(f"{d}/docs/governance/GATES.md", "a").write("| **Release** | reports | y | clear to build — owner, 2026-01-02 |\n")
     assert run(P, True) == 1, "a changed input makes the report STALE"
     run(P, False)
-    assert "**STATUS: RELEASED" in open(f"{d}/docs/release/R.md").read()
+    assert "**STATUS: DRAFT" in open(f"{d}/docs/release/R.md").read(), "an UNCOMMITTED release cell stays DRAFT"
+    subprocess.run(["git", "add", "-A"], cwd=d, check=True); subprocess.run(["git", "-c", "user.name=agent", "-c", "user.email=a@a", "commit", "-qm", "agent"], cwd=d, check=True)
+    run(P, False); assert "**STATUS: DRAFT" in open(f"{d}/docs/release/R.md").read(), "a release cell committed by a non-owner stays DRAFT (blind review 0.9.0 F2)"
+    open(f"{d}/docs/governance/GATES.md", "a").write("| **Release** | reports | y | clear to build — owner, 2026-01-03 |\n")
+    subprocess.run(["git", "add", "-A"], cwd=d, check=True); subprocess.run(["git", "-c", "user.name=owner", "-c", "user.email=o@o", "commit", "-qm", "owner"], cwd=d, check=True)
+    run(P, False); assert "**STATUS: RELEASED" in open(f"{d}/docs/release/R.md").read(), "the owner's committed cell releases"
     open(f"{d}/out/fab/2026-01-01_x/board_id.txt", "a").write("")
     os.makedirs(f"{d}/out/fab/2026-01-02_y"); open(f"{d}/out/fab/2026-01-02_y/board_id.txt", "w").write(f"md5 {md5}\n")
     try:
