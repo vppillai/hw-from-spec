@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """scripts/skill_retro.py — the self-improvement step: what did this project learn that the skill does not carry yet? (SKILL.md §13)
 
-  scripts/skill_retro.py [--project DIR|project.yaml] [--skill SKILL_DIR] [--out DIR] [--since YYYY-MM-DD] [--threshold 0.5]
-      Reads the project's docs/governance/LEARNINGS_LOG.md (dated `- YYYY-MM-DD [domain] …` entries) and DECISIONS.md (D / CC rows), classifies
+  scripts/skill_retro.py [--project DIR|project.yaml] [--skill SKILL_DIR] [--out DIR] [--since YYYY-MM-DD] [--threshold 0.5] [--apply]
+      Reads the project's learnings log (paths.learnings; dated bullets `- | * | + YYYY-MM-DD [domain] | (domain) text`, the date may be bold)
+      and decision log (paths.decisions; owner rows by ids.owner_prefix), lists every bullet carrying a date it could NOT parse (§0; nothing is
+      dropped silently), classifies
       every entry against the skill's SKILL.md + references/*.md sections by keyword overlap (rare tokens weigh more): CARRIED (the best section
       shares >= --threshold of the entry's distinctive tokens), PARTIAL (>= half of that), NEW. Marks entries whose text names a failure that cost
       a round (cracked / wrong / premature / stale / reorder …). Compares the project's recorded skill version (`skill.version` or `skill_version`
@@ -11,7 +13,10 @@
       stub per costly NEW entry, the owner decision topics the kickoff questionnaire does not ask yet, and the DFM process-table drift
       (the project's design/dfm_processes.yaml vs templates/design/dfm_processes.yaml: NEW rows, changed numbers, validation evidence the
       template lacks — each a retro item for the template, SKILL.md §8.1 (c)). Read-only on the project; exit 0 (a report), 2 when an input is
-      missing.
+      missing. `--apply` performs the folds that are mechanical and safe, in the SKILL repo only (idempotent, marked `<!-- retro: <project> <date> -->`):
+      one pitfalls line per NEW learning (generalised, evidence pointer kept) under a dated heading in references/pitfalls.md; every NEW process row
+      copied verbatim (its citation comments included, `validated_on: []`) into templates/design/dfm_processes.yaml; a CHANGELOG stub (`## UNRELEASED
+      — retro <project>`) from §4. Everything else (PARTIAL extensions, CHANGED numbers, evals, questionnaire questions) stays a listed candidate.
   scripts/skill_retro.py --selftest
       a fixture project + fixture skill in a temp dir: one carried, one new, one costly entry; version drift; the report file and its sections.
 
@@ -28,7 +33,8 @@ the its our your one two three four five six seven eight nine zero mm cm the a a
 yes non any all out off way row rows line lines file files project skill worked example source record records read write written""".split())
 COSTLY = re.compile(r"crack|failed|failure|wrong|premature|false|lost|stale|re-?order|reprint|broke|silent|invalid|wasted|would have|went out|twice|"
                     r"three times|nobody|missed|blind spot|unprintable|wrecked|orphan|segfault|corrupt", re.I)
-ENTRY = re.compile(r"^\s*-\s+\**(\d{4}-\d{2}-\d{2})\**\s*(?:\[([^\]]+)\])?\**\s*(.*)$")
+ENTRY = re.compile(r"^\s*[-*+]\s+\**(\d{4}-\d{2}-\d{2})\**\s*(?:\[([^\]]+)\]|\(([^)]+)\))?\**:?\s*(.*)$")
+BULLET_WITH_DATE = re.compile(r"^\s*[-*+]\s+.*\b\d{4}-\d{2}-\d{2}\b")
 
 
 def tokens(text):
@@ -40,16 +46,22 @@ def tokens(text):
     return out
 
 
-def read_entries(path, since=None):
-    """Dated learnings: `- YYYY-MM-DD [domain] text …` (continuation lines joined) -> [{date, domain, text, line}]."""
+def read_entries(path, since=None, unparsed=None):
+    """Dated learnings: `- | * | + YYYY-MM-DD [domain] text …` (continuation lines joined) -> [{date, domain, text, line}]. A bullet that carries a
+    date but does not parse is appended to `unparsed` (list of (line_no, text)) — listed in the report, never dropped silently."""
     entries, cur = [], None
     for n, line in enumerate(open(path, encoding="utf-8"), 1):
         m = ENTRY.match(line)
         if m:
             if cur:
                 entries.append(cur)
-            cur = dict(date=m.group(1), domain=(m.group(2) or "").strip(), text=m.group(3).strip(), line=n)
-        elif cur and line.strip() and not line.startswith("#") and not line.lstrip().startswith("- "):
+            cur = dict(date=m.group(1), domain=(m.group(2) or m.group(3) or "").strip(), text=m.group(4).strip(), line=n)
+        elif re.match(r"^\s*[-*+]\s", line) and BULLET_WITH_DATE.match(line):
+            if unparsed is not None:
+                unparsed.append((n, line.strip()[:160]))
+            if cur:
+                entries.append(cur); cur = None
+        elif cur and line.strip() and not line.startswith("#") and not re.match(r"^\s*[-*+]\s", line):
             cur["text"] += " " + line.strip()
         elif cur and (not line.strip() or line.startswith("#")):
             entries.append(cur); cur = None
@@ -144,19 +156,23 @@ def target_file(entry, best):
         return best["file"]
     d = entry.get("domain", "").lower()
     for key, f in (("dfm", "references/dfm-printed-enclosure.md"), ("mjf", "references/dfm-printed-enclosure.md"), ("fdm", "references/dfm-printed-enclosure.md"),
-                   ("case", "references/case-pipeline.md"), ("mesh", "references/case-pipeline.md"), ("fea", "references/fea-stage.md"),
-                   ("layout", "references/pcb-layout-dfm.md"), ("silk", "references/pcb-layout-dfm.md"), ("drc", "references/pcb-layout-dfm.md"),
-                   ("jlc", "references/fab-dfm.md"), ("fab", "references/fab-dfm.md"), ("parts", "references/part-verification.md"),
-                   ("sourcing", "references/part-verification.md"), ("agents", "references/agent-ops.md"), ("git", "references/agent-ops.md"),
-                   ("process", "references/release-and-cut.md"), ("software", "references/software-track.md"), ("tooling", "references/pitfalls.md")):
+                   ("sla", "references/dfm-printed-enclosure.md"), ("print", "references/print-dfm.md"), ("slicer", "references/dfm-printed-enclosure.md"), ("kit", "references/print-kit.md"),
+                   ("cnc", "references/cnc-enclosure.md"), ("case", "references/case-pipeline.md"), ("mesh", "references/case-pipeline.md"), ("fea", "references/fea-stage.md"),
+                   ("layout", "references/pcb-layout-dfm.md"), ("silk", "references/pcb-layout-dfm.md"), ("drc", "references/pcb-layout-dfm.md"), ("route", "references/pcb-layout-dfm.md"),
+                   ("erc", "references/schematic-phase.md"), ("schematic", "references/schematic-phase.md"), ("sch", "references/schematic-phase.md"),
+                   ("fab", "references/fab-dfm.md"), ("order", "references/fab-dfm.md"), ("quote", "references/vendor-review.md"), ("vendor", "references/vendor-review.md"),
+                   ("parts", "references/part-verification.md"), ("sourcing", "references/part-verification.md"), ("hardware", "references/part-verification.md"),
+                   ("agents", "references/agent-ops.md"), ("git", "references/agent-ops.md"), ("review", "references/agent-ops.md"), ("kickoff", "references/kickoff-questionnaire.md"),
+                   ("process", "references/release-and-cut.md"), ("release", "references/release-and-cut.md"), ("cut", "references/release-and-cut.md"), ("docs", "references/release-and-cut.md"),
+                   ("software", "references/software-track.md"), ("test", "references/software-track.md"), ("ci", "references/pitfalls.md"), ("tooling", "references/pitfalls.md")):
         if key in d:
             return f
     return "references/pitfalls.md"
 
 
 def generalise(text):
-    """Move the evidence pointer (' — CC-nnn', ' — D-nn', trailing references) to the end in italics; keep the mechanism."""
-    parts = re.split(r"\s+—\s+(?=(?:CC|D|B)-\d)", text, maxsplit=1)
+    """Move the evidence pointer (' — <ID>-nnn', any prefix) to the end in italics; keep the mechanism."""
+    parts = re.split(r"\s+[—-]\s+(?=[A-Z]+-\d)", text, maxsplit=1)
     return parts[0].strip() if len(parts) == 1 else f"{parts[0].strip()} *(evidence: {parts[1].strip()})*"
 
 
@@ -164,11 +180,11 @@ DFM_NUMERIC = ("wall_min", "wall_reco", "feature_min", "detail_min", "void_min",
                "overhang_max_deg", "bridge_max", "supports", "part_min", "build_max", "legend_land_min", "legend_void_min")
 
 
-def dfm_table_diff(root, skill):
-    """project design/dfm_processes.yaml vs the skill's templates/design/dfm_processes.yaml -> [{kind, row, key, project, template}]:
+def dfm_table_diff(root, skill, table_rel="design/dfm_processes.yaml"):
+    """project <paths.dfm_processes> vs the skill's templates/design/dfm_processes.yaml -> [{kind, row, key, project, template}]:
     NEW row (a vendor / process the template lacks), CHANGED number (a threshold the project moved — with its citation line), VALIDATED (a row
     whose validated_on the project filled while the template's is empty). Either file missing -> [] (nothing to carry)."""
-    pp, tp = os.path.join(root, "design", "dfm_processes.yaml"), os.path.join(skill, "templates", "design", "dfm_processes.yaml")
+    pp, tp = os.path.join(root, table_rel), os.path.join(skill, "templates", "design", "dfm_processes.yaml")
     if not (os.path.exists(pp) and os.path.exists(tp)):
         return []
     try:
@@ -194,7 +210,44 @@ def dfm_table_diff(root, skill):
     return items
 
 
-def build_report(project, root, skill, entries, decisions, sections, idf, threshold, today):
+def row_block(table_path, row):
+    """The verbatim text block of `row` in a process table (its comment lines = the citations), validated_on reset to []."""
+    lines = open(table_path, encoding="utf-8").read().splitlines(); out = []; on = False
+    for ln in lines:
+        if re.match(rf"^  {re.escape(row)}:\s*$", ln):
+            on = True
+        elif on and re.match(r"^  \S", ln):
+            break
+        if on:
+            out.append(re.sub(r"^(\s+validated_on:).*$", r"\1 []        # retro: validated in the source project; the template ships []", ln) if ln.lstrip().startswith("validated_on:") else ln)
+    return "\n".join(out) + ("\n" if out else "")
+
+
+def apply_folds(project, root, skill, new, dfm, today, table_rel):
+    """The safe mechanical folds into the SKILL repo (never the project). Idempotent: a marker per project + date. -> list of what was appended."""
+    done = []; marker = f"<!-- retro: {project} {today} -->"
+    pit = os.path.join(skill, "references", "pitfalls.md")
+    if new and os.path.exists(pit) and marker not in open(pit, encoding="utf-8").read():
+        block = [f"\n## Retro {project} {today} {marker}", ""] + [f"- {generalise(c['text'])} — {c['date']} [{c['domain'] or 'general'}]" for c in new]
+        open(pit, "a", encoding="utf-8").write("\n".join(block) + "\n"); done.append(f"{len(new)} pitfalls line(s) -> references/pitfalls.md")
+    tp = os.path.join(skill, "templates", "design", "dfm_processes.yaml"); pp = os.path.join(root, table_rel)
+    for d in dfm:
+        if d["kind"] == "NEW" and os.path.exists(tp) and not re.search(rf"^  {re.escape(d['row'])}:", open(tp, encoding="utf-8").read(), re.M):
+            blk = row_block(pp, d["row"])
+            if blk:
+                open(tp, "a", encoding="utf-8").write(f"  # retro {project} {today}: row carried from the project table with its citations\n" + blk); done.append(f"process row {d['row']} -> templates/design/dfm_processes.yaml")
+    ch = os.path.join(skill, "CHANGELOG.md")
+    if new and os.path.exists(ch) and marker not in open(ch, encoding="utf-8").read():
+        txt = open(ch, encoding="utf-8").read(); by_file = {}
+        for c in new:
+            by_file.setdefault(target_file(c, c["best"]), []).append(c)
+        stub = [f"## UNRELEASED — retro {project} ({today}) {marker}", "", "### Added (draft from scripts/skill_retro.py --apply; edit before the release)"]
+        stub += [f"- **`{f}`**: " + "; ".join(generalise(c["text"])[:140] for c in cs[:6]) for f, cs in sorted(by_file.items())]
+        head, _, rest = txt.partition("\n\n"); open(ch, "w", encoding="utf-8").write(head + "\n\n" + "\n".join(stub) + "\n\n" + rest); done.append("CHANGELOG stub -> CHANGELOG.md")
+    return done
+
+
+def build_report(project, root, skill, entries, decisions, sections, idf, threshold, today, unparsed=(), table_rel="design/dfm_processes.yaml"):
     classified = []
     for e in entries:
         cls, cov, best = classify(e["text"], sections, idf, threshold)
@@ -213,11 +266,13 @@ def build_report(project, root, skill, entries, decisions, sections, idf, thresh
             unasked.append(dict(d, cov=cov, best=best))
     pv, sv = project_version(root), skill_version(skill)
     L = [f"# Retro — {project} → hw-from-spec ({today})", "",
-         f"Project `{root}`: {len(entries)} dated learnings, {len(decisions)} decision rows ({sum(d['owner'] for d in decisions)} owner rows). "
-         f"Skill `{skill}` at SKILL.md version **{sv}**; the project recorded skill version **{pv or 'none (add `skill: {version: …}` to project.yaml)'}**"
+         f"Project `{os.path.basename(root)}`: {len(entries)} dated learnings, {len(decisions)} decision rows ({sum(d['owner'] for d in decisions)} owner rows). "
+         f"Skill `{os.path.basename(os.path.abspath(skill))}` at SKILL.md version **{sv}**; the project recorded skill version **{pv or 'none (add `skill: {version: …}` to project.yaml)'}**"
          + (" — **drift: the project ran an older skill; every NEW entry below may already be carried by a later version**" if pv and pv != sv else "") + ".",
-         f"Classifier: keyword overlap against {len(sections)} sections (threshold {threshold}); a human folds the candidates — this report is the input to the next CHANGELOG entry, not the entry itself.", "",
-         "## 1. Counts", "", "| CARRIED | PARTIAL | NEW | NEW and costly (a round, an order, a wrong result) |", "|---|---|---|---|",
+         f"Classifier: keyword overlap against {len(sections)} sections (threshold {threshold}); a human folds the candidates — this report is the input to the next CHANGELOG entry, not the entry itself (`--apply` does the mechanical folds: pitfalls lines, NEW process rows, a CHANGELOG stub).", ""]
+    if unparsed:
+        L += [f"## 0. {len(unparsed)} dated bullet(s) the parser could not read (fix the line or the parser; nothing below counts them)", ""] + [f"- line {n}: `{t}`" for n, t in unparsed] + [""]
+    L += ["## 1. Counts", "", "| CARRIED | PARTIAL | NEW | NEW and costly (a round, an order, a wrong result) |", "|---|---|---|---|",
          f"| {len(carried)} | {len(partial)} | {len(new)} | {sum(c['costly'] for c in new)} |", "",
          "## 2. NEW — learnings the skill does not carry yet", "", "| Date | Domain | Learning | Best section (coverage) | Costly |", "|---|---|---|---|---|"]
     for c in new:
@@ -252,7 +307,7 @@ def build_report(project, root, skill, entries, decisions, sections, idf, thresh
         L.append(f"| {d['id']} | {d['date']} | {d['topic'][:120].replace('|', chr(92) + '|')} | {b} |")
     if not os.path.exists(q_path):
         L.append("| — | — | (no references/kickoff-questionnaire.md in this skill) | — |")
-    dfm = dfm_table_diff(root, skill)
+    dfm = dfm_table_diff(root, skill, table_rel)
     L += ["", "## 8. DFM process table drift — `design/dfm_processes.yaml` vs the skill's `templates/design/dfm_processes.yaml` (SKILL.md §8.1 (c))", "",
           "| Kind | Row | Key | Project value (citation) | Template value |", "|---|---|---|---|---|"]
     L += [f"| {d['kind']} | `{d['row']}` | {d['key']} | {d['project'].replace('|', chr(92) + '|')} | {d['template']} |" for d in dfm] or ["| — | — | — | (no drift, or no table on one side) | — |"]
@@ -261,35 +316,43 @@ def build_report(project, root, skill, entries, decisions, sections, idf, thresh
           "1. Fold every NEW row into the reference named in §5 (one generalised line; the source's number stays as the labelled worked example).",
           "2. Extend the PARTIAL sections where the mechanism is missing.", "3. Add one eval per §6 stub; run the smoke; bump SKILL.md `version`; write the CHANGELOG entry from §4.",
           "4. Add a questionnaire question (with a recommended answer) per §7 topic that will recur.", "5. Carry every §8 row into templates/design/dfm_processes.yaml (cited) / references/print-dfm.md.", "6. Blind-review the skill again (two lenses), then tag."]
-    return "\n".join(L) + "\n", dict(new=len(new), partial=len(partial), carried=len(carried), costly=len(costly_new), unasked=len(unasked), drift=bool(pv and pv != sv), dfm=len(dfm))
+    return "\n".join(L) + "\n", dict(new=len(new), partial=len(partial), carried=len(carried), costly=len(costly_new), unasked=len(unasked), drift=bool(pv and pv != sv), dfm=len(dfm), new_rows=new, dfm_rows=dfm)
 
 
-def run(project_arg, skill, out_dir, since, threshold, today=None):
+def run(project_arg, skill, out_dir, since, threshold, today=None, apply=False):
     today = today or datetime.date.today().isoformat()
     root = project_arg or os.getcwd()
     if root.endswith(".yaml"):
         root = os.path.dirname(os.path.abspath(root))
     root = os.path.abspath(root)
     learn = os.path.join(root, "docs", "governance", "LEARNINGS_LOG.md"); dec = os.path.join(root, "docs", "governance", "DECISIONS.md")
+    owner_prefix, table_rel = "D", "design/dfm_processes.yaml"
     if os.path.exists(os.path.join(root, "project.yaml")):
         try:
             sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
             from project import Project
             P = Project(os.path.join(root, "project.yaml")); learn = P.path("learnings") or learn; dec = P.path("decisions") or dec
-        except Exception:  # noqa: BLE001 — fall back to the default layout
-            pass
+            owner_prefix = P.get("ids.owner_prefix") or "D"; table_rel = P.get("paths.dfm_processes") or table_rel
+        except Exception as e:  # noqa: BLE001 — fall back to the default layout, but say so
+            print(f"skill_retro: project.yaml not read ({e}) — default layout and id prefixes used")
     for p in (learn, dec, os.path.join(skill, "SKILL.md")):
         if not os.path.exists(p):
             print(f"skill_retro: MISSING {p}"); return 2
     project = os.path.basename(root)
     sections, idf = index_skill(skill)
-    entries = read_entries(learn, since); decisions = read_decisions(dec)
-    text, counts = build_report(project, root, skill, entries, decisions, sections, idf, threshold, today)
+    unparsed = []
+    entries = read_entries(learn, since, unparsed); decisions = read_decisions(dec, owner_prefix)
+    text, counts = build_report(project, root, skill, entries, decisions, sections, idf, threshold, today, unparsed, table_rel)
     out_dir = out_dir or os.path.join(skill, "docs", "retro"); os.makedirs(out_dir, exist_ok=True)
     out = os.path.join(out_dir, f"{project}_{today}.md")
     open(out, "w", encoding="utf-8").write(text)
+    if unparsed:
+        print(f"skill_retro: WARNING {len(unparsed)} dated bullet(s) not parsed (report §0): " + "; ".join(f"line {n}" for n, _ in unparsed[:10]))
     print(f"{out}: {len(entries)} learnings -> NEW {counts['new']} / PARTIAL {counts['partial']} / CARRIED {counts['carried']}; costly NEW {counts['costly']}; "
-          f"owner topics not in the questionnaire {counts['unasked']}; version drift {counts['drift']}; DFM process-table drift items {counts['dfm']}")
+          f"owner topics not in the questionnaire {counts['unasked']} (owner prefix {owner_prefix}); version drift {counts['drift']}; DFM process-table drift items {counts['dfm']}")
+    if apply:
+        done = apply_folds(project, root, skill, counts["new_rows"], counts["dfm_rows"], today, table_rel)
+        print("skill_retro --apply: " + ("; ".join(done) if done else "nothing to fold (already applied, or no NEW items)"))
     return 0
 
 
@@ -313,7 +376,9 @@ def selftest():
         "- 2026-09-28 [tooling/yaml] PyYAML keeps the LAST of two duplicate keys in a mapping without a word; a duplicate-aware SafeLoader gates every design yaml — commit abc.\n"
         "- 2026-09-28 [fdm/export] mirror([0,0,1]) flips handedness and every asymmetric mark printed backwards, the WRONG way to put a roof on the bed; use rotate([180,0,0])\n"
         "  and check the export against the board-frame mesh — D-84.\n"
-        "- 2026-09-01 [old] an entry before --since that must be filtered out — x.\n")
+        "- 2026-09-01 [old] an entry before --since that must be filtered out — x.\n"
+        "* **2026-09-29** (process) a star bullet with a parenthesised domain and a bold date — CC-300.\n"
+        "- see also the 2026-09-30 note that carries no leading date and must be LISTED as unparsed\n")
     open(os.path.join(proj, "docs", "governance", "DECISIONS.md"), "w").write(
         "| ID | Date | Status | Topic | Proposal | Reason |\n|---|---|---|---|---|---|\n"
         "| **D-85 (owner)** | 2026-09-28 | APPROVED | Hood retention by magnets, standard easy-to-find size | Owner: magnets | words |\n"
@@ -321,13 +386,17 @@ def selftest():
         "| CC-208 | 2026-09-28 | APPLIED | magnet pockets | two pairs | D-85 |\n")
     sections, idf = index_skill(skill)
     assert len(sections) == 4 and "census" in idf, sections   # frontmatter = a (top) section
-    ents = read_entries(os.path.join(proj, "docs", "governance", "LEARNINGS_LOG.md"), since="2026-09-02")
-    assert len(ents) == 3 and ents[2]["text"].endswith("D-84.") and "board-frame" in ents[2]["text"], ents
+    unp = []; ents = read_entries(os.path.join(proj, "docs", "governance", "LEARNINGS_LOG.md"), since="2026-09-02", unparsed=unp)
+    assert len(ents) == 4 and ents[2]["text"].endswith("D-84.") and "board-frame" in ents[2]["text"], ents
+    assert ents[3]["domain"] == "process" and ents[3]["text"].startswith("a star bullet"), ents[3]
+    assert len(unp) == 1 and "LISTED as unparsed" in unp[0][1], unp
+    assert generalise("x — OWN-12.").endswith("*(evidence: OWN-12.)*"), "any id prefix is an evidence pointer"
     c0 = classify(ents[0]["text"], sections, idf, 0.5); c1 = classify(ents[1]["text"], sections, idf, 0.5)
     assert c0[0] == "CARRIED" and c0[2]["heading"] == "Census gate", c0
     assert c1[0] == "NEW", c1
     decs = read_decisions(os.path.join(proj, "docs", "governance", "DECISIONS.md"))
     assert [x["id"] for x in decs] == ["D-85", "D-86", "CC-208"] and decs[0]["owner"] and not decs[2]["owner"], decs
+    assert not any(x["owner"] for x in read_decisions(os.path.join(proj, "docs", "governance", "DECISIONS.md"), "OWN")), "the owner prefix comes from the project"
     assert generalise(ents[0]["text"]).endswith("*(evidence: CC-205.)*") and COSTLY.search(ents[2]["text"]) and not COSTLY.search(ents[0]["text"])
     out = os.path.join(d, "retro")
     assert run(proj, skill, out, "2026-09-02", 0.5, today="2026-09-28") == 0
@@ -342,9 +411,25 @@ def selftest():
     assert kinds == [("CHANGED", "jlc_mjf_pa12", "hole_min"), ("NEW", "acme_sls", "(row)"), ("VALIDATED", "jlc_mjf_pa12", "validated_on")], kinds
     assert "[V] vendor page 2026-01-01" in [d for d in dfm if d["kind"] == "CHANGED"][0]["project"], "the citation line travels with the changed number"
     assert "| NEW | `acme_sls` |" in rep.split("## 8.")[1] and "| CHANGED | `jlc_mjf_pa12` | hole_min |" in rep, "the drift section"
+    assert "## 0. 1 dated bullet(s)" in rep and "LISTED as unparsed" in rep, "unparsed bullets are listed, not dropped"
+    assert d not in rep, "no absolute local path in the report"
     assert dfm_table_diff(os.path.join(d, "nowhere"), skill) == []
     assert run(os.path.join(d, "nowhere"), skill, out, None, 0.5) == 2
-    print("selftest OK (entries + continuation lines, --since, CARRIED / NEW classification, owner rows, costly marker, version drift, report sections, eval stub, unasked decision topics, DFM process-table drift NEW / CHANGED / VALIDATED)")
+    # --apply: pitfalls lines + the NEW process row (validated_on reset) + a CHANGELOG stub, idempotent
+    open(os.path.join(skill, "references", "pitfalls.md"), "w").write("# pitfalls\n- old line\n"); open(os.path.join(skill, "CHANGELOG.md"), "w").write("# CHANGELOG\n\n## 1.0.0\n- x\n")
+    assert run(proj, skill, out, "2026-09-02", 0.5, today="2026-09-28", apply=True) == 0
+    pit = open(os.path.join(skill, "references", "pitfalls.md")).read(); tpl = open(os.path.join(skill, "templates", "design", "dfm_processes.yaml")).read(); ch = open(os.path.join(skill, "CHANGELOG.md")).read()
+    assert "## Retro proj 2026-09-28" in pit and "PyYAML keeps the LAST" in pit and pit.count("- ") >= 3, pit
+    assert "  acme_sls:" in tpl and "    wall_min: 0.8" in tpl and tpl.count("validated_on: []") == 2 and "validated_on: [{" not in tpl, tpl
+    assert ch.startswith("# CHANGELOG\n\n## UNRELEASED — retro proj (2026-09-28)") and "## 1.0.0" in ch, ch
+    assert run(proj, skill, out, "2026-09-02", 0.5, today="2026-09-28", apply=True) == 0
+    assert open(os.path.join(skill, "references", "pitfalls.md")).read() == pit and open(os.path.join(skill, "CHANGELOG.md")).read() == ch and open(os.path.join(skill, "templates", "design", "dfm_processes.yaml")).read() == tpl, "idempotent"
+    # the default --skill resolves through a symlinked scripts/ (review 0.8.0 F4): run the real script via a project-style link
+    import subprocess
+    os.makedirs(os.path.join(proj, "vendor", "hw-from-spec")); os.symlink(os.path.dirname(os.path.realpath(__file__)), os.path.join(proj, "vendor", "hw-from-spec", "scripts")); os.symlink("vendor/hw-from-spec/scripts", os.path.join(proj, "scripts"))
+    r = subprocess.run([sys.executable, "scripts/skill_retro.py", "--out", os.path.join(d, "ro2")], cwd=proj, capture_output=True, text=True)
+    assert r.returncode == 0 and "MISSING" not in r.stdout, (r.stdout, r.stderr)
+    print("selftest OK (entries + continuation lines + star / parenthesised / bold forms, unparsed bullets listed, --since, CARRIED / NEW classification, owner rows by prefix, costly marker, version drift, report sections without absolute paths, eval stub, unasked decision topics, DFM process-table drift NEW / CHANGED / VALIDATED, --apply pitfalls + process row + CHANGELOG stub idempotent, default --skill through a symlinked scripts/)")
     return 0
 
 
@@ -352,10 +437,11 @@ def main(argv):
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--project", help="project root or its project.yaml (default: cwd)"); ap.add_argument("--skill", default=os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
     ap.add_argument("--out"); ap.add_argument("--since"); ap.add_argument("--threshold", type=float, default=0.5); ap.add_argument("--selftest", action="store_true")
+    ap.add_argument("--apply", action="store_true", help="perform the mechanical folds in the skill repo (pitfalls lines, NEW process rows, CHANGELOG stub)")
     a = ap.parse_args(argv[1:])
     if a.selftest:
         return selftest()
-    return run(a.project, a.skill, a.out, a.since, a.threshold)
+    return run(a.project, a.skill, a.out, a.since, a.threshold, apply=a.apply)
 
 
 if __name__ == "__main__":
