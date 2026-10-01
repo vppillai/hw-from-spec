@@ -313,13 +313,13 @@ def opposing_faces(m, pts, nrm, fid, radius, np):
 def census(stl, samples, gate, void_gate, cell, self_hit, red, boxes, box_min, out_json, wedge_band=None, density=None, accepted=None,
            target=None, seed=0):
     np, trimesh = need("numpy", "trimesh", "scipy")[:2]
-    np.random.seed(seed)
+    np.random.seed(seed)                                                                  # trimesh < 4 reads the global seed
     m = trimesh.load(stl, force="mesh")
     area = float(m.area)
     if samples is None:
         samples = max(2000, int(math.ceil(area * (density or 10.0))))
     thr = round(gate - CLUSTER_MARGIN, 3)
-    pts, fid = trimesh.sample.sample_surface(m, samples); nrm = m.face_normals[fid]
+    pts, fid = trimesh.sample.sample_surface(m, samples, seed=seed); nrm = m.face_normals[fid]   # trimesh >= 4 ignores np.random.seed: seed the sampler itself
     th, ang = first_hits(m, pts - nrm * 1e-3, -nrm, nrm, self_hit, np)                  # inward: wall thickness; hit face vs sample face
     gap, oang = first_hits(m, pts + nrm * 1e-3, nrm, nrm, self_hit, np)                 # outward: void width; a re-entrant corner is not a slot
     gap = np.where(np.isnan(oang) | (oang >= WALL_DEG), np.inf, gap)
@@ -440,6 +440,8 @@ def selftest():
         run = lambda m, name, **kw: (m.export(os.path.join(d, name)), census(os.path.join(d, name), None, 1.2, 1.2, 3.0, 0.02, 0.5, None, None, os.path.join(d, name + ".json"), wedge_band=1.5, density=10, **kw))[1]
         assert run(trimesh.creation.box((30.0, 30.0, 1.0)), "plate10.stl") == 1, "a 1.0 plate must FAIL the 1.2 gate"
         r = json.load(open(os.path.join(d, "plate10.stl.json"))); w = [c for c in r["clusters"] if c["cls"] == "wall"]
+        j1 = open(os.path.join(d, "plate10.stl.json")).read(); run(trimesh.creation.box((30.0, 30.0, 1.0)), "plate10.stl")
+        assert open(os.path.join(d, "plate10.stl.json")).read() == j1, "two census runs of one STL must be byte-identical (the sampler is seeded, not only np.random)"
         assert w and abs(w[0]["tmed_wall"] - 1.0) < 0.05 and w[0]["span"] >= 29 and r["fails"] and r["samples"] >= 10 * 1900, r["clusters"][:2]
         assert any("STL of record" not in b for b in pure_gate([d])) and any("FAIL" in b for b in pure_gate([d]))
         prism = trimesh.creation.extrude_triangulation(numpy.array([[0, 0], [20, 0], [0, 20.0]]), numpy.array([[0, 1, 2]]), 30.0)

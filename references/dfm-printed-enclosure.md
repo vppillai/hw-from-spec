@@ -218,6 +218,9 @@ sort triangles, recompute normals from the float32 vertices, 50-byte records —
 calling a hash "the geometry". The census gate, the vendor uploads and the production cut key on that md5. **Beside the md5 record a geometry
 signature** (volume, area, bbox, facet count, rounded to 1e-3): two STLs that differ by a 1e-6 vertex jitter are "different geometry" to
 the md5 and identical to the signature — a flipped verdict on "identical" geometry is diagnosed in one line instead of a mesh diff.
+**Gate watertightness AFTER canonicalisation, on the file that is recorded**: a canonicaliser that drops zero-area slivers can open the mesh (a
+sliver of 1e-5 mm² can be the only face joining two near-coincident vertices) — snap the sliver's closest vertex pair first, then drop what
+collapsed; a body without slivers keeps its bytes. Record the md5 of the canonical file, never of the raw export.
 
 ## 8. FDM at home (a desktop printer with a 0.4 nozzle at 0.20 mm layers, PLA / PETG, Bambu Studio 02.08 as the slicer) — printer-first preset
 A census that passes on paper is not a print: the FDM preset had 0 FAIL and failed as a product (bad finish, supports on visible faces, illegible

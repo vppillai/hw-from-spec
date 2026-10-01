@@ -44,6 +44,8 @@ Everything under `out/<board>/mechanical/case/<preset>/` is generated; `ASSEMBLY
 ## Presets (print targets)
 - `case.presets.<name>.overrides` deep-merged into `case:` BEFORE any module reads the yaml (generator, drawing, FEA all apply the same merge —
   otherwise one of them silently describes the other build). `preset_default` picks the build of record; `--preset fdm` writes to its own folder.
+- `case.presets.<name>.engine` names the geometry engine of the preset's STL exports of record (the one that passes the chain's mesh gates on its
+  bodies); previews use the fast engine regardless (`references/agent-ops.md` §8 item 6).
 - A fix that turns out to be for every build belongs in the base block; prove "no geometry change" by diffing the merged dict key by key, not by
   re-exporting (CGAL STLs are not byte-stable).
 - FDM (owner's printer, target `home_fdm`): printer-first rules as FAIL rows, numbers from `project.yaml print_targets.home_fdm` (worked example,
@@ -113,9 +115,9 @@ Silhouettes + sections from the STLs of record (trimesh/shapely), dimension line
 geometry together), per-piece and assembly STEP (OCP/cadquery), `--check` = md5 sidecar keyed on the STL md5s. Run AFTER the final STL pass.
 
 ## Process rules
-- The render + STL + interference chain runs through the job pool (`references/agent-ops.md` §8): every body regenerated on every run with a fast
-  engine (no STL cache — a previous md5 is a determinism check only; a CGAL-only install keys STL exports on the SCAD text instead and says so in
-  ENV.md), previews for pictures, `--render` for geometry of record; kill it early when an owner addition arrives.
+- The render + STL + interference chain runs through the job pool (`references/agent-ops.md` §8): previews regenerated on every run on the fast
+  engine; STL exports of record on the preset's `engine:` (the one that passes the mesh gates), cached only on the inputs + engine key with the
+  sidecar md5 as a determinism check (`--no-cache` forces); `--render` for geometry of record; kill it early when an owner addition arrives.
 - Never run a case "check" in the working tree if it writes tracked files — the traceability sandbox copies `gen/ + design/` and symlinks the mesh.
 - Print sheets and order sheets list filaments / processes per piece, orientation, supports, post-process, the material rating (UL 94 / Tg from the
   TDS), insert type / bore / temperature per material (from the insert TDS, `dfm-printed-enclosure.md` §1.1), and the insert temperature/time and

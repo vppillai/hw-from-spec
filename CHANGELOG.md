@@ -1,12 +1,13 @@
 # CHANGELOG — hw-from-spec
 
-## Current state (0.10.0) — read this instead of replaying the entries below
+## Current state (0.10.1) — read this instead of replaying the entries below
 
 - **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
   twelve batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
   (zero errors / zero warnings / no waivers, enforced by scripts), generated-only, the decision log, parts tags [V] / [K] / [K owner-read] / [S],
   blind reviews with a record-reading verifier, layout + fab DFM mirror, the case pipeline with two PURE mesh gates (census margin, print-DFM
-  floor), the software track, release cut + production cut + the arrival checklist + spec errata, agent operations with a resource budget, the retro.
+  floor), the software track, release cut + production cut + the arrival checklist + spec errata, agent operations with a measured resource budget
+  (measure → audit → change; previews on the fast engine, geometry of record on the engine that passes the mesh gates; caches as determinism checks), the retro.
 - **Scripts** (`project.yaml`-driven, every one with `--selftest`, exit 0 / 1 / 2): `project.py` (reader, scaffold, slots, kickoff --check,
   gates-required, record, env), `known_issues`, `traceability`, `release_report`, `collect_renders`, `assembly_guide`, `reorg_paths`, `dfm_check`,
   `erc_gate`, `gate_check`, `handoff_header`, `thin_wall_census` (design-margin gate), `print_dfm` (printability-floor gate + `--validate`),
@@ -20,6 +21,39 @@
   agent-ops, pitfalls — one home per rule, the others link.
 - **Checks**: `smoke/run_smoke.sh` (2 min 27 s with the mesh libraries: every selftest, the rule greps, the enforcement negatives, both lints, the evals), 16 evals
   with mechanical checks, `docs/reviews/INDEX.md` and `docs/retro/INDEX.md` list every review and retro.
+
+## 0.10.1 — 2026-10-01 — the source project's measured performance round folded (its PERF analysis of 2026-09-30, decision CC-220, `jobs.sh`, `make record-round`, the perf / tools / cache learnings)
+
+### Changed (corrects 0.10.0's engine rule)
+- **Manifold caveat** (`agent-ops.md` §8 item 6, `case-pipeline.md` Presets + Process rules, `pitfalls.md`): the snapshot's Manifold backend is
+  measured 100–270 × faster per body and byte-deterministic — the speed claim is [V] with the numbers in the worked example — but on the source
+  project's bodies it was NOT rule-equivalent to CGAL (odd edges = not watertight on two bodies in every export format, a membrane, sub-minimum
+  regions under print DFM, a 18.6 mm³ spurious intersection, with bbox and volume equal). Rule: Manifold for every PREVIEW / PNG; STL exports OF
+  RECORD stay on the engine that passes the chain's own mesh gates (watertight, census, print DFM, interference) — an engine is judged by those
+  gates, never by bbox / volume agreement; `engine:` is a per-preset yaml key (`case.presets.<name>.engine`); re-test per OpenSCAD release.
+- **Caching policy refined** (§8 item 3, SKILL §11, CLAUDE.md template): previews regenerate every run; expensive geometry of record may be
+  cached ONLY on an inputs + engine key with the sidecar md5 as a determinism check (canonicalise the mesh, then record; `--no-cache` forces);
+  slicer / PDF / index caches behind `--check`; one locked record round per batch (`make record-round`); regenerating everything once with the
+  caches off is the best audit of the records (it found an unseeded census sampler and a non-watertight body the caches had hidden).
+- **Measurement method** (§8 item 2 — the rules are in the order applied): measure serially in a detached worktree replica (`nice`,
+  `/usr/bin/time -l`), audit redundancy from sidecar diffs per commit (slices on unchanged inputs, byte-identical re-renders, record rounds per
+  day), then change one knob per commit and name each gain correctly; a multithreaded tool counts as a whole slot and still exceeds it — the load
+  gate, not the slot count, is the control that sees it (item 1). Concurrency budget = `host.jobs_max` writing agents (item 5), no fixed number.
+- **Agent-ops block in the project's CLAUDE.md** (`templates/CLAUDE.md` "Agent operations"; §8 item 10): heavy jobs only via the wrapper, at most
+  `{{JOBS_POOL}}` writing agents, one record round per batch, the caching + engine policy, one-knob changes inline — the pool and floor are slots
+  filled from `scripts/project.py env`.
+- `agent-ops.md` carries its one fenced worked example (the measured round: panics at load ~40 from stacked cores-2 pools, chain / plate / round
+  timings, 24 of 93 slices and 755 of 1119 kernel runs redundant, the engine test's gate failures, the two latent record defects, the steady state).
+
+### Fixed (the skill shipped one of the pitfalls)
+- `scripts/thin_wall_census.py` and `scripts/thin_wall_check.py` seeded only `np.random`; trimesh ≥ 4 ignores it, so every census was one random
+  draw. The sampler takes `seed=` now and the census selftest asserts two runs of one STL are byte-identical. <!-- voice: ok -->
+- `dfm-printed-enclosure.md` §7.2: gate watertightness AFTER canonicalisation, on the recorded file (a sliver-dropping canonicaliser can open a mesh;
+  snap the closest vertex pair first, then drop what collapsed).
+
+### Added
+- Six pitfalls lines (Manifold rule-equivalence, the cache key + canonicalise-then-record, regenerate-everything as the records audit, the trimesh
+  seed, the sliver canonicaliser, stacked pools + multithreaded tools under a process-count pool, the .3mf UUID churn named as a records fix).
 
 ## 0.10.0 — 2026-09-30 — the fifth retro folded, the skill audited and made generic
 

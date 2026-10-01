@@ -112,7 +112,7 @@ def census(stl, samples, thin, red, self_hit, cell, out_json):
     m = trimesh.load(stl, force="mesh")
     print(f"{stl}: faces {len(m.faces)} watertight {m.is_watertight} bbox {np.round(m.bounds, 2).tolist()} volume {m.volume / 1000:.2f} cm3 "
           f"bodies {len(m.split(only_watertight=False))}")
-    pts, fid = trimesh.sample.sample_surface(m, samples); nrm = m.face_normals[fid]; orig = pts - nrm * 1e-3
+    pts, fid = trimesh.sample.sample_surface(m, samples, seed=0); nrm = m.face_normals[fid]; orig = pts - nrm * 1e-3   # trimesh >= 4 ignores np.random.seed
     loc, idx_ray, _ = m.ray.intersects_location(orig, -nrm, multiple_hits=True)
     d = np.linalg.norm(loc - orig[idx_ray], axis=1)
     per_ray = {}

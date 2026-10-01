@@ -1,6 +1,6 @@
 ---
 name: hw-from-spec
-version: 0.10.0
+version: 0.10.1
 description: Run a hardware project (a PCB, a printed or CNC enclosure, or both — scope chosen at kickoff; contract fab such as JLCPCB) from a written specification to a production cut with an owner-gated, generated-only, blind-reviewed workflow — a kickoff questionnaire that asks every owner decision up front with recommended answers, a zero-warning manufacturability bar, and a retro that folds each project's learnings back into the skill. Use this whenever someone starts a board or enclosure project from a spec, asks to set up gates, a decision log, generators, part verification, a fab DFM mirror, a case pipeline, FEA, blind reviews, a release report or a production cut for one, or resumes such a project, or wants the skill improved from a finished project — even if they only say "new KiCad board", "order this at JLC", "review the layout", "cut the release" or "what did we learn".
 ---
 
@@ -412,10 +412,11 @@ with the measured state, never from memory; kill a long render early when an own
 Memory holds resume pointers and owner feedback, never project facts; a numbered PAUSE POINT carries an owner list (owner-only items, struck
 through with date + record as they close) and a Resume line; an owner-only item is listed, never attempted, and a chat delegation is quoted in the
 decision row before the named actions are done (`references/agent-ops.md` §7). **Resources**: every heavy command runs through the one job pool
-`scripts/jobs.sh` (sized from the host, memory / load gate, wall + RSS logged), regeneration is incremental by md5, the record round is serialized
-under one lock, previews not renders for pictures, OpenSCAD's Manifold backend (the fast geometry kernel of the snapshot builds) for geometry, and
-a one-value tweak is done inline rather than delegated; the pool log is `${TMPDIR:-/tmp}/hwfs_jobs/jobs.log` or `jobs.sh --log FILE`
-(`references/agent-ops.md` §8).
+`scripts/jobs.sh` (sized from the host, memory / load gate — the control that also sees a multithreaded tool —, wall + RSS logged), measure
+serially and audit the sidecars before changing anything, previews regenerate every run on the fast engine while STL exports of record stay on
+the engine that passes the mesh gates (cached only on an inputs + engine key with the sidecar md5 as a determinism check), slicer / PDF / index
+caches live behind `--check`, one locked record round per batch, and a one-value tweak is done inline rather than delegated; the pool log is
+`${TMPDIR:-/tmp}/hwfs_jobs/jobs.log` or `jobs.sh --log FILE` (`references/agent-ops.md` §8; the project's CLAUDE.md "Agent operations" block).
 
 ### 11.1 Resume (after a crash, a sleep, a new session)
 
@@ -474,7 +475,7 @@ row. The classifier is a keyword matcher: the report is the input to the change;
 | bring-up tool, criteria, codes | `references/software-track.md` |
 | reports, collateral, tag, cut yaml, one-round chain, assembly guide, re-layout | `references/release-and-cut.md` |
 | the fab's review mail after the order, Replace File boundaries, quote-page DFM mechanics | `references/vendor-review.md` |
-| orchestration, git, reviews, read-only checkers, memory / pause points, the resource budget (job pool, incremental md5, serialized record round, Manifold, preview vs render, inline vs agent) | `references/agent-ops.md`, `scripts/jobs.sh`, `templates/ci/Makefile` |
+| orchestration, git, reviews, read-only checkers, memory / pause points, the resource budget (job pool, measure-audit-change, caching + engine policy, serialized record round, preview vs render, inline vs agent) | `references/agent-ops.md`, `scripts/jobs.sh`, `templates/ci/Makefile` |
 | every recorded pitfall, one line each | `references/pitfalls.md` |
 | the retro after a cut: what the project learned that the skill lacks | `scripts/skill_retro.py`, `docs/retro/` |
 | instantiating a workflow | `workflows/README.md` |
