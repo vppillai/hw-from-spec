@@ -206,7 +206,7 @@ def slots(paths, root="."):
     return out
 
 
-KEY_RE = re.compile(r"`((?:project|kickoff|board|print_targets|fab_dfm)\.[A-Za-z0-9_.*<>{}/ -]+?)`")
+KEY_RE = re.compile(r"`((?:project|kickoff|board|print_targets|fab_dfm)\.[A-Za-z0-9_.*<>{}/ -]+?)`(?:\s*\(((?:ee|mech|both)(?:\s*/\s*(?:ee|mech|both))*)\))?")   # `key` (ee / both) = the key belongs to those scopes
 
 
 def kickoff_check(P):
@@ -241,7 +241,9 @@ def kickoff_check(P):
             bad.append(f"{q}: no D row id in `{drow}`")
         elif dec_ids and not any(i in dec_ids for i in ids):
             bad.append(f"{q}: D row {ids[0]} is not in {P.get('paths.decisions')}")
-        for key in KEY_RE.findall(written):
+        for key, scopes in KEY_RE.findall(written):
+            if scopes and P.scope() not in [x.strip() for x in scopes.split("/")]:
+                continue
             key = key.split(":")[0].strip().replace("print_targets.<t>", "print_targets.*")
             if key.startswith("print_targets.*") or key.startswith("print_targets.{{"):
                 sub = key.split(".", 2)[2] if key.count(".") >= 2 else None
@@ -303,9 +305,11 @@ def selftest():
     os.makedirs(f"{d}/docs/governance"); open(f"{d}/docs/governance/KICKOFF_ANSWERS.md", "w").write(
         "| Q | Question | Answer | Rec. | D row | Written to |\n|---|---|---|---|---|---|\n| A1 | product class | sample | yes | D-02 | `kickoff.product_class`; SPEC §1 |\n"
         "| B1 | layers | 4 | yes | D-03 | `board.layers`, `board.thickness_mm` |\n| C2 | retention | n/a (scope) | - | - | `kickoff.enclosure.retention` |\n"
-        "| C8a | rows | jlc | yes | D-{{nn}} | `print_targets.<t>.dfm_process` |\n| D1 | bar | {{zero}} | yes | D-04 | `fab_dfm.bar` |\n")
+        "| C8a | rows | jlc | yes | D-{{nn}} | `print_targets.<t>.dfm_process` |\n| D1 | bar | {{zero}} | yes | D-04 | `fab_dfm.bar` |\n"
+        "| D2 | waived | nothing | yes | D-02 | `print_targets.*.accepted` (mech / both), `fab_dfm.bar` (ee / both) |\n")
     P.cfg.update(kickoff={"answers": "docs/governance/KICKOFF_ANSWERS.md", "product_class": "sample"}, board={"layers": 4}, print_targets={"t": {"dfm_process": "x"}}, fab_dfm={"bar": {"open": 0}})
     P.cfg["paths"]["decisions"] = "D.md"; open(f"{d}/D.md", "a").write("| **D-02** | d | **APPROVED** | a | p | r |\n| **D-03** | d | **APPROVED** | b | p | r |\n")
+    P.cfg["project"]["scope"] = "ee"
     bad = kickoff_check(P); assert len(bad) == 3 and "board.thickness_mm" in bad[0] and bad[1].startswith("C8a: no D row") and bad[2].startswith("D1: answer still a slot"), bad
     P.cfg["board"]["thickness_mm"] = 1.6; open(f"{d}/docs/governance/KICKOFF_ANSWERS.md", "a").write("| E1 | rounds | one | yes | D-99 | `kickoff.verification.rounds` |\n")
     bad = kickoff_check(P); assert any("D-99 is not in" in b for b in bad) and any("kickoff.verification.rounds" in b for b in bad), bad

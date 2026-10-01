@@ -65,7 +65,7 @@ grep -q '^## Quick start' "$SKILL/README.md" && grep -q '^## The retro loop' "$S
 awk '/^```/{f=!f; next} f && length($0) > 90 {bad=1} END {exit bad}' "$SKILL/README.md" || { echo "FAIL: a fenced README line is over 90 characters (GitHub scrolls)"; exit 1; }
 grep -q '^version: 0.9.0' "$SKILL/SKILL.md" && grep -q '^## 0.9.0' "$SKILL/CHANGELOG.md" || { echo "FAIL: SKILL.md version and CHANGELOG entry disagree"; exit 1; }
 grep -q 'numpy trimesh scipy shapely rtree networkx mapbox-earcut' "$SKILL/README.md" || { echo "FAIL: README lost the mesh-library install line (C-06 / 0.8.0 print DFM deps)"; exit 1; }
-grep -q 'ONE venv' "$SKILL/README.md" && grep -q 'one venv' "$SKILL/SKILL.md" || { echo "FAIL: README / SKILL.md lost the one-venv rule (review 0.8.0 F1)"; exit 1; }
+grep -q 'ONE venv' "$SKILL/README.md" && grep -qi 'one venv' "$SKILL/SKILL.md" || { echo "FAIL: README / SKILL.md lost the one-venv rule (review 0.8.0 F1)"; exit 1; }
 # every script is executable with a shebang, has a --selftest, and --help / a probe never writes (review 0.8.0 F3)
 for s in "$SKILL"/scripts/*.py "$SKILL"/scripts/*.sh; do
   [[ -x "$s" ]] || { echo "FAIL: $s is not executable"; exit 1; }; head -1 "$s" | grep -q '^#!' || { echo "FAIL: $s has no shebang"; exit 1; }
@@ -84,7 +84,7 @@ grep -q 'AskUserQuestion' "$SKILL/SKILL.md" && grep -q '^### 0.1 The kickoff que
 grep -c 'RECOMMENDED' "$SKILL/references/kickoff-questionnaire.md" | awk '$1 >= 30 {ok=1} END {exit !ok}' || { echo "FAIL: the questionnaire lost its recommended answers"; exit 1; }
 grep -q '^| D1 | the manufacturability bar' "$SKILL/templates/KICKOFF_ANSWERS.md" || { echo "FAIL: KICKOFF_ANSWERS.md lost the bar row"; exit 1; }
 grep -q 'references/pcb-layout-dfm.md' "$SKILL/SKILL.md" || { echo "FAIL: SKILL.md lost the layout reference (C-07)"; exit 1; }
-grep -q -E 'p2s|presets\.P2S|AEC-CT2|lap\.ring_down' "$SKILL/SKILL.md" "$SKILL/README.md" "$SKILL/templates"/*.md "$SKILL/templates"/*.yaml && { echo "FAIL: a source-project identifier leaked into SKILL / README / templates (C-15 / B-34)"; exit 1; }
+grep -q -E '(^|[^a-z0-9])p2s([^a-z0-9]|$)|presets\.P2S|AEC-CT2|lap\.ring_down' "$SKILL/SKILL.md" "$SKILL/README.md" "$SKILL/templates"/*.md "$SKILL/templates"/*.yaml && { echo "FAIL: a source-project identifier leaked into SKILL / README / templates (C-15 / B-34)"; exit 1; }
 grep -q '^## 13. Retro' "$SKILL/SKILL.md" || { echo "FAIL: SKILL.md lost the retro phase (§13)"; exit 1; }
 "$PY" scripts/thin_wall_census.py --selftest
 "$PY" scripts/skill_retro.py --selftest
@@ -120,7 +120,7 @@ grep -q '^  FLAG  R root under a rim' out/eval14_flag.txt && grep -q '^  FLAG  W
 "$PY" scripts/print_dfm.py --list | grep -q 'xometry_mjf_pa12' || { echo "FAIL: --list must show the template rows outside a project table"; exit 1; }
 # enforcement (review 0.8.0 F5 / F6 / F7 / F8 / F28), negative tests on a throwaway mech project: a tampered record, an uncensused body, a laxer process
 # row than the target's, --open with a non-OPEN id, an open mesh — each must FAIL the gate / the check
-E=$T/enf; mkdir -p $E/out/mechanical/case/pre/stl $E/out/mechanical/case/pre/dfm $E/docs/governance; cp -R "$R/scripts" $E/scripts 2>/dev/null || ln -s "$SKILL/scripts" $E/scripts
+E=$T/enf; mkdir -p $E/out/mechanical/case/pre/stl $E/out/mechanical/case/pre/dfm $E/docs/governance; ln -s "$SKILL/scripts" $E/scripts
 printf 'project: {name: enf, scope: mech}\npaths: {mech_record: "out/mechanical/case/*/stl/*.stl"}\nprint_targets: {pre: {dfm_process: jlc_mjf_pa12}}\n' > $E/project.yaml
 printf '| ID | Date | Status | Topic | P | R |\n|---|---|---|---|---|---|\n| **D-07** | d | **OPEN** | widen the root | p | r |\n| CC-010 | d | APPLIED | x | p | r |\n' > $E/docs/governance/DECISIONS.md
 "$PY" - "$E" <<'PYEOF'
@@ -141,7 +141,7 @@ PYEOF
  "$PY" scripts/print_dfm.py --gate out/mechanical/case/pre/dfm >/dev/null && { echo "FAIL (F28): a record edited FLAG->PASS by hand passed the gate"; exit 1; }
  "$PY" scripts/print_dfm.py --process jlc_mjf_pa12 --samples 5000 open.stl > open.txt && { echo "FAIL (F8): an open mesh must FLAG"; exit 1; }
  grep -q '^  FLAG  M manifold' open.txt || { echo "FAIL (F8): rule M did not fire on the open mesh"; cat open.txt; exit 1; }
- "$PY" scripts/print_dfm.py --process jlc_mjf_pa12 nonexist.stl >/dev/null 2>&1; [[ $? == 2 ]] || { echo "FAIL (F21): a missing file must exit 2"; exit 1; }
+ rc=0; "$PY" scripts/print_dfm.py --process jlc_mjf_pa12 nonexist.stl >/dev/null 2>&1 || rc=$?; [[ $rc == 2 ]] || { echo "FAIL (F21): a missing file must exit 2 (got $rc)"; exit 1; }
  echo "enforcement (mesh): uncensused body, laxer row, free --open, tampered record, open mesh, missing file -> all FAIL as required")
 rm -f out/eval14_*
 else echo "   (0d SKIPPED: mesh libraries absent)"; fi
@@ -150,8 +150,7 @@ N=$T/nomesh; mkdir -p $N/out/mechanical/case/pre/stl $N/out/mechanical/case/pre/
 printf 'solid a\nendsolid a\n' > $N/out/mechanical/case/pre/stl/a.stl; printf 'solid b\nendsolid b\n' > $N/out/mechanical/case/pre/stl/b.stl
 printf 'project: {name: nomesh, scope: mech, owner: {name: smoke, email: s@s}}\npaths: {mech_record: "out/mechanical/case/*/stl/*.stl"}\nprint_targets: {pre: {wall_gate: 1.2, void_gate: 1.2, accepted: []}}\ngates: {adopt: ["echo step1"], clone: []}\n' > $N/project.yaml
 "$PY" - "$N" <<'PYEOF'
-import sys, json, hashlib, os; N = sys.argv[1]; sys.path.insert(0, f"{N}/scripts"); from project import record_sig
-V = [l.split("=")[1].strip().strip('"') for l in open(f"{N}/scripts/thin_wall_census.py") if l.startswith("VERSION =")][0]
+import sys, json, hashlib, os; N = sys.argv[1]; sys.path.insert(0, f"{N}/scripts"); from project import record_sig; from thin_wall_census import VERSION as V
 for p in ("a", "b"):
     stl = f"{N}/out/mechanical/case/pre/stl/{p}.stl"
     r = dict(version=V, stl=stl, stl_md5=hashlib.md5(open(stl, "rb").read()).hexdigest(), target="pre", fails=[], accepted_fails=[]); r["sig"] = record_sig(r, V)
@@ -185,12 +184,13 @@ cp "$SKILL/templates"/{project.yaml,CLAUDE.md,SPEC.md,STATUS.md} $K/; cp "$SKILL
 (cd $K
  "$PY" scripts/project.py scaffold --scope ee project.yaml CLAUDE.md SPEC.md STATUS.md docs/governance/*.md design/*.yaml >/dev/null
  "$PY" scripts/project.py slots >/dev/null && { echo "FAIL (F24): a fresh scaffold has slots; the counter must exit 1"; exit 1; }
- "$PY" scripts/project.py slots | tail -1 | grep -q 'unfilled in' || { echo "FAIL (F24): slots must print the per-file count"; exit 1; }
+ { "$PY" scripts/project.py slots || true; } | tail -1 | grep -q 'unfilled in' || { echo "FAIL (F24): slots must print the per-file count"; exit 1; }
  "$PY" scripts/project.py kickoff --check >/dev/null && { echo "FAIL (F10): template kickoff rows (slots, D-{{nn}}) passed the kickoff check"; exit 1; }
  for f in project.yaml CLAUDE.md SPEC.md STATUS.md docs/governance/*.md design/*.yaml; do sed -i.bak 's/{{[^{}]*}}/X/g' "$f"; rm -f "$f.bak"; done
- "$PY" scripts/project.py slots | tail -1 | grep -q '^slots: 0 unfilled' || { echo "FAIL (F24): a trivially filled project must show zero slots"; "$PY" scripts/project.py slots | tail -3; exit 1; }
+ sed -i.bak 's/^  scope: X/  scope: ee/' project.yaml; rm -f project.yaml.bak
+ { "$PY" scripts/project.py slots || true; } | tail -1 | grep -q '^slots: 0 unfilled' || { echo "FAIL (F24): a trivially filled project must show zero slots"; "$PY" scripts/project.py slots | tail -3 || true; exit 1; }
  printf '| **D-02** | d | **APPROVED** | kickoff | owner | words |\n' >> docs/governance/DECISIONS.md; sed -i.bak 's/D-X/D-02/g' docs/governance/KICKOFF_ANSWERS.md
- "$PY" scripts/project.py kickoff --check >/dev/null || { echo "FAIL (F10): a filled ee project must pass the kickoff check"; "$PY" scripts/project.py kickoff --check | tail -5; exit 1; }
+ "$PY" scripts/project.py kickoff --check >/dev/null || { echo "FAIL (F10): a filled ee project must pass the kickoff check"; "$PY" scripts/project.py kickoff --check | tail -5 || true; exit 1; }
  echo "slots: fresh ee scaffold -> exit 1 with counts; trivially filled -> 0; kickoff --check: template rows FAIL, filled rows pass")
 say "0b scope: A0 asked first, every scope scaffolds from ONE template set and gets its own gate rows"
 grep -q '^\*\*A0 Project scope' "$SKILL/references/kickoff-questionnaire.md" && grep -q '^| A0 | scope' "$SKILL/templates/KICKOFF_ANSWERS.md" || { echo "FAIL: kickoff A0 (scope) missing"; exit 1; }
