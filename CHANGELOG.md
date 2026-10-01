@@ -1,5 +1,12 @@
 # CHANGELOG — hw-from-spec
 
+## 0.9.2 — 2026-09-30 — self-documenting coupons
+
+### Added
+- Owner rule: every test coupon and bracket variant carries its identifier and the value it tests as printed text on the part (ironed top face or
+  face-up plate, legibility thresholds FAIL-gated, generated from the same yaml value) — `references/dfm-printed-enclosure.md` coupon block,
+  `references/print-kit.md` §4, one pitfall line.
+
 ## 0.9.1 — 2026-09-30 — print DFM rule set mirrored from the source project (its M-B blind review + CC-215 / CC-217; `scripts/print_dfm.py` VERSION 0.9.1)
 
 The source project's `gen/print_dfm.py` (rule set 2026-09-30f) was revised in parallel with 0.9.0 after a blind review tested the tool against

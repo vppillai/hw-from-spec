@@ -64,7 +64,7 @@ grep -q '^fab_dfm:' "$SKILL/templates/project.yaml" || { echo "FAIL: templates/p
 grep -q 'accepted_requires' "$SKILL/templates/project.yaml" || { echo "FAIL: templates/project.yaml lost the DFM bar"; exit 1; }
 grep -q '^## Quick start' "$SKILL/README.md" && grep -q '^## The retro loop' "$SKILL/README.md" && grep -q '^## The kickoff questionnaire' "$SKILL/README.md" || { echo "FAIL: README lost a required section"; exit 1; }
 awk '/^```/{f=!f; next} f && length($0) > 90 {bad=1} END {exit bad}' "$SKILL/README.md" || { echo "FAIL: a fenced README line is over 90 characters (GitHub scrolls)"; exit 1; }
-grep -q '^version: 0.9.1' "$SKILL/SKILL.md" && grep -q '^## 0.9.1' "$SKILL/CHANGELOG.md" || { echo "FAIL: SKILL.md version and CHANGELOG entry disagree"; exit 1; }
+grep -q '^version: 0.9.2' "$SKILL/SKILL.md" && grep -q '^## 0.9.2' "$SKILL/CHANGELOG.md" || { echo "FAIL: SKILL.md version and CHANGELOG entry disagree"; exit 1; }
 grep -q 'numpy trimesh scipy shapely rtree networkx mapbox-earcut' "$SKILL/README.md" || { echo "FAIL: README lost the mesh-library install line (C-06 / 0.8.0 print DFM deps)"; exit 1; }
 grep -q 'ONE venv' "$SKILL/README.md" && grep -qi 'one venv' "$SKILL/SKILL.md" || { echo "FAIL: README / SKILL.md lost the one-venv rule (review 0.8.0 F1)"; exit 1; }
 # every script is executable with a shebang, has a --selftest, and --help / a probe never writes (review 0.8.0 F3)
