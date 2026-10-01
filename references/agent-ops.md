@@ -81,12 +81,12 @@
   (copy them into a fresh directory and run the CLI there).
 
 ## 5. Background jobs and the machine
-- **The per-call wait ceiling is the harness's Bash timeout: 600 s per tool call (Claude Code, platform limit; the workflow templates' "≤ 8 min"
-  waits are the same limit with margin).** Stated here once; every other mention points here. Block in-process, `until ! kill -0 $pid; do sleep
-  20; done` per ≤ 600 s call, repeat, continue in the same turn.
-- Redirected Python block-buffers: `python -u` or judge by `kill -0` + output files. Long chains: `python -u … > log 2>&1; echo EXIT $? >> log`
-  per job, several jobs in parallel when they do not share memory ceilings (never two FEA pools), then one foreground
-  `until grep -q '^EXIT' a.log && grep -q '^EXIT' b.log; do sleep 30; done` per ≤ 600 s call; a non-zero EXIT line stops the chain.
+- **Long chains run in the BACKGROUND and are waited on by the harness, never by a foreground loop.** Every job writes its own log and ends it
+  with `echo EXIT $? >> log` (`python -u` — a redirected Python block-buffers); start the chain with the harness's background-run option (or
+  `nohup … &`) and wait on the `^EXIT` line with the harness's completion notification or its monitor primitive. A foreground `sleep` / `until`
+  loop is refused by current harnesses and, where a harness still allows it, is bounded by its per-call timeout (600 s per tool call in Claude
+  Code) — stated here once, every other mention points here. Several jobs at once only through the pool (§8 item 1; never two FEA pools); a
+  non-zero EXIT line stops the chain.
 - Keep the machine awake (`caffeinate -dimsu` in a background shell) while agents run overnight; agents die on sleep and on API 500s — resume by
   message with the MEASURED state (board md5, counts, last commit), never from memory.
 - **The machine can panic under load** (two macOS kernel watchdog panics on one review day: slicer + mesh checks + several agents): commit small
@@ -134,7 +134,10 @@ the ENV.md row `scripts/project.py env` prints on day 1. The rules are in the or
    (the Makefile pattern `templates/ci/Makefile` wires the targets through it). A generator's own pool (`--jobs`) equals the host pool and nests
    inside ONE slot (a chain holds one slot; a job started inside a held slot passes straight through). **A multithreaded tool (the CAD CLI, the
    slicer, the geometry kernel's parallel passes) counts as a whole slot and still exceeds it**: the load gate, not the slot count, is the control
-   that sees it — one CLI selftest or four gate steps can push the 1-min load past twice the core count on its own.
+   that sees it — one CLI selftest or four gate steps can push the 1-min load past twice the core count on its own. **Mesh checks (the census,
+   print DFM) and offscreen renders are heavy jobs too**: through the pool, one slot each, never beside a CAD export outside it — a census with
+   trimesh's default rtree ray engine holds rays × candidate triangles and needs tens of GB for a large body at the census density (one took a
+   24 GB host down); `embreex` in the mesh stack gives trimesh the Embree engine and the same census runs in seconds under 1 GB (`pitfalls.md`).
 2. **Measure first, then audit, then change.** (a) Measure serially: a detached worktree replica (`git worktree add --detach`), one stage at a
    time under `nice` with `/usr/bin/time -l` (macOS; `-v` on Linux) and `uptime`, wall + peak RSS per chain, per plate, per record-round step, per
    gate step — the wrapper writes the same two numbers into the pool log on every job, so the retro sees where the time goes before anyone
@@ -172,7 +175,9 @@ the ENV.md row `scripts/project.py env` prints on day 1. The rules are in the or
    per-preset yaml key (`case.presets.<name>.engine`, `case-pipeline.md`); the case pipeline detects the snapshot binary (`tools.geometry_cli_snapshot`,
    or `openscad --help | grep -q backend`) and passes the flag for previews. Re-test Manifold per OpenSCAD release (one full regeneration through
    the gates, item 3); when a release passes, the switch is one record round in one commit — "engine switch, md5s re-baselined" — never mixed with
-   a geometry change (tessellation differs, every STL md5 moves). `-q` always; per-body exports, never a whole-assembly re-render.
+   a geometry change (tessellation differs, every STL md5 moves). `-q` always; per-body exports, never a whole-assembly re-render. With the
+   fast engine the CAD export is not the slow step of a chain — a kinematic sweep (hundreds of poses) or an animation becomes affordable as
+   previews — and the pool's slots (item 1) go to the mesh checks and the slicer.
 7. **Preview, not render, for pictures**: concept / review / kit `faces/` PNGs use the OpenCSG preview (`openscad -o x.png --preview`, seconds);
    `--render` (the full kernel) only for geometry of record — STL exports and gates — and for a picture whose rule needs the booleans resolved
    (a mark coupon's recess floor, a section view): the render set says which it is per image.

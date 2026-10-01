@@ -35,6 +35,14 @@ record_ids_as_citations:
   - '\b(SILK_R\d|CASE_MJF_DFM_|TRAY_ISSUE|ORDER_STATUS|OPUS_|JLC_RULES|JLC_QUOTES|REPO_CLEANUP|FEET_MCMASTER|CASE_V3_NOTES)'
   - '\bround 6[a-z]\b'
   - '\baudit #\d\b'
+other_source_projects:                             # later retros' projects: their names, part labels and local paths stay in docs/retro/ and CHANGELOG.md
+  - '(?i)\bwankel\b'
+  - '(?i)\bbeest\b'
+  - '(?i)strandbeest'
+  - '(?i)\bjansen\b'
+  - '\bretro (wankel|beest)\b'
+  - '\b[a-z]–[a-z]–T\d\b'                         # a linkage's bar labels (c–k–T1)
+  - '\bJ\d–J\d\b'                                 # joint labels
 owner_and_machine:
   - '(?i)vysakh'
   - '(?i)vpillai'
