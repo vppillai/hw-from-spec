@@ -19,8 +19,11 @@
       Samples default to --samples-per-mm2 x surface area (a fixed count under-samples a large part). Prints the rows, writes --json, exit 1 on
       any unaccepted FAIL. Needs numpy + trimesh + scipy at run time.
   scripts/thin_wall_census.py --gate-dir DIR [DIR ...]
-      PURE gate for the adopt list: every DIR/*.json (written by --json) must name an STL whose md5 equals `stl_md5`, carry an empty `fails`
-      list, and every `accepted_fails` entry must still carry reason / date / evidence. Recomputes nothing. Exit 1 on any problem.
+      PURE gate for the adopt list (recomputes nothing; exit 1 on any problem): every DIR/*.json (written by --json) must verify its `sig`
+      (hand-edited = FAIL), carry this VERSION, name an STL whose md5 equals `stl_md5`, carry an empty `fails` list, and every `accepted_fails`
+      entry must still carry reason / date / evidence AND still be present in `print_targets.<record.target>.accepted` of the current
+      project.yaml (an acceptance deleted from the yaml un-passes the body — "re-asserted every run"). Every STL of the record set under DIR's
+      parent (sibling `stl/*.stl` and the `paths.mech_record` glob) needs a same-md5 census record (blind review 0.8.0 F5).
   scripts/thin_wall_census.py --selftest
       pure python core (classification, clustering, wedge band, accepted matching, gating, the pure gate on a temp dir); with numpy + trimesh +
       scipy + shapely installed also the RECALL primitives: a 1.0 plate (WALL FAIL), a 45 deg prism (wedges, band under 1.5, 0 FAIL), a 2.0 plate
@@ -31,8 +34,12 @@ Conventions baked in (references/dfm-printed-enclosure.md §2): cluster below `g
 under join every region into one cluster); a ray nudged inside a face hits that face at ~0.000 — discard hits closer than --self-hit; the 30 deg
 wall / wedge split is a convention, not a calibration; a WALL cluster is a wall whatever the yaml calls it (lip, land, skin, floor, ring).
 """
-import argparse, hashlib, json, math, os, sys
+import argparse, glob, hashlib, json, math, os, sys
 
+sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
+from project import record_sig, verify_sig  # noqa: E402 — pure python, no yaml until a project is read
+
+VERSION = "0.9.0"        # census record version: stamped + signed into every record; the pure gate refuses another version
 WALL_DEG = 30.0          # convention: opposite face within 30 deg of parallel = a wall
 CLUSTER_MARGIN = 0.05    # convention: cluster below gate - 0.05
 BINS = (0, 0.3, 0.5, 0.8, 1.0, 1.2, 1.5, 2.0, math.inf)
@@ -177,10 +184,24 @@ def md5_of(path):
     return h.hexdigest()
 
 
+def _project_targets(start):
+    """print_targets of the nearest project.yaml above `start` (and its root), or ({}, None) outside a project."""
+    d = os.path.abspath(start)
+    while True:
+        p = os.path.join(d, "project.yaml")
+        if os.path.exists(p):
+            from project import Project
+            P = Project(p); return (P.cfg.get("print_targets") or {}), P
+        if os.path.dirname(d) == d:
+            return {}, None
+        d = os.path.dirname(d)
+
+
 def pure_gate(dirs):
-    """Every DIR/*.json: its `stl` exists, md5 == stl_md5, fails == [], every accepted_fails entry dated with reason + evidence. -> problem list."""
+    """See the docstring's --gate-dir entry. -> problem list."""
     bad = []; n = 0
     for d in dirs:
+        parent = os.path.dirname(os.path.abspath(d.rstrip("/"))); targets, P = _project_targets(parent); have = set()
         for name in sorted(os.listdir(d)) if os.path.isdir(d) else []:
             if not name.endswith(".json"):
                 continue
@@ -189,18 +210,32 @@ def pure_gate(dirs):
                 r = json.load(open(jp))
             except Exception as e:  # noqa: BLE001 — a corrupt record is a gate failure, not a traceback
                 bad.append(f"{jp}: unreadable ({e})"); continue
+            if r.get("version") != VERSION:
+                bad.append(f"{jp}: census version {r.get('version')} != {VERSION} — written by another census version, rerun thin_wall_census {VERSION}"); continue
+            if not verify_sig(r, VERSION):
+                bad.append(f"{jp}: signature does not verify — edited after it was written, or written by another census version (rerun thin_wall_census {VERSION})"); continue
             stl = r.get("stl", "")
-            cand = [stl, os.path.join(os.path.dirname(jp), stl)]
+            cand = [stl, os.path.join(os.path.dirname(jp), stl), os.path.join(P.root, stl) if P else ""]
             path = next((p for p in cand if p and os.path.exists(p)), None)
             if path is None:
                 bad.append(f"{jp}: STL {stl!r} not found"); continue
+            have.add(r.get("stl_md5"))
             if md5_of(path) != r.get("stl_md5"):
                 bad.append(f"{jp}: census of {str(r.get('stl_md5', '?'))[:8]} but the STL of record is {md5_of(path)[:8]} — rerun the census")
             if r.get("fails"):
                 bad.append(f"{jp}: {len(r['fails'])} FAIL cluster(s): " + "; ".join(r["fails"])[:300])
+            cur = (targets.get(r.get("target")) or {}).get("accepted") if r.get("target") in targets else None
             for a in r.get("accepted_fails") or []:
                 if not all(str(a.get(k, "")).strip() for k in ("reason", "date", "evidence")):
                     bad.append(f"{jp}: accepted entry without reason / date / evidence: {a.get('fail', '?')[:80]}")
+                elif cur is not None and not any(all(str(x.get(k)) == str(a.get(k)) for k in ("reason", "date", "evidence")) for x in cur):
+                    bad.append(f"{jp}: accepted entry no longer in print_targets.{r['target']}.accepted ({a.get('fail', '?')[:60]}) — the acceptance was withdrawn; the FAIL stands, rerun")
+        stls = set(glob.glob(os.path.join(parent, "stl", "*.stl")))
+        if P and P.get("paths.mech_record"):
+            stls |= {f for f in glob.glob(os.path.join(P.root, P.get("paths.mech_record"))) if os.path.abspath(f).startswith(parent + os.sep)}
+        for f in sorted(stls):
+            if md5_of(f) not in have:
+                bad.append(f"{f}: body of the record set without a census record of its md5 (run thin_wall_census.py --target <t> --json {d}/<piece>.json on it)")
     if n == 0:
         bad.append("no census JSON found in " + ", ".join(dirs))
     return bad
@@ -304,7 +339,7 @@ def census(stl, samples, gate, void_gate, cell, self_hit, red, boxes, box_min, o
     opps = opp_rows([P[i] for i in ot], [D[i] for i in ot], [K[i] for i in ot], cell)
     fails, acc = gate_rows(clusters, voids, gate, void_gate, box_min if boxes else None, wedge_band, opps, accepted)
     wall = ang < WALL_DEG
-    r = dict(stl=stl, stl_md5=md5_of(stl), target=target, faces=int(len(m.faces)), watertight=bool(m.is_watertight),
+    r = dict(version=VERSION, stl=stl, stl_md5=md5_of(stl), target=target, faces=int(len(m.faces)), watertight=bool(m.is_watertight),
              bodies=int(len(m.split(only_watertight=False))), bbox=np.round(m.bounds, 2).tolist(), vol_cm3=round(float(m.volume) / 1000, 3),
              area_mm2=round(area, 1), signature=dict(vol=round(float(m.volume), 3), area=round(area, 3), bbox=np.round(m.bounds, 3).tolist(), faces=int(len(m.faces))),
              samples=samples, density_per_mm2=round(samples / area, 2), gate=gate, void_gate=void_gate, red=red, wedge_band=wedge_band, thr=thr,
@@ -325,6 +360,7 @@ def census(stl, samples, gate, void_gate, cell, self_hit, red, boxes, box_min, o
     print(f"FAIL {len(fails)}" + ("".join("\n  " + f for f in fails) if fails else
                                    f" — 0 walls below the gate, 0 voids below the void gate, 0 wedges over band {wedge_band}, 0 opposing faces; wedges listed: "
                                    f"{sum(c['cls'] == 'wedge' for c in clusters)}") + (f"; ACCEPTED {len(acc)} (dated, evidence): " + "; ".join(a['fail'][:60] for a in acc) if acc else ""))
+    r["sig"] = record_sig(r, VERSION)                                          # the pure gate refuses a record whose body changed after it was written
     if out_json:
         json.dump(r, open(out_json, "w"), indent=1)
     return 1 if fails else 0
@@ -361,21 +397,39 @@ def selftest():
     boxed = cluster_rows(plate, [1.0] * 900, [0.0] * 900, boxes=[[-1, -1, 31, 31]])
     assert boxed[0]["in_box_frac"] == 1.0 and gate_rows(boxed, [], 1.6, 1.0, box_min=1.0)[0] == [] and gate_rows(boxed, [], 1.6, 1.0)[0], "legend land rule"
     assert histogram([0.1, 1.19, 5.0, math.inf])["1.0-1.2"] == 1 and histogram([math.inf])["2.0-inf"] == 1
-    # the pure gate: matching md5 + no fails passes; a wrong md5, a FAIL list and an undated acceptance are named
+    # the pure gate: matching md5 + no fails passes; a wrong md5, a FAIL list, an undated acceptance, a tampered record, a withdrawn acceptance
+    # and an uncensused STL of the record set are named (review 0.8.0 F5 / F28)
     with tempfile.TemporaryDirectory() as d:
-        stl = os.path.join(d, "p_body.stl"); open(stl, "wb").write(b"solid p\nendsolid p\n")
-        good = dict(stl=stl, stl_md5=md5_of(stl), fails=[], accepted_fails=[]); json.dump(good, open(os.path.join(d, "p.json"), "w"))
-        assert pure_gate([d]) == [], pure_gate([d])
-        json.dump(dict(good, stl_md5="0" * 32), open(os.path.join(d, "p.json"), "w")); assert any("STL of record" in b for b in pure_gate([d]))
-        json.dump(dict(good, fails=["WALL 0.88 < 1.2 span 141"]), open(os.path.join(d, "p.json"), "w")); assert any("FAIL cluster" in b for b in pure_gate([d]))
-        json.dump(dict(good, accepted_fails=[dict(fail="WALL 0.9", reason="r", date="", evidence="e")]), open(os.path.join(d, "p.json"), "w"))
-        assert any("without reason / date / evidence" in b for b in pure_gate([d]))
-        assert pure_gate([os.path.join(d, "none")]) and "no census JSON" in pure_gate([os.path.join(d, "none")])[0]
-        # target settings from a project.yaml
-        open(os.path.join(d, "project.yaml"), "w").write("print_targets: {t: {wall_gate: 1.2, void_gate: 1.2, red_line: 0.5, wedge_band: 1.5, samples_per_mm2: 10, accepted: []}}\n")
-        t = target_settings("t", os.path.join(d, "project.yaml"))
-        assert t["gate"] == 1.2 and t["wedge_band"] == 1.5 and t["density"] == 10 and t["accepted"] == [], t
-    msg = "selftest OK (pure core: wall / wedge classification, wedge band, opposing rows, accepted matching, void + legend-box gating, pure --gate-dir, target settings"
+        os.makedirs(os.path.join(d, "stl")); os.makedirs(os.path.join(d, "census"))
+        stl = os.path.join(d, "stl", "p_body.stl"); open(stl, "wb").write(b"solid p\nendsolid p\n"); C = os.path.join(d, "census")
+        def put(rec, name="p.json"):
+            rec = dict(rec); rec["sig"] = record_sig(rec, VERSION); json.dump(rec, open(os.path.join(C, name), "w"))
+        acc = dict(fail="WALL 0.9", reason="r", date="2026-01-01", evidence="e")
+        good = dict(version=VERSION, stl=stl, stl_md5=md5_of(stl), target="t", fails=[], accepted_fails=[acc]); put(good)
+        assert pure_gate([C]) == [], pure_gate([C])
+        put(dict(good, stl_md5="0" * 32)); assert any("STL of record" in b for b in pure_gate([C]))
+        put(dict(good, fails=["WALL 0.88 < 1.2 span 141"])); assert any("FAIL cluster" in b for b in pure_gate([C]))
+        put(dict(good, accepted_fails=[dict(acc, date="")])); assert any("without reason / date / evidence" in b for b in pure_gate([C]))
+        json.dump(dict(good, fails=[], sig="00"), open(os.path.join(C, "p.json"), "w")); assert any("signature" in b for b in pure_gate([C])), "a hand-edited record fails"
+        old = dict(good, version="0.0.1"); old["sig"] = record_sig(old, "0.0.1"); json.dump(old, open(os.path.join(C, "p.json"), "w"))
+        assert any("another census version" in b for b in pure_gate([C])), "another version fails"
+        put(good); open(os.path.join(d, "stl", "q_body.stl"), "wb").write(b"solid q\nendsolid q\n")
+        assert any("without a census record" in b for b in pure_gate([C])), "an uncensused STL beside the records fails"
+        os.remove(os.path.join(d, "stl", "q_body.stl"))
+        assert any("no census JSON" in b for b in pure_gate([os.path.join(d, "none")]))
+        # with a project (needs pyyaml): the acceptance must still be in print_targets.<t>.accepted; the mech_record glob widens the STL set
+        try:
+            import yaml  # noqa: F401
+        except ImportError:
+            print("selftest: pyyaml absent — the project-dependent gate cases were skipped"); yaml = None
+        if yaml:
+            open(os.path.join(d, "project.yaml"), "w").write("paths: {mech_record: 'stl/*.stl'}\nprint_targets: {t: {wall_gate: 1.2, void_gate: 1.2, red_line: 0.5, wedge_band: 1.5, samples_per_mm2: 10, accepted: [{class: wall, bbox: [0,0,0,1,1,1], reason: r, date: 2026-01-01, evidence: e}]}}\n")
+            assert pure_gate([C]) == [], pure_gate([C])
+            open(os.path.join(d, "project.yaml"), "w").write("paths: {mech_record: 'stl/*.stl'}\nprint_targets: {t: {wall_gate: 1.2, void_gate: 1.2, red_line: 0.5, wedge_band: 1.5, samples_per_mm2: 10, accepted: []}}\n")
+            assert any("withdrawn" in b for b in pure_gate([C])), "an acceptance deleted from the yaml un-passes the body"
+            t = target_settings("t", os.path.join(d, "project.yaml"))
+            assert t["gate"] == 1.2 and t["wedge_band"] == 1.5 and t["density"] == 10 and t["accepted"] == [], t
+    msg = "selftest OK (pure core: wall / wedge classification, wedge band, opposing rows, accepted matching, void + legend-box gating, pure --gate-dir incl. signature / withdrawn acceptance / uncensused STL, target settings"
     try:
         import numpy, trimesh, scipy, shapely  # noqa: F401
     except ImportError:

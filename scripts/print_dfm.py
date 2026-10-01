@@ -40,10 +40,13 @@ CLI (paths default to the project root = the nearest parent holding project.yaml
   scripts/print_dfm.py --process <row> <mesh.stl>... [--out DIR] [--piece NAME] [--render] [--samples N] [--land x0 y0 x1 y1 ...] [--bodies N]
       one record per body (DIR/<piece>.json [+ DIR/<piece>_<view>.png]); prints one line per rule; exit 1 when any body FLAGs
   scripts/print_dfm.py --list                                 the process rows and their thresholds
-  scripts/print_dfm.py --gate <dfm_dir>... [--open <tag>/<piece>=<decision id> ...]
-      PURE adopt gate: every DIR/<piece>.json names an STL that still has its md5, verdict PASS; a sibling census/<piece>.json (thin_wall_census)
-      must have the same md5 and every census piece needs a dfm record; a body named in --open prints OPEN <id> instead of failing (the finding
-      is recorded, the fix is an open decision — not a waiver)
+  scripts/print_dfm.py --gate <dfm_dir>... [--target <print target>] [--open <tag>/<piece>=<decision id> ...]
+      PURE adopt gate (recomputes nothing). FAILs on: an STL of the record set without a same-md5 record (the sibling `stl/` of each DIR and the
+      `paths.mech_record` glob under DIR's parent); a record whose `sig` does not verify (hand-edited, or written by another rule set); a record
+      `version` != this VERSION or `thresholds` != the current table row; a record `process` != `print_targets.<t>.dfm_process` (t = --target or
+      DIR's parent name); a sibling census/<piece>.json with another md5; a census piece without a dfm record; a verdict FLAG — unless --open
+      <tag>/<piece>=<id> names a row of paths.decisions whose status is OPEN (printed with its topic; any other id = FAIL). Not a waiver: the
+      record still says FLAG and the OPEN row owns the fix.
   scripts/print_dfm.py --validate [--verdicts Y] [--val-dir D] [--val-doc M] [--render-validation substr ...]
       run every labelled STL (records cached by md5 + rule-set version), write the validation doc (vendor vs ours, confusion matrix, rules fired);
       a body the vendor FLAGGED that we PASS is a RULE DEFECT -> printed, exit 1
@@ -66,6 +69,8 @@ except ImportError as e:  # the generic scripts need pyyaml only; this one needs
     sys.exit(2)
 
 HERE = os.path.dirname(os.path.realpath(__file__))   # realpath: in a project `scripts` is a symlink into vendor/hw-from-spec — the template table must resolve through it
+sys.path.insert(0, HERE)
+from project import record_sig, verify_sig, open_decisions  # noqa: E402
 VERSION = "0.9.0"        # rule-set version stamped into every record (the validation cache is keyed on it); bump when a rule or a measure changes
 WALL_DEG = 30.0          # limiting face within 30 deg of parallel = wall / neck / root; otherwise wedge (census convention)
 COS_OPP = 0.7            # a face 'opposes' the sample when its normal is within ~45 deg of the inverse normal (a 45 deg ramp under a skin counts, a 90 deg side face does not)
@@ -344,6 +349,7 @@ def analyse(path, process, n_s=None, seed=0, lands=None, out_dir=None, piece=Non
                frac_below={str(b): round(float((t < b).mean()), 5) for b in (fmin, wall_min, reco)}, area_below={str(b): round(float((t < b).sum() * a_per), 1) for b in (fmin, wall_min, reco)},
                t_min=round(float(t[fin].min()), 3) if fin.any() else None, thin=thin[:40], voids=voids[:40], necks=necks[:40], overhangs=O[:20], ceilings=C[:20],
                verdict="FLAG" if flagged else "PASS", flagged=flagged, rows=rows, seconds=round(time.time() - t0, 1), lands=[list(map(float, b)) for b in (lands or [])])
+    rec["sig"] = record_sig(rec, VERSION)                                         # the gate refuses a record whose body changed after it was written
     if out_dir:
         os.makedirs(out_dir, exist_ok=True)
         json.dump(rec, open(os.path.join(out_dir, rec["piece"] + ".json"), "w"), indent=1)
@@ -383,19 +389,54 @@ def heatmap(m, F, pr, prefix, views=None, size=1600):
     return out
 
 
-def gate(dfm_dirs, open_findings=()):
-    """PURE adopt gate (recomputes nothing): every DIR/<piece>.json names an STL that exists with the recorded md5 and has verdict PASS. A sibling
-    `census/` dir (thin_wall_census records) must agree on the md5 and every census piece needs a dfm record. `open_findings` = "<tag>/<piece>=<id>"
-    (tag = the dir's parent name): that body's FLAG prints OPEN <id> instead of failing — the record still says FLAG; the gate names the open decision."""
-    bad = []; n = 0; opn = dict(e.split("=", 1) for e in open_findings)
+def _project():
+    """The project (None outside one): print_targets, paths.decisions, paths.mech_record."""
+    if not os.path.exists(os.path.join(ROOT, "project.yaml")):
+        return None
+    from project import Project
+    return Project(os.path.join(ROOT, "project.yaml"))
+
+
+def gate(dfm_dirs, open_findings=(), target=None):
+    """PURE adopt gate (recomputes nothing) — see the docstring's --gate entry. Returns 1 on any problem."""
+    bad = []; n = 0; P = _project(); table, _ = processes()
+    opn = {}
+    if open_findings:
+        dec = P.path("decisions") if P else None; rows = open_decisions(dec) if dec else {}
+        for e in open_findings:
+            k, _, did = e.partition("=")
+            if did in rows:
+                opn[k] = f"{did} ({rows[did][:60]})"
+            else:
+                bad.append(f"--open {e}: {did!r} is not an OPEN row of {P.get('paths.decisions') if P else 'the decision log (no project.yaml found)'} — a finding stays open only under an OPEN decision")
+    targets = (P.cfg.get("print_targets") or {}) if P else {}
     for d in dfm_dirs:
-        d = d.rstrip("/"); tag = os.path.basename(os.path.dirname(d)); census = os.path.join(os.path.dirname(d), "census")
-        pieces = {os.path.basename(p)[:-5] for p in glob.glob(os.path.join(d, "*.json"))}
-        for cj in glob.glob(os.path.join(census, "*.json")):
-            if os.path.basename(cj)[:-5] not in pieces:
-                bad.append(f"{d}/{os.path.basename(cj)}: census record without a print_dfm record (run scripts/print_dfm.py on the body)")
-        for piece in sorted(pieces):
-            n += 1; ej = os.path.join(d, piece + ".json"); e = json.load(open(ej)); cj = os.path.join(census, piece + ".json")
+        d = d.rstrip("/"); parent = os.path.dirname(os.path.abspath(d)); tag = target or os.path.basename(parent); census = os.path.join(parent, "census")
+        want = None
+        if targets:
+            if tag not in targets:
+                bad.append(f"{d}: '{tag}' is not a print target (print_targets: {', '.join(targets)}) — lay the records out under <target>/dfm or pass --target"); continue
+            want = targets[tag].get("dfm_process")
+            if not want:
+                bad.append(f"{d}: print_targets.{tag}.dfm_process is not set (kickoff C8a) — the gate cannot tell which process row the bodies must pass")
+        recs = {}
+        for ej in sorted(glob.glob(os.path.join(d, "*.json"))):
+            try:
+                e = json.load(open(ej))
+            except Exception as ex:  # noqa: BLE001 — a corrupt record is a gate failure, not a traceback
+                bad.append(f"{ej}: unreadable ({ex})"); continue
+            n += 1; piece = os.path.basename(ej)[:-5]; recs[piece] = e
+            if not verify_sig(e, VERSION):
+                bad.append(f"{ej}: signature does not verify — the record was edited after it was written, or written by another rule set (rerun print_dfm {VERSION})"); continue
+            if e.get("version") != VERSION:
+                bad.append(f"{ej}: rule set {e.get('version')} != {VERSION} — rerun"); continue
+            if want and e.get("process") != want:
+                bad.append(f"{ej}: checked against process row '{e.get('process')}' but print_targets.{tag}.dfm_process = '{want}' — rerun with --process {want}"); continue
+            if e.get("process") in table:
+                cur = {k: table[e["process"]].get(k) for k in e.get("thresholds", {})}
+                if cur != e.get("thresholds"):
+                    bad.append(f"{ej}: thresholds differ from the current row '{e.get('process')}' ({', '.join(k for k in cur if cur[k] != e['thresholds'].get(k))}) — the table moved, rerun"); continue
+            cj = os.path.join(census, piece + ".json")
             if os.path.exists(cj) and json.load(open(cj)).get("stl_md5") != e.get("stl_md5"):
                 bad.append(f"{ej}: record of {str(e.get('stl_md5'))[:8]} but the census / STL of record is {str(json.load(open(cj)).get('stl_md5'))[:8]} — rerun"); continue
             stl = e["stl"] if os.path.isabs(e["stl"]) else os.path.join(ROOT, e["stl"])
@@ -407,6 +448,17 @@ def gate(dfm_dirs, open_findings=()):
                     print(f"PRINT-DFM GATE: OPEN {opn[f'{tag}/{piece}']} - {msg}")
                 else:
                     bad.append(msg)
+        for cj in glob.glob(os.path.join(census, "*.json")):
+            if os.path.basename(cj)[:-5] not in recs:
+                bad.append(f"{d}/{os.path.basename(cj)}: census record without a print_dfm record (run scripts/print_dfm.py on the body)")
+        # the STL set of record: every body under this tag (sibling stl/ + the paths.mech_record glob under the parent) needs a same-md5 record
+        have = {e.get("stl_md5") for e in recs.values()}
+        stls = set(glob.glob(os.path.join(parent, "stl", "*.stl")))
+        if P and P.get("paths.mech_record"):
+            stls |= {f for f in glob.glob(os.path.join(ROOT, P.get("paths.mech_record"))) if os.path.abspath(f).startswith(parent + os.sep)}
+        for f in sorted(stls):
+            if md5(f) not in have:
+                bad.append(f"{os.path.relpath(f, ROOT)}: body of the record set without a print_dfm record of its md5 (run scripts/print_dfm.py --process {want or '<row>'} --out {d} on it)")
     if not n:
         bad.append("no print_dfm records in " + ", ".join(dfm_dirs) + " (a green gate that checked nothing is a failing check)")
     for b in bad:
@@ -481,7 +533,10 @@ def selftest():
     import tempfile
     global PATHS
     PATHS = dict(PATHS, processes=TEMPLATE_TABLE if os.path.exists(TEMPLATE_TABLE) else PATHS["processes"])
+    global ROOT
+    ROOT0 = ROOT
     with tempfile.TemporaryDirectory() as d:
+        ROOT = d                                                                      # records store the STL path relative to the project root
         p1 = os.path.join(d, "plate08.stl"); trimesh.creation.box((30.0, 30.0, 0.8)).export(p1)
         r = analyse(p1, "jlc_mjf_pa12", n_s=20000)
         assert "W wall" in r["flagged"] and abs(r["thin"][0]["vmed"] - 0.8) < 0.05 and r["thin"][0]["cls"] == "wall", r["rows"][0]
@@ -518,17 +573,31 @@ def selftest():
         pi_ = trimesh.creation.extrude_polygon(Polygon([(-20, 0), (-16, 0), (-16, 15), (16, 15), (16, 0), (20, 0), (20, 18), (-20, 18)]), 10.0); pi_.apply_transform(rotx); p9 = os.path.join(d, "pi.stl"); pi_.export(p9)
         r = analyse(p9, "home_fdm_04", n_s=20000); ro = next(x for x in r["rows"] if x["rule"].startswith("O")); rb = next(x for x in r["rows"] if x["rule"].startswith("B"))
         assert "0 horizontal cantilever(s)" in ro["value"] and rb["value"].startswith("1 horizontal"), (ro["value"], rb["value"])
-        # the gate: FLAG fails, --open names it, a changed STL fails, a census record without a dfm record fails
+        # the gate (review 0.8.0 F5 / F6 / F7 / F28): FLAG fails; --open needs an OPEN decision row; a tampered record, a changed STL, an uncensused
+        # STL of the record set, a laxer process row than the target's and a census record without a dfm record all fail
         import contextlib, io
-        def quiet(*a):
+        def quiet(*a, **k):
             with contextlib.redirect_stdout(io.StringIO()):
-                return gate(*a)
-        assert quiet([os.path.join(d, "dfm")]) == 1
-        assert quiet([os.path.join(d, "dfm")], [f"{os.path.basename(d)}/root05=D-00"]) == 0
+                return gate(*a, **k)
+        tag = os.path.basename(d); G = [os.path.join(d, "dfm")]
+        assert quiet(G) == 1, "FLAG must fail"
+        assert quiet(G, [f"{tag}/root05=D-00"]) == 1, "--open without a project / decision log must fail"
+        os.makedirs(os.path.join(d, "docs", "governance")); open(os.path.join(d, "docs", "governance", "DECISIONS.md"), "w").write("| ID | Date | Status | Topic | P | R |\n|---|---|---|---|---|---|\n| **D-07** | d | **OPEN** | widen the root | p | r |\n| CC-010 | d | APPLIED | x | p | r |\n")
+        open(os.path.join(d, "project.yaml"), "w").write(f"project: {{name: t, scope: mech}}\npaths: {{mech_record: 'stl/*.stl'}}\nprint_targets: {{{tag}: {{dfm_process: jlc_mjf_pa12}}}}\n")
+        assert quiet(G, [f"{tag}/root05=WHATEVER"]) == 1 and quiet(G, [f"{tag}/root05=CC-010"]) == 1, "a free string or an APPLIED row is not an OPEN decision"
+        assert quiet(G, [f"{tag}/root05=D-07"]) == 0, "an OPEN row names the finding"
+        rj = os.path.join(d, "dfm", "root13.json"); e = json.load(open(rj)); e["verdict"] = "FLAG"; json.dump(e, open(rj, "w")); assert quiet(G, [f"{tag}/root05=D-07"]) == 1, "a hand-edited record fails the signature"
+        e["verdict"] = "PASS"; json.dump(e, open(rj, "w")); assert quiet(G, [f"{tag}/root05=D-07"]) == 0, "restored body verifies again"
+        os.makedirs(os.path.join(d, "stl")); import shutil; shutil.copy(p1, os.path.join(d, "stl", "plate08.stl")); assert quiet(G, [f"{tag}/root05=D-07"]) == 1, "a body of the record set without a record fails"
+        os.remove(os.path.join(d, "stl", "plate08.stl"))
+        analyse(p4, "protolabs_mjf_pa12", n_s=20000, out_dir=os.path.join(d, "dfm"), piece="root13"); assert quiet(G, [f"{tag}/root05=D-07"]) == 1, "a laxer process row than print_targets.<t>.dfm_process fails"
+        analyse(p4, "jlc_mjf_pa12", n_s=60000, out_dir=os.path.join(d, "dfm"), piece="root13"); assert quiet(G, [f"{tag}/root05=D-07"]) == 0
+        assert quiet(G, [f"{tag}/root05=D-07"], target="nope") == 1, "an unknown print target fails"
         os.makedirs(os.path.join(d, "census")); json.dump(dict(stl=p4, stl_md5="0" * 32), open(os.path.join(d, "census", "root13.json"), "w"))
-        assert quiet([os.path.join(d, "dfm")], [f"{os.path.basename(d)}/root05=D-00"]) == 1
+        assert quiet(G, [f"{tag}/root05=D-07"]) == 1
         json.dump(dict(stl=p4, stl_md5=md5(p4)), open(os.path.join(d, "census", "root13.json"), "w")); json.dump({}, open(os.path.join(d, "census", "orphan.json"), "w"))
-        assert quiet([os.path.join(d, "dfm")], [f"{os.path.basename(d)}/root05=D-00"]) == 1
+        assert quiet(G, [f"{tag}/root05=D-07"]) == 1
+        os.remove(os.path.join(d, "census", "orphan.json")); assert quiet(G, [f"{tag}/root05=D-07"]) == 0
         # the validation loop on the verdict schema: a labelled FLAG we pass is a RULE DEFECT
         PATHS.update(verdicts=os.path.join(d, "v.yaml"), val_dir=os.path.join(d, "val"), val_doc=os.path.join(d, "VAL.md"))
         yaml.safe_dump(dict(verdicts=[dict(stl=p3, md5=md5(p3)[:8], process="jlc_mjf_pa12", vendor="x", date="2026-01-01", verdict="FLAG", evidence="e1"),
@@ -539,7 +608,8 @@ def selftest():
         assert v["looser"] == [p4] and v["cm"] == {"FLAG->FLAG": 1, "FLAG->PASS": 1, "PASS->PASS": 1}, v["cm"]
         doc = open(PATHS["val_doc"]).read(); assert "RULE DEFECT" in doc and "<!-- hand: begin -->" in doc
         assert _label_verdict(dict(vendor=None)) is None and _label_verdict(dict(verdict="n/a")) is None
-    print("selftest OK: 0.8 plate -> W FLAG only (ray reads 0.8), 0.6 x 60 rib -> W only, 2.0 plate -> PASS (no convex-edge artefact), 0.5 root under a 2.0 rim x 90 -> W + R FLAG, root 1.3 -> PASS, SLA size rule, M (open mesh / two bodies / --bodies 2), O cantilever vs B bridge, gate (FLAG / --open / md5 / orphan census), validate (RULE DEFECT, both label schemas)")
+    ROOT = ROOT0
+    print("selftest OK: 0.8 plate -> W FLAG only (ray reads 0.8), 0.6 x 60 rib -> W only, 2.0 plate -> PASS (no convex-edge artefact), 0.5 root under a 2.0 rim x 90 -> W + R FLAG, root 1.3 -> PASS, SLA size rule, M (open mesh / two bodies / --bodies 2), O cantilever vs B bridge, gate (FLAG / --open only an OPEN row / tampered record / uncensused STL / laxer row / md5 / orphan census), validate (RULE DEFECT, both label schemas)")
 
 
 def main():
@@ -547,7 +617,7 @@ def main():
     ap.add_argument("stl", nargs="*"); ap.add_argument("--process", help="row of the process table (--list shows them)"); ap.add_argument("--out", help="record dir (DIR/<piece>.json)"); ap.add_argument("--piece"); ap.add_argument("--render", action="store_true", help="heat maps beside the record (matplotlib)")
     ap.add_argument("--samples", type=int); ap.add_argument("--bodies", type=int, default=1, help="expected body count (rule M; default 1)"); ap.add_argument("--land", nargs=4, type=float, action="append", metavar=("X0", "Y0", "X1", "Y1"), help="legend land box (repeatable)")
     ap.add_argument("--processes", help=f"process table (default {os.path.relpath(DEFAULTS['processes'])}, else the skill template)"); ap.add_argument("--list", action="store_true")
-    ap.add_argument("--gate", nargs="+", metavar="DFM_DIR"); ap.add_argument("--open", nargs="*", default=[], metavar="TAG/PIECE=ID")
+    ap.add_argument("--gate", nargs="+", metavar="DFM_DIR"); ap.add_argument("--open", nargs="*", default=[], metavar="TAG/PIECE=ID"); ap.add_argument("--target", help="--gate: the print target the DIRs belong to (default: DIR's parent name)")
     ap.add_argument("--validate", action="store_true"); ap.add_argument("--verdicts", help=f"default {os.path.relpath(DEFAULTS['verdicts'])}"); ap.add_argument("--val-dir"); ap.add_argument("--val-doc"); ap.add_argument("--render-validation", nargs="*", default=[], metavar="SUBSTR")
     ap.add_argument("--selftest", action="store_true")
     a = ap.parse_args()
@@ -562,7 +632,7 @@ def main():
             print(f"  {k:22s} {v.get('vendor', '')} / {v.get('process', '')}: wall_min {v.get('wall_min')} feature_min {v.get('feature_min')} detail_min {v.get('detail_min')} void_min {v.get('void_min')} hole_min {v.get('hole_min')}" + ("  (BLOCKED: wall_min null)" if v.get("wall_min") is None else ""))
         return 0
     if a.gate:
-        return gate(a.gate, a.open)
+        return gate(a.gate, a.open, a.target)
     if a.validate:
         c = validate(renders=a.render_validation); print(json.dumps(dict(cm=c["cm"], per_rule=c["per_rule"], stricter=c["stricter"]), indent=1))
         for s in c["looser"]:
