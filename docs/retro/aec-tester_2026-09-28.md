@@ -1,6 +1,6 @@
 # Retro — aec-tester → hw-from-spec (2026-09-28)
 
-Project `/Users/vpillai/temp/aec-tester`: 48 dated learnings, 292 decision rows (86 owner rows). Skill `/Users/vpillai/temp/hw-from-spec` at SKILL.md version **0.4.1**; the project recorded skill version **none (add `skill: {version: …}` to project.yaml)**.
+Project `aec-tester`: 48 dated learnings, 292 decision rows (86 owner rows). Skill `hw-from-spec` at SKILL.md version **0.4.1**; the project recorded skill version **none (add `skill: {version: …}` to project.yaml)**.
 Classifier: keyword overlap against 196 sections (threshold 0.5); a human folds the candidates — this report is the input to the next CHANGELOG entry, not the entry itself.
 
 ## 1. Counts
