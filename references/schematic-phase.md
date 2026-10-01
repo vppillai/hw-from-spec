@@ -51,8 +51,9 @@ Run after every generation, with every severity on, machine-readable, zero error
 <cad-cli> sch erc --severity-all --format json -o out/<board>/erc.json <cad>/<board>/<board>.kicad_sch     # KiCad 10 form; other CADs: the equivalent
 ```
 
-Errors → fix the yaml or the generator. Warnings → fix, or one row in `docs/governance/ERC_WAIVERS.md` (sheet, item, type, justification, decision row,
-date). Add the ERC run to `gates.adopt` at G1 (`templates/project.yaml` has the commented block) so it is repeated on every adopt run and in
+Errors → fix the yaml or the generator. Warnings → fix, or one entry in `design/erc_accept.yaml` (`{type, ref, reason, decision, date}`; the decision
+row must exist and not be REJECTED) — `scripts/erc_gate.py out/<board>/erc.json` is the gate: 0 errors, 0 unaccepted warnings, no stale entry, no
+GUI exclusion (a hidden waiver). There is no prose waiver table. Add `erc_gate.py` to `gates.adopt` at G1 (`templates/project.yaml` has the commented block) so it is repeated on every adopt run and in
 `git archive HEAD`. Export the netlist in the same step (`<cad-cli> sch export netlist --format kicadxml -o out/<board>.xml …`): `paths.netlist`
 feeds the `netlist_net` checks of `scripts/traceability.py`.
 
@@ -72,7 +73,7 @@ implement is a CC row (rule 2), not a silent omission.
 | `<board>.pdf` | `<cad-cli> sch export pdf` | the schematic as drawn, every sheet |
 | `<board>.xml` | `<cad-cli> sch export netlist --format kicadxml` | machine-checkable connectivity |
 | `bom.csv`, `procurement.csv` | the project's BOM exporter | every fitted part with MPN / fab code / tag; DNP excluded |
-| `erc.json` + `docs/governance/ERC_WAIVERS.md` | §2 | zero errors, justified warnings |
+| `erc.json` + `design/erc_accept.yaml` | §2 | `scripts/erc_gate.py` green: zero errors, every warning accepted by a decision row |
 | `check_maps.md` | §3 | maps vs netlist |
 | `EVIDENCE.md` | the generator | which yaml revision / commit produced the pack; md5 of every file above |
 | `REVIEW_NOTES.md` | hand-written, short | what changed since the last round, what the reviewers should weigh |

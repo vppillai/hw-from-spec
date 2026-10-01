@@ -32,6 +32,13 @@ if [[ "$1" == "--selftest" ]]; then
   printf 'project: {name: t}\ngates:\n  clone: []\n' > project.yaml; git add -A; git -c user.name=t -c user.email=t@t commit -qm empty
   out=$(scripts/adopt_gates.sh --no-clone 2>&1 || true)
   echo "$out" | grep -q "gates.adopt is empty" || { echo "selftest FAILED: an empty gate list must not be green"; echo "$out"; exit 1; }
+  # review 0.8.0 F11: an STL set with the census / print-DFM gate lines still commented out is a FAILING adopt run, not a green one
+  mkdir -p out/mechanical/case/v1/stl; printf 'solid a\nendsolid a\n' > out/mechanical/case/v1/stl/a.stl
+  printf 'project: {name: t, scope: mech}\npaths: {mech_record: "out/mechanical/case/*/stl/*.stl"}\ngates:\n  adopt: ["echo step1"]\n  clone: []\n' > project.yaml
+  git add -A; git -c user.name=t -c user.email=t@t commit -qm stl
+  out=$(scripts/adopt_gates.sh --no-clone 2>&1 || true)
+  echo "$out" | grep -q "GATE FAILED: an artefact exists whose gate line is missing" || { echo "selftest FAILED: an STL set without its gate lines must fail"; echo "$out"; exit 1; }
+  rm -rf out
   printf 'project: {name: t}\ngates:\n  adopt: ["echo step1"]\n  clone: ["test -f project.yaml"]\n' > project.yaml
   git add -A; git -c user.name=t -c user.email=t@t commit -qm ok2
   mkdir sub && (cd sub && ../scripts/adopt_gates.sh --no-clone | grep -q "adopt gates OK") || { echo "selftest FAILED: run from a subdirectory"; exit 1; }
@@ -54,6 +61,7 @@ Q=$(get gates.quiet_regex); [[ -n $Q ]] || Q='^$'
 quiet() { grep -vE "$Q" || true; }
 step() { echo "== $1"; eval "$1" 2>&1 | quiet; [[ ${PIPESTATUS[0]} == 0 ]] || { echo "GATE FAILED: $1"; exit 1; }; }
 L=$(get gates.adopt); [[ -n "$L" ]] || { echo "adopt gates: gates.adopt is empty — nothing checked (a green gate that ran nothing is a failing check)"; exit 1; }
+"$PY" "$HERE/project.py" gates-required || { echo "GATE FAILED: an artefact exists whose gate line is missing or still commented out in gates.adopt (schematic -> erc_gate.py, board -> a DRC gate, STL set -> census --gate-dir + print_dfm --gate)"; exit 1; }
 while IFS= read -r c; do [[ -n $c ]] && step "$c"; done <<< "$L"
 if [[ "$1" != "--no-clone" ]]; then
   step "$HERE/clone_gate.sh"

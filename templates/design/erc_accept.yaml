@@ -1,0 +1,5 @@
+# design/erc_accept.yaml — the ONLY way an ERC warning passes the gate (scripts/erc_gate.py; CLAUDE.md rule 7). No prose waiver table exists.
+# An entry needs every field; `decision` must be a row of docs/governance/DECISIONS.md that is not REJECTED / SUPERSEDED; an entry that matches no
+# violation is stale and FAILs the gate; a violation excluded in the CAD GUI FAILs too (a hidden waiver). Errors cannot be accepted.
+accepted: []
+#  - {type: pin_not_connected, ref: U1, reason: "pin 3 is NC per datasheet p.4 (docs/datasheet_notes/<part>.md)", decision: CC-012, date: 2026-01-01}

@@ -9,6 +9,7 @@ top level** — the shell gates (`adopt_gates.sh`, `clone_gate.sh`) archive HEAD
 project:
   name: <short name>                      # used in generated headers
   description: <one line>
+  owner: {name: <who writes the gate cells>, email: <their git email>}   # scripts/gate_check.py --release: the release line's git author must be this person
   scope: both                             # kickoff A0: ee (PCB / PCBA only) | mech (enclosure / printed / CNC parts only) | both — SKILL.md §1;
                                           # `scripts/project.py scaffold --scope` resolves the templates' {{ee,both}} / {{mech,both}} / {{mech}} line tags
 skill: {repo: <url>, commit: <sha>, version: <SKILL.md version>}   # the hw-from-spec commit + version the project follows; scripts/skill_retro.py reports drift
@@ -33,7 +34,8 @@ paths:
   traceability_yaml: design/traceability.yaml
   traceability_out: docs/governance/TRACEABILITY.md  # written by scripts/traceability.py
   learnings: docs/governance/LEARNINGS_LOG.md  # append-only (CLAUDE.md rule 11)
-  erc_waivers: docs/governance/ERC_WAIVERS.md
+  erc_accept: design/erc_accept.yaml       # ee / both: the machine-checked ERC acceptances scripts/erc_gate.py reads (no prose waivers)
+  schematic: kicad/<board>/<board>.kicad_sch   # ee / both: once it exists, gates.adopt must carry the erc_gate.py line (scripts/project.py gates-required)
   env: docs/governance/ENV.md
   parts_verification: docs/parts/PARTS_VERIFICATION.md
   datasheet_notes: docs/datasheet_notes
@@ -134,7 +136,7 @@ gates:
 
 ## Layout the defaults name
 ```
-docs/governance/   DECISIONS STATUS GATES BLOCKERS KNOWN_ISSUES TRACEABILITY LEARNINGS_LOG ERC_WAIVERS ENV KICKOFF_ANSWERS   (records the generators read and write)
+docs/governance/   DECISIONS STATUS GATES BLOCKERS KNOWN_ISSUES TRACEABILITY LEARNINGS_LOG ENV KICKOFF_ANSWERS   (records the generators read and write)
 docs/design/       TEST_PLAN VERIFY SOFTWARE_ARCHITECTURE briefs, design notes, mechanical notes                      (intent)
 docs/parts/        PARTS_VERIFICATION PROCUREMENT parts_check.json compliance json
 docs/reviews/      REVIEW_HANDOFF, <ROUND>_<role>_<model>.md, *_merged.md, REORG_* inventories

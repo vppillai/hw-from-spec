@@ -24,6 +24,7 @@ import yaml
 
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 from project import Project, split_row  # noqa: E402
+from gate_check import release_cell  # noqa: E402
 
 VOLATILE = re.compile(r"^Generated .*$", re.M)
 
@@ -114,9 +115,9 @@ def pkg_for_board(ctx, P, md5=None):
 # ---------------------------------------------------------------- sections
 def section_banner(ctx, P, rep):
     gates = ctx.read(P.get("paths.gates")) or ""
-    released = re.search(P.get("markers.release_regex"), gates, re.I)
-    return [f"**STATUS: {'RELEASED (the owner release line is present in ' + P.get('paths.gates') + ')' if released else 'DRAFT'}** — {rep.get('title', rep['name'])}. "
-            f"The banner turns RELEASED only when the owner writes the release line into `{P.get('paths.gates')}` (regex `{P.get('markers.release_regex')}`); agents never write it.", ""]
+    released = release_cell(P, gates)                        # the Release row's approval cell only — the phrase anywhere else in the file counts for nothing
+    return [f"**STATUS: {'RELEASED (the owner release line is in the Release row of ' + P.get('paths.gates') + ')' if released else 'DRAFT'}** — {rep.get('title', rep['name'])}. "
+            f"The banner turns RELEASED only when the owner writes the release line into the Release row's approval cell of `{P.get('paths.gates')}` (regex `{P.get('markers.release_regex')}`; its git author is checked by `scripts/gate_check.py --release`); agents never write it.", ""]
 
 
 def section_identity(ctx, P, rep):
@@ -236,7 +237,7 @@ def selftest():
     md5 = hashlib.md5(b"(kicad_pcb)\n\xe9\r\n").hexdigest()
     open(f"{d}/out/fab/2026-01-01_x/board_id.txt", "w").write(f"board kicad/b/b.kicad_pcb\nmd5 {md5}\ncommit abc\n")
     open(f"{d}/docs/governance/DECISIONS.md", "w").write("| ID | Date | Status | Topic | P | R |\n|---|---|---|---|---|---|\n| **D-01 (owner)** | d | **APPROVED** | t | p | r |\n| CC-001 | d | OPEN q | t2 | p | r |\n")
-    open(f"{d}/docs/governance/GATES.md", "w").write("| G0 | _not yet approved_ |\n")
+    open(f"{d}/docs/governance/GATES.md", "w").write("prose: clear to build must not count here\n| **G0** | spec | x | _not yet approved_ |\n| **Release** | reports | y | _not yet written_ |\n")
     open(f"{d}/design/case.yaml", "w").write("case: {version: v1, pieces: [tray, hood], note: skip me}\n")
     P = Project(f"{d}/project.yaml")
     assert run(P, False) == 0
@@ -248,7 +249,7 @@ def selftest():
     for f in glob.glob(f"{d}/**/*", recursive=True):
         os.utime(f, (0, 0))
     assert run(P, True) == 0, "--check must survive a mtime change (git archive / clone)"
-    open(f"{d}/docs/governance/GATES.md", "a").write("| G2 | clear to build — owner, 2026-01-02 |\n")
+    open(f"{d}/docs/governance/GATES.md", "a").write("| **Release** | reports | y | clear to build — owner, 2026-01-02 |\n")
     assert run(P, True) == 1, "a changed input makes the report STALE"
     run(P, False)
     assert "**STATUS: RELEASED" in open(f"{d}/docs/release/R.md").read()
