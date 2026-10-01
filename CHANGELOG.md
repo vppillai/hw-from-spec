@@ -1,5 +1,65 @@
 # CHANGELOG — hw-from-spec
 
+## 0.9.0 — 2026-09-30 — gates enforced by scripts, every documented command runs as written (closes blind review S of 0.8.0)
+
+Blind review S (`docs/reviews/OPUS_blind_review_S_skill_0.8.0_2026-09-30.md`, Opus, cold personas: EE user, mech user with a bracket STEP, sceptical
+manager, skill maintainer): 28 findings, every one reproduced with a command. Owner's bar for the release: gates enforced by scripts not prose, "no
+waivers" true in code, a cold user runs README + SKILL.md as written. Every finding re-run before and after the fix (`smoke/run_smoke.sh` section 0e
+and 0d carry the negative cases as permanent checks).
+
+### Per-finding disposition
+
+| # | Sev | Finding (short) | Disposition |
+|---|---|---|---|
+| F1 | MAJOR | README Quick start smoke fails without a skill venv; SKILL says pyyaml-only venv | FIXED — ONE venv (the project's, mesh libs included); the smoke falls back to the caller's `.venv`, skips the mesh section with a NOTE when the libs are absent |
+| F2 | MAJOR | `scripts/project.py scaffold` fails on a stock python3 (`import yaml`) | FIXED — lazy import; the smoke runs scaffold with `python3` |
+| F3 | MAJOR | five scripts not executable | FIXED — all 100755; smoke asserts mode, shebang and `--selftest` on every `scripts/*` |
+| F4 | MAJOR | `skill_retro.py` default `--skill` resolves through the symlink to the project | FIXED — `realpath(__file__)` in every script (smoke greps `abspath(__file__)`); retro selftest runs through a symlinked `scripts/` |
+| F5 | MAJOR | census / print-DFM gates check the records that exist, not the STL set; a deleted acceptance keeps passing | FIXED — both gates glob the sibling `stl/` + `paths.mech_record` under the tag and FAIL on a body without a same-md5 record; the census gate re-matches `accepted_fails` against the live `print_targets.<t>.accepted` |
+| F6 | MAJOR | `dfm_process` read by no script; record version / thresholds not compared | FIXED — `--gate` requires `record.process == print_targets.<t>.dfm_process`, `record.version == VERSION`, `record.thresholds ==` the current row |
+| F7 | MAJOR | `--open <tag>/<piece>=<anything>` accepted | FIXED — the id must be an OPEN row of `paths.decisions` (topic printed); any other string, an APPLIED row, or no decision log = exit 1 |
+| F8 | MAJOR | non-watertight and multi-body meshes PASS | FIXED — rule **M** (watertight, consistent winding, body count = `--bodies N`, default 1); selftest: open box, two plates |
+| F9 | MAJOR | CI recipe writes into the submodule; workflows never init it; three scripts missing | FIXED — project-owned `ci/` (`project.env` + copied scripts), `submodules: recursive` on every checkout, `setup_linux.sh` / `nightly.sh` / `release_archive.sh` shipped |
+| F10 | MAJOR | kickoff answers have no machine-readable home | FIXED — `kickoff:` mapping + `board:` block in `templates/project.yaml` (every class a slot); `scripts/project.py kickoff --check` fails on an answered row without its key or D row |
+| F11 | MAJOR | ERC warnings waived in prose; mesh / DRC gates are opt-in comments | FIXED — `scripts/erc_gate.py` + `design/erc_accept.yaml` (typed entry naming a live decision row; stale entries and GUI exclusions fail; `ERC_WAIVERS.md` removed); `adopt_gates.sh` fails when a schematic / board / STL set exists and its gate line is missing or commented (`project.py gates-required`) |
+| F12 | MAJOR | gate cells and the release line unenforceable; regex matched anywhere in the file | FIXED — `scripts/gate_check.py <gate>` reads the cell per row; `--release` = the Release row's cell AND `git blame` author == `project.owner`; `release_report` banner reads the Release cell only; generators of the next phase call it |
+| F13 | MAJOR | no route for an existing STEP in mech scope | FIXED — `scripts/step2stl.py` (cadquery / FreeCAD CLI / `--canonical`, canonical STL, provenance sidecar, the OPEN decision row printed); `references/case-pipeline.md` §0; M1 row accepts an imported body under its row |
+| F14 | MINOR | the `{{` grep cannot pass right after copying | FIXED — `scripts/project.py slots` replaces the grep; two passes (records now, SPEC / KICKOFF after the spec), 0 before the G0 ask; STATUS skeleton between `<!-- skeleton -->` markers is excluded |
+| F15 | MINOR | scope leaks after scaffold (KICKOFF rows, CLAUDE rules 4 / 9, GATES header / bar, MFG-003) | FIXED — tagged per scope; out-of-scope KICKOFF rows are dropped; `evals/run_evals.py` checks evals 11 / 12 on a real scaffold |
+| F16 | MINOR | scaffold mangles its own explanatory comment | FIXED — the comment names the tags without spelling them |
+| F17 | MINOR | batch 5 has five questions, C10 in no batch, A4 beyond the option limit, "accept all" unspecified | FIXED — twelve batches of ≤ 4, C8a / C9 / C10 / D3 in batch 6, A4 folded to four options, accept-all = first option of the batch's first question; eval 8 checks the table mechanically |
+| F18 | MINOR | SKILL §0 step 2 copy block differs from README, misses VERIFY.md | FIXED — SKILL points at the one README block (incl. `design/VERIFY.md`, `design/erc_accept.yaml`) |
+| F19 | MINOR | retro ignores `ids.owner_prefix`, drops `* YYYY-MM-DD (domain)` bullets silently, hard-codes ids / paths | FIXED — prefix and `paths.dfm_processes` from project.yaml, `- * +` bullets with `[ ]` / `( )` domains and bold dates, unparsed dated bullets listed in §0 + a stdout WARNING, any id prefix generalised, 30 domain tags |
+| F20 | MINOR | every fold is a hand edit | FIXED (bounded) — `--apply`: pitfalls lines, NEW process rows with citations (`validated_on: []`), a CHANGELOG stub, idempotent; PARTIAL / CHANGED / evals / questions stay listed candidates by design |
+| F21 | MINOR | missing file exits 1, docstring says 2 | FIXED |
+| F22 | MINOR | no `mech` role set in the review workflow | FIXED — `ROLE_SET = 'mech'` (case_dfm, mechanical intent, hardware, gates) |
+| F23 | MINOR | §1.2 before §1.1; "the owner writes D rows" contradicts §0.1 | FIXED — reordered; "the agent transcribes the owner's words into D rows, quoted" |
+| F24 | NOTE | 119 / 122 / 151 hand-filled slots | ACCEPTED, made visible — `scripts/project.py slots` lists them per file and exits 1 while any remain; the smoke proves a trivially filled project reads 0 (the kickoff / board slots added for F10 raise the raw count: every answer now has a key) |
+| F25 | NOTE | cantilevers reported as bridges | FIXED — a ceiling with < 2 supported ends (horizontal ray from each end) is a cantilever under O; B keeps two-ended bridges; selftest: T-section 2 cantilevers / 0 bridges, inverted U 1 bridge |
+| F26 | NOTE | source-project residue (openscad default, port_a / port_b, absolute paths in retro reports) | FIXED — mech CLI is a slot, generic `channel_a` / `channel_b`, retro prints basenames; the three shipped reports scrubbed |
+| F27 | NOTE | evals not executed | FIXED — `evals/run_evals.py` runs `checks:` (8 evals carry them), lists 6 as manual |
+| F28 | NOTE | pure gates trust the JSON | FIXED — every record carries `sig = sha256(canonical body \| VERSION)`; both gates refuse a record that fails it (tampered FLAG→PASS = FAIL) |
+
+### Added
+- `scripts/gate_check.py`, `scripts/erc_gate.py`, `scripts/step2stl.py`, `evals/run_evals.py`, `templates/design/erc_accept.yaml`,
+  `templates/ci/{setup_linux,nightly,release_archive}.sh`; `scripts/project.py` `slots` / `kickoff --check` / `gates-required` + `record_sig` /
+  `verify_sig` / `open_decisions`; `print_dfm.py` rule M + `--bodies` + `--target`; `skill_retro.py --apply`; `blind-deep-review.js` `mech` role
+  set; `project.owner`, `paths.schematic`, `paths.erc_accept`, the `kickoff:` mapping and `board:` block in `templates/project.yaml`.
+- Smoke: section 0e (enforcement without mesh libs: missing / tampered census record, commented gate line, empty gate cell, uncommitted and
+  agent-authored release lines, slots → 0, kickoff --check negative + positive) and the 0d negatives (uncensused body, laxer row, free `--open`,
+  tampered record, open mesh, missing file); mode / shebang / selftest / `abspath` / stock-python3 scaffold checks; `run_evals.py` in the smoke.
+
+### Changed
+- `print_dfm.py` rule-set `VERSION` 0.9.0 (rule M, O / B split) — every record is re-made; `thin_wall_census.py` records carry `version` + `sig`.
+- The release line counts only in the Release row's approval cell (`release_report.py` banner); `templates/GATES.md` says so.
+- `ERC_WAIVERS.md` is gone from templates, paths and docs; `paths.erc_waivers` → `paths.erc_accept`.
+
+### Not done
+- `--apply` does not touch PARTIAL sections, CHANGED numbers, evals or questionnaire questions (a human reads the report; deliberate).
+- Evals 2, 3, 4, 5, 7, 10 stay manual (they need an agent run against the prompt).
+- `print_dfm.py` has no `--target <t>` shortcut for the process row on analysis (the gate reads it; one flag, add when asked).
+- `step2stl.py` ships no converter: it calls cadquery or FreeCAD when present and prints the routes otherwise.
+
 ## 0.8.0 — 2026-09-30 — print DFM: a vendor-independent manufacturability check for printed bodies, and the loop that improves it
 
 Owner: "since the tool is reusable for future designs, should it go into the skill repo and we leave commands in there to self improve as the
