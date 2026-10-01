@@ -52,7 +52,8 @@ reference when you reach that step, not before. Nothing here is specific to one 
    add it and rerun**) → `scripts/release_report.py` (DRAFT, record MISSING — correct before G1 / M1) → commit → `scripts/adopt_gates.sh` (day-1 list +
    clone gate) green → fill the CC-001 evidence cell and the first STATUS paragraph → commit. Only now read the spec (§1.1 says what happens at G0).
 7. **CI (optional, when the repo has a remote)**: `templates/ci/` holds pr-check / nightly / release workflows with `{{PROJECT_*}}` placeholders;
-   fill them with the `sed` recipe in `templates/ci/README.md`, write `scripts/ci/project.env`, commit under `.github/workflows/`.
+   fill them with the recipe in `templates/ci/README.md` (it copies `setup_linux.sh` / `nightly.sh` / `release_archive.sh` and writes
+   `project.env` into the PROJECT-OWNED `ci/`, never under `scripts/` = the submodule; every checkout has `submodules: recursive`), commit under `.github/workflows/`.
 
 ### 0.1 The kickoff questionnaire — every owner decision up front, with a recommended answer (`references/kickoff-questionnaire.md`)
 

@@ -18,8 +18,9 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          submodules: recursive          # the skill is a submodule at vendor/hw-from-spec; without this `scripts` dangles and every gate fails
       - name: Project constants
-        run: cat scripts/ci/project.env >> "$GITHUB_ENV"
+        run: cat ci/project.env >> "$GITHUB_ENV"
       - name: Bootstrap (with the mechanical / FEA stack)
         run: {{PROJECT_SETUP_CMD}} NIGHTLY=1
       - name: Nightly checks
