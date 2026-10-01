@@ -1,5 +1,28 @@
 # CHANGELOG — hw-from-spec
 
+## UNRELEASED — retro of the second mechanical-only project (beest, 2026-10-01): legend geometry at a small cap, colour-body target, Manifold backend, linkage sweeps, Bambu arranger
+
+Source: `docs/retro/beest_2026-10-01.md` — a desk Strandbeest (36 bodies, 7 P2S plates, three AMS colours) built under scope `mech` on 0.9.2 + the
+wankel retro branch; 25 learnings, 14 NEW / 7 PARTIAL / 4 CARRIED (the classifier's reading; three CARRIED rows were folded anyway because the number
+they carry is new). Three census / print-DFM rounds on the colour bodies and two aborted slices paid for these lines. No script changed; no version bump.
+
+### Changed
+- **`references/dfm-printed-enclosure.md` §8**: a legend at a small cap — `text(size=)` vs cap height (one H per font), font chosen by measured
+  stroke / counter, SVG glyph holes by ring coverage, morphology OPEN → CLOSE → neck thickening, gaps filled ~0.05 over the gate (the mesh tools read
+  under the polygon), thin-REGION rows instead of an erosion area ratio; colour bodies as their own print target with the body's thickness as the wall
+  gate. **§8.3**: the arranger nests concave outlines ("gcode path conflicts" → pre-place with `--arrange 0`), a self-placed multi-colour plate hits the
+  wipe tower (leave those to the arranger), `result.json` empty for pre-placed plates, `M620` counted against the designed number.
+- **`references/case-pipeline.md`**: Interference — planar linkage levels as a conflict-graph colouring, the 360-step body-PAIR sweep per level with
+  pins / pegs / caps as discs; Process rules — the Manifold backend (< 0.1 s per body) and its two watertightness traps (hull of slabs, unioned D-shafts).
+- **`references/agent-ops.md` §5**: with Manifold the concurrency ceiling belongs to the mesh checks and the slicer, not the CAD export.
+- **`references/pitfalls.md`**: 15 lines (8 dfm: cap height, font measurement, erosion ratio, ring coverage, morphology order, under-reading, colour-body
+  gate, Bambu arranger; 6 mechanical: graph colouring, pair sweep, local-vs-machine frame, chirality + ratchet facing, centroid bistability rows,
+  sagitta / kinked slot; 1 tooling: Manifold speed + hull / D-shaft).
+
+### Not folded
+- The twisted-band motor vs spool-and-loop energy budget (a drive choice for this piece, not a skill rule), the Homebrew cask coexistence note (install
+  trivia), the project-created / selftests-green bookkeeping line, and the O-rule cantilever bevel (carried by `print-dfm.md` rule O already).
+
 ## UNRELEASED — retro of the first mechanical-only project (wankel, 2026-09-30): census memory, legend geometry, curved-exit holes, concurrency ceiling
 
 Source: `docs/retro/wankel_2026-09-30.md` — a hand-crank Wankel engine model (11 bodies, 3 P2S plates) built under scope `mech` from 0.6.1 and

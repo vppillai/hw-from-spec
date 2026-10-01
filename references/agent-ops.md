@@ -87,7 +87,7 @@
 - Owner offline: list owner-only items (orders, gate cells, hardware records) at the pause point, never attempt them; kill a long chain early when an
   owner addition arrives through the coordinator.
 
-- **Concurrency ceiling for geometry pipelines** (two host restarts in one night, retro wankel 2026-09-30): ≤ 3 OpenSCAD / CGAL exports at once, mesh checks (census, print_dfm) and offscreen renders sequential, `embreex` installed so a census is 3 s / 0.8 GB instead of > 12 GB; one long chain in the background writing a log with an `EXIT` line, polled by a background `until grep`, never a foreground loop.
+- **Concurrency ceiling for geometry pipelines** (two host restarts in one night, retro wankel 2026-09-30): ≤ 3 OpenSCAD / CGAL exports at once, mesh checks (census, print_dfm) and offscreen renders sequential, `embreex` installed so a census is 3 s / 0.8 GB instead of > 12 GB; one long chain in the background writing a log with an `EXIT` line, polled by a background `until grep`, never a foreground loop. With OpenSCAD's Manifold backend (retro beest 2026-10-01) the CAD export is no longer the slow step — the ceiling is for the mesh checks and the slicer.
 ## 6. Reporting
 - Report before/after per class, not one number (a repo-wide grep count is not a work estimate).
 - "Already done by <agent>" in the manifest instead of editing twice; re-read each target line before editing on a multi-agent day.
