@@ -12,9 +12,13 @@ CLI (for shell scripts):
   scripts/project.py record                   # "<label> <md5>" of the record of record: the board (ee/both) or the STL set paths.mech_record (mech)
   scripts/project.py scaffold --scope S FILE...   # resolve the {{ee,both}}-style scope tags of copied templates in place: a tagged line stays only
                                               # when S is in its list (tag removed); untagged lines stay. Then `grep -rn '{{'` must print nothing.
+  scripts/project.py gates-required           # exit 1 when an artefact exists (schematic, board, the STL set) and gates.adopt has no gate line for it
   scripts/project.py --selftest
+
+Record signing (print_dfm / thin_wall_census records): `sig` = sha256 of the canonical JSON body (sorted keys, no `sig`) + the tool VERSION;
+`verify_sig(rec, VERSION)` is False for a hand-edited record or one written by another rule set — the PURE gates refuse it.
 """
-import glob, hashlib, os, re, sys
+import glob, hashlib, json, os, re, sys
 
 SCOPES = ("ee", "mech", "both")
 SCOPE_TAG = re.compile(r"\{\{((?:ee|mech|both)(?:,(?:ee|mech|both))*)\}\}")
@@ -127,6 +131,49 @@ def scaffold(scope, files):
     return dropped
 
 
+def record_sig(rec, version):
+    """sha256 of the canonical JSON body (sorted keys, `sig` excluded) and the tool version."""
+    body = {k: v for k, v in rec.items() if k != "sig"}
+    return hashlib.sha256((json.dumps(body, sort_keys=True, separators=(",", ":")) + "|" + str(version)).encode()).hexdigest()
+
+
+def verify_sig(rec, version):
+    return isinstance(rec, dict) and rec.get("sig") == record_sig(rec, version)
+
+
+def open_decisions(path):
+    """{id: topic} of the decision-log rows whose status cell starts with OPEN (bold stripped) — the only ids `--open` may name."""
+    out = {}
+    for line in open(path, encoding="utf-8") if os.path.exists(path) else []:
+        if not line.startswith("|"):
+            continue
+        c = split_row(line)
+        if len(c) >= 4 and re.sub(r"\*", "", c[2]).strip().upper().startswith("OPEN"):
+            m = re.search(r"\b([A-Z]+-\d+[a-z]?)\b", c[0])
+            if m:
+                out[m.group(1)] = re.sub(r"\*", "", c[3]).strip()
+    return out
+
+
+def required_gate_lines(P):
+    """An artefact that exists must have its gate line in gates.adopt (commented lines are not lines): the schematic -> erc_gate.py, the board ->
+    a DRC gate, the STL set (paths.mech_record) -> thin_wall_census --gate-dir AND print_dfm --gate. -> problem list (blind review 0.8.0 F11)."""
+    lines = " ".join(str(x) for x in (P.get("gates.adopt") or []))
+    bad = []
+    sch = P.path("schematic")
+    if sch and os.path.exists(sch) and "erc_gate.py" not in lines:
+        bad.append(f"schematic {P.get('paths.schematic')} exists but gates.adopt has no `scripts/erc_gate.py` line")
+    board = P.path("board")
+    if board and os.path.exists(board) and not re.search(r"drc", lines, re.I):
+        bad.append(f"board {P.get('paths.board')} exists but gates.adopt has no DRC gate line")
+    pat = P.get("paths.mech_record")
+    if pat and glob.glob(os.path.join(P.root, pat)):
+        for tok, what in (("--gate-dir", "thin_wall_census.py --gate-dir"), ("print_dfm.py --gate", "print_dfm.py --gate")):
+            if tok not in lines:
+                bad.append(f"STL set {pat} has files but gates.adopt has no `{what}` line")
+    return bad
+
+
 def split_row(line):
     """Cells of a markdown table row; a backslash-escaped pipe inside a cell is content, not a separator."""
     return [c.strip() for c in re.split(r"(?<!\\)\|", line.strip())[1:-1]]
@@ -151,7 +198,16 @@ def selftest():
     open(f"{d}/out/mechanical/case/v1/stl/b.stl", "wb").write(b"B"); assert P.record_md5()[1] != m, "a new STL moves the mech record md5"
     open(f"{d}/t.md", "w").write("all\n| G1 | {{ee,both}}\n| M1 | {{mech}}\n{{ee,both}}{{mech}} either\n")
     assert scaffold("mech", [f"{d}/t.md"]) == 1 and open(f"{d}/t.md").read() == "all\n| M1 |\n either\n", open(f"{d}/t.md").read()
-    print("selftest OK (defaults, paths, ids, scope, record md5, scaffold)")
+    # record signing, OPEN rows, required gate lines
+    r = dict(a=1, b=[1.5, "x"]); r["sig"] = record_sig(r, "1.0"); assert verify_sig(r, "1.0") and not verify_sig(dict(r, a=2), "1.0") and not verify_sig(r, "1.1")
+    open(f"{d}/D.md", "w").write("| ID | Date | Status | Topic | P | R |\n|---|---|---|---|---|---|\n| **D-07** | d | **OPEN** | widen root | p | r |\n| CC-010 | d | APPLIED | x | p | r |\n| CC-011 | d | OPEN (owner) | y | p | r |\n")
+    assert open_decisions(f"{d}/D.md") == {"D-07": "widen root", "CC-011": "y"}, open_decisions(f"{d}/D.md")
+    P.cfg["paths"] = {"mech_record": "out/mechanical/case/*/stl/*.stl", "schematic": "k/k.kicad_sch"}; P.cfg["gates"] = {"adopt": ["$PY scripts/known_issues.py --check"]}
+    bad = required_gate_lines(P); assert len(bad) == 2 and "--gate-dir" in bad[0] and "print_dfm.py --gate" in bad[1], bad
+    P.cfg["gates"]["adopt"] += ["$PY scripts/thin_wall_census.py --gate-dir out/x/census", "$PY scripts/print_dfm.py --gate out/x/dfm"]
+    assert required_gate_lines(P) == []
+    os.makedirs(f"{d}/k"); open(f"{d}/k/k.kicad_sch", "w").write("x"); assert "erc_gate.py" in required_gate_lines(P)[0]
+    print("selftest OK (defaults, paths, ids, scope, record md5, scaffold, record signing, OPEN rows, required gate lines)")
     return 0
 
 
@@ -160,13 +216,18 @@ def main(argv):
         sys.exit(selftest())
     if len(argv) > 1 and argv[1] in ("--help", "-h"):
         print(__doc__); return
-    if len(argv) < 2 or argv[1] not in ("get", "path", "root", "scope", "record", "scaffold"):
+    if len(argv) < 2 or argv[1] not in ("get", "path", "root", "scope", "record", "scaffold", "gates-required"):
         sys.exit(__doc__)
     if argv[1] == "scaffold":
         if len(argv) < 5 or argv[2] != "--scope":
             sys.exit(__doc__)
         print(f"scaffold {argv[3]}: {scaffold(argv[3], argv[4:])} line(s) dropped in {len(argv) - 4} file(s)"); return
     P = Project.find()
+    if argv[1] == "gates-required":
+        bad = required_gate_lines(P)
+        for b in bad:
+            print("GATES REQUIRED:", b)
+        sys.exit(1 if bad else 0)
     if argv[1] == "root":
         print(P.root)
     elif argv[1] == "scope":
