@@ -29,7 +29,7 @@ batch with no applicable question is skipped — a mech-only owner never sees vi
 | 8 verification (cont.) + bought parts | E3, E4, F1, F2 | all (E3 mech/both) | the G0 review round, parts.yaml |
 | 9 software + reports | G1, G2, H1, H2 | all (G1–G2 ee/both) | the bring-up tool, the first release report |
 | 10 CI, retro, envelope, branding | H3, H4, I1, I2 | all | the spec is read |
-| 11 debug access, delegation, slicer optimisation | I3, I4, C11 | all (I3 ee/both, C11 mech/both) | the spec is read |
+| 11 debug access, delegation, slicer optimisation, stability | I3, I4, C11, C12 | all (I3 ee/both, C11–C12 mech/both) | the spec is read |
 
 Twelve batches (0–11), none above four questions; a batch whose questions are all out of scope is skipped.
 
@@ -148,6 +148,11 @@ magnet pockets, orientation by load. *Alt:* surface — inner/outer/inner walls,
 precise outer wall. *Alt:* speed — 3 walls, 10 % gyroid, no ironing. Every knob set is in the plate yaml and proven from the g-code (`purge_g`,
 `tower_g`, `wall_loops` read back); written to `kickoff.enclosure.optimise`.
 
+**C12 Does the piece stand free?** [mech, both] (`references/case-pipeline.md` §Stability). **RECOMMENDED: yes if it rests on a desk, floor or hand without
+being held — then a CoG-vs-support-polygon row at the worst pose is a gate (margin ≥ 2 mm or a stated value), computed from the STL set with
+an infill factor per body**; *Alt:* fixed (wall-mounted, screwed, clamped) — a mounting-strength row instead; *Alt:* hand-held — no row.
+Written to `kickoff.enclosure.stands_free` and the generator's stability row.
+
 ## D. The manufacturability bar (SKILL §1.2) — the owner confirms the default explicitly
 **D1 The bar.** **RECOMMENDED: zero errors, zero warnings, no waivers** — board: DRC 0 / 0 / 0 warnings, fab DFM 0 Danger / 0 Warning; printed
 enclosure: census 0 unaccepted FAIL, slicer log clean, vendor checker no flag by API read, no yellow / red; CNC: vendor DFM clean; recorded as
@@ -229,7 +234,7 @@ window and lists every action taken.
 | A0 | `project.scope` | CLAUDE.md scope line, GATES.md rows (scaffold), KICKOFF_ANSWERS `n/a (scope)` rows |
 | A1–A4 | `kickoff.product_class`, `kickoff.quantity`, `kickoff.fab`, `print_targets.<t>` (vendor, process, material, rating) | SPEC §1, §8; D rows |
 | B1–B8 | `board.layers / thickness / copper / stackup_template / impedance / finish / mask / silk / min_package / link_parts / sides / test_points / panel` | SPEC §4–§6 (R-M01…), `design/<board>_board.yaml`, `design/dfm_thresholds.json` (source + date) |
-| C1–C11 | `kickoff.enclosure` (pieces, retention, coupling, feet, labelling, fan, light_pipe, targets, marks, kit_recipient, fit_decider, fit_result, optimise); C8a `print_targets.<t>.dfm_process` | SPEC §8, `design/case.yaml` presets + `fits` knobs; START_HERE report-back recipient; the plate yaml `optimise:` block; ARRIVAL_CHECKLIST E-FIT |
+| C1–C12 | `kickoff.enclosure` (pieces, retention, coupling, feet, labelling, fan, light_pipe, targets, marks, kit_recipient, fit_decider, fit_result, optimise, stands_free); C8a `print_targets.<t>.dfm_process` | SPEC §8, `design/case.yaml` presets + `fits` knobs; START_HERE report-back recipient; the plate yaml `optimise:` block; ARRIVAL_CHECKLIST E-FIT |
 | D1–D3 | `fab_dfm.bar`, `print_targets.<t>.design_margin / tolerance / accepted` | GATES.md `{{D-BAR}}` row id, CLAUDE.md rule 9 |
 | E1–E4 | `kickoff.verification` (rounds, visual, fea), `kickoff.coupons` (E3) | GATES prerequisites, `workflows/` model list |
 | F1–F2 | `kickoff.sourcing` (sources, stock_floor, attrition) | PARTS_VERIFICATION header, BLOCKERS |
