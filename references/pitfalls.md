@@ -80,6 +80,13 @@ printer's model name). Grouped by domain.
 - Raised legend items 0.05 inside a plate edge became 0.66 mm non-watertight stubs the slicer sliced "clean": a `legend_edge` margin that LISTS what it dropped + a watertight row per exported STL (recorded `watertight: false` a day without gating it) — 2026-09-30 [fdm/export].
 - Sidecars track every slicer key a rule depends on (`top_one_wall_type`, `xy_hole_compensation`, ironing keys, `wall_loops`) and are drift-checked against the 3MF's embedded config; a mark coupon proves geometry, not the thermal state — coupon, then ONE part, then the plate — 2026-09-30 [fdm/slicer], [kit/procedure].
 - Two kernel watchdog panics on one review day: commit small and often, write review reports incrementally, one worktree per agent, one mesh / slicer pool at a time — 2026-09-30 [agents/machine].
+- A raised legend fails the void gate in EVERY font: the crotches of A / K / N / W and the counters of e / 4 / R narrow below 1.0 at any cap that fits an 11 mm band (11 fonts × 3 caps × 3 pads swept, 0 pass). Meet the rule by geometry — morphologically CLOSE the glyph polygons at the void gate (buffer +g/2 then −g/2, mitre joins, AFTER placement so inter-letter gaps count) and gate the inter-letter gap as its own row — retro wankel 2026-09-30 [fdm/legends].
+- `--boxes` legend lands gate the census's WALL and VOID rows, the OPPOSING-face rows gated at the wall gate regardless (a 1.3 legend stroke read OPP 1.51 < 1.6 inside its land): 0.8.1 makes OPP rows honour the land boxes; until a project runs it, draw raised legend strokes ≥ the wall gate — retro wankel 2026-09-30 [census].
+- Any radial hole exiting a CURVED face leaves a feather edge (the material between the hole wall and the surface tapers to 0.03 at the sides of the exit = a free-standing wedge); a shallow spot face only moves the feather to its own rim. Every radial hole exits the FLAT face of a fused block (port flange, plug boss) — three census rounds, retro wankel 2026-09-30 [fdm/geometry].
+- The wedge `band` (second-largest bbox extent of the cluster) reads a RING-shaped cluster around a hole exit as an 8 mm band when the real taper is 1.4 wide along the hole axis: read the bbox of a ring cluster as its diameter, measure the band radially from the edge before accepting the verdict — retro wankel 2026-09-30 [census/metric].
+- A blind-hole floor drawn exactly a wall gate inboard of a CONCAVE bore surface measures below the gate (1.37 for 1.6 nominal: the bore curves toward the flat floor off the hole axis) — floor = gate + a curvature margin (0.5), or measure the floor against the bore polygon when the yaml value is set — retro wankel 2026-09-30 [fdm/geometry].
+- A 96-gon lobe unioned with an offset curve leaves 0.01..0.03 mm hairline notches at every junction; the area-weighted census never samples them, `print_dfm.py`'s point-contact rule (section planes) does. Close the union with a MITRE buffer (+1 / −1) and `simplify(0.02)` the outline below the printable resolution before any body uses it (1350 → 300 vertices, 0 hairlines) — retro wankel 2026-09-30 [dfm/geometry].
+
 
 ## process / gates
 - A date-stamped artefact selftest (two dated packages, one expected STALE) run across midnight produced two dates and failed the PR gate for no design reason: pin the date in the test or make the gate tolerate a rollover — 2026-09-29 [tooling/gates].
@@ -140,6 +147,8 @@ printer's model name). Grouped by domain.
 - A history rewrite (filter-repo) must remap every hash a TOOL uses functionally (replay defaults, freeze-stock build commits), not only record hashes: commit the old→new map and resolve through it; push tags oldest-first (GitHub's 2 GB pack limit) — 2026-09-27 [process/git].
 
 - **One worktree per parallel agent**: two agents in one working tree corrupted each other's kit parity and record gates; commit from a clean HEAD worktree, move `main` with a mixed reset / fast-forward; a `--copy` / kit mirror must sync EVERY plate of record (default, AMS, alternates + sidecars), not only the default — 2026-09-29 [agents/git].
+- Eight parallel OpenSCAD CGAL exports + four censuses + six offscreen PNG renders exhausted the process table (fork: EAGAIN, load > 70) and the host restarted a second time the same night: ≤ 3 CAD jobs at once, mesh checks and renders sequential, long chains in the background with an `EXIT` line polled by a background `until grep` — retro wankel 2026-09-30 [agents/machine].
+
 
 ## tooling / determinism
 - Bambu Studio CLI (02.08.x): `sparse_infill_density` 100 % is rejected (rc -18) — use top / bottom shell thickness for a solid column; a two-filament slice with a prime tower SEGFAULTS (rc -11 / 133, "no filament colors found in projects") unless each slot's filament JSON carries `filament_colour` (or `--filament-colour '#..;#..'`); bisect on the temp inputs one variable per run — 2026-09-29 [tooling/bambu].
@@ -184,6 +193,8 @@ printer's model name). Grouped by domain.
 - A key on the generator's md5 invalidates every cache on a doc-only edit: key OpenSCAD outputs on the generated SCAD text + imported files + argument list — 2026-09-22 [tooling/cache].
 - A `__main__` script also imported by name has TWO module instances: a `global` set in one is invisible in the other — 2026-09-22 [tooling/python].
 - Two agents committing the same generator: commit only your hunk (`git show HEAD:file` + your edit → `hash-object` → `update-index`) — 2026-09-22 [process/concurrency].
+- The census with trimesh's rtree ray engine holds rays × candidate triangles: a 15 000 mm² plate took 4.7 GB at 4 samples/mm² and four parallel bodies at the target 10 /mm² exceeded a 24 GB host (it restarted). `embreex` beside trimesh = the Embree engine: the same body in 2.7 s at 755 MB; pinned in README Install 0.8.1 — retro wankel 2026-09-30 [census/memory].
+
 
 ## kicad / drc / swig *(worked examples; the mechanism generalises to any CAD CLI)*
 - `kicad-cli pcb drc` honours ONLY explicit `netclass_assignments`, never `netclass_patterns`, and NO DRC exclusions: emit per-net assignments from the generator, assert a canary rule fires exactly once; accepted residue = a generated RULE (`enclosedByArea`, not `insideArea` which is an intersection test — prove with a negative construction in `--selftest`) — audit #4 G01, CC-148.
@@ -285,6 +296,11 @@ printer's model name). Grouped by domain.
 - Vertex colours bleed across shared vertices (a 0.02 mm proud purple artwork painted the whole plate top): unshare the vertices (one per face corner) before per-face colour on a baked mesh — 2026-09-27 [viewer/colours].
 - OpenSCAD 2021.01 PNG export costs the same ≈ 8 s at 3840 × 2880 as at 1600 × 1200 (CGAL bound); colour schemes only move the background; user schemes load only from the config dir — CC-192.
 - The vendor's engineer review mail has no attachments: the marked-up heat maps are `<img>` links fetchable without login; hood-local Z = body Z − split plane; it asks "risk acceptable?" per material (nylon ≥ 1.0, resin ≥ 0.8) and opens Replace File only after a reply — 2026-09-22 [jlc/3dp].
+- Text on an arc anchored by NEAREST-POINT projection onto a peritrochoid landed 15 mm off-centre: the waist at the minor axis is a local MAXIMUM of the radius (slightly concave for K ≈ 6.4), so the point nearest a far anchor lies on a lobe — anchor by polar angle — retro wankel 2026-09-30 [mechanical/curves].
+- Internal-gear meshing at a small tooth difference (14:21) is TIP-limited: standard addendum 0.8 m / backlash 0.25 swept to 0.062 mm running clearance with 0 mm² interference; stub teeth 0.7 m + backlash 0.4 gave 0.161. Gate the minimum running clearance of a gear sweep (≥ 0.15 for printed gears) as its own row beside the interference area — retro wankel 2026-09-30 [mechanical/gears].
+- An eccentric shaft prints support-free only when journal radius + eccentricity ≤ eccentric radius (journals inside the eccentric's footprint) AND the shaft is split so the eccentric disc is a bed face; the inequality is a check row — retro wankel 2026-09-30 [mechanical/print].
+- A pocket cut part-height into a vertical flank leaves a pocket ceiling (an overhang) however shallow: flank recesses are full-height dishes in the 2D profile, every wall stays vertical — retro wankel 2026-09-30 [mechanical/print].
+
 
 ## fea
 - Gmsh refuses CGAL STLs as volume boundaries; fTetWild meshes them; drop zero-volume slivers or K is singular — CASE_V3_NOTES §18.

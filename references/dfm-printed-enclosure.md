@@ -237,6 +237,7 @@ numbers are **[owner bar]** for a 0.4 nozzle at 0.20 mm and live in `print_targe
 - **Legends RAISED**: cap 4 / stroke ≥ 1.0 / height 0.6 on a face-up top (a 0.4-deep, 0.45-wide debossed void at cap 2.2 is illegible on a 0.4
   nozzle); raised text cannot print face-down — a face-down face gets a flush colour body (§8.1 option b), never a deboss (its recess ceiling is a bridge underside). A fit filter keeps a legend only where it
   fits its land and LISTS what it dropped.
+- **Legend geometry, not font choice, meets the void gate**: every font's crotches (A K N W) and counters (e 4 R) fall below 1.0 at a cap that fits a 10–12 mm band — CLOSE the glyph polygons at the void gate (buffer +g/2 / −g/2, mitre) after placement, gate the inter-letter gap as a row, and on a curved band set letters one by one along the band's offset curve anchored by POLAR ANGLE (nearest-point anchoring lands on a lobe when the waist is concave). Strokes ≥ the wall gate until the census's opposing-face rows honour legend lands (0.8.1) — worked example: Arial Bold cap 7, pad 0.5, spacing 1.6, closing 1.0, 0 census FAIL (retro wankel 2026-09-30).
 - No rigid bump on a slit tab (it blocks, F ∝ t³); screws + heat-set inserts in ≥ 1.6 boss walls, or magnets (§1.1), instead of snap tabs where the
   arm cannot be long enough.
 - **Fan boss count = fan hole count** (consumer 30 mm fans have 4 holes even when one SKU drawing shows 3); any point set drawn in two places is

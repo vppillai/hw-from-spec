@@ -15,7 +15,7 @@ git submodule add https://github.com/vppillai/hw-from-spec.git vendor/hw-from-sp
 ln -s vendor/hw-from-spec/scripts scripts
 uv venv .venv
 uv pip install --python .venv/bin/python pyyaml numpy trimesh scipy shapely \
-  rtree networkx mapbox-earcut
+  rtree networkx mapbox-earcut embreex
 vendor/hw-from-spec/smoke/run_smoke.sh
 ```
 
@@ -26,7 +26,7 @@ No project yet, just a bracket STL and a vendor in mind? Clone, one venv, one co
 ```sh
 git clone https://github.com/vppillai/hw-from-spec.git && cd hw-from-spec
 uv venv .venv && uv pip install --python .venv/bin/python pyyaml numpy trimesh scipy \
-  shapely rtree networkx mapbox-earcut
+  shapely rtree networkx mapbox-earcut embreex
 .venv/bin/python scripts/print_dfm.py --list                 # the process rows
 .venv/bin/python scripts/print_dfm.py --process xometry_mjf_pa12 ~/bracket.stl
 ```
@@ -74,7 +74,9 @@ Exit 0 = PASS, 1 = FLAG with one line per rule (measured | limit | where | fix):
 
 Requirements: git, bash ≥ 3.2, Python ≥ 3.11, `uv` (or `python3 -m venv` + `pip`). The generic
 scripts need `pyyaml`; the mesh scripts (`print_dfm.py`, `thin_wall_census.py`, `thin_wall_check.py`)
-need `numpy trimesh scipy shapely rtree networkx mapbox-earcut` (`matplotlib` for heat-map PNGs). CAD, OpenSCAD, FEA
+need `numpy trimesh scipy shapely rtree networkx mapbox-earcut embreex` (`matplotlib` for heat-map PNGs). `embreex` gives trimesh the Embree ray engine: without it the census of a 15 000 mm² body at
+10 samples/mm² needs > 12 GB (the rtree engine holds rays × candidate triangles) and took a 24 GB host down; with it the same body runs in 3 s at 0.8 GB
+(retro wankel 2026-09-30). CAD, OpenSCAD, FEA
 and browser tooling belong to the project and are recorded in its `docs/governance/ENV.md`.
 
 The skill lives in ONE place inside a project: a submodule at `vendor/hw-from-spec` with a relative
@@ -103,7 +105,7 @@ commands in `SKILL.md` that read `project.yaml` are written `.venv/bin/python sc
 ```sh
 uv venv .venv
 uv pip install --python .venv/bin/python pyyaml numpy trimesh scipy shapely \
-  rtree networkx mapbox-earcut
+  rtree networkx mapbox-earcut embreex
 ```
 
 3. Prove the toolchain before reading the spec:
