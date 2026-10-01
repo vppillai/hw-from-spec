@@ -97,7 +97,7 @@ step text (the case generator's `### Step N - title (T s)` + paragraph → the f
 record (marketing look: clean scheme, the ordered colours, legends readable → cameras on the side the legend is laid out for), keyed on
 (geometry md5 of the one scad file named — flatten includes or accept that included files do not move the key, defs, camera, size) so a text edit renders nothing and a case bump re-renders every page (≈ 1 min). Numbers stay in the SOP /
 manufacturing spec (one source); the guide names where the words are. Registered in `production_cut.yaml` as a deliverable with its `--check`;
-the SOP's companion cell points at it (a pointer, no revision bump). Worked example: the source project's VG-001 (D-76 / CC-199).
+the SOP's companion cell points at it (a pointer, no revision bump).
 
 ## 9. Repo re-layout and deletions at the order (`scripts/reorg_paths.py`)
 When the tree is a mess at the order: phase 1 deletions (superseded generated artefacts; git history + tags keep them), phase 2 re-layout after
@@ -107,3 +107,23 @@ path with the same sha, or in the rewrite list) → gates → tag. Frozen record
 generator-owned notes are re-derived, its fab files never rebuilt. URLs into the repo are not rewritten (grep `blob/.*/<old>` by hand). Before a deletion: grep basenames AND exact paths, separate live citations
 (gen/, design/, CI, live docs) from record citations (DECISIONS / STATUS / merged reviews) — treating records as blockers freezes the tree; a
 traceability `exists` check on a file that leaves the tree becomes `git show <tag>:<path> | grep -qF '<same string>'`, nothing weakened.
+
+## 10. The arrival / first-article checklist (`scripts/arrival_checklist.py`) — written at the order, closed as the parts arrive
+`design/arrival_checklist.yaml` (`templates/design/arrival_checklist.yaml`) → `docs/production/ARRIVAL_CHECKLIST.md`; `--check` joins `gates.adopt`
+the moment the yaml exists (`project.py gates-required`), the markdown is a cut deliverable (`production_cut.yaml` REC-002). Sections in the order of
+the day: **before shipment** (the fab's assembly photos: polarity vs silk, the critical connector's seating, holes that must stay open — a paid
+"confirm production file / placement" option is not guaranteed to raise a dialog, so the photo confirmation is the one human look), **bench checks in
+gate order** (each row names the instrument / net / expected value, what to do on FAIL, and what it `opens`: nothing is powered or plugged before
+the row that opens it is DONE), **software gates before the first high-power step** (each with the commit that closed it), **case first article**
+(the caliper table that replaces the vendor's tolerance, fit by hand, retention cycles, coupons read by their printed text), **owner decisions still
+OPEN** with the measurement that resolves each (the bracket-print fit knob → `kickoff.enclosure.fit_result`; SPEC errata rows). The rows come from
+the merged blind reviews ("what the boards decide" = the CONFIRMED items whose closure is a bench step) and the OPEN decision rows — written BEFORE
+the parts arrive, never reconstructed afterwards. Every row carries `status` (TODO / DONE <date> / N/A / APPLIED <date> while the owner's veto
+window is open) and `evidence`; the script refuses a DONE without evidence, a duplicate id, a status outside the grammar. Closing a row = yaml edit,
+regenerate, commit.
+
+## 11. A frozen SPEC gets an errata file, never an edit (`templates/SPEC_ERRATA.md`)
+`docs/spec_sections/SPEC_ERRATA.md`: one E-row per deviation of the design of record from the frozen text — the SPEC text, the design of record, the
+decision that made the change, where the evidence lives, Status OPEN (owner) → APPROVED <date> → FOLDED <rev> when the next SPEC revision's change
+log cites it; a rejected row is struck through with the reason. It records changes already decided (rule 2); it changes nothing. Readers: the
+blind-review verifier (a deviation already here is ALREADY DECIDED), the arrival checklist §E (OPEN rows with their trigger), the next spec author.

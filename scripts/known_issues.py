@@ -113,7 +113,7 @@ def run(P, check):
     begin, end = P.get("markers.hand_curated")
     text = open(out, encoding="utf-8").read() if os.path.exists(out) else ""
     if begin not in text or end not in text:
-        sys.exit(f"{out}: hand-curated block ({begin} … {end}) missing — add the markers around section 1 first")
+        print(f"{out}: hand-curated block ({begin} … {end}) missing — add the markers around section 1 first"); sys.exit(2)
     new = build(P, text[text.index(begin): text.index(end) + len(end)])
     if check:
         if new != text:

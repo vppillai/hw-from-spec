@@ -175,9 +175,9 @@ def section_traceability(ctx, P, rep):
 
 
 def section_dfm(ctx, P, rep):
-    d = ctx.json(P.get("dfm.report", "out/dfm.json"))
+    d = ctx.json(P.get("fab_dfm.report") or P.get("dfm.report", "out/dfm.json"))
     if d is None:
-        return ["## Fab DFM mirror", "", f"MISSING: `{P.get('dfm.report', 'out/dfm.json')}`", ""]
+        return ["## Fab DFM mirror", "", f"MISSING: `{P.get('fab_dfm.report') or P.get('dfm.report', 'out/dfm.json')}`", ""]
     return ["## Fab DFM mirror", "", f"Open (not accepted) items: **{d.get('open')}** of {len(d.get('items', []))} measured; thresholds `{d.get('thresholds')}`", ""]
 
 

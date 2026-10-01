@@ -9,7 +9,9 @@
 set -e
 trap 'echo "adopt gates: aborted at line $LINENO (rc $?)" >&2' ERR
 HERE=$(cd "$(dirname "$0")" && pwd -P)
+case "${1:-}" in -h|--help) sed -n '2,12p' "$0"; exit 0;; ""|--selftest|--no-clone) ;; *) echo "adopt_gates.sh: unknown option $1 (usage: scripts/adopt_gates.sh [--no-clone] | --selftest)" >&2; exit 2;; esac
 if [[ "$1" == "--selftest" ]]; then
+  [[ -z "${PYTHON:-}" && -x "$PWD/.venv/bin/python" ]] && "$PWD/.venv/bin/python" -c "import yaml" 2>/dev/null && export PYTHON="$PWD/.venv/bin/python"   # the selftest's temp project has no venv: take the caller's
   T=$(mktemp -d /tmp/hwfs_ag_XXXX); trap 'rm -rf $T' EXIT
   mkdir -p $T/r && cd $T/r && git init -q
   printf 'project: {name: t}\ngates:\n  quiet_regex: "Fontconfig"\n  adopt: ["echo step1", "sh -c \\"echo Fontconfig warning >&2; exit 0\\"", "false", "echo never"]\n  clone: []\n' > project.yaml

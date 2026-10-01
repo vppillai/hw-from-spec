@@ -25,6 +25,8 @@ kickoff:                                      # the owner's kickoff answers, mac
     marks: {{C9_MARKS}}                       # C9: ironed top-face feature | flush AMS colour body | both | glued plate {{mech,both}}
     kit_recipient: {{C10_RECIPIENT}}          # C10: who receives the print kit's report-back {{mech,both}}
     fit_decider: {{C10_FIT_DECIDER}}          # C10: who picks the fit knob after the bracket print {{mech,both}}
+    fit_result: {{C10_FIT_RESULT}}            # C10: the value the owner picked after the bracket print — "pending: bracket print" until then; ARRIVAL_CHECKLIST E-FIT closes it {{mech,both}}
+    optimise: {{C11_OPTIMISE}}                # C11: speed | strength | surface | minimal waste — the default slicer knob set (references/fdm-print-optimisation.md §4) {{mech,both}}
   verification: {rounds: {{E1_ROUNDS}}, visual: {{E2_VISUAL}}, fea: {{E4_FEA}}}   # E1 / E2 / E4
   coupons: {{E3_COUPONS}}                     # E3 {{mech,both}}
   sourcing: {sources: {{F1_SOURCES}}, stock_floor: {{F2_STOCK}}}   # F1 / F2
@@ -76,27 +78,28 @@ tools:
   python: .venv/bin/python
   kicad_cli: {{CAD_CLI_PATH}}                 # the key names are historical: put YOUR CAD's CLI here ({KICAD_CLI} in commands), whatever the CAD (mech: openscad) {{ee,both}}
   kicad_cli: {{GEOMETRY_CLI_PATH}}            # mech scope: the geometry CLI ({KICAD_CLI} in render commands), e.g. openscad {{mech}}
+  slicer: {{SLICER_CLI_PATH}}                 # the slicer CLI of the home FDM preset (plates, g-code reads) {{mech,both}}
   kicad_python: {{CAD_PYTHON_PATH}}           # the CAD's own Python ({KPY}); python3 when the CAD has none {{ee,both}}
-fab_dfm:                                      # the board's fab-DFM mirror (references/fab-dfm.md; the old block name `dfm:` is still read) {{ee,both}}
+fab_dfm:                                      # the board's fab-DFM mirror (references/fab-dfm.md; `dfm:` is read as an alias) {{ee,both}}
   thresholds: design/dfm_thresholds.json      # the fab's numbers with source URL + date {{ee,both}}
   items: out/dfm_items.json                   # written by the project's measurer (G2) {{ee,both}}
   accept: design/{{BOARD}}_board.yaml         # key dfm_accepted: [{check, refs, reason, date, evidence}] {{ee,both}}
   report: out/dfm.json {{ee,both}}
-  bar: {open: 0, warnings_fail: true, accepted_requires: [reason, date, evidence]}   # owner decision {{D-BAR}}: 0 Danger / 0 Warning; an acceptance without all three fields does not count {{ee,both}}
+  bar: {open: 0, warnings_fail: true, accepted_requires: [reason, date, evidence]}   # owner decision {{D-BAR}}: 0 open at either of the fab's grades; an acceptance without all three fields does not count {{ee,both}}
 print_targets:                                # every printed body is censused against ONE named target; no number lives in a script (references/dfm-printed-enclosure.md) {{mech,both}}
-  {{VENDOR_TARGET}}:                          # e.g. jlc_mjf {{mech,both}}
+  {{VENDOR_TARGET}}:                          # e.g. vendor_mjf {{mech,both}}
     vendor: {{VENDOR}}                        # e.g. JLC3DP {{mech,both}}
     process: {{PROCESS}}                      # MJF | SLA | FDM | CNC {{mech,both}}
     material: {{MATERIAL}}                    # e.g. PA12-HP {{mech,both}}
     dfm_process: {{DFM_PROCESS}}              # row of design/dfm_processes.yaml scripts/print_dfm.py gates this target on (kickoff C8a; e.g. jlc_mjf_pa12) {{mech,both}}
-    wall_gate: {{WALL_GATE}}                  # the checker's grey line (JLC3DP 2026-09-28: 1.2)         [checker] {{mech,both}}
+    wall_gate: {{WALL_GATE}}                  # the vendor checker's grey line, read on checker_date       [checker] {{mech,both}}
     void_gate: {{VOID_GATE}}                  # slots / slits / engraved strokes (1.2)                    [checker] {{mech,both}}
     red_line: {{RED_LINE}}                    # the checker's red band (0.5)                              [checker] {{mech,both}}
     design_margin: {{DESIGN_MARGIN}}          # walls drawn at wall_gate + margin (0.1)                   [owner bar] {{mech,both}}
     wedge_band: 1.5                           # a wedge whose sub-gate band is wider FAILs unless accepted [convention] {{mech,both}}
-    tolerance: {{TOLERANCE}}                  # the vendor's published dimensional tolerance (MJF PA12 ±0.3 or ±0.3 %); replaced by the first-article spread {{mech,both}}
+    tolerance: {{TOLERANCE}}                  # the vendor's published dimensional tolerance (cite it: `published.tolerance` of the process row); replaced by the first-article spread {{mech,both}}
     tolerance_source: {{URL_AND_DATE}} {{mech,both}}
-    max_bbox_for_rule: {{MAX_BBOX_MM}}        # the largest part dimension the length-dependent rule was calibrated at (147) {{mech,both}}
+    max_bbox_for_rule: {{MAX_BBOX_MM}}        # the largest part dimension the length-dependent rule was calibrated at (your first vendor round) {{mech,both}}
     checker_url: {{CHECKER_URL}}              # the vendor's quote / DFM page {{mech,both}}
     checker_date: {{DATE}}                    # when checker_url and the numbers above were last read {{mech,both}}
     samples_per_mm2: 10                       # census density (a fixed count under-samples a large part) {{mech,both}}
@@ -107,7 +110,7 @@ print_targets:                                # every printed body is censused a
     vendor: home {{mech,both}}
     process: FDM {{mech,both}}
     material: {{FILAMENT}}                    # PLA | PETG {{mech,both}}
-    printer: {{PRINTER_AND_NOZZLE}}           # e.g. "Bambu Lab P2S, 0.4 nozzle, 0.20 mm" {{mech,both}}
+    printer: {{PRINTER_AND_NOZZLE}}           # e.g. "<printer model>, 0.4 nozzle, 0.20 mm" {{mech,both}}
     dfm_process: home_fdm_04                  # the printability floor row (walls 0.9 / one perimeter 0.45); the DESIGN rule is wall_gate below {{mech,both}}
     wall_gate: 1.6                            # 4 perimeters at 0.4                                       [owner bar] {{mech,both}}
     rib_gate: 1.2 {{mech,both}}
@@ -120,7 +123,26 @@ print_targets:                                # every printed body is censused a
     post_process: none {{mech,both}}
     rating: {ul94: unrated, tg_c: 55, source: {{TDS_URL}}} {{mech,both}}
     accepted: [] {{mech,both}}
+# home_fdm_colour:                            # OPTIONAL: flush AMS colour bodies (C9 option b) are their OWN print target — the wall gate is the body's thickness, never the host's {{mech,both}}
+#   vendor: home
+#   process: FDM
+#   material: {{FILAMENT}}
+#   printer: {{PRINTER_AND_NOZZLE}}
+#   dfm_process: home_fdm_04_colour_body      # the printability floor for a 2-3 layer body (strokes are walls; print_dfm rule W gates them)
+#   wall_gate: 0.6                            # = the colour body's thickness (3 layers at 0.20) — the census gates the body on itself
+#   void_gate: 0.45                           # one nozzle width; glyph gaps are filled in the polygon ~0.05 over it (the mesh tools read under the polygon)
+#   red_line: 0.4
+#   design_margin: 0.0
+#   wedge_band: 1.5
+#   tolerance: 0.0
+#   samples_per_mm2: 10
+#   accepted: []
 renders: []                                   # G2+: see references/project-yaml.md `renders:`
+# host: {jobs_max: 3, min_free_gb: 3.6}       # OPTIONAL overrides of what scripts/jobs.sh derives from THIS machine (pool = cores // 4, floor = max(2 GB, 15 % RAM));
+                                              #   the derived numbers are the ENV.md host row (`scripts/project.py env`) — no machine constant lives in the skill
+arrival_checklist:                            # written BEFORE the order ships (SKILL.md §10.1): scripts/arrival_checklist.py renders yaml -> md; `--check` joins gates.adopt once the yaml exists
+  yaml: design/arrival_checklist.yaml
+  out: docs/production/ARRIVAL_CHECKLIST.md
 # reorg:                                      # only when the layout changes: decision row first, then scripts/reorg_paths.py --plan/--apply/--check/--proof
 #   moves: {docs/OLD.md: docs/<folder>/OLD.md}
 #   frozen: [out/fab/]                        # uploaded packages, archived records: never rewritten, `--map` explains their old paths
@@ -162,6 +184,8 @@ gates:
     # - "$PY gen/route_quality.py" {{ee,both}}
     # - "$PY scripts/dfm_check.py --check" {{ee,both}}
     # - "$PY scripts/collect_renders.py --check"
+    # Order placed (any scope): the arrival / first-article checklist (scripts/project.py gates-required demands this line once design/arrival_checklist.yaml exists)
+    # - "$PY scripts/arrival_checklist.py --check"
     # Case / M1 (every printed body, every preset): the PURE census gate + the geometry generator's --check {{mech,both}}
     # - "$PY gen/case.py --check" {{mech,both}}
     # - "$PY scripts/thin_wall_census.py --gate-dir out/mechanical/case/<preset>/census" {{mech,both}}

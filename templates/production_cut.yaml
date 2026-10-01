@@ -10,7 +10,7 @@
 case_yaml: design/case.yaml {{mech,both}}
 package_root: docs/production            # -> docs/production/{md5}/
 records_dir: records                     # docs/production/{md5}/records/ — THE records folder (photos, press logs, first-article caliper table, test results, calibration, order captures); RELEASE_NOTES points here
-doc_id_prefix: {{PRODUCT}}               # <product>-<type>-<nnn>
+doc_id_prefix: {{PROJECT}}               # <project>-<type>-<nnn>
 
 deliverables:
   - {id: pcb_design_report, doc_id: DR-001, title: PCB design report, kind: generated, path: docs/release/PCB_DESIGN_REPORT.md, {{ee,both}}
@@ -38,4 +38,5 @@ deliverables:
   - {id: incoming_inspection, doc_id: SOP-002, title: Incoming-inspection SOP (acceptance criteria — test_criteria.yaml by name + sha256 in ee / both, the first-article caliper table in mech / both), kind: template, path: "{root}/INCOMING_INSPECTION_SOP.md", required: release, owner_placeholders: allowed}
   - {id: analysis_index, doc_id: AN-000, title: Analysis bundle index with dispositions, kind: generated, path: "{root}/ANALYSIS_INDEX.md", required: release, owner_placeholders: forbidden}
   - {id: compliance, doc_id: CMP-001, title: Compliance statements (RoHS table from live pages; no DoC claimed), kind: hand-written, path: "{root}/COMPLIANCE.md", required: release, owner_placeholders: forbidden}
+  - {id: arrival_checklist, doc_id: REC-002, title: Arrival / first-article checklist (before shipment, bench in gate order, software gates, first article, open owner calls), kind: generated, path: docs/production/ARRIVAL_CHECKLIST.md, check: "$PY scripts/arrival_checklist.py --check", inputs: [design/arrival_checklist.yaml], required: release, owner_placeholders: forbidden}
   - {id: records, doc_id: REC-001, title: Records (photos, press logs, test results, calibration, order captures), kind: template, path: "{root}/records/*.md", required: release, owner_placeholders: allowed}

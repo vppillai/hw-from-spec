@@ -15,7 +15,7 @@
       rail flank a wide one), and OPPOSING faces — the nearest face with an opposing normal in ANY direction (a ledge underside beside a step top,
       the root of a rim ring set inboard of its wall: invisible to normal rays, coloured by the vendor). A FAIL cluster passes only when an
       `accepted` entry {class, bbox, reason, date, evidence} covers it (bbox ± 1 mm, same class, all three text fields present).
-      A cluster mostly inside a --boxes rectangle (legend lands, [[x0, y0, x1, y1], ...]) gates at --box-min instead — wall, void AND opposing-face rows (0.8.1).
+      A cluster mostly inside a --boxes rectangle (legend lands, [[x0, y0, x1, y1], ...]) gates at --box-min instead — wall, void AND opposing-face rows.
       Samples default to --samples-per-mm2 x surface area (a fixed count under-samples a large part). Prints the rows, writes --json, exit 1 on
       any unaccepted FAIL. Needs numpy + trimesh + scipy at run time.
   scripts/thin_wall_census.py --gate-dir DIR [DIR ...]
@@ -48,6 +48,7 @@ ACC_TOL = 1.0            # mm: an accepted entry's bbox covers a cluster bbox wi
 
 # ---------------------------------------------------------------- pure-python core (selftested) -----------------------------------------------
 def first_hit_beyond(dists, self_hit):
+    """The thickness a ray reports: the first hit farther than self_hit (the nudged origin's own face returns ~0.000); shared with thin_wall_check."""
     for x in dists:
         if x > self_hit:
             return x
@@ -171,7 +172,7 @@ def gate_rows(clusters, voids, gate, void_gate, box_min=None, wedge_band=None, o
             emit("void", v["bbox"], f"VOID {v['gmed']:.2f} (min {v['gmin']:.2f}) < {g} span {v['span']} bbox {v['bbox']}")
     for o in opps or []:
         g = void_gate if o["kind"] == "void" else gate
-        if box_min is not None and o.get("in_box_frac", 0) >= 0.5:    # a legend stroke IS two opposing faces box_min apart: the land rule owns it (0.8.1)
+        if box_min is not None and o.get("in_box_frac", 0) >= 0.5:    # a legend stroke IS two opposing faces box_min apart: the land rule owns it
             g = box_min
         if o["dmin"] < g - 1e-9:                 # the root WIDTH is the minimum (exact point-to-face distance, no sampling noise); the median grows with the band
             emit("opp", o["bbox"], f"OPP {o['dmin']:.2f} (med {o['dmed']:.2f}) < {g} ({o['kind']}, opposing faces in any direction) span {o['span']} bbox {o['bbox']}")
@@ -256,7 +257,7 @@ def target_settings(name, project_arg=None):
     P = Project.find(arg=project_arg)
     t = (P.cfg.get("print_targets") or {}).get(name)
     if not t:
-        sys.exit(f"thin_wall_census: print_targets.{name} not found in {P.file} (references/project-yaml.md)")
+        print(f"thin_wall_census: print_targets.{name} not found in {P.file} (references/project-yaml.md)", file=sys.stderr); sys.exit(2)
     return dict(gate=t.get("wall_gate"), void_gate=t.get("void_gate"), red=t.get("red_line"), wedge_band=t.get("wedge_band"),
                 density=t.get("samples_per_mm2"), accepted=t.get("accepted") or [], design_margin=t.get("design_margin"))
 
@@ -269,7 +270,7 @@ def need(*mods):
         try:
             out.append(importlib.import_module(name))
         except ImportError:
-            sys.exit(f"thin_wall_census: this mode needs {', '.join(mods)} ({name} is not installed): pip install {' '.join(mods)}")
+            print(f"thin_wall_census: this mode needs {', '.join(mods)} ({name} is not installed): pip install {' '.join(mods)}", file=sys.stderr); sys.exit(2)
     return out
 
 
@@ -320,13 +321,13 @@ def opposing_faces(m, pts, nrm, fid, radius, np):
 def census(stl, samples, gate, void_gate, cell, self_hit, red, boxes, box_min, out_json, wedge_band=None, density=None, accepted=None,
            target=None, seed=0):
     np, trimesh = need("numpy", "trimesh", "scipy")[:2]
-    np.random.seed(seed)
+    np.random.seed(seed)                                                                  # trimesh < 4 reads the global seed
     m = trimesh.load(stl, force="mesh")
     area = float(m.area)
     if samples is None:
         samples = max(2000, int(math.ceil(area * (density or 10.0))))
     thr = round(gate - CLUSTER_MARGIN, 3)
-    pts, fid = trimesh.sample.sample_surface(m, samples); nrm = m.face_normals[fid]
+    pts, fid = trimesh.sample.sample_surface(m, samples, seed=seed); nrm = m.face_normals[fid]   # trimesh >= 4 ignores np.random.seed: seed the sampler itself
     th, ang = first_hits(m, pts - nrm * 1e-3, -nrm, nrm, self_hit, np)                  # inward: wall thickness; hit face vs sample face
     gap, oang = first_hits(m, pts + nrm * 1e-3, nrm, nrm, self_hit, np)                 # outward: void width; a re-entrant corner is not a slot
     gap = np.where(np.isnan(oang) | (oang >= WALL_DEG), np.inf, gap)
@@ -406,7 +407,7 @@ def selftest():
     # legend boxes: a 1.0 raised stroke inside a box gates at box_min
     boxed = cluster_rows(plate, [1.0] * 900, [0.0] * 900, boxes=[[-1, -1, 31, 31]])
     assert boxed[0]["in_box_frac"] == 1.0 and gate_rows(boxed, [], 1.6, 1.0, box_min=1.0)[0] == [] and gate_rows(boxed, [], 1.6, 1.0)[0], "legend land rule"
-    # 0.8.1: an opposing-face pair inside a legend land gates at box_min too (a 1.3 raised stroke is two faces 1.3 apart, not a thin wall)
+    # an opposing-face pair inside a legend land gates at box_min too (a 1.3 raised stroke is two faces 1.3 apart, not a thin wall)
     lopp = opp_rows([(10.0, 10.0, 6.3), (10.0, 11.3, 6.3)], [1.3, 1.3], [0, 0], boxes=[[0, 0, 30, 30]])
     assert gate_rows([], [], 1.6, 1.0, box_min=1.0, opps=lopp)[0] == [] and gate_rows([], [], 1.6, 1.0, opps=lopp)[0], "legend land rule applies to opposing-face rows"
     assert histogram([0.1, 1.19, 5.0, math.inf])["1.0-1.2"] == 1 and histogram([math.inf])["2.0-inf"] == 1
@@ -461,6 +462,8 @@ def selftest():
         run = lambda m, name, **kw: (m.export(os.path.join(d, name)), census(os.path.join(d, name), None, 1.2, 1.2, 3.0, 0.02, 0.5, None, None, os.path.join(d, name + ".json"), wedge_band=1.5, density=10, **kw))[1]
         assert run(trimesh.creation.box((30.0, 30.0, 1.0)), "plate10.stl") == 1, "a 1.0 plate must FAIL the 1.2 gate"
         r = json.load(open(os.path.join(d, "plate10.stl.json"))); w = [c for c in r["clusters"] if c["cls"] == "wall"]
+        j1 = open(os.path.join(d, "plate10.stl.json")).read(); run(trimesh.creation.box((30.0, 30.0, 1.0)), "plate10.stl")
+        assert open(os.path.join(d, "plate10.stl.json")).read() == j1, "two census runs of one STL must be byte-identical (the sampler is seeded, not only np.random)"
         assert w and abs(w[0]["tmed_wall"] - 1.0) < 0.05 and w[0]["span"] >= 29 and r["fails"] and r["samples"] >= 10 * 1900, r["clusters"][:2]
         assert any("STL of record" not in b for b in pure_gate([d])) and any("FAIL" in b for b in pure_gate([d]))
         prism = trimesh.creation.extrude_triangulation(numpy.array([[0, 0], [20, 0], [0, 20.0]]), numpy.array([[0, 1, 2]]), 30.0)
@@ -512,7 +515,7 @@ def main(argv):
         t = target_settings(a.target, a.project) if a.target else dict(gate=None, void_gate=None, red=None, wedge_band=None, density=None, accepted=[])
         gate = a.gate if a.gate is not None else t["gate"]; void_gate = a.void_gate if a.void_gate is not None else t["void_gate"]
         if gate is None or void_gate is None:
-            sys.exit("thin_wall_census: name a print target (--target NAME, project.yaml print_targets) or give --gate and --void-gate — no gate value lives in this script")
+            print("thin_wall_census: name a print target (--target NAME, project.yaml print_targets) or give --gate and --void-gate — no gate value lives in this script", file=sys.stderr); sys.exit(2)
         red = a.red if a.red is not None else (t["red"] if t["red"] is not None else 0.5)
         wedge_band = a.wedge_band if a.wedge_band is not None else t["wedge_band"]
         density = a.samples_per_mm2 if a.samples_per_mm2 is not None else t["density"]

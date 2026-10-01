@@ -19,51 +19,20 @@ discard hits closer than --self-hit and take the first beyond it (`multiple_hits
 for the neck and keep the `connected components = 1` row — that row caught the mis-placed disc, the neck row measured the wrong frame.
 Exit 1 when --pinch finds a contact or --census finds a red cluster (so it can sit in a gate list).
 """
-import argparse, json, math, sys
+import argparse, json, math, os, sys
 
 
-# ---------------------------------------------------------------- pure-python core (selftested) -----------------------------------------------
-def first_hit_beyond(dists, self_hit):
-    """The thickness a ray reports: the first hit farther than `self_hit` (the nudged origin's own face returns ~0.000)."""
-    for x in dists:
-        if x > self_hit:
-            return x
-    return math.inf
-
-
-def histogram(values, bins=(0, 0.3, 0.5, 0.8, 1.0, 1.2, 1.5, 2.0, math.inf)):
-    h = {f"{a}-{b}": 0 for a, b in zip(bins[:-1], bins[1:])}
-    for v in values:
-        for a, b in zip(bins[:-1], bins[1:]):
-            if a <= v < b or (v == b == math.inf):   # inf = the ray left the piece (no opposite face): counted in the last bin
-                h[f"{a}-{b}"] += 1; break
-    return h
+# the ray / histogram / clustering core is shared with scripts/thin_wall_census.py (the GATE); this file keeps the quick look and the pinch test
+sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
+from thin_wall_census import first_hit_beyond, histogram, grid_groups, need  # noqa: E402
 
 
 def clusters(points, thick, cell=3.0, red=0.5):
     """Grid-cluster (26-neighbour union-find) thin samples -> rows sorted by red count then min thickness; each row names a bbox = a feature."""
-    keys = [tuple(math.floor(c / cell) for c in p) for p in points]
-    uniq = {k: i for i, k in enumerate(sorted(set(keys)))}
-    par = list(range(len(uniq)))
-
-    def f(x):
-        while par[x] != x:
-            par[x] = par[par[x]]; x = par[x]
-        return x
-    for k, i in uniq.items():
-        for dx in (-1, 0, 1):
-            for dy in (-1, 0, 1):
-                for dz in (-1, 0, 1):
-                    j = uniq.get((k[0] + dx, k[1] + dy, k[2] + dz))
-                    if j is not None:
-                        par[f(i)] = f(j)
-    groups = {}
-    for p, t, k in zip(points, thick, keys):
-        groups.setdefault(f(uniq[k]), []).append((p, t))
     rows = []
-    for v in groups.values():
-        ts = sorted(t for _, t in v); ps = [p for p, _ in v]
-        rows.append({"n": len(v), "tmin": round(ts[0], 3), "tmed": round(ts[len(ts) // 2], 2), "n_red": sum(t < red for t in ts),
+    for idx in grid_groups(points, cell):
+        ts = sorted(thick[i] for i in idx); ps = [points[i] for i in idx]
+        rows.append({"n": len(idx), "tmin": round(ts[0], 3), "tmed": round(ts[len(ts) // 2], 2), "n_red": sum(t < red for t in ts),
                      "bbox": [round(min(p[i] for p in ps), 1) for i in range(3)] + [round(max(p[i] for p in ps), 1) for i in range(3)]})
     rows.sort(key=lambda r: (-r["n_red"], r["tmin"]))
     return rows
@@ -97,18 +66,6 @@ def pinch_points(coords, close=0.05, path_frac=0.05, merge=3.0):   # ponytail: O
 
 
 # ---------------------------------------------------------------- mesh-bound wrappers (trimesh / numpy / shapely at run time) -----------------
-def need(*mods):
-    """Import the mesh libraries or say which one is missing (rule 10), exit 2 — never a traceback."""
-    import importlib
-    out = []
-    for name in mods:
-        try:
-            out.append(importlib.import_module(name))
-        except ImportError:
-            sys.exit(f"thin_wall_check: this mode needs {', '.join(mods)} ({name} is not installed): pip install {' '.join(mods)}")
-    return out
-
-
 def section_outline(stl, z=None):
     """Outline polygon(s) of the piece at height z (default: mid-height), in MODEL coordinates (to_2D's re-origin mapped back through the full
     2-D affine part of its to-3D matrix, rotation included)."""
@@ -155,7 +112,7 @@ def census(stl, samples, thin, red, self_hit, cell, out_json):
     m = trimesh.load(stl, force="mesh")
     print(f"{stl}: faces {len(m.faces)} watertight {m.is_watertight} bbox {np.round(m.bounds, 2).tolist()} volume {m.volume / 1000:.2f} cm3 "
           f"bodies {len(m.split(only_watertight=False))}")
-    pts, fid = trimesh.sample.sample_surface(m, samples); nrm = m.face_normals[fid]; orig = pts - nrm * 1e-3
+    pts, fid = trimesh.sample.sample_surface(m, samples, seed=0); nrm = m.face_normals[fid]; orig = pts - nrm * 1e-3   # trimesh >= 4 ignores np.random.seed
     loc, idx_ray, _ = m.ray.intersects_location(orig, -nrm, multiple_hits=True)
     d = np.linalg.norm(loc - orig[idx_ray], axis=1)
     per_ray = {}

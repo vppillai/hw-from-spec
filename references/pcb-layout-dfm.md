@@ -121,10 +121,10 @@ Copy the fab's table into `design/dfm_thresholds.json` (source URL + date) and d
   pads, test points and designed artwork only.
 
 ## 8. Component size and link-part policy **[owner choice]**
-Defaults the questionnaire proposes (the source project's D-04 / D-38 Q4 rows are the worked example):
+Defaults the questionnaire proposes:
 - **No 0201** (Economic PCBA minimum is 0402 at JLC; 0201 is Standard-only and hand-rework-hostile); **0402 minimum**, 0603 where the value is
   likely to be reworked (pull-up options, series terminations near an edge).
-- **Signal 0 Ω links: 0603; power-path links: 1206** (a named basic-library code, e.g. JLC C17888) — the size is the current rating and the
+- **Signal 0 Ω links: 0603; power-path links: 1206** (a named basic-library code of the fab) — the size is the current rating and the
   rework handle; a link that may be cut later is a **bridged solder-jumper net-tie footprint** (allowed, DFM-clean), never a 0 Ω resistor
   drawn as a wire.
 - Every fitted part rated for the fab's reflow profile **[fab capability]** (JLC Economic 255 ± 5 °C not adjustable; Standard 240 ± 5 °C):
@@ -133,7 +133,7 @@ Defaults the questionnaire proposes (the source project's D-04 / D-38 Q4 rows ar
   preferred parts for jellybeans (a stock floor per code is an owner choice, `references/part-verification.md`).
 
 ## 9. Two-sided SMT assembly
-- The **owner chooses** single / two-sided **[owner choice]** (D-15 / D-04 in the source project: two-sided for size). Two-sided implies the
+- The **owner chooses** single / two-sided **[owner choice]** (two-sided buys 30–40 % board area). Two-sided implies the
   fab's Standard tier (setup + second stencil fees), edge rails / fiducials required, and a press-fit or THT step that needs a **fixture band**
   on the bottom: no bottom part within ±2 mm of a press-fit row over its length, boss / screw-head keep-outs drawn on BOTH sides.
 - **Part height per side** **[physics + convention]**: the side that reflows first (usually the lighter, smaller-part side) is reflowed a second
@@ -200,7 +200,7 @@ reviewer can read); an isolated section (USB isolator, mains) gets a keep-out zo
 Per net: routed / direct (MST over pads) meander ratio, segments, vias, layer changes, min/max width vs class, stubs, acute corners, layers used.
 Board level: via total, copper per layer, inner-layer signal length not over solid reference copper, sensitive-net proximity (I²C / control /
 sense / USB) to switching nodes and the crystal, power corridor cross-section (≥ N mm² per rail, ≥ 2 vias per transition). Flags are graded
-HIGH / MED / LOW; **0 unjustified HIGH** at G2 (D-37 / D-43 in the source project: "0 HIGH with no waivers"), each HIGH either fixed through
+HIGH / MED / LOW; **0 unjustified HIGH** at G2, each HIGH either fixed through
 the generator or a dated waiver row + accept rule (§14). The report is `route_quality.md` in the pack.
 
 ## 16. Schematic ↔ layout parity **[convention]**
@@ -212,7 +212,7 @@ restore it from HEAD or merge (`references/pitfalls.md` tooling/gates).
 ## 17. Fab DFM mirror before the order, and the order-time stock freeze
 - **Before the first quote and at every adopt**: the fab's checker mirrored in-repo (`references/fab-dfm.md`: thresholds JSON with source +
   date, project measurer → items, `scripts/dfm_check.py` grader, acceptances by refdes with **date + reason + evidence**, bare tracks / vias
-  never accepted), **0 open** — every Danger AND Warning fixed or accepted with vendor evidence (D-47 in the source project). Then the fab's
+  never accepted), **0 open** — every item of either fab grade fixed or accepted with vendor evidence. Then the fab's
   own viewer on the board AND the panel upload, counts diffed against the mirror, PDF export filed under `docs/quotes/<date>/`.
 - **Stock**: every fitted code verified live with the run-relative minimum (`qty × boards × attrition`), owner floors on jellybeans; **once the
   order is PLACED the package is judged on the frozen `stock_snapshot.json`**, never on the live shelf (`references/fab-dfm.md` §8).

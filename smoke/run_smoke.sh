@@ -4,7 +4,7 @@
 # no content there, exactly like a submodule), RELATIVE symlink scripts -> vendor/hw-from-spec/scripts, project .venv -> the skill's venv.
 set -e -o pipefail
 HERE=$(cd "$(dirname "$0")" && pwd -P); SKILL=$(dirname "$HERE"); CALLER=$PWD
-T=$(mktemp -d /tmp/hwfs_smoke_XXXX); [[ "$1" == "--keep" ]] || trap 'rm -rf $T' EXIT
+T=$(mktemp -d "${TMPDIR:-/tmp}/hwfs_smoke_XXXX"); [[ "$1" == "--keep" ]] || trap 'rm -rf $T' EXIT
 R=$T/smoke; cp -R "$HERE" "$R"; rm -f "$R/run_smoke.sh"
 mkdir -p "$R/vendor/hw-from-spec"; ln -s "$SKILL/scripts" "$R/vendor/hw-from-spec/scripts"; ln -s vendor/hw-from-spec/scripts "$R/scripts"
 # interpreter: the skill's .venv, else the caller's project .venv (README Quick start runs the smoke from the project root), else python3 — the first with pyyaml
@@ -34,9 +34,9 @@ grep -q 'parseStatus == 2' "$REF" || { echo "FAIL: $REF lost the API-verdict rul
 grep -q 'computed at UPLOAD and does not depend on the process / material' "$REF" || { echo "FAIL: $REF lost the flag-independent-of-material rule"; exit 1; }
 grep -q 'Save the RAW JSON response' "$REF" || { echo "FAIL: $REF lost the raw-JSON evidence rule (B-17)"; exit 1; }
 grep -q 'LENGTH-DEPENDENT' "$REF" || { echo "FAIL: $REF lost the length-dependence rule"; exit 1; }
-grep -q 'bbox-relative voxel / sampling resolution' "$REF" || { echo "FAIL: $REF lost the bbox-resolution hypothesis (B-05)"; exit 1; }
-grep -q 'rim above a skirt-lap step must be \*\*≥ 2.0 mm\*\*' "$REF" || { echo "FAIL: $REF lost the rim-over-lap-step rule"; exit 1; }
-grep -q '40 mm AND to the full part length' "$REF" || { echo "FAIL: $REF lost the full-length probe rule"; exit 1; }
+grep -q 'bbox-relative resolution' "$REF" || { echo "FAIL: $REF lost the bbox-resolution hypothesis (B-05)"; exit 1; }
+grep -q 'rim above a skirt-lap step ≥ 2.0 mm' "$REF" || { echo "FAIL: $REF lost the rim-over-lap-step rule"; exit 1; }
+grep -q 'a short length AND to the full part' "$REF" || { echo "FAIL: $REF lost the full-length probe rule"; exit 1; }
 grep -q 'Dimensional tolerance is the vendor' "$REF" || { echo "FAIL: $REF lost the vendor-tolerance rule (B-01)"; exit 1; }
 grep -q '^## 11. SLA' "$REF" || { echo "FAIL: $REF lost the SLA rule set (B-09)"; exit 1; }
 grep -q 'ironing_type: top` — never `topmost`' "$REF" && grep -q 'flush AMS colour body in the bed layers' "$REF" || { echo "FAIL: $REF lost the brand-mark options (§8.1)"; exit 1; }
@@ -49,22 +49,22 @@ grep -q '`None`, `nan`, a `{name}` brace' "$KIT" && grep -q 'Print-sheet names =
 grep -q 'bridged strips sit one layer BELOW them' "$REF" && grep -q 'exactly 45.0° is AT the overhang limit' "$REF" && grep -q 'Ship a bracket plate' "$REF" || { echo "FAIL: $REF lost §8.4 / §8.5 (plate seat, 45° limit, bracket plate)"; exit 1; }
 grep -q 'print kit is a deliverable row' "$SKILL/references/release-and-cut.md" || { echo "FAIL: release-and-cut.md lost the kit deliverable row"; exit 1; }
 grep -q 'The machine can panic under load' "$SKILL/references/agent-ops.md" || { echo "FAIL: agent-ops.md lost the small-commits rule"; exit 1; }
-grep -q 'parseStatus == 2' "$SKILL/SKILL.md" || { echo "FAIL: SKILL.md §8.1 lost the API-verdict rule"; exit 1; }
+grep -q "the vendor's analysis API response, never a page" "$SKILL/SKILL.md" || { echo "FAIL: SKILL.md §8.1 lost the API-verdict rule"; exit 1; }
 grep -q 'length-dependent' "$SKILL/SKILL.md" || { echo "FAIL: SKILL.md §8.1 lost the length-dependence rule"; exit 1; }
 grep -q 'Zero errors, zero warnings, no waivers' "$SKILL/SKILL.md" || { echo "FAIL: SKILL.md lost the manufacturability bar (§1.2)"; exit 1; }
-grep -q '0 Danger / 0 Warning' "$SKILL/templates/GATES.md" || { echo "FAIL: GATES.md lost the zero-warning prerequisite"; exit 1; }
+grep -q "0 open at either of the fab's grades" "$SKILL/templates/GATES.md" || { echo "FAIL: GATES.md lost the zero-warning prerequisite"; exit 1; }
 grep -q '^| \*\*Case order\*\*' "$SKILL/templates/GATES.md" || { echo "FAIL: GATES.md lost the Case-order row (B-32)"; exit 1; }
-grep -q 'parseStatus == 2' "$SKILL/templates/DFM_ROUND.md" || { echo "FAIL: DFM_ROUND.md lost the API-verdict column"; exit 1; }
+grep -q '{{VERDICT_API}}' "$SKILL/templates/DFM_ROUND.md" && grep -q 'parseStatus == 2' "$SKILL/templates/DFM_ROUND.md" || { echo "FAIL: DFM_ROUND.md lost the API-verdict slot"; exit 1; }
 grep -q '^## 5. Probes' "$SKILL/templates/DFM_ROUND.md" || { echo "FAIL: DFM_ROUND.md lost the probes section"; exit 1; }
-grep -q -- '--gate-dir out/' "$SKILL/templates/CENSUS_GATE_ROWS.md" || { echo "FAIL: CENSUS_GATE_ROWS.md adopt line must use --gate-dir (C-01)"; exit 1; }
-grep -q -- '--gate out/' "$SKILL/templates/CENSUS_GATE_ROWS.md" "$SKILL/references/case-pipeline.md" "$REF" && { echo "FAIL: a census adopt line still says --gate (C-01)"; exit 1; }
+grep -q -- '--gate-dir out/' "$SKILL/templates/CENSUS_GATE_ROWS.md" && grep -q -- 'print_dfm.py --gate out/' "$SKILL/templates/CENSUS_GATE_ROWS.md" || { echo "FAIL: CENSUS_GATE_ROWS.md must carry both adopt lines (census --gate-dir + print_dfm --gate)"; exit 1; }
+grep -q -- 'thin_wall_census.py --gate out/' "$SKILL/templates/CENSUS_GATE_ROWS.md" "$SKILL/references/case-pipeline.md" "$REF" && { echo "FAIL: a census adopt line says --gate instead of --gate-dir"; exit 1; }
 grep -q '^print_targets:' "$SKILL/templates/project.yaml" || { echo "FAIL: templates/project.yaml lost the print_targets block (B-33)"; exit 1; }
 grep -q 'home_fdm:' "$SKILL/templates/project.yaml" || { echo "FAIL: templates/project.yaml lost the home_fdm target"; exit 1; }
 grep -q '^fab_dfm:' "$SKILL/templates/project.yaml" || { echo "FAIL: templates/project.yaml lost the fab_dfm block"; exit 1; }
 grep -q 'accepted_requires' "$SKILL/templates/project.yaml" || { echo "FAIL: templates/project.yaml lost the DFM bar"; exit 1; }
 grep -q '^## Quick start' "$SKILL/README.md" && grep -q '^## The retro loop' "$SKILL/README.md" && grep -q '^## The kickoff questionnaire' "$SKILL/README.md" || { echo "FAIL: README lost a required section"; exit 1; }
 awk '/^```/{f=!f; next} f && length($0) > 90 {bad=1} END {exit bad}' "$SKILL/README.md" || { echo "FAIL: a fenced README line is over 90 characters (GitHub scrolls)"; exit 1; }
-grep -q '^version: 0.9.2' "$SKILL/SKILL.md" && grep -q '^## 0.9.2' "$SKILL/CHANGELOG.md" || { echo "FAIL: SKILL.md version and CHANGELOG entry disagree"; exit 1; }
+V=$(sed -n 's/^version: //p' "$SKILL/SKILL.md"); [[ -n "$V" ]] && grep -q "^## $V " "$SKILL/CHANGELOG.md" && grep -q "version $V" "$SKILL/README.md" || { echo "FAIL: SKILL.md version ($V) has no CHANGELOG entry or README line"; exit 1; }
 grep -q 'numpy trimesh scipy shapely rtree networkx mapbox-earcut' "$SKILL/README.md" || { echo "FAIL: README lost the mesh-library install line (C-06 / 0.8.0 print DFM deps)"; exit 1; }
 grep -q 'ONE venv' "$SKILL/README.md" && grep -qi 'one venv' "$SKILL/SKILL.md" || { echo "FAIL: README / SKILL.md lost the one-venv rule (review 0.8.0 F1)"; exit 1; }
 # every script is executable with a shebang, has a --selftest, and --help / a probe never writes (review 0.8.0 F3)
@@ -72,7 +72,7 @@ for s in "$SKILL"/scripts/*.py "$SKILL"/scripts/*.sh; do
   [[ -x "$s" ]] || { echo "FAIL: $s is not executable"; exit 1; }; head -1 "$s" | grep -q '^#!' || { echo "FAIL: $s has no shebang"; exit 1; }
   grep -q -- '--selftest' "$s" || { echo "FAIL: $s has no --selftest"; exit 1; }
 done
-(cd "$SKILL" && git ls-files -s scripts | awk '$1 != "100755" {bad=1; print "FAIL: git mode " $1 " on " $4} END {exit bad}') || exit 1
+(cd "$SKILL" && git ls-files -s scripts | awk '$4 !~ /\.yaml$/ && $1 != "100755" {bad=1; print "FAIL: git mode " $1 " on " $4} END {exit bad}') || exit 1   # the lint term file is data
 grep -q 'abspath(__file__)' "$SKILL"/scripts/*.py && { echo "FAIL: a script resolves its own path with abspath (a symlinked scripts/ points at the project, not the skill — F4)"; exit 1; }
 python3 "$SKILL/scripts/project.py" scaffold --scope ee /dev/null >/dev/null || { echo "FAIL: project.py scaffold must run on a stock python3 without pyyaml (F2)"; exit 1; }
 grep -q 'kickoff --check' "$SKILL/SKILL.md" && grep -q '^kickoff:' "$SKILL/templates/project.yaml" && grep -q '^board:' "$SKILL/templates/project.yaml" || { echo "FAIL: the kickoff answers lost their machine-readable home (F10)"; exit 1; }
@@ -85,10 +85,24 @@ grep -q 'AskUserQuestion' "$SKILL/SKILL.md" && grep -q '^### 0.1 The kickoff que
 grep -c 'RECOMMENDED' "$SKILL/references/kickoff-questionnaire.md" | awk '$1 >= 30 {ok=1} END {exit !ok}' || { echo "FAIL: the questionnaire lost its recommended answers"; exit 1; }
 grep -q '^| D1 | the manufacturability bar' "$SKILL/templates/KICKOFF_ANSWERS.md" || { echo "FAIL: KICKOFF_ANSWERS.md lost the bar row"; exit 1; }
 grep -q 'references/pcb-layout-dfm.md' "$SKILL/SKILL.md" || { echo "FAIL: SKILL.md lost the layout reference (C-07)"; exit 1; }
-grep -q -E '(^|[^a-z0-9])p2s([^a-z0-9]|$)|presets\.P2S|AEC-CT2|lap\.ring_down' "$SKILL/SKILL.md" "$SKILL/README.md" "$SKILL/templates"/*.md "$SKILL/templates"/*.yaml && { echo "FAIL: a source-project identifier leaked into SKILL / README / templates (C-15 / B-34)"; exit 1; }
+LEAK='(^|[^a-z0-9])p2s([^a-z0-9]|$)|presets\.P2S|lap\.ring_down|aec[-_]tester|tenstorrent'   # generic: ok (the lint patterns themselves)
+grep -rqiE "$LEAK" "$SKILL/SKILL.md" "$SKILL/README.md" "$SKILL/templates" "$SKILL/workflows" "$SKILL/evals" && { echo "FAIL: a source-project identifier leaked into SKILL / README / templates (C-15 / B-34)"; exit 1; }
 grep -q '^## 13. Retro' "$SKILL/SKILL.md" || { echo "FAIL: SKILL.md lost the retro phase (§13)"; exit 1; }
+# 0.10.0: the arrival checklist, the spec errata, the review protocol with a record-reading verifier, the owner-read tag, the slicer optimisation home
+grep -q '^### 10.1 Before the order ships' "$SKILL/SKILL.md" && test -f "$SKILL/templates/design/arrival_checklist.yaml" && test -f "$SKILL/templates/SPEC_ERRATA.md" || { echo "FAIL: SKILL.md / templates lost the arrival checklist or the SPEC errata (0.10.0)"; exit 1; }
+# 0.10.1: the engine rule (previews fast, geometry of record on the gate-passing engine), the per-preset engine key, the CLAUDE.md agent-ops block, the seeded sampler
+grep -q 'passes the chain.s own mesh gates' "$SKILL/references/agent-ops.md" && grep -q 'case.presets.<name>.engine' "$SKILL/references/case-pipeline.md" && grep -q '^## Agent operations' "$SKILL/templates/CLAUDE.md" && grep -q 'sample_surface(m, samples, seed=seed)' "$SKILL/scripts/thin_wall_census.py" || { echo "FAIL: the engine / caching rule of 0.10.1 is missing (agent-ops §8, case-pipeline, CLAUDE.md template, census seed)"; exit 1; }
+grep -q 'ALREADY DECIDED' "$SKILL/SKILL.md" && grep -q "'ALREADY DECIDED'" "$SKILL/workflows/blind-deep-review.js" && grep -q 'rev_impact' "$SKILL/workflows/blind-deep-review.js" || { echo "FAIL: the review protocol lost the record-reading verifier (ALREADY DECIDED / rev impact)"; exit 1; }
+grep -q 'K owner-read' "$SKILL/SKILL.md" && grep -q 'K owner-read' "$SKILL/references/part-verification.md" || { echo "FAIL: the [K owner-read] tag is missing"; exit 1; }
+OPT="$SKILL/references/fdm-print-optimisation.md"; test -f "$OPT" && grep -q 'flush_into_infill' "$OPT" && grep -q 'HAVE sparse infill' "$OPT" && grep -q 'longest' "$SKILL/scripts/print_dfm.py" || { echo "FAIL: fdm-print-optimisation.md (flush-into-infill rule) or the chord span is missing"; exit 1; }
+grep -q 'fdm-print-optimisation.md' "$SKILL/SKILL.md" "$SKILL/references/print-kit.md" "$SKILL/references/dfm-printed-enclosure.md" || { echo "FAIL: the optimisation reference is not linked from SKILL / print-kit / dfm-printed-enclosure"; exit 1; }
+grep -q '^\*\*C11 Slicer optimisation' "$SKILL/references/kickoff-questionnaire.md" && grep -q '^| C11 |' "$SKILL/templates/KICKOFF_ANSWERS.md" && grep -q 'optimise:' "$SKILL/templates/project.yaml" && grep -q 'fit_result:' "$SKILL/templates/project.yaml" || { echo "FAIL: kickoff C11 / the fit_result landing key missing"; exit 1; }
+grep -q 'arrival_checklist' "$SKILL/templates/production_cut.yaml" && grep -c 'ARRIVAL_CHECKLIST' "$SKILL/templates/GATES.md" | grep -q '^2$' || { echo "FAIL: the arrival checklist is not a cut deliverable / an order prerequisite"; exit 1; }
 "$PY" scripts/thin_wall_census.py --selftest
 "$PY" scripts/skill_retro.py --selftest
+say "0c the skill reads as the current, generic procedure: no changelog voice, no version numbers in prose, no source-project names / parts / ids / dimensions outside the fenced worked examples"
+"$PY" "$SKILL/scripts/doc_voice_lint.py" --selftest >/dev/null && "$PY" "$SKILL/scripts/doc_voice_lint.py" || { echo "FAIL: doc_voice_lint hits (the skill narrates its history inside a rule)"; exit 1; }
+"$PY" "$SKILL/scripts/generic_lint.py" --selftest >/dev/null && "$PY" "$SKILL/scripts/generic_lint.py" || { echo "FAIL: generic_lint hits (the skill names the project it was learned on)"; exit 1; }
 say "0d print DFM: the loop is in SKILL.md as commands, the table and verdict record ship as templates, the tool and the SCAD lint selftest, eval 14's pair flags / passes through the CLI"
 PD="$SKILL/references/print-dfm.md"; test -f "$PD" || { echo "FAIL: references/print-dfm.md missing"; exit 1; }
 grep -q 'RULE DEFECT' "$PD" && grep -q '^## 3. The loop' "$PD" && grep -q 'read the MESH, never the yaml' "$PD" || { echo "FAIL: print-dfm.md lost the loop / RULE DEFECT / mesh-not-yaml rules"; exit 1; }
@@ -190,7 +204,7 @@ cp "$SKILL/templates"/{project.yaml,CLAUDE.md,SPEC.md,STATUS.md} $K/; cp "$SKILL
  "$PY" scripts/project.py slots >/dev/null && { echo "FAIL (F24): a fresh scaffold has slots; the counter must exit 1"; exit 1; }
  { "$PY" scripts/project.py slots || true; } | tail -1 | grep -q 'unfilled in' || { echo "FAIL (F24): slots must print the per-file count"; exit 1; }
  out=$("$PY" scripts/project.py kickoff --check 2>&1 || true); echo "$out" | grep -q 'not valid YAML.*slots' || { echo "FAIL (0.9.0 F3): an unfilled project.yaml must name the slots as the cause, not traceback"; echo "$out" | tail -3; exit 1; }
- for f in project.yaml CLAUDE.md SPEC.md STATUS.md docs/governance/*.md design/*.yaml; do sed -i.bak 's/{{[^{}]*}}/X/g' "$f"; rm -f "$f.bak"; done
+ for f in project.yaml CLAUDE.md SPEC.md STATUS.md docs/governance/*.md design/*.yaml; do sed -i.bak -E 's/\{\{[^{}]*\}\}/X/g' "$f"; rm -f "$f.bak"; done
  { "$PY" scripts/project.py slots || true; } | tail -1 | grep -q '^slots: 0 unfilled' || { echo "FAIL (F24): a trivially filled project must show zero slots"; "$PY" scripts/project.py slots | tail -3 || true; exit 1; }
  out=$("$PY" scripts/project.py kickoff --check 2>&1 || true); echo "$out" | grep -q '^KICKOFF: .*no D row id\|^KICKOFF: .*is not in' || { echo "FAIL (F10): kickoff rows with D-X ids passed the kickoff check"; echo "$out" | tail -3; exit 1; }
  printf '| **D-02** | d | **APPROVED** | kickoff | owner | words |\n' >> docs/governance/DECISIONS.md; sed -i.bak 's/D-X/D-02/g' docs/governance/KICKOFF_ANSWERS.md
@@ -249,9 +263,14 @@ say "4 dfm_check (grading the measurer's items against fab_dfm.bar; report to fa
 say "5 collect_renders";                          $PY scripts/collect_renders.py
 say "5b assembly_guide (keyed renders via the stub renderer)"; $PY scripts/assembly_guide.py; $PY scripts/assembly_guide.py --check
 say "5c reorg_paths --check (layout of record: no old literal, no dangling docs/ path)"; $PY scripts/reorg_paths.py --check
+say "5d arrival_checklist (yaml -> md; DONE needs evidence; gates-required demands the adopt line)"; $PY scripts/arrival_checklist.py; $PY scripts/arrival_checklist.py --check
+grep -q '| E-2 | case first-article clearance |' docs/production/ARRIVAL_CHECKLIST.md && grep -q '| \*\*all\*\* | 4 | 1 | 0 | 3 |' docs/production/ARRIVAL_CHECKLIST.md || { echo "FAIL: ARRIVAL_CHECKLIST.md rows / counts wrong"; exit 1; }
+cp design/arrival_checklist.yaml /tmp/ac.$$ && sed -i.bak 's/evidence: "records\/first_article.md (caliper table)"/evidence: ""/' design/arrival_checklist.yaml && rm -f design/arrival_checklist.yaml.bak
+$PY scripts/arrival_checklist.py --check >/dev/null && { echo "FAIL: a DONE row without evidence must fail the checklist"; exit 1; }; mv /tmp/ac.$$ design/arrival_checklist.yaml
+sed -i.bak 's/scripts\/arrival_checklist.py --check/true/' project.yaml && rm -f project.yaml.bak; $PY scripts/project.py gates-required >/dev/null && { echo "FAIL: gates-required must demand the arrival_checklist line while the yaml exists"; exit 1; }; git checkout -q -- project.yaml
 say "6 release_report (DRAFT expected)";          $PY scripts/release_report.py
 grep -q '^\*\*STATUS: DRAFT\*\*' docs/release/PCB_DESIGN_REPORT.md || { echo "FAIL: report not DRAFT"; exit 1; }
-say "7 every --check must pass";                  $PY scripts/known_issues.py --check; $PY scripts/assembly_guide.py --check; $PY scripts/traceability.py --check; $PY scripts/dfm_check.py --check; $PY scripts/collect_renders.py --check; $PY scripts/release_report.py --check
+say "7 every --check must pass";                  $PY scripts/known_issues.py --check; $PY scripts/assembly_guide.py --check; $PY scripts/arrival_checklist.py --check; $PY scripts/traceability.py --check; $PY scripts/dfm_check.py --check; $PY scripts/collect_renders.py --check; $PY scripts/release_report.py --check
 say "8 commit + handoff header";                  git add -A; git -c user.name=smoke -c user.email=s@s commit -qm "generated records"; $PY scripts/handoff_header.py
 $PY scripts/handoff_header.py | grep -q 'MATCH' || { echo "FAIL: handoff header has no MATCH"; exit 1; }
 say "9 adopt gates incl. the clone gate on git archive HEAD"; scripts/adopt_gates.sh

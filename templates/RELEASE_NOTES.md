@@ -22,6 +22,7 @@
 | Fab DFM mirror | {{0 open}} | `out/dfm.json` | {{ee,both}}
 | Route quality | {{0 HIGH}} | `{{path}}` | {{ee,both}}
 | Census `--gate-dir` per preset + vendor DFM | {{0 unaccepted FAIL; DFM_ROUND verdict}} | `out/mechanical/case/<preset>/census/`, `docs/quotes/<date>/DFM_ROUND.md` | {{mech,both}}
+| `print_dfm.py --gate` per preset | {{PASS on n bodies, rule set VERSION}} | `out/mechanical/case/<preset>/dfm/` | {{mech,both}}
 | Traceability | {{VERIFIED n / FAILED 0 / unmapped none}} | `docs/governance/TRACEABILITY.md` |
 | Blind reviews | {{rounds, last merged report}} | `docs/reviews/{{merged}}` |
 | Adopt + clone gate | green at `{{sha}}` | `scripts/adopt_gates.sh` transcript in DECISIONS {{row}} |
