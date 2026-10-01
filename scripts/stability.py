@@ -35,7 +35,12 @@ def cog_of_assembly(items):
     acc = np.zeros(3); tot = 0.0; cache = {}
     for stl, M, rho in items:
         if stl not in cache:
-            m = tm.load(stl, force="mesh"); cache[stl] = (np.append(m.centroid, 1.0), float(m.volume))
+            m = tm.load(stl, force="mesh")
+            if not m.is_watertight:
+                raise ValueError(f"{stl}: not watertight — its volume and mass centre are undefined (canonicalise / fix the body first)")
+            # center_mass is the VOLUME centroid; trimesh's `centroid` is the area-weighted average of the triangle centroids and sits
+            # elsewhere on any body that is not symmetric (a bar with a boss at one end) — never use it for a mass model
+            cache[stl] = (np.append(m.center_mass, 1.0), float(abs(m.volume)))
         c, v = cache[stl]
         p = np.array(M, dtype=float) @ c
         w = v * rho
@@ -87,6 +92,15 @@ def selftest():
         assert abs(c2[0] - 6.0) < 1e-6 and abs(mass2 - 5000.0) < 1e-6, c2
         c3, _ = cog_of_assembly([(p1, I, 1.0), (p2, T.tolist(), 0.5)])    # half density halves the pull
         assert abs(c3[0] - 1000 * 0.5 * 30 / 4500) < 1e-6, c3
+        # ONE asymmetric mesh (body + knob at x = 30 as one STL): the volume centroid is x = 6.0; the area-weighted centroid reads ~8.2
+        both = tm.util.concatenate([body, knob.copy().apply_transform(T)]); p3 = os.path.join(d, "both.stl"); both.export(p3)
+        c4, m4 = cog_of_assembly([(p3, I, 1.0)]); assert abs(c4[0] - 6.0) < 1e-6 and abs(m4 - 5000.0) < 1e-6, (c4, m4)
+        assert abs(tm.load(p3, force="mesh").centroid[0] - 6.0) > 1.0, "the test body must separate the two centroids"
+        open_body = body.copy(); open_body.update_faces([i for i in range(len(open_body.faces)) if i != 0]); p4 = os.path.join(d, "open.stl"); open_body.export(p4)
+        try:
+            cog_of_assembly([(p4, I, 1.0)]); raise AssertionError("an open mesh must be refused")
+        except ValueError as e:
+            assert "watertight" in str(e), e
         feet = [box(-10, -10, -6, -6), box(6, -10, 10, -6), box(-10, 6, -6, 10), box(6, 6, 10, 10)]
         m, hull = support_margin((0.0, 0.0), feet); assert abs(m - 10.0) < 1e-6, m                  # centred: 10 to the hull edge
         m, _ = support_margin((0.0, 0.0), feet[:2]); assert m is not None and m < 0, m             # two feet on one side: outside
@@ -94,7 +108,7 @@ def selftest():
         m, _ = support_margin((0.0, 0.0), []); assert m is None
         worst, lab, rows = sweep([("a", (0.0, 0.0), feet), ("b", (14.0, 0.0), feet), ("c", (0.0, 0.0), feet[:1])])
         assert lab == "c" and worst < -8.0 and rows[1][1] == -4.0, (worst, lab, rows)                  # one foot: the CoG is outside its footprint
-    print("selftest OK (CoG of transformed bodies with densities, support margin inside / outside / degenerate, sweep worst pose)")
+    print("selftest OK (volume centroid of transformed bodies with densities — not the area centroid, open mesh refused; support margin inside / outside / degenerate; sweep worst pose)")
     return 0
 
 

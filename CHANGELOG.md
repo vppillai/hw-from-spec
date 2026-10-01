@@ -1,17 +1,17 @@
 # CHANGELOG — hw-from-spec
 
-## Current state (0.10.2) — read this instead of replaying the entries below
+## Current state (0.10.3) — read this instead of replaying the entries below
 
 - **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
   twelve batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
   (zero errors / zero warnings / no waivers, enforced by scripts), generated-only, the decision log, parts tags [V] / [K] / [K owner-read] / [S],
   blind reviews with a record-reading verifier, layout + fab DFM mirror, the case pipeline with two PURE mesh gates (census margin, print-DFM
-  floor), the software track, release cut + production cut + the arrival checklist + spec errata, agent operations with a measured resource budget
+  floor) and the stability row for anything that stands free (kickoff C12), the software track, release cut + production cut + the arrival checklist + spec errata, agent operations with a measured resource budget
   (measure → audit → change; previews on the fast engine, geometry of record on the engine that passes the mesh gates; caches as determinism checks), the retro.
 - **Scripts** (`project.yaml`-driven, every one with `--selftest`, exit 0 / 1 / 2): `project.py` (reader, scaffold, slots, kickoff --check,
   gates-required, record, env), `known_issues`, `traceability`, `release_report`, `collect_renders`, `assembly_guide`, `reorg_paths`, `dfm_check`,
   `erc_gate`, `gate_check`, `handoff_header`, `thin_wall_census` (design-margin gate), `print_dfm` (printability-floor gate + `--validate`),
-  `thin_wall_check` (quick look + pinch), `scad_lint`, `step2stl`, `arrival_checklist`, `skill_retro` (+ `--apply`), `jobs.sh` (the heavy-job
+  `thin_wall_check` (quick look + pinch), `stability` (CoG vs support hull at the worst pose), `scad_lint`, `step2stl`, `arrival_checklist`, `skill_retro` (+ `--apply`), `jobs.sh` (the heavy-job
   pool), `adopt_gates.sh`, `clone_gate.sh`, `doc_voice_lint`, `generic_lint`. Mesh stack: `numpy trimesh scipy shapely rtree networkx
   mapbox-earcut embreex` (the Embree ray engine keeps a census in seconds under 1 GB).
 - **Templates**: CLAUDE.md, project.yaml (kickoff / board / print_targets / fab_dfm / arrival_checklist / host), SPEC + VERIFY + SPEC_ERRATA,
@@ -20,10 +20,10 @@
 - **References**: project-yaml, kickoff-questionnaire, schematic-phase, pcb-layout-dfm, fab-dfm, case-pipeline, dfm-printed-enclosure,
   print-dfm, print-kit, fdm-print-optimisation, cnc-enclosure, fea-stage, part-verification, software-track, release-and-cut, vendor-review,
   agent-ops, pitfalls — one home per rule, the others link.
-- **Checks**: `smoke/run_smoke.sh` (2 min 27 s with the mesh libraries: every selftest, the rule greps, the enforcement negatives, both lints, the evals), 16 evals
+- **Checks**: `smoke/run_smoke.sh` (2 min 27 s with the mesh libraries: every selftest, the rule greps, the enforcement negatives, both lints, the evals), 17 evals
   with mechanical checks, `docs/reviews/INDEX.md` and `docs/retro/INDEX.md` list every review and retro.
 
-## UNRELEASED — static stability as a gate (owner rule, 2026-10-01)
+## 0.10.3 — 2026-10-01 — static stability as a gate (owner rule: anything that stands, rocks, walks or is set down free carries a CoG-vs-support row at its worst pose); print-DFM rule P ignores tessellation detours (rule set 0.10.3)
 
 ### Added
 - **`scripts/stability.py`**: centre of gravity of an assembly from the STL set of record (volume centroids through the assembly transforms, a
@@ -39,6 +39,11 @@
   carries two vertices ~0.02 mm apart two steps along the ring, facing away from each other, and every such plate FLAGged "neck 0.006". The pair
   now also needs the shorter ring path between the two points to exceed 10 × `neck_max` — a neck has material on both sides of it. Selftest: a
   slab turned 7° produces no P finding; the touching-cube and hairline constructs still FLAG.
+  The measure changed, so the rule-set `VERSION` is 0.10.3: the gate refuses records of the old rule set and every body is re-recorded
+  (`references/print-dfm.md` rule P names the condition).
+- **`scripts/stability.py`** (review of PR #2 before merge): the mass centre is `center_mass` (the VOLUME centroid); trimesh's `centroid` is the
+  area-weighted average of the triangle centroids and read 8.2 for a body whose volume centroid is 6.0 — an asymmetric selftest body now
+  separates the two, and an open mesh is refused (its volume is undefined). Smoke runs the selftest; eval 17 asks the question.
 
 ## 0.10.2 — 2026-10-01 — two mechanical-only project retros folded (wankel 2026-09-30, beest 2026-10-01): census OPP rows honour legend lands, `embreex`, legend geometry, colour-body target, linkage sweeps, arranger facts; `--gate-dir` resolves STLs in its own tree
 
