@@ -217,7 +217,13 @@ def pure_gate(dirs):
             if not verify_sig(r, VERSION):
                 bad.append(f"{jp}: signature does not verify — edited after it was written, or written by another census version (rerun thin_wall_census {VERSION})"); continue
             stl = r.get("stl", "")
-            cand = [stl, os.path.join(os.path.dirname(jp), stl), os.path.join(P.root, stl) if P else ""]
+            # the STL of record is the sibling stl/<basename> of THIS tree, then a project-relative path; an absolute path stored by an older
+            # census is honoured only inside this project's root (a gate run from another checkout must never read another tree's STLs)
+            root = os.path.abspath(P.root) if P else None
+            cand = [os.path.join(parent, "stl", os.path.basename(stl)),
+                    os.path.join(root, stl) if root and not os.path.isabs(stl) else "",
+                    os.path.join(os.path.dirname(jp), stl) if not os.path.isabs(stl) else "",
+                    stl if os.path.isabs(stl) and (root is None or os.path.abspath(stl).startswith(root + os.sep)) else ""]
             path = next((p for p in cand if p and os.path.exists(p)), None)
             if path is None:
                 bad.append(f"{jp}: STL {stl!r} not found"); continue
@@ -341,7 +347,9 @@ def census(stl, samples, gate, void_gate, cell, self_hit, red, boxes, box_min, o
     opps = opp_rows([P[i] for i in ot], [D[i] for i in ot], [K[i] for i in ot], cell, boxes)
     fails, acc = gate_rows(clusters, voids, gate, void_gate, box_min if boxes else None, wedge_band, opps, accepted)
     wall = ang < WALL_DEG
-    r = dict(version=VERSION, stl=stl, stl_md5=md5_of(stl), target=target, faces=int(len(m.faces)), watertight=bool(m.is_watertight),
+    _, Pr = _project_targets(os.path.dirname(os.path.abspath(stl)))
+    stl_rec = os.path.relpath(os.path.abspath(stl), os.path.abspath(Pr.root)) if Pr else stl   # project-relative in the record: the gate resolves it in ITS tree
+    r = dict(version=VERSION, stl=stl_rec, stl_md5=md5_of(stl), target=target, faces=int(len(m.faces)), watertight=bool(m.is_watertight),
              bodies=int(len(m.split(only_watertight=False))), bbox=np.round(m.bounds, 2).tolist(), vol_cm3=round(float(m.volume) / 1000, 3),
              area_mm2=round(area, 1), signature=dict(vol=round(float(m.volume), 3), area=round(area, 3), bbox=np.round(m.bounds, 3).tolist(), faces=int(len(m.faces))),
              samples=samples, density_per_mm2=round(samples / area, 2), gate=gate, void_gate=void_gate, red=red, wedge_band=wedge_band, thr=thr,
@@ -421,6 +429,15 @@ def selftest():
         put(good); open(os.path.join(d, "stl", "q_body.stl"), "wb").write(b"solid q\nendsolid q\n")
         assert any("without a census record" in b for b in pure_gate([C])), "an uncensused STL beside the records fails"
         os.remove(os.path.join(d, "stl", "q_body.stl"))
+        # the record's stl path is resolved in THIS tree: an absolute path into another checkout (same name, other content) must not be read
+        with tempfile.TemporaryDirectory() as other:
+            os.makedirs(os.path.join(other, "stl")); open(os.path.join(other, "stl", "p_body.stl"), "wb").write(b"solid other\nendsolid other\n")
+            put(dict(good, stl=os.path.join(other, "stl", "p_body.stl"))); assert pure_gate([C]) == [], "the sibling stl/ of the record set wins over a stored absolute path"
+            put(dict(good, stl=os.path.join(other, "stl", "p_body.stl"), stl_md5=md5_of(os.path.join(other, "stl", "p_body.stl"))))
+            assert any("STL of record" in b for b in pure_gate([C])), "a record of another tree's body fails against this tree's STL"
+            put(dict(good, stl=os.path.join(other, "stl", "zz_body.stl"))); assert any("not found" in b for b in pure_gate([C])), "an absolute path outside the tree with no sibling is not found"
+        put(dict(good, stl="stl/p_body.stl")); assert pure_gate([C]) == [], "a project-relative path resolves from the record set's parent"
+        put(good)
         assert any("no census JSON" in b for b in pure_gate([os.path.join(d, "none")]))
         # with a project (needs pyyaml): the acceptance must still be in print_targets.<t>.accepted; the mech_record glob widens the STL set
         try:
@@ -434,7 +451,7 @@ def selftest():
             assert any("withdrawn" in b for b in pure_gate([C])), "an acceptance deleted from the yaml un-passes the body"
             t = target_settings("t", os.path.join(d, "project.yaml"))
             assert t["gate"] == 1.2 and t["wedge_band"] == 1.5 and t["density"] == 10 and t["accepted"] == [], t
-    msg = "selftest OK (pure core: wall / wedge classification, wedge band, opposing rows, accepted matching, void + legend-box gating, pure --gate-dir incl. signature / withdrawn acceptance / uncensused STL, target settings"
+    msg = "selftest OK (pure core: wall / wedge classification, wedge band, opposing rows, accepted matching, void + legend-box gating, pure --gate-dir incl. signature / withdrawn acceptance / uncensused STL / foreign-tree path, target settings"
     try:
         import numpy, trimesh, scipy, shapely  # noqa: F401
     except ImportError:

@@ -4,7 +4,14 @@
 
 Source: `docs/retro/beest_2026-10-01.md` — a desk Strandbeest (36 bodies, 7 P2S plates, three AMS colours) built under scope `mech` on 0.9.2 + the
 wankel retro branch; 25 learnings, 14 NEW / 7 PARTIAL / 4 CARRIED (the classifier's reading; three CARRIED rows were folded anyway because the number
-they carry is new). Three census / print-DFM rounds on the colour bodies and two aborted slices paid for these lines. No script changed; no version bump.
+they carry is new). Three census / print-DFM rounds on the colour bodies and two aborted slices paid for these lines. One script fix (below); no version bump.
+
+### Fixed
+- **`scripts/thin_wall_census.py --gate-dir`** followed the ABSOLUTE `stl` path stored in a record, so a gate run from another checkout path read
+  the other tree's STLs (found by the beest retro, `git archive` scratch copy): the gate now resolves the sibling `stl/<basename>` of the record set
+  first, then a project-relative path, and honours a stored absolute path only inside this project's root; new records store the path
+  project-relative. Selftest: a record pointing into another tree passes on this tree's STL, fails on the other body's md5, and an absolute path
+  outside the tree without a sibling is "not found". VERSION unchanged (no rule changed; old records still gate).
 
 ### Changed
 - **`references/dfm-printed-enclosure.md` §8**: a legend at a small cap — `text(size=)` vs cap height (one H per font), font chosen by measured
