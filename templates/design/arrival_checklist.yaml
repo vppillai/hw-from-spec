@@ -1,0 +1,48 @@
+# design/arrival_checklist.yaml — what to check once the ordered boards / parts are back, written BEFORE they arrive (SKILL.md §10.1;
+# references/release-and-cut.md §10). Rendered to docs/production/ARRIVAL_CHECKLIST.md by `scripts/arrival_checklist.py` (`--check` in gates.adopt
+# once this file exists — `scripts/project.py gates-required` demands the line). Every row: id, item, how (instrument / net / expected or the
+# measurement), fail or pass (what to do), opens (the gate or step the row releases), status (TODO | DONE <date> | N/A | APPLIED <date> …),
+# evidence (file / photo / commit). Closing a row = editing THIS file, regenerating, committing — the markdown is never hand-edited (rule 5).
+# Sources: the merged blind reviews of the ordered revision (their "what the boards decide" rows), the OPEN decision rows, the SPEC errata.
+# Scope tags {{ee,both}} / {{mech,both}}: `scripts/project.py scaffold --scope <A0>` keeps your scope's sections.
+version: 1-{{DATE}}
+title: "ARRIVAL_CHECKLIST.md — {{PROJECT}} rev {{REV}} (order {{ORDER_ID}}, record {{MD5_8}})"
+sections:
+  - key: A {{ee,both}}
+    title: Before shipment approval — the fab's assembly photos (no board in hand yet) {{ee,both}}
+    note: "A paid 'confirm production file / placement' option is not guaranteed to raise a dialog (one order went Reviewed -> In Production in 14 h with neither offered): the photo confirmation is the one human look before shipment. Approve shipment only with every row DONE or N/A." {{ee,both}}
+    columns: [id, item, how, fail, opens, status, evidence] {{ee,both}}
+    rows: {{ee,both}}
+      - {id: A-1, item: "cathode bars / pin-1 of every polarised part vs the silk mark ({{POLARISED_REFDES}})", how: "zoom the fab's images; compare with the top / bottom renders of record", fail: "reversed -> ask the fab to re-place BEFORE shipment (a bench rework is a hot-air job)", opens: "B-2", status: TODO, evidence: ""} {{ee,both}}
+      - {id: A-2, item: "seating of the critical connector ({{CRITICAL_CONNECTOR}}): body flat, pads wetted at the visible edge, no shift along the pad column", how: "images, oblique shots if offered", fail: "lifted / shifted -> the board is footprint evidence only; the bench row decides", opens: "B-6", status: TODO, evidence: ""} {{ee,both}}
+      - {id: A-3, item: "holes that must stay open / unplated ({{OPEN_HOLES}}) are open and as specified", how: "images; count them", fail: "a filled / wrongly plated hole -> stop, raise with the fab", opens: "B-6", status: TODO, evidence: ""} {{ee,both}}
+  - key: B {{ee,both}}
+    title: Bench checks in gate order — nothing powered or plugged until the row that opens it is DONE {{ee,both}}
+    columns: [id, item, how, fail, opens, status, evidence] {{ee,both}}
+    rows: {{ee,both}}
+      - {id: B-1, item: "switch / strap end sense: silk position = electrical state ({{SWITCH_REFDES}})", how: "unpowered continuity per position; then powered, no load: DMM on the sensed net", fail: "DECISIONS row (silk / legends wrong); operate by the measured end", opens: "any power-on with a load", status: TODO, evidence: ""} {{ee,both}}
+      - {id: B-2, item: "polarised parts electrically right (the A-1 set)", how: "Vf in-circuit in the forward rows; every input powers the board", fail: "rework before any load", opens: "any load; any dongle", status: TODO, evidence: ""} {{ee,both}}
+      - {id: B-3, item: "smoke test (test plan T-00)", how: "ohms to GND on every rail TP; bench supply at the rail's nominal with a current limit; idle current within the plan; only then the host", fail: "stop; locate under magnification; never the host first", opens: "host connection", status: TODO, evidence: ""} {{ee,both}}
+      - {id: B-4, item: "interlock / enable logic margin ({{INTERLOCK_NET}})", how: "DMM on the gate net in every mode at room temperature", fail: "below the margin: not released for use; below the threshold: rework", opens: "powered session with a load", status: TODO, evidence: ""} {{ee,both}}
+      - {id: B-5, item: "bring-up tool reads identity and status with the load rail OFF", how: "`tools/<board>_bringup.py status`", fail: "fix the tool first (§C), not the board", opens: "load insertion rules", status: TODO, evidence: ""} {{ee,both}}
+      - {id: B-6, item: "press-fit / mechanical install ({{PRESSFIT_PART}}) — force logged, pins seated", how: "arbor press with the fixture; measure the seated height", fail: "stop; a bent pin is a board-level decision row", opens: "first real load", status: TODO, evidence: ""} {{ee,both}}
+  - key: C {{ee,both}}
+    title: Software gates before the first high-power step — each with the commit that closed it {{ee,both}}
+    columns: [id, item, how, pass, commit, status, evidence] {{ee,both}}
+    rows: {{ee,both}}
+      - {id: C-1, item: "{{SW_GATE_1}} (e.g. the tool refuses the high-power mode while the interlock net reads wrong)", how: "selftest with the fake backend + the B-5 bench read", pass: "refusal printed with its reason code", commit: "{{SHA_OR_OPEN}}", status: TODO, evidence: ""} {{ee,both}}
+  - key: D {{mech,both}}
+    title: Case first article (printed kit, then the vendor parts) {{mech,both}}
+    columns: [id, item, how, pass, status, evidence] {{mech,both}}
+    rows: {{mech,both}}
+      - {id: FA-1, item: "every gated wall and bore measured on the received part (first-article caliper table)", how: "calipers / pin gauge per `fits` knob vs the drawing", pass: "within `print_targets.<t>.tolerance`; the spread replaces the vendor's published tolerance", status: TODO, evidence: ""} {{mech,both}}
+      - {id: FA-2, item: "mating part fitted by hand (board / module / plate) — no force", how: "drop-in test, photographed", pass: "seats by hand; play within the clearance row", status: TODO, evidence: ""} {{mech,both}}
+      - {id: FA-3, item: "retention holds: {{RETENTION}} (screw torque to the coupon value / magnets hold upside down / hang test)", how: "20 cycles; hang test", pass: "holds; no crack at a boss root", status: TODO, evidence: ""} {{mech,both}}
+      - {id: FA-4, item: "coupons read their printed identifier and the value they test", how: "read the text on each coupon at arm's length", pass: "legible on every piece; which value won is reported by its printed text, never by position on the plate", status: TODO, evidence: ""} {{mech,both}}
+  - key: E
+    title: Owner decisions still OPEN — and the trigger that resolves each
+    columns: [id, item, trigger, status, evidence]
+    rows:
+      - {id: E-1, item: "{{OPEN_ROW_ID}}: {{what the owner decides}}", trigger: "{{the measurement / print / first article that resolves it}}", status: TODO, evidence: "DECISIONS {{OPEN_ROW_ID}}"}
+      - {id: E-FIT, item: "the fit knob the owner picks after the bracket print (kickoff C10 `kickoff.enclosure.fit_result`)", trigger: "the bracket plate printed; the variant that seats under thumb pressure and survives the hang test is reported by its printed value", status: TODO, evidence: ""} {{mech,both}}
+      - {id: E-SPEC, item: "SPEC errata E-rows (docs/spec_sections/SPEC_ERRATA.md): the frozen spec's known deviations", trigger: "owner approval -> the next SPEC revision's change log cites the row", status: TODO, evidence: "SPEC_ERRATA.md"}

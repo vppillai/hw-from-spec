@@ -26,6 +26,8 @@ _(G0 round: board, package and case rows read MISSING by design — the artefact
 {{KNOWN_ISSUES §2.1 rows}}
 ### 3.2 OPEN owner rows
 {{KNOWN_ISSUES §2 rows}}
+### 3.3 Spec errata (decided deviations of the frozen SPEC — `docs/spec_sections/SPEC_ERRATA.md`; a deviation listed here is ALREADY DECIDED, not a finding)
+{{SPEC_ERRATA rows or "none"}}
 
 ## 4. Claims of this round (delta audits) — each with commit + evidence path
 | # | Claim | Commit | Evidence |

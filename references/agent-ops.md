@@ -63,10 +63,20 @@
   in two phases (generators, then outputs + kits) with small commits. The technician found the two BLOCKERs (an un-instructed irreversible step, a
   hardware list into the wrong pocket) that every mesh check had passed; the DFM persona found the seat that rocked. Trust the reviewer's
   measurements, re-measure only where the geometry changed, and state every deviation from a disposition openly in the decision row.
-- Adversarial verifier per specialty on every BLOCKER/MAJOR: default REFUTED; open the cited files; a number about copper carries the script that
-  produced it (a disputed clearance is one `Collide` bisection); convert coordinate frames before calling a site "missing".
-- Merge: verifier verdicts applied (REFUTED → rejected table with reason), dedupe by defect, corroboration matrix, REQUIRED / OWNER (proposed row
-  text) / DOCUMENT / ACCEPT, explicit verdict, reviewer quality (findings, refuted rate, empty runs per model), counts; commit with explicit paths.
+- **The standard protocol (0.10.0, from two rounds that re-found decided items at 1:1 and 1:2):** reviewers = a second model family where one
+  is available (Opus beside Claude Code, a Cursor CLI model) + the in-session agent, briefed with the artefacts and the role's checklist ONLY — no
+  decision log, no earlier reviews; **one verifier WITH record access** (DECISIONS, KNOWN_ISSUES, BLOCKERS, SPEC + `SPEC_ERRATA.md`, the test plan,
+  netlist / mesh of record) classifies every finding **CONFIRMED / ALREADY DECIDED (row id; does its number still hold?) / REFUTED / PARTLY /
+  UNVERIFIABLE** with a **rev-impact** column (ordered revision / arrival bench check / next revision / record only); the merge writes CC rows and
+  **nothing is applied from a review without the verifier's row**. A CONFIRMED item whose closure is a bench step becomes an
+  `ARRIVAL_CHECKLIST` row (`release-and-cut.md` §10). Record the already-decided rate per reviewer beside the refuted rate: a high rate means the
+  decision rows do not name the fact they rest on, which is the cheaper fix.
+- Adversarial verification detail: default REFUTED; open the cited files; a number about copper carries the script that produced it (a disputed
+  clearance is one `Collide` bisection); a netlist claim is re-exported and parsed by the verifier (`<cad-cli> sch export netlist` + a 20-line
+  parser), a mesh claim re-measured with trimesh on the STL of record; convert coordinate frames before calling a site "missing".
+- Merge: verifier verdicts applied (REFUTED → rejected table with reason; ALREADY DECIDED → the row cited, no new row), dedupe by defect,
+  corroboration matrix, REQUIRED / OWNER (proposed row text) / DOCUMENT / ACCEPT, explicit verdict, reviewer quality (findings, refuted rate,
+  already-decided rate, empty runs per model), counts; commit with explicit paths.
 - Visual inspections: tiles ≥ 40 px/mm with a mm legend burned in, per-net-class highlight renders, the external inspector sees ONLY the tiles
   (copy them into a fresh directory and run the CLI there).
 
@@ -111,3 +121,41 @@
 - **Resume by message with the measured state** (§5): board md5, package, case version, last commit, gates green — read from the repo, not
   remembered; a difference with STATE NOW becomes a STATUS paragraph before any work.
 - **Paths in old records:** after a re-layout, frozen paragraphs spell the old paths; the pause point says "paths older than this: `scripts/reorg_paths.py --map`".
+
+## 8. Resource budget and speed — without losing quality or the machine
+The source project's host panicked twice (kernel watchdog) when several agents each ran the geometry kernel, the slicer on a stack of plates,
+headless-browser PDF renders and the gate set at the same time — memory pressure, not CPU, is the likely trigger. Nothing below is a machine
+constant: every number is derived from the host at run time or set in `project.yaml host:`; the host's facts (cores, RAM, the derived pool and
+floor) are the ENV.md row `scripts/project.py env` prints on day 1.
+1. **ONE heavy-job pool per machine — `scripts/jobs.sh -- <cmd>`**: a slot semaphore (pool = `host.jobs_max`, default max(1, cores // 4)),
+   `nice -n 10`, and a gate that does not START a job while free memory < `host.min_free_gb` (default max(2 GB, 15 % of RAM)) or load1 > cores
+   (it waits, then exits 2 after `--wait-max`); START / DONE lines with wall time and peak RSS in the pool's log. Every generator chain, slice
+   run, render, FEA solve and record round goes through it; **agents never call the geometry kernel, the slicer or the renderer directly**
+   (the Makefile pattern `templates/ci/Makefile` wires the targets through it).
+2. **Incremental by md5**: slice only plates whose input STL md5 or settings md5 changed (the sidecar carries both — `--only-changed` is the
+   default, `--all` explicit); render only bodies / faces whose SCAD text + camera key changed; PDF-render only documents whose source md5 changed;
+   the record round's `--check` modes are the gate, regeneration is the exception. Caches are keyed by md5 of inputs + tool version, stored beside
+   the outputs, and verified by the `--check` — skipping is safe by construction, quality is unchanged.
+3. **Serialize the record round**: one lock on the machine (`make record-round`: an atomic `mkdir` lock), once per batch of commits, never per
+   agent; agents commit generators + outputs and leave the round to the coordinator or the last agent. The documented order (`release-and-cut.md`
+   §3.1) is a fixed point: the second `release_report` pass runs only when `traceability --check` says the matrix changed.
+4. **Concurrency budget**: ≤ 3 writing agents with heavy work at once (the pool refuses the fourth job, not the agent), read-only reviewers
+   unlimited but told not to re-slice or re-render; one worktree per writing agent (§2).
+5. **Geometry engine**: the 2021.01 OpenSCAD release's CGAL kernel is the slow part (minutes per body); the snapshot build ships the Manifold
+   backend — `--backend=Manifold` (`openscad --help` of a snapshot lists `--backend arg: 'CGAL' (old/slow) [default] or 'Manifold' (new/fast)`
+   **[V, OpenSCAD manual, wikibooks "Using OpenSCAD in a command line environment", 2026-09-30]**; `--enable=manifold` on older snapshots **[K]**),
+   typically 10–100 × faster on the same files **[K, source project's reading]**, installs beside the release (`brew install --cask
+   openscad@snapshot` on macOS; the AppImage / `openscad-nightly` package on Linux). The case pipeline detects the snapshot binary
+   (`tools.geometry_cli_snapshot`, or `openscad --help | grep -q backend`) and passes the flag; tessellation differs slightly, so every STL md5
+   moves on the first regeneration — acceptable (records regenerate per run) but **an engine switch is followed by one record round in one commit:
+   "engine switch, md5s re-baselined"**, never mixed with a geometry change. `-q` always; per-body exports, never a whole-assembly re-render.
+6. **Preview, not render, for pictures**: concept / review / kit `faces/` PNGs use the OpenCSG preview (`openscad -o x.png --preview`, seconds);
+   `--render` (the full kernel) only for geometry of record — STL exports and gates — and for a picture whose rule needs the booleans resolved
+   (a mark coupon's recess floor, a section view): the render set says which it is per image.
+7. **Slicer / browser**: the slicer CLI one process per plate, never parallel plates (one plate is already multi-threaded); PDF rendering one
+   headless browser instance reused across the document set.
+8. **Measure**: every chain prints its wall time and peak RSS (`/usr/bin/time -l` on macOS, `-v` on Linux — the wrapper does it) into its sidecar /
+   the pool log, so the retro can see where the time goes before anyone parallelises (`pitfalls.md`: 25.1 of 25.8 s was a selftest sleeping).
+9. **Shorter loop for small tweaks**: a subagent round trip costs minutes of overhead. Criterion: **one yaml value or one emitter string = the
+   coordinator edits it and runs ONE preview through the wrapper inline; a new feature, a new gate, or anything touching the records = an agent
+   with its own worktree.** Restructures and full rounds are delegated; colour, a position, a label text are not.

@@ -8,7 +8,7 @@ written specification, for fabrication and assembly at {{FAB}}. Humans review at
 ## Non-negotiable rules
 1. **Never invent a fab or distributor part number** (electronics, and hardware: inserts, magnets, feet, screws). A number enters the BOM only after
    a fetch of its live page in this session confirms MPN, package and stock. Record every check in `docs/parts/PARTS_VERIFICATION.md` (date, URL,
-   stock, class). Tags: [V] verified, [K] known-unverified, [S] select-by-parameter.
+   stock, class). Tags: [V] verified, [K] known-unverified ([K owner-read] when the owner read a page we could not fetch), [S] select-by-parameter.
 2. **Never change a specified value, part, topology or pin assignment silently.** Write the proposal to `docs/governance/DECISIONS.md` with the reason, mark it
    OPEN, ask the owner. Apply only after approval (or when the spec delegates the choice); an operating gate may ship as an optional flag that warns.
 3. **Every VERIFY item is closed by reading the primary datasheet** before the part is drawn. A VERIFY item is a spec value or claim that rests
@@ -47,6 +47,8 @@ written specification, for fabrication and assembly at {{FAB}}. Humans review at
 - CAD CLI: `{{CAD_CLI_PATH}}`; CAD Python: `{{CAD_PYTHON_PATH}}`; project venv `.venv` (Python ≥ 3.11) with {{VENV_PACKAGES}}. {{ee,both}}
 - Geometry CLI: `{{CAD_CLI_PATH}}` (e.g. openscad); slicer CLI: `{{SLICER_CLI_PATH}}`; project venv `.venv` (Python ≥ 3.11) with {{VENV_PACKAGES}}. {{mech}}
 - All tool paths live in `project.yaml tools:`; generators read them from there (`scripts/project.py`), never hard-code them.
+- Heavy tools (geometry kernel, slicer, renderer, FEA, the record round) run through `scripts/jobs.sh -- <cmd>` (one pool per machine, sized from
+  the host; `make <target>`), never directly; regenerate only what an md5 says changed (`references/agent-ops.md` §8).
 
 ## Repository layout
 ```

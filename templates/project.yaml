@@ -25,6 +25,8 @@ kickoff:                                      # the owner's kickoff answers, mac
     marks: {{C9_MARKS}}                       # C9: ironed top-face feature | flush AMS colour body | both | glued plate {{mech,both}}
     kit_recipient: {{C10_RECIPIENT}}          # C10: who receives the print kit's report-back {{mech,both}}
     fit_decider: {{C10_FIT_DECIDER}}          # C10: who picks the fit knob after the bracket print {{mech,both}}
+    fit_result: {{C10_FIT_RESULT}}            # C10: the value the owner picked after the bracket print — "pending: bracket print" until then; ARRIVAL_CHECKLIST E-FIT closes it {{mech,both}}
+    optimise: {{C11_OPTIMISE}}                # C11: speed | strength | surface | minimal waste — the default slicer knob set (references/fdm-print-optimisation.md §4) {{mech,both}}
   verification: {rounds: {{E1_ROUNDS}}, visual: {{E2_VISUAL}}, fea: {{E4_FEA}}}   # E1 / E2 / E4
   coupons: {{E3_COUPONS}}                     # E3 {{mech,both}}
   sourcing: {sources: {{F1_SOURCES}}, stock_floor: {{F2_STOCK}}}   # F1 / F2
@@ -107,7 +109,7 @@ print_targets:                                # every printed body is censused a
     vendor: home {{mech,both}}
     process: FDM {{mech,both}}
     material: {{FILAMENT}}                    # PLA | PETG {{mech,both}}
-    printer: {{PRINTER_AND_NOZZLE}}           # e.g. "Bambu Lab P2S, 0.4 nozzle, 0.20 mm" {{mech,both}}
+    printer: {{PRINTER_AND_NOZZLE}}           # e.g. "<printer model>, 0.4 nozzle, 0.20 mm" {{mech,both}}
     dfm_process: home_fdm_04                  # the printability floor row (walls 0.9 / one perimeter 0.45); the DESIGN rule is wall_gate below {{mech,both}}
     wall_gate: 1.6                            # 4 perimeters at 0.4                                       [owner bar] {{mech,both}}
     rib_gate: 1.2 {{mech,both}}
@@ -121,6 +123,11 @@ print_targets:                                # every printed body is censused a
     rating: {ul94: unrated, tg_c: 55, source: {{TDS_URL}}} {{mech,both}}
     accepted: [] {{mech,both}}
 renders: []                                   # G2+: see references/project-yaml.md `renders:`
+# host: {jobs_max: 3, min_free_gb: 3.6}       # OPTIONAL overrides of what scripts/jobs.sh derives from THIS machine (pool = cores // 4, floor = max(2 GB, 15 % RAM));
+                                              #   the derived numbers are the ENV.md host row (`scripts/project.py env`) — no machine constant lives in the skill
+arrival_checklist:                            # written BEFORE the order ships (SKILL.md §10.1): scripts/arrival_checklist.py renders yaml -> md; `--check` joins gates.adopt once the yaml exists
+  yaml: design/arrival_checklist.yaml
+  out: docs/production/ARRIVAL_CHECKLIST.md
 # reorg:                                      # only when the layout changes: decision row first, then scripts/reorg_paths.py --plan/--apply/--check/--proof
 #   moves: {docs/OLD.md: docs/<folder>/OLD.md}
 #   frozen: [out/fab/]                        # uploaded packages, archived records: never rewritten, `--map` explains their old paths
@@ -162,6 +169,8 @@ gates:
     # - "$PY gen/route_quality.py" {{ee,both}}
     # - "$PY scripts/dfm_check.py --check" {{ee,both}}
     # - "$PY scripts/collect_renders.py --check"
+    # Order placed (any scope): the arrival / first-article checklist (scripts/project.py gates-required demands this line once design/arrival_checklist.yaml exists)
+    # - "$PY scripts/arrival_checklist.py --check"
     # Case / M1 (every printed body, every preset): the PURE census gate + the geometry generator's --check {{mech,both}}
     # - "$PY gen/case.py --check" {{mech,both}}
     # - "$PY scripts/thin_wall_census.py --gate-dir out/mechanical/case/<preset>/census" {{mech,both}}

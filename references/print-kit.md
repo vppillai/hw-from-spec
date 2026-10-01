@@ -60,6 +60,10 @@ START_HERE, every README and print sheet, and the generated ASSEMBLY.md; the run
   by its value in the 3MF (no digit deboss — the object name carries it). The technician keeps the one that seats under thumb pressure and
   survives the hang test and reports the value; **the owner picks the knob after that print** (default stays the middle value).
 
+## 4.1 Slicer-level optimisation (waste / strength / quality) — `references/fdm-print-optimisation.md`
+One table there, every knob with the g-code-derived row that proves it (`purge_g`, `tower_g`, `support_g`, `print_time_s`, `wall_loops` read back);
+the plate yaml's `optimise:` block = the kickoff C11 default set; START_HERE may claim a saving only when the sidecar shows it (the text gate §3).
+
 ## 5. Records that travel with the kit
 - **Watertight row per exported STL** (a slicer fills or drops a non-manifold feature silently and reports "clean"); a `watertight: false` was
   recorded for a day without gating it. Raised legend items keep a `legend_edge` margin (0.3) from the plate outline and the fit filter LISTS

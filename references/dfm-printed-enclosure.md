@@ -333,6 +333,9 @@ the geometry rows guarantee the rest — the report says which is which.
   R > 0.66); ribs bear on the faces the drawing shows SOLID (a QSFP-DD module is open at its bottom leading edge and recessed on top).
 - The README states the first-print knobs, one per print (fit clearance OR rib proud), with the expected calliper readings.
 
+Slicer-level knobs (purge into infill, flush calibration, prime tower, wall loops / sequence, infill, modifier meshes, EF / XY compensation, seam,
+ironing, fuzzy skin, per-object overrides) and how each is PROVEN from the g-code: `references/fdm-print-optimisation.md` — not repeated here.
+
 ### 8.3 Bambu Studio CLI facts (02.08.x, 2026-09-29 — verify on your build)
 - `sparse_infill_density: 100%` is **rejected by the validator (rc -18 "Invalid parameter value(s)")** with any pattern; 90 % passes. Force a
   solid column with `top_shell_layers` / `bottom_shell_layers` (or their thickness keys) instead.

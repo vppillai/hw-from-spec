@@ -39,7 +39,8 @@ Rules (each a row: process parameter + physical reason + fix; verdict FLAG / PAS
      footprint reaches further than bridge_max across (a shorter one is bridged from its edges: the round top of a slot, a shallow recess roof);
      PLUS every horizontal ceiling with fewer than two supported ends (a CANTILEVER is a 90 deg overhang, not a bridge) longer than two line widths
   B  bridge (layer processes): a horizontal ceiling above the bed with BOTH ends on material whose SPAN exceeds bridge_max — the span is the shortest
-     crossing between its supported edges (the inscribed circle of a footprint bounded all round, the supported axis of one open at the ends): a
+     crossing between its supported edges, measured by RAYS from the inscribed-circle centre (bounded all round: the inscribed circle; one axis with
+     both ends on material: that chord — full-height lands inside a rebate split it into short strips the bbox extent would not see): a
      2 x 40 tunnel roof bridges 2 mm, not 40. O / B FLAG when the body prints with supports = none (per body: --supports overrides the row), INFO otherwise
   S  size: bbox against part_min / build_max
   L  INFO: regions inside legend boxes (the coupon rule owns them) and slivers
@@ -92,7 +93,7 @@ except ImportError as e:  # the generic scripts need pyyaml only; this one needs
 HERE = os.path.dirname(os.path.realpath(__file__))   # realpath: in a project `scripts` is a symlink into vendor/hw-from-spec — the template table must resolve through it
 sys.path.insert(0, HERE)
 from project import record_sig, verify_sig, open_decisions  # noqa: E402
-VERSION = "0.9.1"        # rule-set version stamped into every record (the validation cache is keyed on it); bump when a rule or a measure changes
+VERSION = "0.10.0"        # rule-set version stamped into every record (the validation cache is keyed on it); bump when a rule or a measure changes
 WALL_DEG = 30.0          # limiting face within 30 deg of parallel = wall / neck / root; otherwise wedge (census convention)
 COS_OPP = 0.7            # main field: a face 'opposes' the sample when its normal is within ~45 deg of the inverse normal (a 45 deg ramp under a skin counts, a 90 deg side face does not)
 COS_K = 0.05             # knife field: any face that faces back at all (included angle < ~87 deg); a 90 deg side face still does not
@@ -228,16 +229,49 @@ def regions(pts, vals, mask, link, a_per, extra=None, min_n=NOISE_N):
     return rows
 
 
-def span_edt(P, spacing, cell=0.25):
-    """Shortest crossing of a footprint bounded all round = the largest inscribed circle: rasterise the sample footprint, close the sampling gaps
-    (dilate by k cells), Euclidean distance transform, 2 x (max - k) x cell. A 2 x 40 tunnel roof reads ~2, not 40."""
-    from scipy.ndimage import distance_transform_edt, binary_dilation
+def _footprint_mask(P, spacing, cell=0.25):
+    """Rasterised sample footprint: (mask, k, cell, lo) — the sampling gaps closed by a dilation of k cells (k = ceil(spacing / cell) + 1)."""
+    from scipy.ndimage import binary_dilation
     cell = max(cell, spacing); k = int(np.ceil(spacing / cell)) + 1
     xy = np.asarray(P)[:, :2]; lo = xy.min(0) - (k + 2) * cell
     ij = np.floor((xy - lo) / cell).astype(int); shape = tuple(ij.max(0) + k + 3)
     mask = np.zeros(shape, bool); mask[ij[:, 0], ij[:, 1]] = True
-    mask = binary_dilation(mask, iterations=k)
+    return binary_dilation(mask, iterations=k), k, cell, lo
+
+
+def span_edt(P, spacing, cell=0.25):
+    """Shortest crossing of a footprint bounded all round = the largest inscribed circle: Euclidean distance transform of the closed footprint,
+    2 x (max - k) x cell. A 2 x 40 tunnel roof reads ~2, not 40."""
+    from scipy.ndimage import distance_transform_edt
+    mask, k, cell, _ = _footprint_mask(P, spacing, cell)
     return round(float(max(0.0, distance_transform_edt(mask).max() - k) * 2 * cell), 1)
+
+
+def span_rays(m, P, spacing, cell=0.25):
+    """Bridge span of a ceiling and how many of its ends rest on material, measured with RAYS from the inscribed-circle centre (0.10.0): the
+    origin is in the air just under the ceiling at the EDT maximum; along each in-plane axis a ray each way counts a hit only within the footprint
+    extent + 1 -> ends[a] in 0..2, chord[a] = the two hit distances summed. Bounded all round (ends [2, 2]) -> the inscribed circle; exactly one
+    axis with both ends on material -> that axis' chord (an open-ended rebate split by full-height lands reads one strip, not the bbox); else the
+    inscribed circle (the cantilever decision is rule O's). Not a raster chord: a run through a MERGED cluster reads any row of it (a 1.4 mm relief
+    ring around a sole read 44 mm) and the mask dilation erases lands thinner than ~2k cells (a debossed word merged into one 12.7 mm span)."""
+    from scipy.ndimage import distance_transform_edt
+    mask, k, cell, lo = _footprint_mask(P, spacing, cell)
+    edt = distance_transform_edt(mask); c = np.unravel_index(int(np.argmax(edt)), edt.shape)
+    edt_span = round(float(max(0.0, edt[c] - k) * 2 * cell), 1)
+    o = np.array([lo[0] + (c[0] + 0.5) * cell, lo[1] + (c[1] + 0.5) * cell, float(np.median(P[:, 2])) - 0.05])
+    reach = float(np.ptp(P[:, :2], axis=0).max()) + 1.0
+    ends, chord = [0, 0], [0.0, 0.0]
+    for a in (0, 1):
+        for sgn in (1.0, -1.0):
+            d = np.zeros(3); d[a] = sgn
+            loc, ir, _ = m.ray.intersects_location(o[None], d[None], multiple_hits=False)
+            if len(ir):
+                dist = float(np.linalg.norm(loc[0] - o))
+                if dist <= reach:
+                    ends[a] += 1; chord[a] += dist
+    two = [a for a in (0, 1) if ends[a] == 2]
+    span = edt_span if len(two) != 1 else round(chord[two[0]], 1)
+    return span, ends
 
 
 def pinches(m, neck_max, levels=(0.1, 0.3, 0.5, 0.7, 0.9)):
@@ -425,23 +459,11 @@ def analyse(path, process, n_s=None, seed=0, boxes=None, out_dir=None, piece=Non
         zmin = m.bounds[0][2]; down = nrm[:, 2] < -np.sin(np.radians(pr["overhang_max_deg"] + OVERHANG_TOL)); ceiling = nrm[:, 2] < -0.985; bed = pts[:, 2] < zmin + 0.2
         Oall = regions(pts, -nrm[:, 2], down & ~ceiling & ~bed, link, a_per, lambda s: dict(cls="overhang", deg=round(float(np.degrees(np.arcsin(np.clip(-nrm[s, 2].mean(), -1, 1)))), 0), span=span_edt(pts[s], spacing)))
         O = [r for r in Oall if r["span"] > pr["bridge_max"]]; Os = [r for r in Oall if r not in O]
-        def ends_supported(P):                                                   # per in-plane axis: how many of the ceiling's two ends rest on material (a horizontal ray from just under each end, outward, must hit within reach)
-            out = []
-            for a in (0, 1):
-                n = 0
-                for end, sgn in ((P[np.argmin(P[:, a])], -1.0), (P[np.argmax(P[:, a])], 1.0)):
-                    d = np.zeros(3); d[a] = sgn; o = end.copy(); o[2] -= 0.3; o[a] -= sgn * 0.5
-                    loc, ir, _ = m.ray.intersects_location(o[None], d[None], multiple_hits=False)
-                    n += bool(len(ir)) and float(np.linalg.norm(loc[0] - o)) <= max(3.0, 2 * link)
-                out.append(n)
-            return out
         C = regions(pts, pts[:, 2], ceiling & ~bed, link, a_per, lambda s: dict(cls="ceiling", z=round(float(np.median(pts[s, 2])), 2), _s=s))
-        for r in C:                                                              # the span is the shortest crossing between SUPPORTED edges: bounded all round -> inscribed circle; open at the ends -> the supported axis; no axis with two ends -> a cantilever
-            P = pts[r.pop("_s")]; ea = ends_supported(P); r["supported_ends"] = ea
-            if ea[0] >= 2 and ea[1] >= 2:
-                r["cls"], r["span"] = "bridge", span_edt(P, spacing)
-            elif max(ea) >= 2:
-                r["cls"], r["span"] = "bridge", round(float(np.ptp(P[:, int(np.argmax(ea))])), 1)
+        for r in C:                                                              # span + supported ends by rays from the inscribed-circle centre (span_rays): bounded -> inscribed circle; one open axis -> that chord; no axis with both ends on material -> a cantilever
+            P = pts[r.pop("_s")]; span, ea = span_rays(m, P, spacing); r["supported_ends"] = ea
+            if max(ea) >= 2:
+                r["cls"], r["span"] = "bridge", span
             else:
                 r["cls"], r["span"] = "cantilever", r["extent"]
         B = [r for r in C if r["cls"] == "bridge" and r["span"] > pr["bridge_max"]]
@@ -818,6 +840,38 @@ def selftest():
         pi_ = _extrude(Polygon([(-20, 0), (-16, 0), (-16, 15), (16, 15), (16, 0), (20, 0), (20, 18), (-20, 18)]), 10.0, os.path.join(d, "pi.stl"), up=True)
         r = analyse(pi_, FDM, n_s=20000, supports="none"); ro = next(x for x in r["rows"] if x["rule"].startswith("O")); rb = next(x for x in r["rows"] if x["rule"].startswith("B"))
         assert "0 horizontal cantilever(s)" in ro["value"] and rb["value"].startswith("1 horizontal") and fired(r) == {"B"} and abs(r["ceilings"][0]["span"] - 32) < 1, (ro["value"], rb["value"], r["ceilings"][:1])
+        pi6 = _extrude(Polygon([(-7, 0), (-3, 0), (-3, 15), (3, 15), (3, 0), (7, 0), (7, 18), (-7, 18)]), 40.0, os.path.join(d, "pi6.stl"), up=True)
+        r = analyse(pi6, FDM, n_s=40000, supports="none"); c = [x for x in r["ceilings"] if x["extent"] > 30]
+        assert c and c[0]["cls"] == "bridge" and abs(c[0]["span"] - 6) <= 0.6 and "B bridge (layers)" not in r["flagged"], ("pi 6 x 40 must read 6 and stay silent", c[:1], r["flagged"])
+        # 0.10.0: a rebate split by two full-height 2.0 lands into three 6.1 strips, open at both ends, links into ONE ceiling region (gap < link): the span
+        # is the longest in-footprint chord 6.1 along the supported axis — the bbox extent (22.3) flipped three verdicts of record in the source project
+        w, land, wall = 6.1, 2.0, 4.0; x0 = -(1.5 * w + land + wall); pts2 = [(x0, 0)]
+        for i in range(3):
+            a = x0 + wall + i * (w + land) if i == 0 else pts2[-1][0]
+            if i == 0:
+                pts2 += [(a, 0), (a, 15), (a + w, 15), (a + w, 0)]
+            else:
+                pts2 += [(a + land, 0), (a + land, 15), (a + land + w, 15), (a + land + w, 0)]
+        pts2 += [(-x0, 0), (-x0, 18), (x0, 18)]
+        reb = _extrude(Polygon(pts2), 40.0, os.path.join(d, "rebate_lands.stl"), up=True)
+        r = analyse(reb, FDM, n_s=60000, supports="none"); c = [x for x in r["ceilings"] if x["extent"] > 30]
+        assert c and all(x["cls"] == "bridge" for x in c) and max(x["span"] for x in c) <= w + 0.7 and "B bridge (layers)" not in r["flagged"], ("lands-split rebate must read ~6.1 per strip, never the 22.3 bbox", c[:3], r["flagged"])
+        # a 1.4 mm relief ring around a sole (an annular groove on the bottom face, by revolution — no boolean backend needed) and a 1.4 mm straight groove
+        # open at both ends: each ceiling reads its WIDTH (~1.4), never the ring's circumference / the groove's 46 mm length
+        ring = trimesh.creation.revolve(np.array([(0, 0), (10, 0), (10, 2), (11.4, 2), (11.4, 0), (22, 0), (22, 8), (0, 8)], float), sections=96); ring.export(os.path.join(d, "ring.stl"))
+        r = analyse(os.path.join(d, "ring.stl"), FDM, n_s=60000, supports="none"); c = [x for x in r["ceilings"] if x["cls"] == "bridge"]
+        assert c and max(x["span"] for x in c) <= 2.0 and "B bridge (layers)" not in r["flagged"], ("a relief ring must read its 1.4 width", [(x["span"], x["extent"]) for x in c], r["flagged"])
+        gr = _extrude(Polygon([(-23, 0), (-0.7, 0), (-0.7, 2), (0.7, 2), (0.7, 0), (23, 0), (23, 8), (-23, 8)]), 46.0, os.path.join(d, "groove.stl"), up=True)
+        r = analyse(gr, FDM, n_s=60000, supports="none"); c = [x for x in r["ceilings"] if x["cls"] == "bridge"]
+        assert c and max(x["span"] for x in c) <= 2.0 and "B bridge (layers)" not in r["flagged"], ("an open groove must read its 1.4 width, not 46", [(x["span"], x["extent"]) for x in c], r["flagged"])
+        # a debossed word on the bottom face: three 2 mm letter grooves 1.0 apart link into ONE cluster — the span is one letter (2), never the 8 mm word
+        prof = [(-15, 0)]
+        for x0 in (-4.0, -1.0, 2.0):
+            prof += [(x0, 0), (x0, 1.2), (x0 + 2, 1.2), (x0 + 2, 0)]
+        prof += [(15, 0), (15, 3), (-15, 3)]
+        word = _extrude(Polygon(prof), 6.0, os.path.join(d, "word.stl"), up=True)
+        r = analyse(word, FDM, n_s=40000, supports="none"); c = [x for x in r["ceilings"] if x["cls"] == "bridge"]
+        assert c and max(x["span"] for x in c) <= 2.6 and "B bridge (layers)" not in r["flagged"], ("debossed letters must not merge into one span", [(x["span"], x["extent"]) for x in c], r["flagged"])
         # overhang by reach: a 60 deg pitched slot roof 2 mm across is bridged (listed), a 24 mm one is an overhang defect with supports none (INFO with interior)
         for wid, want in ((2.0, False), (24.0, True)):
             apex = 2 + (wid / 2) * np.tan(np.radians(30))
@@ -877,7 +931,7 @@ def selftest():
     ROOT = ROOT0
     print("selftest OK: ray reads 0.8 on the 0.8 plate (W, no R) / 2.0 plate PASS / free ribs W no R / 0.5 root under a 2.0 rim x 90 -> W + R, root 1.3 PASS / SLA size / "
           "Z-limited legend box keeps W, full box lists it, records byte-identical, sidecar written + removed / 0.3 rib in a box listed not W / pins Ø0.4 Ø0.3 -> F, Ø1.2 PASS / "
-          "ridges 30-40-50 K, 60-90 read but pass / 0.6 sheet flat = skin PASS, 0.4 -> Z, stood up -> W / 0.6 slot V on MJF not FDM / 2 mm tunnel span 2, 15 mm -> B / tee arms cantilever O, pi roof 32 mm bridge B / "
+          "ridges 30-40-50 K, 60-90 read but pass / 0.6 sheet flat = skin PASS, 0.4 -> Z, stood up -> W / 0.6 slot V on MJF not FDM / 2 mm tunnel span 2, 15 mm -> B / tee arms cantilever O, pi roof 32 mm bridge B, pi 6 x 40 silent, lands-split rebate 3 x 6.1 silent, 1.4 relief ring + open groove read 1.4, debossed word letters not merged (span by rays from the inscribed-circle centre) / "
           "60 deg slot roof 2 mm bridged, 24 mm -> O / cavity C (MJF) INFO (FDM) / open mesh + touching cubes M, --bodies 2 / gate (FLAG, --open only an OPEN row naming the piece, --expect with a reason, tampered record, sidecar ignored, uncensused STL, laxer row, md5, orphan census) / validate (RULE DEFECT, geometry twins grouped, both label schemas)")
 
 

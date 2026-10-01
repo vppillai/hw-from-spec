@@ -32,7 +32,8 @@ answered question is a defect; changing an answer is a new D row that supersedes
 | C8 | two targets, per-preset fits | {{yes}} | yes | D-{{nn}} | `kickoff.enclosure.targets` | {{mech,both}}
 | C8a | print-DFM process row per target | {{jlc_mjf_pa12 + home_fdm_04}} | yes | D-{{nn}} | `print_targets.<t>.dfm_process`; `design/dfm_processes.yaml` | {{mech,both}}
 | C9 | brand marks on FDM parts | {{ironed top-face feature}} | yes | D-{{nn}} | `kickoff.enclosure.marks`; slicer plate profile (`ironing_type: top`) | {{mech,both}}
-| C10 | print kit hand-over: report-back recipient, fit decider | {{owner; owner}} | yes | D-{{nn}} | `kickoff.enclosure.kit_recipient`, `kickoff.enclosure.fit_decider`; START_HERE | {{mech,both}}
+| C10 | print kit hand-over: report-back recipient, fit decider | {{owner; owner}} | yes | D-{{nn}} | `kickoff.enclosure.kit_recipient`, `kickoff.enclosure.fit_decider`, `kickoff.enclosure.fit_result` ("pending: bracket print" until the owner picks; ARRIVAL_CHECKLIST E-FIT); START_HERE | {{mech,both}}
+| C11 | slicer optimisation target | {{minimal waste}} | yes | D-{{nn}} | `kickoff.enclosure.optimise`; the plate yaml `optimise:` block (`references/fdm-print-optimisation.md` §4) | {{mech,both}}
 | D1 | the manufacturability bar | {{zero errors / zero warnings / no waivers}} | yes | D-{{nn}} = `{{D-BAR}}` | `fab_dfm.bar` (ee / both), `print_targets.*.accepted` (mech / both); GATES.md; CLAUDE.md rule 9 |
 | D2 | what may be waived | {{nothing}} | yes | D-{{nn}} | `print_targets.*.accepted: []` (mech / both), `dfm_accepted: []` (ee / both) |
 | D3 | design margin / tolerance source | {{+0.1 MJF; first article replaces the vendor sheet}} | yes | D-{{nn}} | `print_targets.*.design_margin / tolerance` | {{mech,both}}
