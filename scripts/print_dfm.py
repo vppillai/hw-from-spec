@@ -92,7 +92,7 @@ except ImportError as e:  # the generic scripts need pyyaml only; this one needs
 HERE = os.path.dirname(os.path.realpath(__file__))   # realpath: in a project `scripts` is a symlink into vendor/hw-from-spec — the template table must resolve through it
 sys.path.insert(0, HERE)
 from project import record_sig, verify_sig, open_decisions  # noqa: E402
-VERSION = "0.10.0"        # rule-set version stamped into every record (the validation cache is keyed on it); bump when a rule or a measure changes
+VERSION = "0.10.3"        # rule-set version stamped into every record (the validation cache is keyed on it); bump when a rule or a measure changes
 WALL_DEG = 30.0          # limiting face within 30 deg of parallel = wall / neck / root; otherwise wedge (census convention)
 COS_OPP = 0.7            # main field: a face 'opposes' the sample when its normal is within ~45 deg of the inverse normal (a 45 deg ramp under a skin counts, a 90 deg side face does not)
 COS_K = 0.05             # knife field: any face that faces back at all (included angle < ~87 deg); a 90 deg side face still does not
