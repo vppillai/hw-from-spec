@@ -66,6 +66,9 @@ first quote and make it part of the adopt rule.
   to (say "holes in the PCB"), wave soldering for any THT part on a two-sided SMT board (say no, explicitly), and the fallback ("ship that part loose
   in the bag"). Expect one to three clarification mails; answer each with the vendor drawing's picture of the feature. Their screenshots arrive as
   links to the fab's message-file API, not attachments - download and file them the same day, the links are session-bound.
+- Holes in a remark are cited by drill tool / finished diameter / count with coordinates in the drill-file frame (origin = the aux origin),
+  never by CAD pad names: pad names are not exported to Gerbers or Excellon, so a remark that says "S1-S12" names nothing the fab's
+  engineer can see. Attach a marked picture generated from the drill file (the same data the fab has).
 - Driven browser: session expires within hours; a fresh tab on the orders URL is the decisive signed-in check (redirect = out); reload the quote tab
   after re-sign-in. Vue tiles ignore `element.click()` from a script — use real input events; the hidden file input needs its `hide` class defeated;
   material lists re-order after finish changes — click by text, never by position (a positional click bought the wrong laminate at 2× the price).
