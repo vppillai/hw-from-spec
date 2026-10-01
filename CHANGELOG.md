@@ -1,5 +1,35 @@
 # CHANGELOG — hw-from-spec
 
+## 0.9.1 — 2026-09-30 — print DFM rule set mirrored from the source project (its M-B blind review + CC-215 / CC-217; `scripts/print_dfm.py` VERSION 0.9.1)
+
+The source project's `gen/print_dfm.py` (rule set 2026-09-30f) was revised in parallel with 0.9.0 after a blind review tested the tool against
+constructs its author never built (a plate, a pin, a 50° ridge, a tunnel, a sealed void, two touching cubes) and found a dead measurement behind
+a green gate. Every rule change below is physics, not vendor tuning; 0.9.0's enforcement (record signature, `--open` only against an OPEN
+decision row naming the piece, STL-set and `print_targets.<t>.dfm_process` checks, `fix:` on every FLAG row, project-root paths, the cantilever test) is kept.
+
+### Mirrored (`scripts/print_dfm.py`)
+- Ray origin nudged INTO the material — already fixed in 0.9.0 (blind review F1 = the project's CC-215); verified, now asserted finite and near 0.8 on the 0.8 plate with R SILENT.
+- Knife-edge field `COS_K` 0.05 (any face that faces back) + rule K by the tip band `feature_min / (2 tan(a/2))` > `KNIFE_BAND × feature_min` (included angle < 53°) over ≥ `slender × feature_min`: ridges 30 / 40 / 50° FLAG, 60 / 90° read but pass; the former 45° cone cut-off is gone.
+- Sliver exemption needs the aspect test: area < `sliver_area` AND extent ≤ 2 × thickness; a Ø0.4 × 3.5 or Ø0.3 × 2.9 pin is rule F, a Ø1.2 pin passes.
+- 3-D legend boxes `(x0, y0, z0, x1, y1, z1)` in the print frame: `--boxes file.json`, the `<piece>.boxes.json` sidecar written / removed beside the record, `--land` kept as the every-Z spelling; W and R respect the boxes like every other rule; non-manifold edges and point contacts inside boxes listed in row L.
+- No run time inside the record (`_seconds` printed, not written, not signed): a CLI rerun reproduces the gated record byte for byte (asserted).
+- Process fields `media` (powder / resin / none), `layer` + `skin_min_layers` -> rule **Z** (a horizontal skin is a layer count: 0.6 flat = 3 layers PASS, 0.4 -> Z, 0.6 stood up -> W); FDM `void_min: null` = no long-slot rule, with the rule stated in the row and the yaml.
+- Bridge span = the shortest crossing between SUPPORTED edges (inscribed circle of a footprint bounded all round, the supported axis of one open at the ends): a 2 × 40 tunnel roof bridges 2 mm, a 15 mm tunnel FLAGs B with `supports: none`, a 32 mm pi roof open at the ends is a 32 mm bridge (not 10); steep overhangs judged by reach ≤ `bridge_max` (a 2 mm slot top is bridged, a 24 mm one FLAGs O); `--supports none|interior|any` per body overrides the row; 0.9.0's cantilever (< 2 supported ends) kept under O.
+- Rule **C** sealed cavity: FLAG on powder / resin (escape hole ≥ 3.5 mm [V Hubs]), INFO on FDM.
+- Rule **M** merged with 0.9.0's: non-manifold / open edges located (in-box exempt), inconsistent winding, solid count vs `--bodies` (cavities not counted as bodies); two cubes touching at a vertex (2 solids) or along an edge (a 4-face edge) FLAG, `--bodies 2` passes the vertex case.
+- Gate: `--expect <tag>/<piece>=<reason>` for bodies that FLAG by design (coupons, dummies), printed on every run; record-only dirs (no sibling `census/`) checked the same way; `*.boxes.json` skipped; a stale `--open` / `--expect` entry noted; the 0.9.0 signature / version / threshold / process-row checks kept.
+- `--validate` groups the labelled files by GEOMETRY (faces equal, volume 0.05 mm³, area 0.5 mm², bbox 0.01) and counts agreement on unique geometries; §3a coverage per mechanism, §3b thresholds with their `[V]` / `[K]` tags + the tool's judgment constants; exit 1 on any LOOSER geometry (kept).
+- Selftest: a positive AND a negative construct per rule (plate / rib / root / pins / ridges / sheets / slot / tunnels / tee / pi / pitched roofs / cavity / touching cubes / gate incl. `--expect` and the sidecar / validate incl. twin grouping); 45 s.
+- `--list` shows `media` and `layer × skin_min_layers`; `[K]` "slenderness heuristic" replaces the Kirchhoff citation (the L/t ≥ 10 of plate theory is a validity condition, not a manufacturability number).
+
+### Templates / references
+- `templates/design/dfm_processes.yaml`: `media` on every row, `layer` / `skin_min_layers` / `void_min: null` on the FDM rows with the rule stated, `home_fdm_04_colour_body` (skin_min_layers 1, supports none), header fields for media / layer / skin / boxes / supports-per-body, sliver aspect test and slenderness heuristic in the comments.
+- `references/print-dfm.md`: rules table (M C W R Z F K P V H O B S + L Y), legend-box sidecar, `--expect`, the geometry grouping and coverage reading; `references/pitfalls.md` +3 (negative selftest case, sliver aspect test, validation deduped by geometry).
+
+### Not done
+- The project's record paths (`out/MINI/...`) and its 42-file validation set stay in the project; the skill ships the schema and the selftest constructs.
+- `thin_wall_census.py` VERSION stays 0.9.0 (no census rule changed).
+
 ## 0.9.0 — 2026-09-30 — gates enforced by scripts, every documented command runs as written (closes blind review S of 0.8.0)
 
 Blind review S (`docs/reviews/OPUS_blind_review_S_skill_0.8.0_2026-09-30.md`, Opus, cold personas: EE user, mech user with a bracket STEP, sceptical
