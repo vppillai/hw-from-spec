@@ -11,6 +11,7 @@ mkdir -p "$R/vendor/hw-from-spec"; ln -s "$SKILL/scripts" "$R/vendor/hw-from-spe
 VENV=""; for c in "$SKILL/.venv" "$CALLER/.venv"; do [[ -x "$c/bin/python" ]] && "$c/bin/python" -c 'import yaml' 2>/dev/null && { VENV=$c; break; }; done
 if [[ -n "$VENV" ]]; then ln -s "$VENV" "$R/.venv"; export PY="$R/.venv/bin/python"; echo "python: $VENV/bin/python"
 else echo "NOTE: no .venv with pyyaml at $SKILL or $CALLER — using python3 from PATH"; export PY=python3; fi
+export PYTHON="$PY"                                       # the shell gates (adopt_gates.sh / clone_gate.sh) honour $PYTHON first
 "$PY" -c 'import yaml' || { echo "FAIL: $PY has no pyyaml (README Install step 2: uv pip install --python .venv/bin/python pyyaml ...)"; exit 1; }
 if "$PY" -c 'import numpy, trimesh, scipy, shapely, rtree, networkx, mapbox_earcut' 2>/dev/null; then MESH=1; else MESH=""; echo "NOTE: mesh libraries absent in $PY — section 0d (print DFM on meshes) will be SKIPPED; install numpy trimesh scipy shapely rtree networkx mapbox-earcut to run it"; fi
 md5of_py() { "$PY" -c 'import hashlib,sys; print(hashlib.md5(open(sys.argv[1],"rb").read()).hexdigest())' "$1"; }
