@@ -1,5 +1,14 @@
 # CHANGELOG — hw-from-spec
 
+## UNRELEASED — retro aec-tester (2026-09-30) <!-- retro: aec-tester 2026-09-30 -->
+
+### Added (draft from scripts/skill_retro.py --apply; edit before the release)
+- **`references/dfm-printed-enclosure.md`**: Per-object print settings DO work headless: write them as Bambu object-level `<metadata key="..." value="..."/>` entries under `<object>` in; A "did my setting land" proof must be spatial and comparative: per-object footprints from the exported plate json, feature points (Ironing /; Two 'robust CSG' habits made the two p2s shell slivers: a cutter overshoot (+1 above the trough floor) that is air inside the channel but a 
+- **`references/part-verification.md`**: Vendor TDS PDFs on Shopify / bblcdn CDNs fetch fine with curl + a browser UA and read with `pdftotext -layout`; WebFetch returns binary garb
+- **`references/pcb-layout-dfm.md`**: Blind reviewers re-find decided items at a 1:1 ratio (H-A: 16 of 27 were on record, H-B: 4 of 28) — the merge is cheap when every decision r
+- **`references/pitfalls.md`**: A dust cap cannot damage a QSFP-DD plug if it only ever meets the smooth 18.35 x 8.5 shell: the paddle card is recessed >= 2.2 behind the le; "ESD-safe" on a filament page is not a class: the CNT-loaded flexible grades with datasheets (3DXTech ESD-TPU 60D 10^3 Ω/sq IEC 62631-3-2, E; JLC's paid 'Confirm Production file' and 'Confirm Parts Placement' options are not guaranteed to raise a dialog or mail — the order went Rev; A footprint's 3D model can sit off its pads and nobody notices until a blind reviewer measures the exported mesh: the XYECONN USB-C STEP is ; Blind mechanical reviews re-find decided items at ~1:2 (10 of 23 were owner decisions whose numbers still hold, 2 refuted); the two that mat; A fake that NACKs for 50 ms after EVERY write breaks read_id before the code under test is reached; model the hold-off from the write you wa
+- **`references/release-and-cut.md`**: One-liner coordinator rules land as generator features, not as hand edits: 'coupons are self-documenting' became a yaml marker block + a sha
+
 ## 0.9.2 — 2026-09-30 — self-documenting coupons
 
 ### Added

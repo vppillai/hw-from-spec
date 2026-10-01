@@ -1,0 +1,20 @@
+# smoke FIXTURE — the arrival / first-article checklist of the smoke project (scripts/arrival_checklist.py; SKILL.md §10.1)
+version: 1-2026-01-03
+title: "ARRIVAL_CHECKLIST.md — smoke rev 0 (order SMOKE-1, record 00000000)"
+sections:
+  - key: A
+    title: Before shipment approval — the fab's assembly photos
+    columns: [id, item, how, fail, opens, status, evidence]
+    rows:
+      - {id: A-1, item: "D1 cathode bar vs the silk mark", how: "zoom the fab's images vs the top render", fail: "reversed -> re-place before shipment", opens: "B-1", status: TODO, evidence: ""}
+  - key: B
+    title: Bench checks in gate order
+    columns: [id, item, how, fail, opens, status, evidence]
+    rows:
+      - {id: B-1, item: "smoke test (T-01)", how: "ohms to GND at TP1; 5.00 V / 300 mA bench supply; idle <= 150 mA", fail: "stop; locate under 20x", opens: "host on USB", status: TODO, evidence: ""}
+  - key: E
+    title: Owner decisions still OPEN — and the trigger that resolves each
+    columns: [id, item, trigger, status, evidence]
+    rows:
+      - {id: E-1, item: "CC-003 (OPEN): the owner question of the smoke project", trigger: "the owner answers in DECISIONS", status: TODO, evidence: "DECISIONS CC-003"}
+      - {id: E-2, item: "case first-article clearance", trigger: "first print measured", status: "DONE 2026-01-03", evidence: "records/first_article.md (caliper table)"}

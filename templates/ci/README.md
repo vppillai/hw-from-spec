@@ -22,6 +22,7 @@ grep -n '{{PROJECT_' .github/workflows/*.yml && echo "unfilled placeholders" || 
 
 | Script (copied to `ci/`) | Does | Edit when |
 |---|---|---|
+| `Makefile` (copied to the project ROOT) | `make check` = the adopt gates (the PR entry point), `case` / `slice` / `renders` / `pdf` through the one heavy-job pool `scripts/jobs.sh` (`--only-changed` by default), `record-round` under one lock (`references/agent-ops.md` §8) | the project's generator names differ (they are placeholders for `gen/…`) |
 | `setup_linux.sh` | apt `git python3-venv python3-pip bash`, `python3 -m venv .venv` + `pip install pyyaml` (+ the mesh libs with `NIGHTLY=1`), `git config safe.directory` | the project needs more (fonts, a slicer CLI, a pinned requirements file) |
 | `nightly.sh` | every `scripts/*.py --selftest`, the gen/ selftests it finds, `scripts/adopt_gates.sh --no-clone` | the case chain / FEA selftests join |
 | `release_archive.sh OUT` | stages the fab package of record (`scripts/project.py record` md5 → `paths.fab_dir`), `docs/release/`, `docs/production/<md5-8>/` into OUT; REFUSES when any staged path starts with `$PROJECT_VENDOR_EXCLUDE` | the deliverable set changes |

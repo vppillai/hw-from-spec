@@ -133,6 +133,7 @@ cp "$T/PARTS_VERIFICATION.md" docs/parts/
 cp "$T/TEST_PLAN.md" "$T/design/VERIFY.md" docs/design/
 cp -R "$T/datasheet_notes" docs/
 cp "$T/design/traceability.yaml" "$T/production_cut.yaml" design/
+cp "$T/design/arrival_checklist.yaml" design/           # filled at the order
 cp "$T/design/dfm_processes.yaml" design/                # mech, both
 cp "$T/docs/quotes/dfm_verdicts.yaml" docs/quotes/       # mech, both
 cp "$T/design/erc_accept.yaml" design/                  # ee, both

@@ -10,6 +10,7 @@ project carried wrong numbers and a stock of 4 passed a "> 0" gate for a 5-board
 |---|---|---|
 | **[V]** | verified live this session: URL + date + stock + class recorded | yes |
 | **[K]** | known-unverified (number from memory / an old note / a datasheet) | no — the schematic generator refuses `Confidence K` on a fitted part |
+| **[K owner-read]** | the OWNER read the distributor page (date, who, which page) and our tools could not fetch it (login / bot wall) | as a sourced hardware line in PROCUREMENT with the owner's read quoted and an `ARRIVAL_CHECKLIST` row; promoted to [V] only by a fetch of ours — never on the owner's word alone (rule 1 is about evidence we can re-check) |
 | **[S]** | select-by-parameter (value, package, tolerance known; MPN not chosen yet) | no — becomes [V] when chosen and fetched |
 | **N/A** | global-sourcing / owner-supplied line (no fab code by design) | yes, with an MPN and a procurement row |
 
