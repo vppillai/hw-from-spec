@@ -203,6 +203,21 @@
     "the ribs ship as a bracket plate with named objects and the owner is asked to choose the value after one print",
     "the glued plate rests on the lands, strip ceilings one layer below, working clearance after EF on both parts >= 0.1 as a row"
    ]
+  },
+  {
+   "id": 14,
+   "name": "print-dfm-root-under-rim-flags-and-wall-1-3-passes",
+   "prompt": "An MJF bracket of record (90 mm long) carries a 2.0 mm rim ring set inboard of its 2.0 mm wall over a lap step so that the rim stands on a 0.5 mm root; the ray census reads >= 2.0 everywhere. The owner wants to upload it to JLC3DP as PA12 (process row jlc_mjf_pa12) and asks whether it is printable; then proposes widening the root to 1.3 mm. Run the print DFM on both and say what each result means.",
+   "expected_output": "scripts/print_dfm.py --process jlc_mjf_pa12 <stl> on the 0.5-root body: verdict FLAG with rows W wall (wall-class region, median ~0.5-0.7 < wall_min 1.0, extent ~90 mm >= 10 x t) AND R root under a rim / ledge (the same region reads >= 1.0 along the normal) — the ray census cannot see the overlap, the opposing-face tangent ball does; the body is not uploaded (the vendor's checker would pass a root this length up to ~60 mm and its PASS is not sufficient). The 1.3-root body: PASS on every rule (Y INFO lists the 1.0..1.2 band if any). Both records written to out/.../dfm/<piece>.json with the STL md5; the gate line `print_dfm.py --gate` in gates.adopt; the geometry change is a decision row and a generator change, never an edit of the yaml alone; after the vendor's verdict the row goes into docs/quotes/dfm_verdicts.yaml and --validate runs. The pair is scripts/print_dfm.py --selftest's third / fourth case (rim_profile(0.5) vs rim_profile(1.3), 90 mm extrusion) and the smoke's step 0d.",
+   "files": [],
+   "assertions": [
+    "the 0.5 mm root body is FLAG with both W wall and R root fired and the region's extent ~90 mm, min ~0.5",
+    "the agent explains that a normal-ray census misses the root and the opposing-face tangent ball reads it",
+    "the 1.3 mm root body is PASS under jlc_mjf_pa12",
+    "no upload before the PASS; the vendor's own PASS is called necessary, not sufficient (length-tolerant checker)",
+    "the records carry the STL md5 and the gate line joins gates.adopt; the fix is a generator change with a decision row",
+    "the vendor's later verdict is appended to dfm_verdicts.yaml and --validate is run; a vendor FLAG on a body we pass would be a RULE DEFECT, not a threshold tweak"
+   ]
   }
  ]
 }

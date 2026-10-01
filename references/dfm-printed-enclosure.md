@@ -99,6 +99,10 @@ binds at worst case is a FAIL row, not a note. **Fit clearances are per-preset k
 base block: FDM holes shrink ~0.1–0.3, MJF ±0.3, SLA ~0.1 — the coupon decides each (B-23).
 
 ## 2. Waivers are not checks — the census is a FAIL gate
+
+The census gates the DESIGN margin per `print_targets.<t>`; the printability FLOOR (walls, roots, knife edges, point contacts, voids, holes,
+size — from physics + the cited process minimums, vendor-independent) is `scripts/print_dfm.py --process <row>` on the same mesh before every
+upload, with the verdict → validate → rule-fix → retro loop in `references/print-dfm.md`. Both are PURE adopt gates; neither reads the yaml.
 - A row `KEPT BELOW 1.2 (listed): …` with verdict `None` and yaml numbers is a waiver nobody signed. The cracked lip's row quoted the MALE profile
   (tip / neck); the female hinge (parting line − groove roof = 0.88) was never a measured quantity. **Every thin feature gets a measured number from
   the MESH (not the yaml), a span and a class (wall / void / wedge / opposing).**

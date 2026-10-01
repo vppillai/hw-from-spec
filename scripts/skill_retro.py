@@ -8,8 +8,10 @@
       a round (cracked / wrong / premature / stale / reorder …). Compares the project's recorded skill version (`skill.version` or `skill_version`
       in project.yaml) with the skill's SKILL.md version. Writes DIR/<project>_<date>.md (default: <skill>/docs/retro/) with: counts, the NEW and
       PARTIAL tables (entry, best section, score), a CHANGELOG entry draft, one reference patch stub per target file (bullets to append), an eval
-      stub per costly NEW entry, and the owner decision topics the kickoff questionnaire does not ask yet. Read-only on the project; exit 0
-      (a report), 2 when an input is missing.
+      stub per costly NEW entry, the owner decision topics the kickoff questionnaire does not ask yet, and the DFM process-table drift
+      (the project's design/dfm_processes.yaml vs templates/design/dfm_processes.yaml: NEW rows, changed numbers, validation evidence the
+      template lacks — each a retro item for the template, SKILL.md §8.1 (c)). Read-only on the project; exit 0 (a report), 2 when an input is
+      missing.
   scripts/skill_retro.py --selftest
       a fixture project + fixture skill in a temp dir: one carried, one new, one costly entry; version drift; the report file and its sections.
 
@@ -158,6 +160,40 @@ def generalise(text):
     return parts[0].strip() if len(parts) == 1 else f"{parts[0].strip()} *(evidence: {parts[1].strip()})*"
 
 
+DFM_NUMERIC = ("wall_min", "wall_reco", "feature_min", "detail_min", "void_min", "hole_min", "neck_max", "slender", "sliver_area",
+               "overhang_max_deg", "bridge_max", "supports", "part_min", "build_max", "legend_land_min", "legend_void_min")
+
+
+def dfm_table_diff(root, skill):
+    """project design/dfm_processes.yaml vs the skill's templates/design/dfm_processes.yaml -> [{kind, row, key, project, template}]:
+    NEW row (a vendor / process the template lacks), CHANGED number (a threshold the project moved — with its citation line), VALIDATED (a row
+    whose validated_on the project filled while the template's is empty). Either file missing -> [] (nothing to carry)."""
+    pp, tp = os.path.join(root, "design", "dfm_processes.yaml"), os.path.join(skill, "templates", "design", "dfm_processes.yaml")
+    if not (os.path.exists(pp) and os.path.exists(tp)):
+        return []
+    try:
+        import yaml
+        P = (yaml.safe_load(open(pp, encoding="utf-8")) or {}).get("processes") or {}; T = (yaml.safe_load(open(tp, encoding="utf-8")) or {}).get("processes") or {}
+    except Exception as e:  # noqa: BLE001 — an unparsable table is one report line, not a crash
+        return [dict(kind="UNREADABLE", row="-", key="-", project=str(e)[:120], template="")]
+    cite = {}
+    for line in open(pp, encoding="utf-8"):
+        m = re.match(r"^\s{4}([a-z_]+):.*?#\s*(.*)$", line)
+        if m:
+            cite[m.group(1)] = m.group(2).strip()[:160]
+    items = []
+    for row, pr in P.items():
+        if row not in T:
+            items.append(dict(kind="NEW", row=row, key="(row)", project=f"{pr.get('vendor', '')} / {pr.get('process', '')}: " + ", ".join(f"{k} {pr[k]}" for k in DFM_NUMERIC if pr.get(k) is not None), template="-"))
+            continue
+        for k in DFM_NUMERIC:
+            if pr.get(k) != T[row].get(k):
+                items.append(dict(kind="CHANGED", row=row, key=k, project=f"{pr.get(k)}  ({cite.get(k, 'no citation on the line')})", template=str(T[row].get(k))))
+        if pr.get("validated_on") and not T[row].get("validated_on"):
+            items.append(dict(kind="VALIDATED", row=row, key="validated_on", project=str(pr["validated_on"])[:200], template="[]"))
+    return items
+
+
 def build_report(project, root, skill, entries, decisions, sections, idf, threshold, today):
     classified = []
     for e in entries:
@@ -216,11 +252,16 @@ def build_report(project, root, skill, entries, decisions, sections, idf, thresh
         L.append(f"| {d['id']} | {d['date']} | {d['topic'][:120].replace('|', chr(92) + '|')} | {b} |")
     if not os.path.exists(q_path):
         L.append("| — | — | (no references/kickoff-questionnaire.md in this skill) | — |")
-    L += ["", "## 8. What to do with this report", "",
+    dfm = dfm_table_diff(root, skill)
+    L += ["", "## 8. DFM process table drift — `design/dfm_processes.yaml` vs the skill's `templates/design/dfm_processes.yaml` (SKILL.md §8.1 (c))", "",
+          "| Kind | Row | Key | Project value (citation) | Template value |", "|---|---|---|---|---|"]
+    L += [f"| {d['kind']} | `{d['row']}` | {d['key']} | {d['project'].replace('|', chr(92) + '|')} | {d['template']} |" for d in dfm] or ["| — | — | — | (no drift, or no table on one side) | — |"]
+    L += ["", "NEW rows and CHANGED numbers go into the template WITH their [V] / [K] citation; a VALIDATED row's evidence goes into `references/print-dfm.md` §4 (the template keeps `validated_on: []`). A CHANGED number without a citation on its line is not carried.", "",
+          "## 9. What to do with this report", "",
           "1. Fold every NEW row into the reference named in §5 (one generalised line; the source's number stays as the labelled worked example).",
           "2. Extend the PARTIAL sections where the mechanism is missing.", "3. Add one eval per §6 stub; run the smoke; bump SKILL.md `version`; write the CHANGELOG entry from §4.",
-          "4. Add a questionnaire question (with a recommended answer) per §7 topic that will recur.", "5. Blind-review the skill again (two lenses), then tag."]
-    return "\n".join(L) + "\n", dict(new=len(new), partial=len(partial), carried=len(carried), costly=len(costly_new), unasked=len(unasked), drift=bool(pv and pv != sv))
+          "4. Add a questionnaire question (with a recommended answer) per §7 topic that will recur.", "5. Carry every §8 row into templates/design/dfm_processes.yaml (cited) / references/print-dfm.md.", "6. Blind-review the skill again (two lenses), then tag."]
+    return "\n".join(L) + "\n", dict(new=len(new), partial=len(partial), carried=len(carried), costly=len(costly_new), unasked=len(unasked), drift=bool(pv and pv != sv), dfm=len(dfm))
 
 
 def run(project_arg, skill, out_dir, since, threshold, today=None):
@@ -248,7 +289,7 @@ def run(project_arg, skill, out_dir, since, threshold, today=None):
     out = os.path.join(out_dir, f"{project}_{today}.md")
     open(out, "w", encoding="utf-8").write(text)
     print(f"{out}: {len(entries)} learnings -> NEW {counts['new']} / PARTIAL {counts['partial']} / CARRIED {counts['carried']}; costly NEW {counts['costly']}; "
-          f"owner topics not in the questionnaire {counts['unasked']}; version drift {counts['drift']}")
+          f"owner topics not in the questionnaire {counts['unasked']}; version drift {counts['drift']}; DFM process-table drift items {counts['dfm']}")
     return 0
 
 
@@ -259,8 +300,13 @@ def selftest():
     open(os.path.join(skill, "SKILL.md"), "w").write("---\nname: x\nversion: 9.9.9\n---\n# x\n## Rules\nEvery checker is read-only on the tree.\n")
     open(os.path.join(skill, "references", "dfm.md"), "w").write("# dfm\n## Census gate\nThe ray-cast census clusters thin samples below the gate and classifies wall versus wedge by the opposite-face angle; walls FAIL, wedges are listed.\n")
     open(os.path.join(skill, "references", "kickoff-questionnaire.md"), "w").write("# q\n## C2 Retention\nscrews into inserts, magnets, none — recommended screws.\n")
+    os.makedirs(os.path.join(skill, "templates", "design"))
+    open(os.path.join(skill, "templates", "design", "dfm_processes.yaml"), "w").write("processes:\n  jlc_mjf_pa12:\n    wall_min: 1.0\n    hole_min: 1.5\n    validated_on: []\n")
     proj = os.path.join(d, "proj"); os.makedirs(os.path.join(proj, "docs", "governance"))
     open(os.path.join(proj, "project.yaml"), "w").write("project: {name: proj}\nskill: {version: 1.0.0}\n")
+    os.makedirs(os.path.join(proj, "design"))
+    open(os.path.join(proj, "design", "dfm_processes.yaml"), "w").write("processes:\n  jlc_mjf_pa12:\n    wall_min: 1.0\n    hole_min: 2.0   # [V] vendor page 2026-01-01\n    validated_on: [{date: 2026-01-02, bodies: 3}]\n"
+                                                                        "  acme_sls:\n    vendor: Acme\n    process: SLS PA12\n    wall_min: 0.8\n    hole_min: 1.5\n    validated_on: []\n")
     open(os.path.join(proj, "docs", "governance", "LEARNINGS_LOG.md"), "w").write(
         "# log\n\n## 2026-09-28\n"
         "- 2026-09-28 [dfm/census] A ray-cast census that clusters thin samples below the gate must classify each cluster wall versus wedge by the opposite-face angle; walls FAIL, wedges are listed — CC-205.\n"
@@ -292,8 +338,13 @@ def selftest():
     assert '"name": "mirror-0-0-1-flips-handedness' in rep or '"id": "R1"' in rep, "an eval stub for the costly NEW entry"
     assert "D-86" in rep.split("## 7.")[1], "the badge decision is not asked by the fixture questionnaire"
     assert "### references/pitfalls.md" in rep or "### references/dfm.md" in rep, "patch stubs per target file"
+    dfm = dfm_table_diff(proj, skill); kinds = sorted((d["kind"], d["row"], d["key"]) for d in dfm)
+    assert kinds == [("CHANGED", "jlc_mjf_pa12", "hole_min"), ("NEW", "acme_sls", "(row)"), ("VALIDATED", "jlc_mjf_pa12", "validated_on")], kinds
+    assert "[V] vendor page 2026-01-01" in [d for d in dfm if d["kind"] == "CHANGED"][0]["project"], "the citation line travels with the changed number"
+    assert "| NEW | `acme_sls` |" in rep.split("## 8.")[1] and "| CHANGED | `jlc_mjf_pa12` | hole_min |" in rep, "the drift section"
+    assert dfm_table_diff(os.path.join(d, "nowhere"), skill) == []
     assert run(os.path.join(d, "nowhere"), skill, out, None, 0.5) == 2
-    print("selftest OK (entries + continuation lines, --since, CARRIED / NEW classification, owner rows, costly marker, version drift, report sections, eval stub, unasked decision topics)")
+    print("selftest OK (entries + continuation lines, --since, CARRIED / NEW classification, owner rows, costly marker, version drift, report sections, eval stub, unasked decision topics, DFM process-table drift NEW / CHANGED / VALIDATED)")
     return 0
 
 

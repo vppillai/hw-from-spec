@@ -25,8 +25,10 @@ written specification, for fabrication and assembly at {{FAB}}. Humans review at
 6. **{{GEOMETRY_CONVENTION}}** (e.g. one module per piece, presets `base + overrides` deep-merged, a version key per preset, canonical STL export). {{mech}}
 7. **Validate after every generation:** ERC/DRC via the CAD CLI with all severities, zero errors (`references/schematic-phase.md` §2 has the {{ee,both}}
    command); warnings fixed or justified in `docs/governance/ERC_WAIVERS.md`. {{ee,both}}
-7. **Validate after every generation:** census `--gate-dir` 0 unaccepted FAIL on every body of every preset, `thin_wall_check.py --pinch` on every {{mech}}
-   mark-shaped body, slicer log 0 warnings, every face rendered and looked at (`references/dfm-printed-enclosure.md`). {{mech}}
+7. **Validate after every generation:** census `--gate-dir` 0 unaccepted FAIL on every body of every preset, `print_dfm.py --process <row>` PASS on {{mech}}
+   every body before any upload (`--gate` in the adopt list; a vendor verdict → `dfm_verdicts.yaml` → `--validate`, a RULE DEFECT fixes the rule), {{mech}}
+   `thin_wall_check.py --pinch` on every mark-shaped body, `scad_lint.py` on every generated SCAD, slicer log 0 warnings, every face rendered and {{mech}}
+   looked at (`references/dfm-printed-enclosure.md`, `references/print-dfm.md`). {{mech}}
 8. **Blind reviews are really blind.** Reviewers get the frozen worktree and the hand-off only — never each other's output, never the author's
    reasoning. Verify BLOCKER/MAJOR adversarially, merge in `docs/reviews/`.
 9. **Fab constraints are hard:** {{FAB_CONSTRAINTS}} (ee / both: assembly sides, minimum package, link parts, excluded package families, parts on

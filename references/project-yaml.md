@@ -60,7 +60,7 @@ fab_dfm:                                  # the board's fab-DFM mirror (referenc
   accept: design/board.yaml               # yaml with key dfm_accepted: [{check, refs: [..] | {REF: n}, reason, date, evidence}]
   report: out/dfm.json                    # written by every plain scripts/dfm_check.py run (--check compares); read by release_report section dfm
   bar: {open: 0, warnings_fail: true, accepted_requires: [reason, date, evidence]}   # the owner's manufacturability bar (SKILL §1.2): an acceptance missing a field is ignored
-print_targets:                            # one entry per print target; scripts/thin_wall_census.py --target <name> reads it — no gate constant lives in a script
+print_targets:                            # one entry per print target; scripts/thin_wall_census.py --target <name> reads it — no gate constant lives in a script; `dfm_process` names the design/dfm_processes.yaml row scripts/print_dfm.py gates on
   jlc_mjf:                                # vendor / process / material / wall_gate / void_gate / red_line [checker]; design_margin [owner bar];
     vendor: JLC3DP                        # wedge_band (convention 1.5); tolerance + tolerance_source [vendor sheet, replaced by the first-article spread];
     process: MJF                          # max_bbox_for_rule (the size the length-dependent rule was calibrated at); checker_url + checker_date;
@@ -123,6 +123,8 @@ gates:
     - "$PY scripts/reorg_paths.py --check"   # when a reorg: block exists: no old literal, no dangling docs/ path in structural files
     - "$PY scripts/assembly_guide.py --check"   # production cut
     - "$PY scripts/thin_wall_census.py --gate-dir out/<board>/mechanical/case/<preset>/census"   # every printed body: census record md5 = STL of record, 0 unaccepted FAIL, accepted entries dated with evidence
+    - "$PY scripts/print_dfm.py --gate out/<board>/mechanical/case/<preset>/dfm"   # every censused body: a print_dfm record of the same md5, verdict PASS (or --open <tag>/<piece>=<decision>)
+    - "$PY scripts/scad_lint.py out/<board>/mechanical/case/<preset>/*.scad"       # generated SCAD: no statement behind a `//`
   clone:                                  # scripts/clone_gate.sh: run inside `git archive HEAD`
     - "$PY scripts/release_report.py --check"
   regen:                                  # clone_gate.sh --regen: run inside the archive, then copy regen_copy_back into the tree
@@ -155,7 +157,8 @@ Every `docs/…` path in SKILL.md / references / templates spells this layout. C
   imports `yaml` among `$PYTHON`, the project `.venv`, the skill's `.venv`, `python3` (printed at the top of every run).
 - Which scripts are generators and which are graders: `known_issues`, `traceability`, `release_report`, `collect_renders`, `dfm_check`,
   `assembly_guide` have `--check`; `reorg_paths --check` is a grader (no generator side); `thin_wall_check` is a measurer (`--census`, `--pinch`,
-  exit 1 on a finding); `thin_wall_census` is the printed-body GATE (`<stl> --target <print target> --json out/…/census/<piece>.json`, exit 1 on a
+  exit 1 on a finding); `print_dfm` is the printability-floor GATE on the mesh (`--process <row> <stl> --out DIR`, exit 1 on FLAG; PURE `--gate DIR`; `--validate`
+  exit 1 on a RULE DEFECT); `scad_lint` is a grader of generated SCAD; `thin_wall_census` is the printed-body design-margin GATE (`<stl> --target <print target> --json out/…/census/<piece>.json`, exit 1 on a
   WALL / VOID / WEDGE-band / OPPOSING cluster below its gate that no dated `accepted` entry covers) plus a PURE `--gate-dir <census dir>` for
   `gates.adopt` (md5 of the STL beside the record + empty `fails` + every accepted entry still dated with evidence); `skill_retro` reads a
   project's learnings and decisions and drafts the skill's next changes (no --check);

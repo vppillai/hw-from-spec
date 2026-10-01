@@ -1,6 +1,6 @@
 ---
 name: hw-from-spec
-version: 0.7.1
+version: 0.8.0
 description: Run a hardware project (a PCB, a printed or CNC enclosure, or both — scope chosen at kickoff; contract fab such as JLCPCB) from a written specification to a production cut with an owner-gated, generated-only, blind-reviewed workflow — a kickoff questionnaire that asks every owner decision up front with recommended answers, a zero-warning manufacturability bar, and a retro that folds each project's learnings back into the skill. Use this whenever someone starts a board or enclosure project from a spec, asks to set up gates, a decision log, generators, part verification, a fab DFM mirror, a case pipeline, FEA, blind reviews, a release report or a production cut for one, or resumes such a project, or wants the skill improved from a finished project — even if they only say "new KiCad board", "order this at JLC", "review the layout", "cut the release" or "what did we learn".
 ---
 
@@ -17,7 +17,8 @@ reference when you reach that step, not before. Nothing here is specific to one 
 1. **Install — ONE layout, ONE block (README "Install")**: the skill is a submodule at `vendor/hw-from-spec` with a RELATIVE symlink `scripts ->
    vendor/hw-from-spec/scripts` (or a copy of `scripts/`); a personal clone under `~/.claude/skills/` is for skill discovery only and never the
    project's scripts source; never a submodule AT `scripts/`. Two venvs, both gitignored: the skill's (`vendor/hw-from-spec/.venv`, pyyaml) and
-   the project's (`.venv`, pyyaml + `numpy trimesh scipy shapely` for the mesh scripts `thin_wall_census.py` / `thin_wall_check.py`) — `uv venv`
+   the project's (`.venv`, pyyaml + `numpy trimesh scipy shapely rtree networkx mapbox-earcut` for the mesh scripts `print_dfm.py` /
+   `thin_wall_census.py` / `thin_wall_check.py`) — `uv venv`
    + `uv pip install`, or `python3 -m venv` + `pip` when `uv` is absent. `tools.python` and the step-5 loop use the project venv; the shell gates
    fall back to the first interpreter that imports yaml (project venv, skill venv, python3) and print which.
    **Then the kickoff questionnaire (§0.1)** — A0 scope first, then every owner decision the scope needs, asked up front with recommended
@@ -26,7 +27,8 @@ reference when you reach that step, not before. Nothing here is specific to one 
    `cp templates/CLAUDE.md templates/.gitignore templates/project.yaml templates/SPEC.md .`; `mkdir -p docs/{governance,design,parts,reviews,release,quotes,production} design`;
    `cp templates/{DECISIONS,STATUS,GATES,KNOWN_ISSUES,LEARNINGS_LOG,BLOCKERS,ENV,KICKOFF_ANSWERS}.md docs/governance/`; `cp templates/PARTS_VERIFICATION.md
    docs/parts/`; `cp templates/TEST_PLAN.md docs/design/`; `cp -R templates/datasheet_notes docs/`; `cp templates/design/traceability.yaml
-   templates/production_cut.yaml design/`; ee / both also `cp templates/ERC_WAIVERS.md docs/governance/` and `templates/design/SOFTWARE_ARCHITECTURE.md`;
+   templates/production_cut.yaml design/`; mech / both also `cp templates/design/dfm_processes.yaml design/` and `cp templates/docs/quotes/dfm_verdicts.yaml
+   docs/quotes/` (the print-DFM process table and verdict record, §8.1); ee / both also `cp templates/ERC_WAIVERS.md docs/governance/` and `templates/design/SOFTWARE_ARCHITECTURE.md`;
    mech / both also `templates/parts/PROCUREMENT.md`. Then **`scripts/project.py scaffold --scope <A0 answer> CLAUDE.md SPEC.md project.yaml
    docs/governance/*.md design/*.yaml`** (later also the copied `REVIEW_HANDOFF.md` / `RELEASE_NOTES.md`) — template lines tagged `{{ee,both}}` / `{{mech,both}}` / `{{mech}}` stay only in
    their scopes (one template set, no copies); the leftover `{{` grep proves the tags are resolved. What each scope creates: **ee** — the board
@@ -272,7 +274,26 @@ checker (2026-09-28, ~150 mm parts) and a 0.4-nozzle FDM printer — substitute 
    1.0 at 0.4 nozzle), **wedges gated by the width of their sub-gate band**, **the nearest opposing face in ANY direction gated** (the ring-root /
    ledge class every normal-ray census missed), samples ∝ surface area, a NOISE-FLOOR row (not a recall proof), bodies = 1, geometry signature
    beside the md5, concentricity, retention feature present in the mesh, worst-case clearance per mating pair, six face renders. The only
-   exception path is a dated `accepted` entry with vendor evidence, re-asserted every run.
+   exception path is a dated `accepted` entry with vendor evidence, re-asserted every run. The census gates the DESIGN margin (the vendor's grey
+   line); the printability FLOOR is the print-DFM check below — both run, both are PURE gates.
+   **The print-DFM loop — vendor-independent, self-improving (`references/print-dfm.md`; `scripts/print_dfm.py`, rules W R F K P V H O B S +
+   INFO rows L Y from physics + the published minimums in `design/dfm_processes.yaml`, every number `[V]` / `[K]`; ray + opposing-face tangent
+   ball, so a root under a rim that every ray misses is read):**
+   - **(a) before every vendor upload**: `scripts/print_dfm.py --process <row> --out out/…/<preset>/dfm <stl>` → `PASS` or `FLAG` + one line per
+     rule (area × extent, min / median, bbox). FLAG = a real sub-minimum region on the MESH: fix the generator, re-export, rerun; no waiver field.
+     `scripts/print_dfm.py --gate out/…/<preset>/dfm` in `gates.adopt` beside the census `--gate-dir` (exit 1: missing record, md5 drift, FLAG
+     without an `--open <tag>/<piece>=<decision id>`). The vendor's PASS is necessary, never sufficient.
+   - **(b) after every vendor DFM verdict**: append `{stl, md5, process, vendor, date, verdict, evidence}` to `docs/quotes/dfm_verdicts.yaml`
+     (evidence = the saved API JSON at `parseStatus == 2` / screenshot / mail), then `scripts/print_dfm.py --validate` → confusion matrix, rules
+     fired, `docs/reviews/PRINT_DFM_VALIDATION.md`. **Vendor FLAG + ours PASS = `RULE DEFECT` (exit 1)**: the rule lacks physics — fix it in
+     `print_dfm.py` (never a vendor fudge, never a moved threshold), bump its `VERSION`, re-validate, run `scripts/skill_retro.py` so the rule
+     change flows back to the skill. Vendor PASS + ours FLAG = stricter: list it with its physical reason under the doc's hand marker; the rule stands.
+   - **(c) a new vendor or process** = ONE new row in `design/dfm_processes.yaml`: published minimums `[V]` (URL + date; a 404 = BLOCKED, value
+     `null`, the row refuses to gate), the rest `[K]` with the source named, `validated_on: []`; kickoff C8 names the row per print target
+     (`print_targets.<t>.dfm_process`). The retro's §8 diffs the project table against `templates/design/dfm_processes.yaml`: NEW rows, CHANGED
+     numbers (with the citation on the line) and VALIDATED rows are retro items for the template.
+   - **(d) check rows read the MESH, never the yaml**; generated code is linted — `scripts/scad_lint.py <generated.scad>` on every emit (a `//`
+     comment mid-line silently drops every statement after it; a plate lost its webs for two days while the yaml and the check row read right).
 2. **Geometry rules — checker vs material**: no FREE-STANDING wedge (rail tips, lips, non-tangent coves, knife edges) **[checker]**; chamfers
    and **tangent fillets cut into ≥ gate walls are fine and recommended at stress risers** **[physics]**; **snap features are possible in PA12**
    **[physics]** — under a no-yellow bar at JLC3DP the ≥ void-gate slit rarely fits, so screws + inserts or magnets (`§1.1` of the reference) are the
@@ -376,8 +397,9 @@ After every production cut (and after any round that cost an order or a reprint)
 first day>` reads the project's `LEARNINGS_LOG.md` and `DECISIONS.md`, classifies every dated entry against this skill's sections (CARRIED /
 PARTIAL / NEW, "costly" when the text names a failure that cost a round), compares the skill version the project recorded (`project.yaml skill:
 {version}`) with `SKILL.md`, and writes `docs/retro/<project>_<date>.md` in the skill repo: the NEW and PARTIAL tables, a CHANGELOG entry draft,
-one reference patch stub per target file, an eval stub per costly NEW entry, and the owner decision topics the kickoff questionnaire does not
-ask yet. Then, in the skill repo: fold every NEW line into the named reference (generalised, the source number as the labelled worked example),
+one reference patch stub per target file, an eval stub per costly NEW entry, the owner decision topics the kickoff questionnaire does not
+ask yet, and the DFM process-table drift (`design/dfm_processes.yaml` vs the skill's template: NEW rows, CHANGED numbers with their citation,
+VALIDATED rows — §8.1 (c)). Then, in the skill repo: fold every NEW line into the named reference (generalised, the source number as the labelled worked example),
 extend the PARTIAL sections, add the evals, add a questionnaire question per recurring owner topic, run the smoke, bump `version`, write the
 CHANGELOG entry from the draft, blind-review the skill (a cold-user lens and a DFM-expert lens), open the PR. The project pins the new version in
 `project.yaml` and its CC-001 row. The classifier is a keyword matcher: the report is the input to the change, never the change itself.
@@ -397,6 +419,7 @@ CHANGELOG entry from the draft, blind-review the skill (a cold-user lens and a D
 | case yaml → STL → checks → quotes | `references/case-pipeline.md` |
 | printed-enclosure DFM: MJF / FDM / SLA rules tagged checker / vendor / physics / owner, inserts + magnets, post-processing, tolerance stack, census gate, heat-map procedure, probes, coupons, dummies, brand marks (ironed top face / AMS bed layers), dust caps, Bambu CLI facts, post-mortem | `references/dfm-printed-enclosure.md` |
 | the print kit as a deliverable: START_HERE, kit text gate, hardware from the knobs, magnet procedure, bracket plate, watertight / sidecar rows | `references/print-kit.md` |
+| print DFM before every upload: rules W R F K P V H O B S (+ INFO L Y) from physics + cited process rows, the commands and what a FAIL means, the verdict → validate → rule-fix → retro loop, adding a vendor row, the generated-SCAD lint | `references/print-dfm.md`, `scripts/print_dfm.py`, `scripts/scad_lint.py`, `templates/design/dfm_processes.yaml` |
 | machined enclosure: corner radii, walls, threads, anodising, quote page, case-order gate | `references/cnc-enclosure.md` |
 | bought hardware: line schema, hardware classes (inserts, magnets, feet, labels), adhesive on PA12 | `references/part-verification.md` |
 | meshing, solving, caches, reporting | `references/fea-stage.md` |

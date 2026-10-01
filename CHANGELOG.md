@@ -1,5 +1,57 @@
 # CHANGELOG — hw-from-spec
 
+## 0.8.0 — 2026-09-30 — print DFM: a vendor-independent manufacturability check for printed bodies, and the loop that improves it
+
+Owner: "since the tool is reusable for future designs, should it go into the skill repo and we leave commands in there to self improve as the
+skill is used and new things are identified?" — yes. Source: the fourth retro of the source project (its CC-213 round: 44 bodies, 32 labelled
+vendor verdicts, 0 looser / 24 agree / 8 stricter).
+
+### Added
+- **`scripts/print_dfm.py`** (project-agnostic; paths default to the nearest `project.yaml`, the process table falls back to the skill template):
+  ray + opposing-face tangent-ball thickness (a root under a rim that every ray misses), regions linked at an absolute 2.5 mm, rules W wall / R
+  root / F feature / K knife edge / P point contact (section planes) / V void / H hole / O overhang / B bridge / S size + INFO rows L (legend lands,
+  slivers) and Y (the vendor's yellow band = the design margin the census owns); per-face MIN heat maps in the vendors' palette (`--render`);
+  `--gate` PURE adopt gate (record md5 = STL = census, PASS or `--open <tag>/<piece>=<decision>`); `--validate` against every labelled vendor
+  verdict → `PRINT_DFM_VALIDATION.md` (confusion matrix, rules fired, hand-written reading kept) with **a vendor FLAG we PASS printed as `RULE
+  DEFECT`, exit 1**; `--list`; `--selftest` (eval 14's pair among its cases). Rule-set `VERSION` keys the validation cache.
+- **`templates/design/dfm_processes.yaml`**: seven rows (JLC3DP MJF / SLA / FDM, home FDM 0.4, Xometry MJF, Protolabs MJF, HP guide BLOCKED),
+  every number `[V]` with URL + date or `[K]` with the source named, `validated_on: []` each. **`templates/docs/quotes/dfm_verdicts.yaml`**: the
+  verdict row schema (stl, md5, process, vendor, date, verdict, evidence, note).
+- **`scripts/scad_lint.py`**: a statement after a mid-line `//` in generated OpenSCAD is dropped silently (a plate lost its mark webs for two days
+  while the yaml and the check row read right) — rejects it, names the identifiers; `--selftest`.
+- **The loop as commands** — SKILL.md §8.1 (a) PASS before every upload + `--gate` in the adopt list, (b) every vendor verdict → `dfm_verdicts.yaml`
+  → `--validate` → RULE DEFECT = fix the rule from physics, re-validate, `skill_retro.py`; stricter cases listed with their reason, (c) a new vendor
+  = one cited row with `validated_on: []`, (d) check rows read the MESH, generated code is linted. **`references/print-dfm.md`** (short): rules
+  table, commands with their output and what FAIL means, the loop, the validation on record, adding a vendor in one sitting.
+- **`scripts/skill_retro.py` §8**: diffs the project's `design/dfm_processes.yaml` against the template — NEW rows, CHANGED numbers (with the
+  citation on the line), VALIDATED rows — as retro items; selftest covers the three kinds.
+- Kickoff **C8a** (the process row per print target → `print_targets.<t>.dfm_process`), KICKOFF_ANSWERS row, `templates/project.yaml`
+  (`dfm_process`, the two adopt lines), `templates/CLAUDE.md` mech rule 7, `references/project-yaml.md`, `references/dfm-printed-enclosure.md`
+  §2 pointer, 8 pitfall lines, eval 14 (0.5 mm root under a 2 mm rim × 90 mm FLAGs W + R under `jlc_mjf_pa12`, the same at 1.3 PASSes), smoke
+  step 0d (templates parse, every row `validated_on: []`, both selftests, the eval-14 pair through the CLI, `--list` outside a project).
+- README: version, the feature line, the dependency note (`rtree networkx mapbox-earcut` join the mesh set; `matplotlib` optional), the no-project
+  quick path for a cold user with a bracket STL.
+
+- **Blind review** (`docs/reviews/blind_review_0.8.0_print_dfm.md`, one cold-user lens, 15 findings, 13 fixed, 1 partly, 1 fixed by rule):
+  the BLOCKER was a dead measure — the census ray's origin was nudged OUTSIDE the surface, so every ray hit its own face, read inf, and rule R
+  fired on every thin wall while the tangent ball kept the verdicts right. Fixed (nudge into the side the ray travels); the selftest now asserts the
+  ray reads ~0.8 on a 0.8 plate and that a free 0.6 × 60 rib is W-only. Also from the review: numeric limits and a `fix:` hint on every rule row,
+  exit codes 0 / 1 / 2, the no-project README block, Xometry's build volume corrected to the usable 356 × 279 × 330, citation rule for untagged
+  repeats. The same ray defect exists in the source project's copy — reported there as an OPEN decision row, not patched silently.
+
+### Changed
+- `thin_wall_census.py` stays: `print_dfm.py` does not import it and does not replace it — the census gates the DESIGN margin
+  (`print_targets.<t>.wall_gate`, wedge band, bodies, concentricity, retention, clearances), print DFM gates the printability FLOOR; both PURE.
+  Its retirement was considered and rejected for that reason (not a deferral).
+- The skill venv takes the mesh libraries too (README step 2) so `smoke/run_smoke.sh` can run the print-DFM selftest; `thin_wall_census.py
+  --selftest` still needs none.
+
+### Not done
+- No `--target <print target>` shortcut reading `print_targets.<t>.dfm_process` from `project.yaml` (one flag; add when two projects want it).
+- The source project's 32 verdicts and their STLs are not shipped (project data); their reading is `references/print-dfm.md` §4. A probe generator
+  for one-knob profiles stays project-side (`rim_profile()` in the selftest is the one shipped shape).
+- `--validate` writes only the generated sections; the stricter-case reasons are hand-written under the marker, as in the source project.
+
 ## 0.7.1 — 2026-09-30 — the print kit as a deliverable: START_HERE, kit text gate, plate seat datum, bracket plate
 
 Third retro on the source project (`docs/retro/aec-tester_2026-09-30.md`: 8 learnings, 3 NEW / 5 PARTIAL, from the two blind reviews of the
