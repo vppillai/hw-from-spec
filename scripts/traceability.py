@@ -31,7 +31,7 @@ from datetime import date
 import yaml
 
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
-from project import Project, split_row  # noqa: E402
+from project import decision_status as _decision_status, Project, split_row  # noqa: E402
 
 
 class Ctx:
@@ -70,7 +70,7 @@ class Ctx:
             dst = os.path.join(self.scratch, rel)
             shutil.rmtree(dst, ignore_errors=True)
             shutil.copytree(os.path.join(self.root, rel), dst)
-            for link in self.P.get("traceability.scratch_links", ["lib"]):
+            for link in self.P.get("traceability.scratch_links", []):
                 if os.path.exists(os.path.join(self.root, link)) and not os.path.lexists(os.path.join(self.scratch, link)):
                     os.symlink(os.path.join(self.root, link), os.path.join(self.scratch, link))
         self._scratch_ready = True
@@ -182,16 +182,8 @@ def run_check(c, ctx):
 
 
 def decision_status(P):
-    """id -> status cell up to the first '(was:', bold stripped."""
-    out, dre = {}, P.decision_re()
-    for line in open(P.path("decisions"), encoding="utf-8"):
-        if line.startswith("|"):
-            cells = split_row(line)
-            if len(cells) >= 3:
-                st = re.split(r"\(was:", cells[2], maxsplit=1)[0].replace("**", "").strip()
-                for i in dre.findall(cells[0]):
-                    out.setdefault(i, st)
-    return out
+    """id -> status cell up to the first history marker, bold stripped (project.decision_status with the project's id regex)."""
+    return _decision_status(P.path("decisions"), P.decision_re())
 
 
 def md(s):
@@ -201,7 +193,7 @@ def md(s):
 def build(P, ctx, only=None):
     ty = P.path("traceability_yaml")
     if not os.path.exists(ty):
-        sys.exit(f"MISSING: {ty} — seed it from the skill's templates/design/traceability.yaml (one entry per decision row)")
+        print(f"MISSING: {ty} — seed it from the skill's templates/design/traceability.yaml (one entry per decision row)"); sys.exit(2)
     spec = yaml.safe_load(open(ty))
     entries = spec.get("entries", [])
     if only:
@@ -320,7 +312,7 @@ entries:
     try:
         build(P2, Ctx(P2, tempfile.mkdtemp(), False)); raise AssertionError("missing yaml must exit with MISSING")
     except SystemExit as e:
-        assert "MISSING" in str(e)
+        assert e.code == 2, "a missing traceability yaml exits 2"
     print("selftest OK")
     return 0
 

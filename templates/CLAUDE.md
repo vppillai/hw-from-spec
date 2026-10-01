@@ -8,7 +8,7 @@ written specification, for fabrication and assembly at {{FAB}}. Humans review at
 ## Non-negotiable rules
 1. **Never invent a fab or distributor part number** (electronics, and hardware: inserts, magnets, feet, screws). A number enters the BOM only after
    a fetch of its live page in this session confirms MPN, package and stock. Record every check in `docs/parts/PARTS_VERIFICATION.md` (date, URL,
-   stock, class). Tags: [V] verified, [K] known-unverified, [S] select-by-parameter.
+   stock, class). Tags: [V] verified, [K] known-unverified ([K owner-read] when the owner read a page we could not fetch), [S] select-by-parameter.
 2. **Never change a specified value, part, topology or pin assignment silently.** Write the proposal to `docs/governance/DECISIONS.md` with the reason, mark it
    OPEN, ask the owner. Apply only after approval (or when the spec delegates the choice); an operating gate may ship as an optional flag that warns.
 3. **Every VERIFY item is closed by reading the primary datasheet** before the part is drawn. A VERIFY item is a spec value or claim that rests
@@ -37,7 +37,7 @@ written specification, for fabrication and assembly at {{FAB}}. Humans review at
 9. **Fab constraints are hard:** {{FAB_CONSTRAINTS}}. **The manufacturability bar is zero / zero / no waivers** (owner row {{D-BAR}}), enforced by scripts:
    board — assembly sides, minimum package, link parts, excluded package families, parts on the verified list, fab code field on every fitted part, {{ee,both}}
    DNP marked and excluded from BOM/CPL, the fab's DFM checker mirrored in-repo (`design/dfm_thresholds.json`, `scripts/dfm_check.py`); DRC 0 errors / {{ee,both}}
-   0 warnings and fab DFM 0 Danger / 0 Warning unless a dated `dfm_accepted` entry with vendor evidence (`references/pcb-layout-dfm.md`). {{ee,both}}
+   0 warnings and fab DFM 0 open at either of the fab's grades unless a dated `dfm_accepted` entry with vendor evidence (`references/pcb-layout-dfm.md`). {{ee,both}}
    printed enclosure — wall / void / red gates, tolerance and rating per print target (`project.yaml print_targets`, never in a script); census 0 {{mech,both}}
    unaccepted FAIL, `print_dfm.py` PASS, slicer log clean, vendor checker no flag by API read; CNC — vendor DFM clean (`references/dfm-printed-enclosure.md`). {{mech,both}}
 10. **Say what you don't know.** If a datasheet, drawing or page cannot be fetched, mark the item BLOCKED in `docs/governance/BLOCKERS.md` and continue elsewhere.
@@ -45,8 +45,22 @@ written specification, for fabrication and assembly at {{FAB}}. Humans review at
 
 ## Environment (verify on first run, record in docs/governance/ENV.md)
 - CAD CLI: `{{CAD_CLI_PATH}}`; CAD Python: `{{CAD_PYTHON_PATH}}`; project venv `.venv` (Python ≥ 3.11) with {{VENV_PACKAGES}}. {{ee,both}}
-- Geometry CLI: `{{CAD_CLI_PATH}}` (e.g. openscad); slicer CLI: `{{SLICER_CLI_PATH}}`; project venv `.venv` (Python ≥ 3.11) with {{VENV_PACKAGES}}. {{mech}}
+- Geometry CLI: `{{GEOMETRY_CLI_PATH}}` (e.g. openscad); slicer CLI: `{{SLICER_CLI_PATH}}`; project venv `.venv` (Python ≥ 3.11) with {{VENV_PACKAGES}}. {{mech}}
 - All tool paths live in `project.yaml tools:`; generators read them from there (`scripts/project.py`), never hard-code them.
+- Heavy tools (geometry kernel, slicer, renderer, FEA, the record round) run through `scripts/jobs.sh -- <cmd>` (one pool per machine, sized from
+  the host; `make <target>`), never directly — the "Agent operations" block below (`references/agent-ops.md` §8).
+
+## Agent operations
+- **Heavy jobs only via `scripts/jobs.sh`** (geometry kernel, slicer, headless browser, chains, FEA, `make check`): slot pool = {{JOBS_POOL}}
+  (cores // 4), memory floor {{MIN_FREE_GB}} GB, load gate = cores, `nice`; the generators and the Makefile route through it — never a bare
+  geometry / slicer / chain call, never a `--jobs` above the pool. Numbers from `scripts/project.py env` (the ENV.md host row).
+- **At most {{JOBS_POOL}} agents writing or running chains at once**; readers are free. Stacked per-tool pools panic the host.
+- **One record round per batch** (`make record-round`, locked), after the last generator of the batch — never one per commit.
+- **Caching policy:** previews regenerate every run (the fast engine, seconds); STL exports of record stay on the preset's `engine:` (the one that
+  passes the mesh gates), cached only on the inputs + engine key, and the sidecar md5 is a determinism check on every export (`--no-cache`
+  forces; drift under an unchanged key = FAIL). Cache only the slicer / PDF / index steps, each behind its `--check`; slice incrementally by default.
+- **One-knob changes are inline edits** (a yaml value, a sidecar row, a text cell): no chain re-run for a value no generator reads; run the
+  generator whose `--check` says STALE, nothing more.
 
 ## Repository layout
 ```
@@ -75,4 +89,4 @@ docs/          governance/ (ENV DECISIONS BLOCKERS GATES STATUS KNOWN_ISSUES TRA
 - Symbol fields: `MPN, Manufacturer, {{FAB_CODE_FIELD}}, Datasheet, Confidence, Alt_MPN, Alt_{{FAB_CODE_FIELD}}`. {{ee,both}}
 - Units mm, µF/nF/pF, `4.7k` not `4k7`. Every sheet has a title block and a NOTES block (intent, key values, rework links, test points, checklist). {{ee,both}}
 - Envelope, interface positions, materials and fits: exactly as in the spec / fit input of record unless a logged decision changes them; units mm. {{mech}}
-- Decision rows: 6 cells, `\|` for a literal pipe; status history after `(was: …)`; the nod marker in a status cell means "applied, owner look wanted".
+- Decision rows: 6 cells, `\|` for a literal pipe; status history after the `(was:` marker; the nod marker in a status cell means "applied, owner look wanted".

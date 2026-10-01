@@ -22,7 +22,7 @@ under out/ embeds docs paths too; a literal rewrite moves the md5 of files other
 Not rewritten: URLs into the repo (`…/blob/main/docs/X.md` — the `<word>/` guard excludes them; grep `blob/.*/<old>` by hand) and binaries.
 Paths with non-ASCII characters: run the `git ls-files -s` dumps with `git -c core.quotepath=off`.
 """
-import argparse, hashlib, os, re, subprocess, sys, tempfile
+import argparse, os, re, subprocess, sys, tempfile
 
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 from project import Project  # noqa: E402
@@ -42,7 +42,7 @@ class Reorg:
         self.allow_old_files = set(r.get("allow_old_files") or ()) | {"scripts/reorg_paths.py", "project.yaml"}
         self.no_existence = tuple(r.get("no_existence") or (".py", ".js"))
         self.allow_missing = [re.compile(p) for p in (r.get("allow_missing") or [])]
-        self.record = r.get("rewrites_record", "docs/reviews/REORG_REWRITES.txt")
+        self.record = r.get("rewrites_record") or P.get("paths.reorg_rewrites")
         olds = sorted(self.moves, key=len, reverse=True)
         self.old_rx = re.compile(r"(?<![\w-])(?<!\w/)(" + "|".join(map(re.escape, olds)) + r")(?!\w)") if olds else None
         joins = [(o.split("/", 1)) for o in olds if o.count("/") == 1]
@@ -201,7 +201,6 @@ def selftest():
     assert R.plan() == [], "second pass must be a no-op (idempotent)"
     assert not g("ls-files", "out/old").strip() and not g("ls-files", "out/logs/run.log").strip() and os.path.exists(f"{d}/out/logs/run.log")
     assert "out/logs/*.log" in open(f"{d}/.gitignore").read() and un == ["out/logs/run.log"]
-    bad_lines = []
     import io, contextlib
     with contextlib.redirect_stdout(io.StringIO()) as buf:
         assert R.check(verbose=True) == 1

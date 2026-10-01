@@ -32,12 +32,12 @@ Not replaced: {{LINES_UNCHANGED}} (geometry identical: facets / volume / area eq
 ## 5. Actions on the order (owner's explicit word: "{{OWNER_QUOTE}}", {{TIME}})
 | Time | Action | Line | Result / screenshot |
 |---|---|---|---|
-| {{HH:MM}} | Replace File → upload `{{FILE}}` (md5 re-checked locally) → Confirm | {{LINE_ID}} | line shows the new file, qty / price unchanged; `{{PNG}}` |
+| {{HH:MM}} | {{VENDOR_REPLACE_ACTION}} (e.g. "Replace File") → upload `{{FILE}}` (md5 re-checked locally) → Confirm | {{LINE_ID}} | line shows the new file, qty / price unchanged; `{{PNG}}` |
 | {{HH:MM}} | Chat: "{{EXACT_MESSAGE}}" | — | reply: "{{VENDOR_REPLY}}" |
 
 **Explicitly NOT touched:** payment / checkout / cart; any terms, risk or "I agree" box; quantities, materials, colours, finishes, remarks,
 address, shipping; Cancel; the other lines ({{LIST}}); other orders; account settings. Observed side effects not clicked: {{E.G. shipping display recomputed}}.
 
 ## 6. Follow-up (read-only status checks, one line per check)
-- {{DATE TIME}}: order history / detail / message centre read; "audit failed — please replace files" mails = Replace-File activations, not
-  rejections; lines approved {{TIMES}}; pending on our side: {{NOTHING / ITEM}}; owner next: {{PAY / NOTHING}}; watch: {{FACTORY CLOSURES}}.
+- {{DATE TIME}}: order history / detail / message centre read; the vendor's "please replace files" mail = the replace action activated, not a
+  rejection; lines approved {{TIMES}}; pending on our side: {{NOTHING / ITEM}}; owner next: {{PAY / NOTHING}}; watch: {{FACTORY CLOSURES}}.

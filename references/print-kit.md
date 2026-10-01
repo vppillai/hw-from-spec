@@ -1,7 +1,7 @@
 # print-kit.md — the home-FDM print kit as a deliverable a technician can run without the repo
 
-Added 0.7.1 from a blind technician review of a kit as received (worked example: the source project's P2S kit, 2026-09-30 — two BLOCKERs, both in
-the one irreversible step). The rules are FAIL-gated where a generator can check them; the numbers are the worked example's.
+A kit is reviewed as a technician receives it — no repo, no git — and the two BLOCKERs such a review finds sit in the one irreversible step. The
+rules are FAIL-gated where a generator can check them; the numbers quoted are one kit's and stand for the mechanism.
 
 ## 1. One entry point: a generated `START_HERE.md` at the top of the kit
 Written by the slicer wrapper (it owns the minutes and grams) from a `kit_facts.json` the geometry generator writes — **numbers from the
@@ -17,8 +17,8 @@ sidecars, prose from the knobs, nothing typed**. Four blocks, in this order:
    down) → dry-fit body on tray → screws → **magnets dry, then CA** → legend plate (CA) → hood plate (CA on the lands only) → fixture = real
    board only → **feet LAST** over the screw counterbores (a foot fitted early is peeled and wasted).
 4. **Report-back table** with **numeric pass criteria per interface** (body-on-tray play ≤ 0.3 at the seam; plates ≈ 1.2 proud, LED holes
-   concentric; hood pulls itself down at both magnet pairs and holds upside down; cap mouth 18.55..18.65 × 8.7..8.8 by calliper; coupon: which
-   cap / stroke reads) **and a recipient** ("reply in the project chat" / a name). A kit without a recipient gets no answer.
+   concentric; hood pulls itself down at both magnet pairs and holds upside down; a cap mouth within its tolerance window by calliper; coupon:
+   which cap / stroke reads) **and a recipient** ("reply in the project chat" / a name). A kit without a recipient gets no answer.
 
 Rules the entry point makes checkable:
 - **Print-sheet names = project-file names** (`PRINT_SHEET_<piece>.md` names its `.3mf`; sheets called `shell` / `plate_ui` for projects called
@@ -59,6 +59,10 @@ START_HERE, every README and print sheet, and the generated ASSEMBLY.md; the run
 - **Snug-fit features ship as a bracket plate** (`dfm-printed-enclosure.md` §8.5): e.g. crush ribs at 0.20 / 0.25 / 0.30, one object each, NAMED
   by its value in the 3MF (no digit deboss — the object name carries it). The technician keeps the one that seats under thumb pressure and
   survives the hang test and reports the value; **the owner picks the knob after that print** (default stays the middle value).
+
+## 4.1 Slicer-level optimisation (waste / strength / quality) — `references/fdm-print-optimisation.md`
+One table there, every knob with the g-code-derived row that proves it (`purge_g`, `tower_g`, `support_g`, `print_time_s`, `wall_loops` read back);
+the plate yaml's `optimise:` block = the kickoff C11 default set; START_HERE may claim a saving only when the sidecar shows it (the text gate §3).
 
 ## 5. Records that travel with the kit
 - **Watertight row per exported STL** (a slicer fills or drops a non-manifold feature silently and reports "clean"); a `watertight: false` was

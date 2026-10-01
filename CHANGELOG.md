@@ -1,52 +1,156 @@
 # CHANGELOG — hw-from-spec
 
-## UNRELEASED — retro of the second mechanical-only project (beest, 2026-10-01): legend geometry at a small cap, colour-body target, Manifold backend, linkage sweeps, Bambu arranger
+## Current state (0.10.2) — read this instead of replaying the entries below
 
-Source: `docs/retro/beest_2026-10-01.md` — a desk Strandbeest (36 bodies, 7 P2S plates, three AMS colours) built under scope `mech` on 0.9.2 + the
-wankel retro branch; 25 learnings, 14 NEW / 7 PARTIAL / 4 CARRIED (the classifier's reading; three CARRIED rows were folded anyway because the number
-they carry is new). Three census / print-DFM rounds on the colour bodies and two aborted slices paid for these lines. One script fix (below); no version bump.
+- **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
+  twelve batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
+  (zero errors / zero warnings / no waivers, enforced by scripts), generated-only, the decision log, parts tags [V] / [K] / [K owner-read] / [S],
+  blind reviews with a record-reading verifier, layout + fab DFM mirror, the case pipeline with two PURE mesh gates (census margin, print-DFM
+  floor), the software track, release cut + production cut + the arrival checklist + spec errata, agent operations with a measured resource budget
+  (measure → audit → change; previews on the fast engine, geometry of record on the engine that passes the mesh gates; caches as determinism checks), the retro.
+- **Scripts** (`project.yaml`-driven, every one with `--selftest`, exit 0 / 1 / 2): `project.py` (reader, scaffold, slots, kickoff --check,
+  gates-required, record, env), `known_issues`, `traceability`, `release_report`, `collect_renders`, `assembly_guide`, `reorg_paths`, `dfm_check`,
+  `erc_gate`, `gate_check`, `handoff_header`, `thin_wall_census` (design-margin gate), `print_dfm` (printability-floor gate + `--validate`),
+  `thin_wall_check` (quick look + pinch), `scad_lint`, `step2stl`, `arrival_checklist`, `skill_retro` (+ `--apply`), `jobs.sh` (the heavy-job
+  pool), `adopt_gates.sh`, `clone_gate.sh`, `doc_voice_lint`, `generic_lint`. Mesh stack: `numpy trimesh scipy shapely rtree networkx
+  mapbox-earcut embreex` (the Embree ray engine keeps a census in seconds under 1 GB).
+- **Templates**: CLAUDE.md, project.yaml (kickoff / board / print_targets / fab_dfm / arrival_checklist / host), SPEC + VERIFY + SPEC_ERRATA,
+  the governance records, PARTS_VERIFICATION + PROCUREMENT, TEST_PLAN, REVIEW_HANDOFF, DFM_ROUND, VENDOR_REVIEW_RECORD, CENSUS_GATE_ROWS,
+  design/{traceability, erc_accept, dfm_processes, arrival_checklist}.yaml, production_cut.yaml, datasheet note, G1 pack, CI workflows + Makefile.
+- **References**: project-yaml, kickoff-questionnaire, schematic-phase, pcb-layout-dfm, fab-dfm, case-pipeline, dfm-printed-enclosure,
+  print-dfm, print-kit, fdm-print-optimisation, cnc-enclosure, fea-stage, part-verification, software-track, release-and-cut, vendor-review,
+  agent-ops, pitfalls — one home per rule, the others link.
+- **Checks**: `smoke/run_smoke.sh` (2 min 27 s with the mesh libraries: every selftest, the rule greps, the enforcement negatives, both lints, the evals), 16 evals
+  with mechanical checks, `docs/reviews/INDEX.md` and `docs/retro/INDEX.md` list every review and retro.
+
+## 0.10.2 — 2026-10-01 — two mechanical-only project retros folded (wankel 2026-09-30, beest 2026-10-01): census OPP rows honour legend lands, `embreex`, legend geometry, colour-body target, linkage sweeps, arranger facts; `--gate-dir` resolves STLs in its own tree
+
+Sources: `docs/retro/wankel_2026-09-30.md` (a hand-crank Wankel engine model, 11 bodies, 3 plates, scope `mech` on 0.8.0 → 0.9.0; 15 learnings,
+10 NEW / 5 PARTIAL; two host restarts and three census rounds) and `docs/retro/beest_2026-10-01.md` (a desk Strandbeest, 36 bodies, 7 plates, three
+AMS colours, scope `mech` on 0.9.2; 25 learnings, 14 NEW / 7 PARTIAL / 4 CARRIED — three CARRIED rows folded because the number they carry is new;
+three census / print-DFM rounds on the colour bodies and two aborted slices). Opened as PR #1 against 0.9.2 and merged onto 0.10.1 here; the
+project names stay in this file and in `docs/retro/` (`generic_lint_terms.yaml` lists them now).
 
 ### Fixed
 - **`scripts/thin_wall_census.py --gate-dir`** followed the ABSOLUTE `stl` path stored in a record, so a gate run from another checkout path read
-  the other tree's STLs (found by the beest retro, `git archive` scratch copy): the gate now resolves the sibling `stl/<basename>` of the record set
-  first, then a project-relative path, and honours a stored absolute path only inside this project's root; new records store the path
-  project-relative. Selftest: a record pointing into another tree passes on this tree's STL, fails on the other body's md5, and an absolute path
-  outside the tree without a sibling is "not found". VERSION unchanged (no rule changed; old records still gate).
+  the other tree's STLs (`git archive` scratch copy): the gate resolves the sibling `stl/<basename>` of the record set first, then a
+  project-relative path, and honours a stored absolute path only inside this project's root; new records store the path project-relative.
+  Selftest: a record pointing into another tree passes on this tree's STL, fails on the other body's md5, and an absolute path outside the tree
+  without a sibling is "not found". Record VERSION unchanged (no rule changed; old records still gate).
+- **`scripts/thin_wall_census.py`**: opposing-face rows honour `--boxes` legend lands (`in_box_frac`, gate = `--box-min` inside a land) — a 1.3 mm
+  raised stroke is two faces 1.3 apart, not a thin wall; the WALL / VOID rows already did. Selftest case added.
 
 ### Changed
-- **`references/dfm-printed-enclosure.md` §8**: a legend at a small cap — `text(size=)` vs cap height (one H per font), font chosen by measured
-  stroke / counter, SVG glyph holes by ring coverage, morphology OPEN → CLOSE → neck thickening, gaps filled ~0.05 over the gate (the mesh tools read
-  under the polygon), thin-REGION rows instead of an erosion area ratio; colour bodies as their own print target with the body's thickness as the wall
-  gate. **§8.3**: the arranger nests concave outlines ("gcode path conflicts" → pre-place with `--arrange 0`), a self-placed multi-colour plate hits the
+- **README / SKILL §0 install**: `embreex` joins the mesh stack — trimesh's rtree ray engine needs > 12 GB for a 15 000 mm² body at 10 samples/mm²
+  (it took a 24 GB host down); with Embree the same census runs in 2.7 s at 755 MB. `agent-ops.md` §8 item 1: mesh checks and offscreen renders
+  are pool jobs too; item 6: with the fast engine the slots go to the mesh checks and the slicer.
+- **`agent-ops.md` §5**: long chains run in the background with an `EXIT` line per job and are waited on by the harness (completion notification
+  / monitor primitive), never by a foreground `sleep` loop (current harnesses refuse it; where allowed it is bounded by the per-call timeout).
+- **`dfm-printed-enclosure.md` §8**: legend geometry meets the void gate (closing at the gate after placement, inter-letter gap row, letters along
+  a curved band anchored by polar angle); a legend at a small cap — `text(size=)` vs cap height (one H per font), font chosen by measured stroke /
+  counter, SVG glyph holes by ring coverage, morphology OPEN → CLOSE → neck thickening, gaps filled ~0.05 over the gate (the mesh tools read under
+  the polygon), thin-REGION rows instead of an erosion area ratio; **colour bodies as their own print target** (`print_targets.home_fdm_colour`,
+  a commented example block in `templates/project.yaml`, → process row `home_fdm_04_colour_body`) with the body's thickness as the wall gate.
+  **§8.3**: the arranger nests concave outlines ("gcode path conflicts" → pre-place with `--arrange 0`), a self-placed multi-colour plate hits the
   wipe tower (leave those to the arranger), `result.json` empty for pre-placed plates, `M620` counted against the designed number.
-- **`references/case-pipeline.md`**: Interference — planar linkage levels as a conflict-graph colouring, the 360-step body-PAIR sweep per level with
-  pins / pegs / caps as discs; Process rules — the Manifold backend (< 0.1 s per body) and its two watertightness traps (hull of slabs, unioned D-shafts).
-- **`references/agent-ops.md` §5**: with Manifold the concurrency ceiling belongs to the mesh checks and the slicer, not the CAD export.
-- **`references/pitfalls.md`**: 15 lines (8 dfm: cap height, font measurement, erosion ratio, ring coverage, morphology order, under-reading, colour-body
-  gate, Bambu arranger; 6 mechanical: graph colouring, pair sweep, local-vs-machine frame, chirality + ratchet facing, centroid bistability rows,
-  sagitta / kinked slot; 1 tooling: Manifold speed + hull / D-shaft).
+- **`case-pipeline.md`**: Interference — planar linkage levels as a conflict-graph colouring, the 360-step body-PAIR sweep per level with pins /
+  pegs / caps as discs; Process rules — the fast engine makes sweeps and animations affordable as previews while the exports of record keep the
+  preset's `engine:`; its two watertightness traps (hull of thin slabs, unioned D-shafts) are what the engine rule's watertight row catches.
+- **`pitfalls.md`**: 28 lines (legend fonts and glyph geometry, curved-exit feather edges → flat flange blocks, ring-shaped wedge clusters and the
+  `band` metric, concave-bore floor margin, hairline junction notches → closing + `simplify(0.02)`, census memory, process-table exhaustion, arc
+  anchoring on a concave waist, tip-limited internal gears → running-clearance row, the eccentric-shaft inequality, full-height flank dishes,
+  cap height vs `size`, font measurement, erosion ratio, ring coverage, morphology order, under-reading, colour-body gate, the arranger, graph
+  colouring, pair sweep, local-vs-machine frame, chirality + ratchet facing, centroid bistability rows, sagitta / kinked slot, Manifold traps,
+  absolute paths in gate records).
+- `scripts/generic_lint_terms.yaml`: `other_source_projects` (the two projects' names, bar / joint labels, local paths) — 0 hits.
 
 ### Not folded
-- The twisted-band motor vs spool-and-loop energy budget (a drive choice for this piece, not a skill rule), the Homebrew cask coexistence note (install
-  trivia), the project-created / selftests-green bookkeeping line, and the O-rule cantilever bevel (carried by `print-dfm.md` rule O already).
+- The twisted-band motor vs spool-and-loop energy budget (a drive choice for one piece, not a skill rule), the Homebrew cask coexistence note
+  (install trivia), the project-created / selftests-green bookkeeping line, and the O-rule cantilever bevel (`print-dfm.md` rule O carries it).
 
-## UNRELEASED — retro of the first mechanical-only project (wankel, 2026-09-30): census memory, legend geometry, curved-exit holes, concurrency ceiling
+## 0.10.1 — 2026-10-01 — the source project's measured performance round folded (its PERF analysis of 2026-09-30, decision CC-220, `jobs.sh`, `make record-round`, the perf / tools / cache learnings)
 
-Source: `docs/retro/wankel_2026-09-30.md` — a hand-crank Wankel engine model (11 bodies, 3 P2S plates) built under scope `mech` from 0.6.1 and
-moved to 0.8.0 / 0.9.0; 15 learnings, 10 NEW / 5 PARTIAL. Two host restarts and three census rounds paid for these lines.
+### Changed (corrects 0.10.0's engine rule)
+- **Manifold caveat** (`agent-ops.md` §8 item 6, `case-pipeline.md` Presets + Process rules, `pitfalls.md`): the snapshot's Manifold backend is
+  measured 100–270 × faster per body and byte-deterministic — the speed claim is [V] with the numbers in the worked example — but on the source
+  project's bodies it was NOT rule-equivalent to CGAL (odd edges = not watertight on two bodies in every export format, a membrane, sub-minimum
+  regions under print DFM, a 18.6 mm³ spurious intersection, with bbox and volume equal). Rule: Manifold for every PREVIEW / PNG; STL exports OF
+  RECORD stay on the engine that passes the chain's own mesh gates (watertight, census, print DFM, interference) — an engine is judged by those
+  gates, never by bbox / volume agreement; `engine:` is a per-preset yaml key (`case.presets.<name>.engine`); re-test per OpenSCAD release.
+- **Caching policy refined** (§8 item 3, SKILL §11, CLAUDE.md template): previews regenerate every run; expensive geometry of record may be
+  cached ONLY on an inputs + engine key with the sidecar md5 as a determinism check (canonicalise the mesh, then record; `--no-cache` forces);
+  slicer / PDF / index caches behind `--check`; one locked record round per batch (`make record-round`); regenerating everything once with the
+  caches off is the best audit of the records (it found an unseeded census sampler and a non-watertight body the caches had hidden).
+- **Measurement method** (§8 item 2 — the rules are in the order applied): measure serially in a detached worktree replica (`nice`,
+  `/usr/bin/time -l`), audit redundancy from sidecar diffs per commit (slices on unchanged inputs, byte-identical re-renders, record rounds per
+  day), then change one knob per commit and name each gain correctly; a multithreaded tool counts as a whole slot and still exceeds it — the load
+  gate, not the slot count, is the control that sees it (item 1). Concurrency budget = `host.jobs_max` writing agents (item 5), no fixed number.
+- **Agent-ops block in the project's CLAUDE.md** (`templates/CLAUDE.md` "Agent operations"; §8 item 10): heavy jobs only via the wrapper, at most
+  `{{JOBS_POOL}}` writing agents, one record round per batch, the caching + engine policy, one-knob changes inline — the pool and floor are slots
+  filled from `scripts/project.py env`.
+- `agent-ops.md` carries its one fenced worked example (the measured round: panics at load ~40 from stacked cores-2 pools, chain / plate / round
+  timings, 24 of 93 slices and 755 of 1119 kernel runs redundant, the engine test's gate failures, the two latent record defects, the steady state).
 
-### Changed
-- **`scripts/thin_wall_census.py`**: opposing-face rows honour `--boxes` legend lands (`in_box_frac`, gate = `--box-min` inside a land) — a 1.3 mm
-  raised stroke is two faces 1.3 apart, not a thin wall; the WALL / VOID rows already did this. Selftest case added.
-- **README / SKILL §0 install**: `embreex` joins the mesh stack — trimesh's rtree ray engine needs > 12 GB for a 15 000 mm² body at 10 samples/mm²
-  (it took a 24 GB host down); with Embree the same census runs in 2.7 s at 755 MB.
-- **`references/agent-ops.md` §5**: a concurrency ceiling for geometry pipelines (≤ 3 CAD exports, sequential mesh checks and renders, background
-  chains with an `EXIT` line).
-- **`references/dfm-printed-enclosure.md` §8**: legend geometry meets the void gate (closing at the gate after placement, inter-letter gap row,
-  letters along a curved band anchored by polar angle); **`references/pitfalls.md`**: 12 lines (legend fonts, curved-exit feather edges →
-  flat flange blocks, ring-shaped wedge clusters and the `band` metric, concave-bore floor margin, hairline junction notches → closing +
-  `simplify(0.02)`, census memory, process-table exhaustion, arc anchoring on a concave waist, tip-limited internal gears → running-clearance
-  row, the eccentric-shaft inequality, full-height flank dishes).
+### Fixed (the skill shipped one of the pitfalls)
+- `scripts/thin_wall_census.py` and `scripts/thin_wall_check.py` seeded only `np.random`; trimesh ≥ 4 ignores it, so every census was one random
+  draw. The sampler takes `seed=` now and the census selftest asserts two runs of one STL are byte-identical. <!-- voice: ok -->
+- `dfm-printed-enclosure.md` §7.2: gate watertightness AFTER canonicalisation, on the recorded file (a sliver-dropping canonicaliser can open a mesh;
+  snap the closest vertex pair first, then drop what collapsed).
+
+### Added
+- Six pitfalls lines (Manifold rule-equivalence, the cache key + canonicalise-then-record, regenerate-everything as the records audit, the trimesh
+  seed, the sliver canonicaliser, stacked pools + multithreaded tools under a process-count pool, the .3mf UUID churn named as a records fix).
+
+## 0.10.0 — 2026-09-30 — the fifth retro folded, the skill audited and made generic
+
+### Added (retro of the source project's landing round)
+- **Arrival / first-article checklist, generated** (`scripts/arrival_checklist.py`, `templates/design/arrival_checklist.yaml`; SKILL §10.1,
+  `release-and-cut.md` §10; cut deliverable REC-002; `project.py gates-required` demands the `--check` line once the yaml exists): before shipment
+  (the fab's photos), bench checks in gate order with what each row opens, software gates with their closing commit, case first article, owner
+  decisions still OPEN with their trigger; status grammar + evidence enforced; smoke step 5d, eval 15.
+- **SPEC errata** (`templates/SPEC_ERRATA.md`, `release-and-cut.md` §11): a frozen spec's deviations as OPEN E-rows, never an edit; the
+  hand-off's §3.3 and the arrival checklist §E carry them.
+- **`[K owner-read]`** tag (SKILL §4, `part-verification.md`, CLAUDE.md rule 1).
+- **Review protocol with a record-reading verifier** (SKILL §5, `agent-ops.md` §4, `blind-deep-review.js`): reviewers of a second model family get
+  artefacts + checklist only; one verifier with record access classifies CONFIRMED / ALREADY DECIDED / REFUTED / PARTLY / UNVERIFIABLE with a
+  `rev_impact` column; every finding is verified; nothing is applied without the verifier's row; a CONFIRMED bench item becomes a checklist row.
+- Kickoff **C10** `fit_result` landing key (an owner-picks-after-a-print answer has a home) and **C11** slicer optimisation target.
+- **`references/fdm-print-optimisation.md`** (owner addition): waste / strength / quality knobs, each with what it buys, costs, when it applies, how
+  it is PROVEN from the g-code / sidecar, and the slicer keys; default knob sets per C11 answer; flush-into-infill only where the change sits above
+  the first infill layer. Sources fetched (Bambu wiki, Prusa KB) tagged [V] / [K]. Linked from SKILL §8, `print-kit.md` §4.1, the enclosure
+  reference §8. Eval 16.
+- **`print_dfm.py` rule B**: an open-ended ceiling's span by rays from the inscribed-circle centre (bounded all round → inscribed circle; one axis
+  with both ends on material → that chord; never a bbox extent or a raster run); constructs: pi 32 FLAG / pi 6 silent / tunnel 2 + 15 /
+  lands-split rebate ~6 / relief ring + open groove 1.4 / debossed word letters separate. Rule-set VERSION 0.10.0.
+- **Resource budget** (owner addition; `agent-ops.md` §8, `scripts/jobs.sh`, `templates/ci/Makefile`, `project.py env`, ENV host row): one heavy-job
+  pool per machine sized from the host (cores // 4, memory floor max(2 GB, 15 % RAM), nice, load gate, wall + RSS logged), caching policy
+  (regenerate geometry, cache only slicer / PDF / index steps with a `--check`), serialized record round, Manifold backend (`--backend=Manifold` [V]),
+  previews not renders for pictures, inline edits for one-value tweaks.
+- 18 pitfalls lines (generalised by hand); the two project-named process rows of the retro were not carried (the template's `home_fdm_04` rows
+  are the generic equivalents).
+
+### Changed (audit — `docs/reviews/AUDIT_0.10.0.md`)
+- **One home per rule**: SKILL §8.1 items 1 / 4 / 5 trimmed to commands + pointers; `vendor-review.md` §3 / §4, `fab-dfm.md` §4 / §6 and
+  `case-pipeline.md` §Census shortened to pointers at their homes.
+- **Present tense, no history in rules**: `scripts/doc_voice_lint.py` (changelog voice + version numbers in prose; 47 hits → 0) runs in the smoke;
+  README carries one version line and no counts.
+- **Generic, not one project**: `scripts/generic_lint.py` + `scripts/generic_lint_terms.yaml` (project names, parts, record ids as citations, owner /
+  machine, preset names, this design's dimensions; one fenced worked-example block per file; 181 hits → 0) runs in the smoke; pitfalls.md's evidence
+  pointers replaced by dates; the enclosure reference keeps one worked-example block (§7.1).
+- Stale mentions fixed: `print_dfm.py --gate` beside the census line in CENSUS_GATE_ROWS, GATES M1 / Case order, RELEASE_NOTES, DFM_ROUND, the
+  `case_dfm` verifier; ERC wording in G1/EVIDENCE; `tools.slicer` key; the fab's grade names ("Danger / Warning") no longer the vocabulary; CAD-neutral
+  CI image placeholder (`{{PROJECT_CAD_IMAGE}}`) and ENV row; `{{GEOMETRY_CLI_PATH}}` in every mech file; `doc_id_prefix: {{PROJECT}}`; the smoke's
+  record path without `<board>/`; workflow README lists every `{{BRIEF_*}}` and the shared wrapper / blindness paragraphs; `{{SILK_METRICS}}`.
+- Scripts: `Project.find` exits 2 (ten scripts at once), every usage / missing-input path exits 2, `print_dfm --processes PATH` that does not
+  exist is an error, `handoff_header` takes one package, `collect_renders` has a description, the shell gates answer `-h` and refuse unknown flags,
+  `run_evals.py --selftest` + absolute `--python`, `release_report` reads `fab_dfm.report`, `scratch_links` default `[]`, defaults in `DEFAULTS`,
+  `thin_wall_check` imports its core from `thin_wall_census`, `skill_retro` uses `project.split_row`, dead imports / no-op lines removed.
+- Evals 2 / 3 / 4 / 5 / 7 / 10 gained mechanical checks (16 of 16 carry them); eval 8's batch count corrected.
+
+### Not done
+- No shared `_common.py`: the duplicated helpers net under 100 lines once written; `decision_status` moved into `project.py`, the rest stays.
+- `print_dfm.py`'s selftest keeps naming template rows (a data table under test by design).
+- The two lints are word lists, not grammars: a sentence can narrate history without a listed word; the blind review reads for that.
 
 ## 0.9.2 — 2026-09-30 — self-documenting coupons
 

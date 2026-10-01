@@ -29,7 +29,7 @@ batch with no applicable question is skipped — a mech-only owner never sees vi
 | 8 verification (cont.) + bought parts | E3, E4, F1, F2 | all (E3 mech/both) | the G0 review round, parts.yaml |
 | 9 software + reports | G1, G2, H1, H2 | all (G1–G2 ee/both) | the bring-up tool, the first release report |
 | 10 CI, retro, envelope, branding | H3, H4, I1, I2 | all | the spec is read |
-| 11 debug access, delegation | I3, I4 | all (I3 ee/both) | the spec is read (I1–I4: found by the first retro — the owner rows the source project needed that no batch asked) |
+| 11 debug access, delegation, slicer optimisation | I3, I4, C11 | all (I3 ee/both, C11 mech/both) | the spec is read |
 
 Twelve batches (0–11), none above four questions; a batch whose questions are all out of scope is skipped.
 
@@ -137,6 +137,16 @@ kit text gate; snug-fit features (crush ribs, press lips) ship as a bracket plat
 print** — the technician needs no repo, the irreversible steps (magnets, CA) are instructed. *Alt:* READMEs only — the technician reconstructs the
 order from the sheets. *Alt:* the engineer picks the fit value from the tolerance row alone — no bracket, one reprint if it binds.
 **Owner inputs:** the recipient for the report-back (a chat, a name); who decides the fit knob after the bracket print (RECOMMENDED: the owner).
+The picked value has a landing key, `kickoff.enclosure.fit_result` ("pending: bracket print" until the print; the arrival checklist row E-FIT closes
+it, SKILL §10.1) — an answer that is "the owner picks after a print" is still an answer with a home, not a loose end.
+
+**C11 Slicer optimisation target** [mech, both] (`references/fdm-print-optimisation.md` §4). **RECOMMENDED: minimal waste** — colour changes grouped
+low in one Z band, `flush_into_infill` / `flush_into_support` on bodies whose changes sit above the first infill layer (a 2-layer bed-face mark
+gains nothing — stated per plate), flush volumes calibrated per filament pair, prime tower off on single-filament plates, purge grams reported
+per plate against the chute-only slice. *Alt:* strength — 4–5 walls, gyroid / cubic 20–25 %, modifier meshes at 100 % around inserts / bosses /
+magnet pockets, orientation by load. *Alt:* surface — inner/outer/inner walls, seam at the back, `ironing_type: top` on marked faces, Arachne,
+precise outer wall. *Alt:* speed — 3 walls, 10 % gyroid, no ironing. Every knob set is in the plate yaml and proven from the g-code (`purge_g`,
+`tower_g`, `wall_loops` read back); written to `kickoff.enclosure.optimise`.
 
 ## D. The manufacturability bar (SKILL §1.2) — the owner confirms the default explicitly
 **D1 The bar.** **RECOMMENDED: zero errors, zero warnings, no waivers** — board: DRC 0 / 0 / 0 warnings, fab DFM 0 Danger / 0 Warning; printed
@@ -147,7 +157,7 @@ per surprise; not recommended.
 **D2 What may be waived (default: nothing).** **RECOMMENDED: nothing — an item is fixed through the generator, or a dated `accepted` / `dfm_accepted`
 entry with the vendor's written acceptance is the only exception, per refdes / per cluster, listed in the merge.** *Alt:* a named class waived
 (e.g. the fab's "sharp trace corner" presence check) — one decision row per class with the vendor's statement. *Alt:* prose waivers — forbidden
-(the waived 0.88 × 141 mm lip cracked on five parts).
+(a waived sub-minimum lip cracked on every part of one order).
 **D3 Design margin and tolerance source per target** [mech, both]. **RECOMMENDED: walls at the checker's line + 0.1 (MJF), first-article caliper table
 replaces the vendor's published tolerance after the first order, INFO until then** — no "PASS by design". *Alt:* design at the line — the mesh
 samples 0.01 under and the argument is lost. *Alt:* + 0.3 everywhere — heavy, slow, unnecessary on a 2 mm shell.
@@ -197,7 +207,7 @@ before every tag.
 drafts the skill's next changes and a retro report goes to the skill repo as a PR** — the skill gets better with each project (SKILL §13). *Alt:*
 no retro — the next project repeats this one's rounds.
 
-## I. Identity, envelope, delegation (added by the first retro — the owner rows that recurred and no question asked)
+## I. Identity, envelope, delegation (the owner rows that recur in every project and no earlier batch asks)
 **I1 Envelope: fixed or grows.** **RECOMMENDED: the board grows as routing needs, the case follows; connector positions and the form-factor
 class are fixed** — clean routing beats a millimetre. *Alt:* envelope fixed by a mating part (a cage, a rail, a pocket) — a routing budget
 per iteration and a decision row when it is missed. *Alt:* smallest possible — expect two placement iterations per connector.
@@ -219,7 +229,7 @@ window and lists every action taken.
 | A0 | `project.scope` | CLAUDE.md scope line, GATES.md rows (scaffold), KICKOFF_ANSWERS `n/a (scope)` rows |
 | A1–A4 | `kickoff.product_class`, `kickoff.quantity`, `kickoff.fab`, `print_targets.<t>` (vendor, process, material, rating) | SPEC §1, §8; D rows |
 | B1–B8 | `board.layers / thickness / copper / stackup_template / impedance / finish / mask / silk / min_package / link_parts / sides / test_points / panel` | SPEC §4–§6 (R-M01…), `design/<board>_board.yaml`, `design/dfm_thresholds.json` (source + date) |
-| C1–C10 | `kickoff.enclosure` (pieces, retention, coupling, feet, labelling, fan, light_pipe, targets, marks, kit_recipient, fit_decider); C8a `print_targets.<t>.dfm_process` | SPEC §8, `design/case.yaml` presets + `fits` knobs; START_HERE report-back recipient |
+| C1–C11 | `kickoff.enclosure` (pieces, retention, coupling, feet, labelling, fan, light_pipe, targets, marks, kit_recipient, fit_decider, fit_result, optimise); C8a `print_targets.<t>.dfm_process` | SPEC §8, `design/case.yaml` presets + `fits` knobs; START_HERE report-back recipient; the plate yaml `optimise:` block; ARRIVAL_CHECKLIST E-FIT |
 | D1–D3 | `fab_dfm.bar`, `print_targets.<t>.design_margin / tolerance / accepted` | GATES.md `{{D-BAR}}` row id, CLAUDE.md rule 9 |
 | E1–E4 | `kickoff.verification` (rounds, visual, fea), `kickoff.coupons` (E3) | GATES prerequisites, `workflows/` model list |
 | F1–F2 | `kickoff.sourcing` (sources, stock_floor, attrition) | PARTS_VERIFICATION header, BLOCKERS |

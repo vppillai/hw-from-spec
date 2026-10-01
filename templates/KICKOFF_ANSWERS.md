@@ -19,7 +19,7 @@ answered question is a defect; changing an answer is a new D row that supersedes
 | B3 | controlled impedance | {{none, pairs < N cm}} | yes | D-{{nn}} | `board.impedance` | {{ee,both}}
 | B4 | finish / mask / silk | {{ENIG green white}} | yes | D-{{nn}} | `board.finish`, `board.mask`, `board.silk` | {{ee,both}}
 | B5 | component size + link policy | {{no 0201, 0402 min, 0603 / 1206 links}} | yes | D-{{nn}} | `board.min_package`, `board.link_parts`; R-P02 | {{ee,both}}
-| B6 | assembly sides | {{both}} | yes | D-{{nn}} | `board.sides`; R-M03 | {{ee,both}}
+| B6 | assembly sides | {{top and bottom}} | yes | D-{{nn}} | `board.sides`; R-M03 | {{ee,both}}
 | B7 | test points + silk labels | {{per rail / bus, labelled}} | yes | D-{{nn}} | `board.test_points`; R-S01 | {{ee,both}}
 | B8 | panel + fiducials | {{customer panel long rails}} | yes | D-{{nn}} | `board.panel` | {{ee,both}}
 | C1 | pieces | {{tray + shell}} | yes | D-{{nn}} | `kickoff.enclosure.pieces`; SPEC §8 | {{mech,both}}
@@ -30,9 +30,10 @@ answered question is a defect; changing an answer is a new D row that supersedes
 | C6 | fan / vents | {{passive vents}} | yes | D-{{nn}} | `kickoff.enclosure.fan` | {{mech,both}}
 | C7 | light pipes / windows | {{holes, pipe on the backlog}} | yes | D-{{nn}} | `kickoff.enclosure.light_pipe` | {{mech,both}}
 | C8 | two targets, per-preset fits | {{yes}} | yes | D-{{nn}} | `kickoff.enclosure.targets` | {{mech,both}}
-| C8a | print-DFM process row per target | {{jlc_mjf_pa12 + home_fdm_04}} | yes | D-{{nn}} | `print_targets.<t>.dfm_process`; `design/dfm_processes.yaml` | {{mech,both}}
+| C8a | print-DFM process row per target | {{<vendor row> + home_fdm_04}} | yes | D-{{nn}} | `print_targets.<t>.dfm_process`; `design/dfm_processes.yaml` | {{mech,both}}
 | C9 | brand marks on FDM parts | {{ironed top-face feature}} | yes | D-{{nn}} | `kickoff.enclosure.marks`; slicer plate profile (`ironing_type: top`) | {{mech,both}}
-| C10 | print kit hand-over: report-back recipient, fit decider | {{owner; owner}} | yes | D-{{nn}} | `kickoff.enclosure.kit_recipient`, `kickoff.enclosure.fit_decider`; START_HERE | {{mech,both}}
+| C10 | print kit hand-over: report-back recipient, fit decider | {{owner; owner}} | yes | D-{{nn}} | `kickoff.enclosure.kit_recipient`, `kickoff.enclosure.fit_decider`, `kickoff.enclosure.fit_result` ("pending: bracket print" until the owner picks; ARRIVAL_CHECKLIST E-FIT); START_HERE | {{mech,both}}
+| C11 | slicer optimisation target | {{minimal waste}} | yes | D-{{nn}} | `kickoff.enclosure.optimise`; the plate yaml `optimise:` block (`references/fdm-print-optimisation.md` §4) | {{mech,both}}
 | D1 | the manufacturability bar | {{zero errors / zero warnings / no waivers}} | yes | D-{{nn}} = `{{D-BAR}}` | `fab_dfm.bar` (ee / both), `print_targets.*.accepted` (mech / both); GATES.md; CLAUDE.md rule 9 |
 | D2 | what may be waived | {{nothing}} | yes | D-{{nn}} | `print_targets.*.accepted: []` (mech / both), `dfm_accepted: []` (ee / both) |
 | D3 | design margin / tolerance source | {{+0.1 MJF; first article replaces the vendor sheet}} | yes | D-{{nn}} | `print_targets.*.design_margin / tolerance` | {{mech,both}}

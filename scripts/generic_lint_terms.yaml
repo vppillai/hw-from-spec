@@ -1,0 +1,71 @@
+# scripts/generic_lint_terms.yaml — what the skill may NOT say outside CHANGELOG.md, docs/retro/ and docs/reviews/ (owner rule: the skill
+# describes the METHOD for any hardware project, never one project). Read by scripts/generic_lint.py; every entry is a Python regex matched
+# per line, case-sensitive unless it starts with (?i). Lines inside a fenced worked example are skipped:
+#   <!-- worked example: begin (source project, 2026) -->  …  <!-- worked example: end -->   (at most ONE block per file)
+# Extend this list at a retro when a new project's names leak in; never shorten it to make a hit go away — rewrite the sentence.
+project_names:
+  - '\bAEC-CT2\b'
+  - '\bAEC\b'
+  - '\bMINI\b'
+  - '(?i)tenstorrent'
+  - '\bQSFP-DD\b'
+  - '\bQSFP\b'
+  - '\bCMIS\b'
+  - '\bMSA\b'
+parts_and_refdes:
+  - '\b(J|U|R|C|D|SW|TP|Q|L|H)\d{3}\b'            # the source project's refdes scheme (sheet x 100 + n)
+  - '\bFT2232H\b'
+  - '\bSTUSB4500\b'
+  - '\bUE36-'
+  - '\bV36-'
+  - '\bC\d{5,8}\b'                                 # LCSC codes; a fab code belongs in parts.yaml, never in a rule
+  - '\bSJ5\d{3}\b'
+  - '\bMSK13C02\b'
+  - '(?i)xyeconn'
+  - '(?i)amphenol'
+  - '\b74LVC14A\b'
+  - '\bBAT54\b'
+record_ids_as_citations:
+  - '\bCC-(?!001\b)\d{3}\b'                      # CC-001 / D-01 are the template's own seed rows (the process row, the spec row)
+  - '\bD-(?!01\b)\d{2}[a-z]?\b'
+  - '\bR1-\d+\b'
+  - '\bB-\d{2}\b'
+  - '\bFA-\d+\b'
+  - '\bCC-\d{3}\.\d\b'
+  - '\b(SILK_R\d|CASE_MJF_DFM_|TRAY_ISSUE|ORDER_STATUS|OPUS_|JLC_RULES|JLC_QUOTES|REPO_CLEANUP|FEET_MCMASTER|CASE_V3_NOTES)'
+  - '\bround 6[a-z]\b'
+  - '\baudit #\d\b'
+other_source_projects:                             # later retros' projects: their names, part labels and local paths stay in docs/retro/ and CHANGELOG.md
+  - '(?i)\bwankel\b'
+  - '(?i)\bbeest\b'
+  - '(?i)strandbeest'
+  - '(?i)\bjansen\b'
+  - '\bretro (wankel|beest)\b'
+  - '\b[a-z]–[a-z]–T\d\b'                         # a linkage's bar labels (c–k–T1)
+  - '\bJ\d–J\d\b'                                 # joint labels
+owner_and_machine:
+  - '(?i)vysakh'
+  - '(?i)vpillai'
+  - '/Users/'
+  - '\bSMT\d{10,}\b'
+  - '\bW\d{14,}\b'
+preset_names:
+  - '(?i)\bp2s\b'
+  - '\bjlc_mjf\b(?!_)'                             # the preset name; the process-table ROW jlc_mjf_pa12 is per-vendor by design
+  - '\bBambu Lab P2S\b'
+design_dimensions:
+  - '\b18\.65\b'
+  - '\b8\.80\b'
+  - '\b18\.35\b'
+  - '\b41\.4 ?[×x] ?22\.4\b'
+  - '\b40\.8 ?[×x] ?21\.8\b'
+  - '\b147 ?mm\b'
+  - '\b141 ?(mm|×|x)\b'
+  - '\b0\.88 ?[×x]\b'
+  - '\b88 and 147\b'
+  - '\b48 ?mm\b'
+  - '\b13\.4 ?mm\b'
+  - '\b20\.95\b'
+  - '\b22\.3 bbox\b'
+  - '\b12\.00 face\b'
+  - '\b70 ?[×x] ?136\b'

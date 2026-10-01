@@ -43,6 +43,12 @@
     "BLOCKER/MAJOR findings go through an adversarial verifier defaulting to REFUTED",
     "the merged report classifies items as REQUIRED / OWNER / DOCUMENT / ACCEPT and states an explicit verdict",
     "docs/governance/GATES.md G2 approval cell is still empty after the round"
+   ],
+   "checks": [
+    {
+     "name": "blind-deep-review template: blindness clause, verifier default REFUTED with record access, REQUIRED/OWNER/DOCUMENT/ACCEPT merge, handoff header selftest",
+     "run": "grep -q \"Do NOT read any file named docs/reviews/\\${TAG}_\\*\" \"$SKILL\"/workflows/blind-deep-review.js && grep -q \"Default to REFUTED\" \"$SKILL\"/workflows/blind-deep-review.js && grep -q \"'ALREADY DECIDED'\" \"$SKILL\"/workflows/blind-deep-review.js && grep -q \"REQUIRED generator/YAML change\" \"$SKILL\"/workflows/blind-deep-review.js && \"$PY\" \"$SKILL\"/scripts/handoff_header.py --selftest"
+    }
    ]
   },
   {
@@ -58,6 +64,12 @@
     "release notes name a source file next to every number",
     "an annotated tag was created (or its exact command proposed) with the board md5 and package path in the message",
     "the owner-only actions (approval cells, release line, placing the order) are listed, not performed"
+   ],
+   "checks": [
+    {
+     "name": "release chain tools: release_report / collect_renders / clone_gate selftests (DRAFT until the owner's committed cell is the smoke's step 10)",
+     "run": "\"$PY\" \"$SKILL\"/scripts/release_report.py --selftest && \"$PY\" \"$SKILL\"/scripts/collect_renders.py --selftest && \"$SKILL\"/scripts/clone_gate.sh --selftest"
+    }
    ]
   },
   {
@@ -73,6 +85,12 @@
     "the vendor's DFM is re-run on the replacement files before any upload, with nothing saved, carted or agreed",
     "Replace File, chat messages, payment and risk/terms boxes are listed as owner-only; none is performed without a quoted delegation",
     "the record lists what was clicked and what was explicitly not touched"
+   ],
+   "checks": [
+    {
+     "name": "vendor review record template: decision per line, 'not touched' list; vendor-review reference; pinch check selftest",
+     "run": "grep -q \"Explicitly NOT touched\" \"$SKILL\"/templates/VENDOR_REVIEW_RECORD.md && grep -q \"^## 3. Decision per line\" \"$SKILL\"/templates/VENDOR_REVIEW_RECORD.md && test -f \"$SKILL\"/references/vendor-review.md && \"$PY\" \"$SKILL\"/scripts/thin_wall_check.py --selftest"
+    }
    ]
   },
   {
@@ -88,6 +106,12 @@
     "scripts/reorg_paths.py --check reports 0 findings and --proof reports MISSING: 0 on the before/after inventories",
     "frozen records and uploaded packages are not rewritten; the record points readers at --map",
     "gates run green after the move and the commit uses explicit paths"
+   ],
+   "checks": [
+    {
+     "name": "reorg_paths selftest incl. the --proof branch",
+     "run": "\"$PY\" \"$SKILL\"/scripts/reorg_paths.py --selftest && grep -q -- \"--proof\" \"$SKILL\"/scripts/reorg_paths.py"
+    }
    ]
   },
   {
@@ -131,13 +155,19 @@
     "the fix goes through the yaml on the vendor preset AND the home preset with their own version keys, and the rule becomes a named census row",
     "every body of record is re-verified by the API after the change and a PROBES.md / DFM_ROUND.md record the probes, md5s and verdicts",
     "the mating part's registration is proven unchanged (partner overlap 0 mm3) and nothing is saved, carted, agreed or paid on the vendor site"
+   ],
+   "checks": [
+    {
+     "name": "length-dependence + full-length probe rules in the reference, probes section in DFM_ROUND",
+     "run": "grep -q \"LENGTH-DEPENDENT\" \"$SKILL\"/references/dfm-printed-enclosure.md && grep -q \"a short length AND to the full part\" \"$SKILL\"/references/dfm-printed-enclosure.md && grep -q \"^## 5. Probes\" \"$SKILL\"/templates/DFM_ROUND.md"
+    }
    ]
   },
   {
    "id": 8,
    "name": "kickoff-questionnaire-before-any-cad",
    "prompt": "New repo, SPEC.md is a two-page draft for a USB-powered sensor board with a two-piece printed case (MJF at a print service, plus my home printer). Set the project up. I want to make all the decisions now, not one by one over the next weeks.",
-   "expected_output": "Installs the skill in the vendor/hw-from-spec layout, then runs the kickoff questionnaire from references/kickoff-questionnaire.md with the AskUserQuestion tool in nine batches (product/process, PCB build x2, enclosure x2, manufacturability bar, verification, parts + software, release), each question with its RECOMMENDED answer listed first and 2-3 alternatives with consequences, each batch offering 'accept every recommended answer'; writes docs/governance/KICKOFF_ANSWERS.md, one owner D row per answer (words quoted), project.yaml kickoff / board / fab_dfm.bar / print_targets (vendor, process, material, gates, margin, tolerance + source), traceability entries; a deferred answer is an OPEN D row; only then reads the spec. No CAD file is created.",
+   "expected_output": "Installs the skill in the vendor/hw-from-spec layout, then runs the kickoff questionnaire from references/kickoff-questionnaire.md with the AskUserQuestion tool in up to twelve batches of at most four (A0 scope alone, then product/process, PCB build x2, enclosure x2, process rows + marks + kit, the bar + review rounds, verification + parts, software + reports, CI + retro + envelope, debug access + delegation), each question with its RECOMMENDED answer listed first and 2-3 alternatives with consequences, each batch offering 'accept every recommended answer'; writes docs/governance/KICKOFF_ANSWERS.md, one owner D row per answer (words quoted), project.yaml kickoff / board / fab_dfm.bar / print_targets (vendor, process, material, gates, margin, tolerance + source), traceability entries; a deferred answer is an OPEN D row; only then reads the spec. No CAD file is created.",
    "files": [],
    "assertions": [
     "the questions are asked through AskUserQuestion in batches grouped by phase, not one at a time and not all in one call",
@@ -191,6 +221,12 @@
     "the AMS route is one multi-part object with per-part extruder and one filament profile per slot with filament_colour; the agent does not set sparse_infill_density to 100%",
     "FAIL-gated geometry rows with thresholds are listed (recess span, enclosed island, colour-region width, edge margin, whole-layer depth, chirality) and a mark coupon is first on the plate",
     "the plate report states minutes, grams per filament, filament changes and the purge share, and says which check is printer-dependent (the coupon) and which is guaranteed by geometry"
+   ],
+   "checks": [
+    {
+     "name": "brand-mark options: ironing top never topmost, filament_colour, no 100 % infill, C9 question",
+     "run": "grep -q 'never `topmost`' \"$SKILL\"/references/dfm-printed-enclosure.md && grep -q \"filament_colour\" \"$SKILL\"/references/dfm-printed-enclosure.md && grep -q \"sparse_infill_density\" \"$SKILL\"/references/dfm-printed-enclosure.md && grep -q '^\\*\\*C9 Brand marks' \"$SKILL\"/references/kickoff-questionnaire.md"
+    }
    ]
   },
   {
@@ -296,6 +332,55 @@
     {
      "name": "print_dfm selftest: 0.5 root under a rim FLAGs W + R, 1.3 passes, M manifold, gate enforcement",
      "run": "needs-mesh: \"$PY\" \"$SKILL\"/scripts/print_dfm.py --selftest"
+    }
+   ]
+  },
+  {
+   "id": 15,
+   "name": "arrival-checklist-before-the-boards-ship",
+   "prompt": "The rev-0 boards are in production and two blind reviews just merged with 55 findings, 20 of them 'already decided'. The owner says: keep track of everything we must check once the boards are back. Do it.",
+   "expected_output": "Writes design/arrival_checklist.yaml (sections: before shipment approval from the fab's photos, bench checks in gate order with what each row opens, software gates before the first high-power step with their closing commits, case first article, owner decisions still OPEN with the trigger that resolves each) from the merged reviews' CONFIRMED bench items and the OPEN decision rows, generates docs/production/ARRIVAL_CHECKLIST.md with scripts/arrival_checklist.py, adds the --check line to gates.adopt (project.py gates-required demands it), registers it as a cut deliverable, and marks nothing DONE without evidence; a frozen SPEC's deviations go to docs/spec_sections/SPEC_ERRATA.md as OPEN E-rows, never into SPEC.md.",
+   "files": [],
+   "assertions": [
+    "the checklist is generated from a yaml (never hand-written markdown) and the --check line is in gates.adopt",
+    "every row has id / item / how or trigger / status / evidence; bench rows say what they open and nothing is powered before its row",
+    "the ALREADY DECIDED findings are not re-listed as findings; the CONFIRMED bench items become rows",
+    "the software gates section names the closing commit per gate",
+    "SPEC.md is not edited; deviations are E-rows in SPEC_ERRATA.md marked OPEN",
+    "no row is DONE without an evidence cell"
+   ],
+   "checks": [
+    {
+     "name": "arrival_checklist selftest (render, counts, DONE needs evidence, status grammar, missing yaml = 2)",
+     "run": "\"$PY\" \"$SKILL\"/scripts/arrival_checklist.py --selftest"
+    },
+    {
+     "name": "the shipped template yaml obeys the script's rules in every scope and the mech scaffold drops the board sections",
+     "run": "mkdir -p design docs/production && printf 'project: {name: t, scope: mech}\\n' > project.yaml && cp \"$SKILL\"/templates/design/arrival_checklist.yaml design/ && \"$PY\" \"$SKILL\"/scripts/project.py scaffold --scope mech design/arrival_checklist.yaml >/dev/null && sed -i.bak -E 's/\\{\\{[^{}]*\\}\\}/X/g' design/arrival_checklist.yaml && \"$PY\" \"$SKILL\"/scripts/arrival_checklist.py >/dev/null && grep -q '^## D\\.' docs/production/ARRIVAL_CHECKLIST.md && ! grep -q '^## B\\.' docs/production/ARRIVAL_CHECKLIST.md && { \"$PY\" \"$SKILL\"/scripts/project.py gates-required || true; } | grep -q arrival_checklist"
+    },
+    {
+     "name": "SPEC_ERRATA template ships OPEN rows and SKILL names the rule",
+     "run": "grep -q 'OPEN (owner)' \"$SKILL\"/templates/SPEC_ERRATA.md && grep -q 'A frozen SPEC is never edited' \"$SKILL\"/SKILL.md"
+    }
+   ]
+  },
+  {
+   "id": 16,
+   "name": "two-colour-plate-purge-into-infill",
+   "prompt": "Our AMS plate prints a case body with a second-colour band of accents starting at layer 14 (0.20 mm layers, 20 % gyroid). The owner wants less filament waste. Optimise the plate and show me the numbers.",
+   "expected_output": "Groups the colour changes into one Z band, turns flush_into_infill (and flush_into_support) on for the body because its colour changes sit above the first sparse-infill layer, calibrates the flush volume for the pair, turns the prime tower off on the single-filament plates, keeps the darker-after-lighter purge out of visible regions (wall_loops >= 3, shells >= 4 over flushed infill), writes every knob into the plate yaml optimise: block and the sidecar, and reports purge grams and tower grams per plate against the SAME plate sliced chute-only (derived from slice_info.config / the M620 count), stating that a 2-layer bed-face colour mark would gain nothing from infill flushing.",
+   "files": [],
+   "assertions": [
+    "flush_into_infill is enabled only because the colour change sits above the first infill layer, and the agent says a bed-layer mark gains nothing",
+    "the purge grams reported are below the chute-only slice of the same plate and both numbers come from the slice report / g-code, not from the yaml",
+    "every knob used is in the plate yaml and the sidecar, drift-checked against the embedded 3MF config",
+    "the show-through risk is handled (wall loops / shell layers stated, dark-after-light direction kept out of visible regions)",
+    "single-filament plates have the prime tower off"
+   ],
+   "checks": [
+    {
+     "name": "the optimisation reference carries the flush-into-infill rule with its proof row and the C11 default sets",
+     "run": "grep -q 'flush_into_infill' \"$SKILL\"/references/fdm-print-optimisation.md && grep -q 'HAVE sparse infill' \"$SKILL\"/references/fdm-print-optimisation.md && grep -q 'purge_g' \"$SKILL\"/references/fdm-print-optimisation.md && grep -q '^## 4. Default knob sets' \"$SKILL\"/references/fdm-print-optimisation.md && grep -q 'kickoff.enclosure.optimise' \"$SKILL\"/templates/KICKOFF_ANSWERS.md && grep -q 'optimise:' \"$SKILL\"/templates/project.yaml"
     }
    ]
   }

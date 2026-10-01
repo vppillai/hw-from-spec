@@ -13,10 +13,13 @@ CLI (for shell scripts):
   scripts/project.py scaffold --scope S FILE...   # resolve the {{ee,both}}-style scope tags of copied templates in place: a tagged line stays only
                                               # when S is in its list (tag removed); untagged lines stay; the {{SCOPE}} slot becomes S. Then `slots`.
   scripts/project.py gates-required           # exit 1 when an artefact exists (schematic, board, the STL set) and gates.adopt has no gate line for it
-  scripts/project.py slots [FILE|DIR ...]     # the unfilled {{...}} slots per file (default: CLAUDE.md SPEC.md project.yaml docs design); lines between
+  scripts/project.py slots [FILE|DIR ...]     # the unfilled {{...}} slots per file (default: CLAUDE.md SPEC.md project.yaml docs design — CI workflow
+                                              # files are the ci/README's own `{{PROJECT_` grep); lines between
                                               # `<!-- skeleton: begin -->` / `<!-- skeleton: end -->` are skipped; exit 1 while any slot remains
   scripts/project.py kickoff --check          # every answered KICKOFF_ANSWERS row (not n/a, not a slot) has its `Written to` project.yaml keys set
                                               # and a real D row id; exit 1 otherwise
+  scripts/project.py env                      # the host row for docs/governance/ENV.md: cores, RAM, the heavy-job pool size and memory floor
+                                              # scripts/jobs.sh derives (project.yaml host: {jobs_max, min_free_gb} overrides them) — no machine constant lives in the skill
   scripts/project.py --selftest
 
 Record signing (print_dfm / thin_wall_census records): `sig` = sha256 of the canonical JSON body (sorted keys, no `sig`) + the tool VERSION;
@@ -40,7 +43,8 @@ DEFAULTS = {
               "traceability_out": "docs/governance/TRACEABILITY.md", "test_plan": "docs/design/TEST_PLAN.md",
               "parts_verification": "docs/parts/PARTS_VERIFICATION.md", "datasheet_notes": "docs/datasheet_notes", "reviews_dir": "docs/reviews",
               "quotes_dir": "docs/quotes", "production_dir": "docs/production", "fab_dir": "out/fab", "release_dir": "docs/release",
-              "collateral_dir": "docs/release/collateral", "mech_record": "out/mechanical/case/*/stl/*.stl"},
+              "collateral_dir": "docs/release/collateral", "mech_record": "out/mechanical/case/*/stl/*.stl", "kickoff_answers": "docs/governance/KICKOFF_ANSWERS.md",
+              "reorg_rewrites": "docs/reviews/REORG_REWRITES.txt"},
     "tools": {"python": ".venv/bin/python", "kicad_cli": "kicad-cli", "kicad_python": "python3"},
 }
 
@@ -67,7 +71,7 @@ class Project:
             if os.path.exists(c):
                 return cls(c)
             if os.path.dirname(d) == d:
-                sys.exit("project.yaml not found (walk up from cwd, or set HWFS_PROJECT / --project)")
+                print("project.yaml not found (walk up from cwd, or set HWFS_PROJECT / --project)", file=sys.stderr); sys.exit(2)
             d = os.path.dirname(d)
 
     def get(self, dotted, default=None):
@@ -166,7 +170,7 @@ def open_decisions(path):
 
 def required_gate_lines(P):
     """An artefact that exists must have its gate line in gates.adopt (commented lines are not lines): the schematic -> erc_gate.py, the board ->
-    a DRC gate, the STL set (paths.mech_record) -> thin_wall_census --gate-dir AND print_dfm --gate. -> problem list (blind review 0.8.0 F11)."""
+    a DRC gate, the STL set (paths.mech_record) -> thin_wall_census --gate-dir AND print_dfm --gate, design/arrival_checklist.yaml -> arrival_checklist.py --check. -> problem list (blind review 0.8.0 F11)."""
     lines = " ".join(str(x) for x in (P.get("gates.adopt") or []))
     bad = []
     sch = P.path("schematic")
@@ -180,6 +184,9 @@ def required_gate_lines(P):
         for tok, what in (("--gate-dir", "thin_wall_census.py --gate-dir"), ("print_dfm.py --gate", "print_dfm.py --gate")):
             if tok not in lines:
                 bad.append(f"STL set {pat} has files but gates.adopt has no `{what}` line")
+    ac = P.get("arrival_checklist.yaml", "design/arrival_checklist.yaml")
+    if os.path.exists(os.path.join(P.root, ac)) and "arrival_checklist.py --check" not in lines:
+        bad.append(f"{ac} exists but gates.adopt has no `scripts/arrival_checklist.py --check` line")
     return bad
 
 
@@ -218,7 +225,7 @@ def kickoff_check(P):
     """Every answered row of the kickoff answers file names project.yaml keys in `Written to`; each must exist (print_targets.<t>.x / .*.x = some
     target has x). A row whose answer or D-row cell is still a slot, or whose D row is not in the decision log, is a problem. -> problem list."""
     ans = P.get("kickoff.answers") if isinstance(P.get("kickoff"), dict) else None
-    path = os.path.join(P.root, ans) if ans else os.path.join(P.root, "docs", "governance", "KICKOFF_ANSWERS.md")
+    path = os.path.join(P.root, ans) if ans else P.path("kickoff_answers")
     if not os.path.exists(path):
         return [f"kickoff answers file missing: {os.path.relpath(path, P.root)}"]
     dec_ids = set()
@@ -271,6 +278,40 @@ def _has(d, dotted):
     return d is not None
 
 
+def host_facts():
+    """cores, RAM GB of this host (sysctl on macOS, /proc on Linux) and the derived heavy-job pool size max(1, cores // 4) + memory floor
+    max(2 GB, 15 % of RAM) — what scripts/jobs.sh uses unless project.yaml host: overrides it."""
+    import subprocess
+    try:
+        cores = int(subprocess.run(["sysctl", "-n", "hw.ncpu"], capture_output=True, text=True).stdout or 0) or os.cpu_count() or 1
+        ram = int(subprocess.run(["sysctl", "-n", "hw.memsize"], capture_output=True, text=True).stdout or 0) / 2**30
+    except FileNotFoundError:
+        cores = os.cpu_count() or 1; ram = 0
+    if not ram and os.path.exists("/proc/meminfo"):
+        ram = next((int(l.split()[1]) / 2**20 for l in open("/proc/meminfo") if l.startswith("MemTotal")), 0)
+    return dict(cores=cores, ram_gb=round(ram), jobs_max=max(1, cores // 4), min_free_gb=round(max(2.0, 0.15 * ram), 1))
+
+
+def host_row(h=None):
+    h = h or host_facts(); import datetime
+    return (f"| Host | {h['cores']} cores, {h['ram_gb']} GB RAM (`sysctl hw.ncpu / hw.memsize`, `nproc` + `/proc/meminfo` on Linux) → heavy-job pool {h['jobs_max']} "
+            f"(cores // 4), memory floor {h['min_free_gb']} GB (max of 2 GB, 15 % of RAM) — `scripts/jobs.sh`; project.yaml `host:` overrides | this machine | {datetime.date.today().isoformat()} |")
+
+
+def decision_status(path, id_re=None):
+    """{id: status cell with bold stripped and the history after `(was:` dropped} of a decision log; ids by `id_re` (default: any PREFIX-nn)."""
+    out = {}
+    rx = id_re or re.compile(r"\b([A-Z]+-\d+[a-z]?)\b")
+    for line in open(path, encoding="utf-8") if path and os.path.exists(path) else []:
+        if line.startswith("|"):
+            c = split_row(line)
+            if len(c) >= 3:
+                st = re.split(r"\(was:", re.sub(r"\*", "", c[2]), maxsplit=1)[0].strip()
+                for i in rx.findall(c[0]):
+                    out.setdefault(i, st)
+    return out
+
+
 def split_row(line):
     """Cells of a markdown table row; a backslash-escaped pipe inside a cell is content, not a separator."""
     return [c.strip() for c in re.split(r"(?<!\\)\|", line.strip())[1:-1]]
@@ -287,6 +328,8 @@ def selftest():
     assert P.tool("python") == f"{d}/.venv/bin/python" and P.tool("kicad_cli") == "kicad-cli"
     assert P.id_re().findall("D-01 AG-002 B-03 CC-004") == ["D-01", "AG-002", "B-03"] and P.decision_re().findall("D-2a AG-002 B-03") == ["D-2a", "AG-002"]
     assert split_row("| a | b \\| c | d |") == ["a", "b \\| c", "d"], "an escaped pipe is content"
+    open(f"{d}/DS.md", "w").write("| ID | Date | Status | T | P | R |\n|---|---|---|---|---|---|\n| **D-03** | d | **APPROVED** (was: OPEN) | t | p | r |\n| CC-010 | d | APPLIED (!) | t | p | r |\n")
+    assert decision_status(f"{d}/DS.md") == {"D-03": "APPROVED", "CC-010": "APPLIED (!)"} and decision_status(f"{d}/nope.md") == {}, decision_status(f"{d}/DS.md")
     # scope + record id: board md5 in ee / both, the STL set in mech, MISSING when absent
     assert P.scope() == "both" and P.record_md5()[1] is None, "no board: MISSING"
     os.makedirs(f"{d}/out/mechanical/case/v1/stl"); open(f"{d}/out/mechanical/case/v1/stl/a.stl", "wb").write(b"A")
@@ -304,6 +347,8 @@ def selftest():
     P.cfg["gates"]["adopt"] += ["$PY scripts/thin_wall_census.py --gate-dir out/x/census", "$PY scripts/print_dfm.py --gate out/x/dfm"]
     assert required_gate_lines(P) == []
     os.makedirs(f"{d}/k"); open(f"{d}/k/k.kicad_sch", "w").write("x"); assert "erc_gate.py" in required_gate_lines(P)[0]
+    os.makedirs(f"{d}/design"); open(f"{d}/design/arrival_checklist.yaml", "w").write("sections: []\n"); assert any("arrival_checklist.py" in b for b in required_gate_lines(P))
+    P.cfg["gates"]["adopt"] += ["$PY scripts/arrival_checklist.py --check"]; assert not any("arrival_checklist" in b for b in required_gate_lines(P))
     # slots (skeleton skipped) and the kickoff check
     open(f"{d}/S.md", "w").write("a {{X}} b {{Y}}\n<!-- skeleton: begin -->\n{{SKEL}}\n<!-- skeleton: end -->\n{{X}}\n")
     assert slots(["S.md", "nope.md"], d) == {"S.md": ["{{X}}", "{{Y}}"]}, slots(["S.md"], d)
@@ -318,7 +363,9 @@ def selftest():
     bad = kickoff_check(P); assert len(bad) == 3 and "board.thickness_mm" in bad[0] and bad[1].startswith("C8a: no D row") and bad[2].startswith("D1: answer still a slot"), bad
     P.cfg["board"]["thickness_mm"] = 1.6; open(f"{d}/docs/governance/KICKOFF_ANSWERS.md", "a").write("| E1 | rounds | one | yes | D-99 | `kickoff.verification.rounds` |\n")
     bad = kickoff_check(P); assert any("D-99 is not in" in b for b in bad) and any("kickoff.verification.rounds" in b for b in bad), bad
-    print("selftest OK (defaults, paths, ids, scope, record md5, scaffold, record signing, OPEN rows, required gate lines, slots, kickoff check)")
+    h = host_facts(); assert h["cores"] >= 1 and h["jobs_max"] >= 1 and h["min_free_gb"] >= 2 and "| Host |" in host_row(h), h
+    assert host_row(dict(cores=14, ram_gb=24, jobs_max=3, min_free_gb=3.6)).startswith("| Host | 14 cores, 24 GB RAM")
+    print("selftest OK (defaults, paths, ids, scope, record md5, scaffold, record signing, OPEN rows, required gate lines, slots, kickoff check, host row)")
     return 0
 
 
@@ -327,6 +374,8 @@ def main(argv):
         sys.exit(selftest())
     if len(argv) > 1 and argv[1] in ("--help", "-h"):
         print(__doc__); return
+    if len(argv) > 1 and argv[1] == "env":
+        print(host_row()); return
     if len(argv) < 2 or argv[1] not in ("get", "path", "root", "scope", "record", "scaffold", "gates-required", "slots", "kickoff"):
         sys.exit(__doc__)
     if argv[1] == "scaffold":
@@ -340,6 +389,8 @@ def main(argv):
         print(f"slots: {total} unfilled in {len(found)} file(s)"); sys.exit(1 if total else 0)
     P = Project.find()
     if argv[1] == "kickoff":
+        if argv[2:] != ["--check"]:
+            sys.exit(__doc__)
         bad = kickoff_check(P)
         for b in bad:
             print("KICKOFF:", b)
@@ -355,6 +406,8 @@ def main(argv):
         print(P.scope())
     elif argv[1] == "record":
         lbl, m = P.record_md5(); print(f"{lbl} md5 {m or 'MISSING'}")
+    elif len(argv) < 3:
+        sys.exit(__doc__)
     elif argv[1] == "path":
         print(P.path(argv[2]) or "")
     else:

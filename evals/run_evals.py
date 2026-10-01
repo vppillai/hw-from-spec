@@ -3,7 +3,8 @@
 
   evals/run_evals.py [--only ID,ID] [--python PY]
       Each eval may carry `checks: [{name, run, expect_rc?}]`: `run` is a shell snippet executed in a fresh temp dir with $SKILL (this repo),
-      $PY (the interpreter: --python, else the skill .venv, else sys.executable) and $T (the temp dir) set. A check whose `run` starts with
+      $PY (the interpreter: --python made absolute, else the interpreter running this file) and $T (the temp dir) set.
+  evals/run_evals.py --selftest      # evals.json schema: unique ids, prompt / expected_output / assertions / checks (name + run) on every eval A check whose `run` starts with
       `needs-mesh:` is SKIPPED (not failed) when $PY lacks numpy / trimesh. Evals without checks are listed as manual with their assertion count
       (they need an agent run against the prompt and a human reading the assertions). Exit 1 on any failed check.
 """
@@ -13,9 +14,11 @@ HERE = os.path.dirname(os.path.realpath(__file__)); SKILL = os.path.dirname(HERE
 
 
 def main():
-    ap = argparse.ArgumentParser(description=__doc__.split("\n")[0]); ap.add_argument("--only"); ap.add_argument("--python")
+    ap = argparse.ArgumentParser(description=__doc__.split("\n")[0]); ap.add_argument("--only"); ap.add_argument("--python"); ap.add_argument("--selftest", action="store_true")
     a = ap.parse_args()
-    py = a.python or sys.executable          # run it with the project's .venv/bin/python (README step 3); the skill's own venv is for developing the skill
+    if a.selftest:
+        return selftest()
+    py = os.path.abspath(a.python) if a.python else sys.executable   # checks run with cwd = a temp dir, so a relative --python must be absolutised; default = the interpreter running this file
     mesh = subprocess.run([py, "-c", "import numpy, trimesh, scipy, shapely"], capture_output=True).returncode == 0
     evals = json.load(open(os.path.join(HERE, "evals.json")))["evals"]
     only = set(a.only.split(",")) if a.only else None
@@ -40,6 +43,15 @@ def main():
                 print(f"[{'PASS' if ok else 'FAIL'} ] {e['id']:>2} {c.get('name', run[:60])}" + ("" if ok else f"\n        rc {r.returncode}: {(r.stdout + r.stderr).strip()[-600:]}"))
     print(f"\nevals: {n_mech} with mechanical checks ({fails} failed check(s), {n_skip} skipped), {n_manual} manual — the manual ones are graded by a human after an agent run")
     return 1 if fails else 0
+
+
+def selftest():
+    E = json.load(open(os.path.join(HERE, "evals.json")))["evals"]
+    ids = [e["id"] for e in E]; assert len(ids) == len(set(ids)) and ids == sorted(ids), "ids unique and ordered"
+    for e in E:
+        assert e.get("prompt") and e.get("expected_output") and e.get("assertions") and e.get("checks"), f"eval {e.get('id')} incomplete"
+        assert all(c.get("name") and c.get("run") for c in e["checks"]), f"eval {e['id']}: a check without name / run"
+    print(f"selftest OK ({len(E)} evals, every one with prompt / expected_output / assertions / checks)"); return 0
 
 
 if __name__ == "__main__":
