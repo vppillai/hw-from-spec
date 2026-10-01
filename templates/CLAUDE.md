@@ -14,9 +14,11 @@ written specification, for fabrication and assembly at {{FAB}}. Humans review at
 3. **Every VERIFY item is closed by reading the primary datasheet** before the part is drawn. A VERIFY item is a spec value or claim that rests
    on a datasheet or standard nobody has read yet (definition: skill `SKILL.md` §4); they are listed in SPEC.md (tag `VERIFY`) or `docs/design/VERIFY.md`,
    and closed by a `docs/datasheet_notes/<part>.md` row (page/section) or a `docs/governance/BLOCKERS.md` row.
-4. **Stop at gates.** The gate table is `docs/governance/GATES.md` (ee: G0 SPEC → G1 schematic → G2 layout → board order; mech: G0 mechanical
-   spec → M1 geometry → M2 first article → case order; both: G0 → G1 → G2 → board order + case order), one review round before each. Do not
-   start the next phase's CAD before the owner writes the approval into `docs/governance/GATES.md`. **Agents never write approval cells or the release line** — they ask (skill
+4. **Stop at gates.** The gate table is `docs/governance/GATES.md` (G0 SPEC → G1 schematic → G2 layout → board order), one review round before each. {{ee}}
+4. **Stop at gates.** The gate table is `docs/governance/GATES.md` (G0 mechanical spec → M1 geometry → M2 first article → case order), one review round before each. {{mech}}
+4. **Stop at gates.** The gate table is `docs/governance/GATES.md` (G0 → G1 → G2 → board order + case order), one review round before each. {{both}}
+   Do not start the next phase's CAD before the owner writes the approval into `docs/governance/GATES.md` — a generator for the next phase calls
+   `scripts/gate_check.py <gate>` and refuses while it says NOT approved. **Agents never write approval cells or the release line** — they ask (skill
    `SKILL.md` §1.1) and wait; a chat approval is quoted verbatim under the table, the cell stays the owner's. Never quote the release phrase in prose.
 5. **Everything is generated, nothing is hand-edited.** CAD files, reports and indexes come from `gen/` scripts reading `design/*.yaml`. A review
    finding changes the YAML or the generator, then regenerates. Every generator has `--check` and `--selftest`. Exceptions are logged decision rows
@@ -32,13 +34,12 @@ written specification, for fabrication and assembly at {{FAB}}. Humans review at
    looked at (`references/dfm-printed-enclosure.md`, `references/print-dfm.md`). {{mech}}
 8. **Blind reviews are really blind.** Reviewers get the frozen worktree and the hand-off only — never each other's output, never the author's
    reasoning. Verify BLOCKER/MAJOR adversarially, merge in `docs/reviews/`.
-9. **Fab constraints are hard:** {{FAB_CONSTRAINTS}} (ee / both: assembly sides, minimum package, link parts, excluded package families, parts on
-   the verified list, fab code field on every fitted part, DNP marked and excluded from BOM/CPL, the fab's DFM checker mirrored in-repo —
-   `design/dfm_thresholds.json`, `scripts/dfm_check.py`; mech / both: wall / void / red gates, tolerance and rating per print target). **The
-   manufacturability bar is zero / zero / no waivers** (owner row {{D-BAR}}): board DRC 0 errors / 0 warnings and fab DFM 0 Danger / 0 Warning
-   unless a dated accepted entry with vendor evidence; printed enclosure census 0 unaccepted FAIL, slicer log clean, vendor checker no flag by API
-   read; CNC vendor DFM clean. Build rules: `references/pcb-layout-dfm.md`, `references/dfm-printed-enclosure.md`; every print target's numbers
-   live in `project.yaml print_targets`, never in a script.
+9. **Fab constraints are hard:** {{FAB_CONSTRAINTS}}. **The manufacturability bar is zero / zero / no waivers** (owner row {{D-BAR}}), enforced by scripts:
+   board — assembly sides, minimum package, link parts, excluded package families, parts on the verified list, fab code field on every fitted part, {{ee,both}}
+   DNP marked and excluded from BOM/CPL, the fab's DFM checker mirrored in-repo (`design/dfm_thresholds.json`, `scripts/dfm_check.py`); DRC 0 errors / {{ee,both}}
+   0 warnings and fab DFM 0 Danger / 0 Warning unless a dated `dfm_accepted` entry with vendor evidence (`references/pcb-layout-dfm.md`). {{ee,both}}
+   printed enclosure — wall / void / red gates, tolerance and rating per print target (`project.yaml print_targets`, never in a script); census 0 {{mech,both}}
+   unaccepted FAIL, `print_dfm.py` PASS, slicer log clean, vendor checker no flag by API read; CNC — vendor DFM clean (`references/dfm-printed-enclosure.md`). {{mech,both}}
 10. **Say what you don't know.** If a datasheet, drawing or page cannot be fetched, mark the item BLOCKED in `docs/governance/BLOCKERS.md` and continue elsewhere.
 11. **Capture learnings.** Before your final commit, append every non-obvious learning as a dated, domain-tagged line to `docs/governance/LEARNINGS_LOG.md`.
 
@@ -51,9 +52,11 @@ written specification, for fabrication and assembly at {{FAB}}. Humans review at
 ```
 CLAUDE.md  SPEC.md  project.yaml  .gitignore   (parts_seed.csv: the spec's part list, if the owner supplies one) {{ee,both}}
 CLAUDE.md  SPEC.md  project.yaml  .gitignore   (the fit input: the board STEP / envelope named in paths.mesh_provenance) {{mech}}
-design/        <board>.yaml parts.yaml <board>_board.yaml placement.csv case.yaml traceability.yaml erc_accept.yaml dfm_thresholds.json   (references/schematic-phase.md §1) {{ee,both}}
+design/        <board>.yaml parts.yaml <board>_board.yaml placement.csv traceability.yaml erc_accept.yaml dfm_thresholds.json   (references/schematic-phase.md §1) {{ee}}
+design/        <board>.yaml parts.yaml <board>_board.yaml placement.csv case.yaml traceability.yaml erc_accept.yaml dfm_thresholds.json   (references/schematic-phase.md §1) {{both}}
 design/        case.yaml parts.yaml (hardware) traceability.yaml   (references/case-pipeline.md) {{mech}}
-gen/           project generators (build_sch, check_maps, place_pcb, export, fab_package, case, fea, drawings, …) — each with --check / --selftest {{ee,both}}
+gen/           project generators (build_sch, check_maps, place_pcb, export, fab_package, …) — each with --check / --selftest {{ee}}
+gen/           project generators (build_sch, check_maps, place_pcb, export, fab_package, case, fea, drawings, …) — each with --check / --selftest {{both}}
 gen/           project generators (case geometry, drawings, fea, kits, production_cut) — each with --check / --selftest {{mech}}
 vendor/hw-from-spec/  the skill (submodule);  scripts -> vendor/hw-from-spec/scripts  (relative symlink; or a copy of scripts/)
 lib/           fetched symbols/footprints/3D (vendor-licensed data never leaves the repo) {{ee,both}}

@@ -1,14 +1,51 @@
 # project.yaml — the one file the hw-from-spec scripts read (schema: references/project-yaml.md; filled example: smoke/project.yaml).
 # Day-1 version: the gate lists hold only what exists before a board. Uncomment the G1/G2 blocks as the artefacts appear.
-# Scope tags: a line ending in {{ee,both}} / {{mech,both}} / {{mech}} belongs to those scopes only — `scripts/project.py scaffold --scope <A0> <files>`
-# keeps the lines of your scope and strips the tags; afterwards `grep -rn '{{'` must print nothing.
+# Scope tags: a line ending in a double-brace tag that names scopes (ee, mech, both — references/project-yaml.md) belongs to those scopes only;
+# `scripts/project.py scaffold --scope <A0> <files>` keeps the lines of your scope and strips the tags. Fill the remaining slots (`scripts/project.py slots`).
 project:
   name: {{PROJECT}}
   description: {{ONE_LINE_DESCRIPTION}}
   scope: {{SCOPE}}                            # kickoff A0: ee (PCB/PCBA only) | mech (enclosure / printed / CNC parts only) | both (a housed board) — SKILL.md §1
   owner: {name: {{OWNER_NAME}}, email: {{OWNER_EMAIL}}}   # who writes the gate cells and the release line; scripts/gate_check.py --release checks the line's git author against this
 skill: {repo: {{SKILL_REPO_URL}}, commit: {{SKILL_COMMIT}}, version: {{SKILL_VERSION}}}   # the hw-from-spec commit + SKILL.md version this project follows; scripts/skill_retro.py reads `version`
-kickoff: docs/governance/KICKOFF_ANSWERS.md   # the owner's answers to references/kickoff-questionnaire.md (D rows); written before any CAD
+kickoff:                                      # the owner's kickoff answers, machine-readable (references/kickoff-questionnaire.md "What the answers write"; `scripts/project.py kickoff --check`
+  answers: docs/governance/KICKOFF_ANSWERS.md   #   proves every answered row landed here); the words and D rows live in the answers file
+  product_class: {{A1_PRODUCT_CLASS}}         # A1: engineering sample | product for external users | one-off lab jig
+  quantity: {{A2_QUANTITY}}                   # A2: e.g. "5 first article, design for 50"
+  fab: {{A3_FAB}}                             # A3: the board fab / assembler {{ee,both}}
+  enclosure:                                  # C1–C10 {{mech,both}}
+    pieces: {{C1_PIECES}} {{mech,both}}
+    retention: {{C2_RETENTION}} {{mech,both}}
+    coupling: {{C3_COUPLING}} {{mech,both}}
+    feet: {{C4_FEET}} {{mech,both}}
+    labelling: {{C5_LABELLING}} {{mech,both}}
+    fan: {{C6_FAN}} {{mech,both}}
+    light_pipe: {{C7_LIGHT_PIPE}} {{mech,both}}
+    targets: {{C8_TARGETS}}                   # C8: one yaml, presets base + overrides {{mech,both}}
+    marks: {{C9_MARKS}}                       # C9: ironed top-face feature | flush AMS colour body | both | glued plate {{mech,both}}
+    kit_recipient: {{C10_RECIPIENT}}          # C10: who receives the print kit's report-back {{mech,both}}
+    fit_decider: {{C10_FIT_DECIDER}}          # C10: who picks the fit knob after the bracket print {{mech,both}}
+  verification: {rounds: {{E1_ROUNDS}}, visual: {{E2_VISUAL}}, fea: {{E4_FEA}}}   # E1 / E2 / E4
+  coupons: {{E3_COUPONS}}                     # E3 {{mech,both}}
+  sourcing: {sources: {{F1_SOURCES}}, stock_floor: {{F2_STOCK}}}   # F1 / F2
+  software: {modes: {{G1_MODES}}, criteria: {{G2_CRITERIA}}}       # G1 / G2 {{ee,both}}
+  release: {reports: {{H1_REPORTS}}, cut: {{H2_CUT}}, ci: {{H3_CI}}, retro: {{H4_RETRO}}}   # H1–H4
+  identity: {envelope: {{I1_ENVELOPE}}, branding: {{I2_BRANDING}}, delegation: {{I4_DELEGATION}}}   # I1 / I2 / I4
+  debug_access: {{I3_DEBUG}}                  # I3 {{ee,both}}
+board:                                        # the PCB build from kickoff B1–B8 (references/pcb-layout-dfm.md); SPEC R-M01 cites these, never repeats them {{ee,both}}
+  layers: {{B1_LAYERS}} {{ee,both}}
+  thickness_mm: {{B1_THICKNESS}} {{ee,both}}
+  stackup_template: {{B1_STACKUP}} {{ee,both}}
+  copper: {{B2_COPPER}}                       # e.g. "1 oz outer / 0.5 oz inner" {{ee,both}}
+  impedance: {{B3_IMPEDANCE}} {{ee,both}}
+  finish: {{B4_FINISH}} {{ee,both}}
+  mask: {{B4_MASK}} {{ee,both}}
+  silk: {{B4_SILK}} {{ee,both}}
+  min_package: {{B5_MIN_PACKAGE}} {{ee,both}}
+  link_parts: {{B5_LINK_PARTS}} {{ee,both}}
+  sides: {{B6_SIDES}} {{ee,both}}
+  test_points: {{B7_TEST_POINTS}} {{ee,both}}
+  panel: {{B8_PANEL}} {{ee,both}}
 ids: {owner_prefix: D, agent_prefix: CC, blocker_prefix: B}
 markers:
   release_regex: 'clear[ -]to[ -]build'       # the owner's release line in paths.gates — never quote the phrase in prose
@@ -38,7 +75,7 @@ paths:
 tools:
   python: .venv/bin/python
   kicad_cli: {{CAD_CLI_PATH}}                 # the key names are historical: put YOUR CAD's CLI here ({KICAD_CLI} in commands), whatever the CAD (mech: openscad) {{ee,both}}
-  kicad_cli: openscad                         # mech scope: the geometry CLI ({KICAD_CLI} in render commands) {{mech}}
+  kicad_cli: {{GEOMETRY_CLI_PATH}}            # mech scope: the geometry CLI ({KICAD_CLI} in render commands), e.g. openscad {{mech}}
   kicad_python: {{CAD_PYTHON_PATH}}           # the CAD's own Python ({KPY}); python3 when the CAD has none {{ee,both}}
 fab_dfm:                                      # the board's fab-DFM mirror (references/fab-dfm.md; the old block name `dfm:` is still read) {{ee,both}}
   thresholds: design/dfm_thresholds.json      # the fab's numbers with source URL + date {{ee,both}}

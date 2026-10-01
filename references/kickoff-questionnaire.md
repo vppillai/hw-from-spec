@@ -3,8 +3,9 @@
 Owner's words (2026-09-28): *"the skill should ask all questions upfront … the questions must come with required recommendations that the user
 can select."* The decision classes below are mined from one complete project's owner rows (85 D rows, 200+ agent rows); each question carries a
 **RECOMMENDED** answer (marked) and two or three alternatives with their one-line consequence. The agent asks them in the batches of §0 with the
-`AskUserQuestion` tool (≤ 4 questions per call, the recommended answer listed first and labelled, plus "accept every recommended answer of this
-batch" as the first option of each batch), records every answer in `docs/governance/KICKOFF_ANSWERS.md` (`templates/KICKOFF_ANSWERS.md`), writes
+`AskUserQuestion` tool (≤ 4 questions per call, ≤ 4 options per question; the recommended answer listed first and labelled; **"accept every
+recommended answer of this batch" is the FIRST option of the batch's FIRST question** — so that question carries at most two alternatives, the
+others at most three; a question with more alternatives folds the rare ones into one "other (named in the reason)" option), records every answer in `docs/governance/KICKOFF_ANSWERS.md` (`templates/KICKOFF_ANSWERS.md`), writes
 one owner row per answer into `docs/governance/DECISIONS.md` (D rows, the owner's words quoted; a recommended default the owner accepted reads
 `accepted recommended`), copies the machine-readable values into `project.yaml` (`kickoff`, `board`, `fab_dfm.bar`, `print_targets`) and a
 traceability entry per row — **all before any CAD**. A question the owner defers is a D row `OPEN` and blocks the phase that needs it, never a
@@ -23,11 +24,14 @@ batch with no applicable question is skipped — a mech-only owner never sees vi
 | 3 PCB build (cont.) | B5–B8 | ee, both | SPEC §5, layout rules |
 | 4 enclosure architecture | C1–C4 | mech, both | the case concept in SPEC §8 |
 | 5 enclosure architecture (cont.) | C5–C8 | mech, both | case.yaml |
-| 6 the manufacturability bar + brand marks | D1–D3, C9 | all (D3, C9 mech/both) | day-1 `fab_dfm.bar` / `print_targets`; the mark option before the first FDM plate |
-| 7 verification | E1–E4 | all (E3 mech/both) | the G0 review round |
-| 8 bought parts & software | F1–F2, G1–G2 | all (G1–G2 ee/both) | parts.yaml, the bring-up tool |
-| 9 release & cut | H1–H4 | all | the first release report |
-| 10 identity, envelope, delegation | I1–I4 | all (I3 ee/both) | the spec is read (found by the first retro: the owner rows the source project needed that no batch above asked) |
+| 6 print process rows, brand marks, kit, margin | C8a, C9, C10, D3 | mech, both | `print_targets.<t>.dfm_process`, the mark option before the first FDM plate, START_HERE recipient |
+| 7 the manufacturability bar + review rounds | D1, D2, E1, E2 | all | day-1 `fab_dfm.bar` / `print_targets.*.accepted`; the G0 review round |
+| 8 verification (cont.) + bought parts | E3, E4, F1, F2 | all (E3 mech/both) | the G0 review round, parts.yaml |
+| 9 software + reports | G1, G2, H1, H2 | all (G1–G2 ee/both) | the bring-up tool, the first release report |
+| 10 CI, retro, envelope, branding | H3, H4, I1, I2 | all | the spec is read |
+| 11 debug access, delegation | I3, I4 | all (I3 ee/both) | the spec is read (I1–I4: found by the first retro — the owner rows the source project needed that no batch asked) |
+
+Twelve batches (0–11), none above four questions; a batch whose questions are all out of scope is skipped.
 
 ## A0. Scope (asked first, alone)
 **A0 Project scope.** **RECOMMENDED: what the brief implies — `both` when a board is being designed AND will be housed** (today's full flow:
@@ -51,9 +55,10 @@ copies its viewer, every part [V] on its library, two-sided assembly available. 
 spec you own, consigned parts. *Alt:* prototype fab only, hand assembly — no CPL / rotation work, no basic-part policy.
 **A4 Enclosure process and material (per target)** [mech, both]. **RECOMMENDED: two targets — a print service MJF PA12 build of record + a home FDM (PLA /
 PETG, 0.4 nozzle) mirror** — the vendor part is premium and rated HB, the home part is the fit / assembly mock-up and every vendor DFM decision is
-mirrored the same day. *Alt:* MJF only — no coupons before the first quote, every fit answered by the vendor round. *Alt:* SLA resin — smoother,
-brittle, walls ≥ 0.8 / parts ≥ 2 mm, drain holes, post-cure warp; no snap or press fits. *Alt:* CNC aluminium — corner radii, threads, anodising
-build-up, 5–10× the price; `references/cnc-enclosure.md`. *Alt:* FDM only — an engineering sample; every legend raised; ≥ 1.6 walls.
+mirrored the same day. *Alt:* MJF only — no coupons before the first quote, every fit answered by the vendor round. *Alt:* FDM only — an engineering
+sample; every legend raised; ≥ 1.6 walls. *Alt:* another process, named in the reason — SLA resin (smoother, brittle, walls ≥ 0.8 / parts ≥ 2 mm,
+drain holes, post-cure warp, no snap or press fits; `references/dfm-printed-enclosure.md` §11) or CNC aluminium (corner radii, threads, anodising
+build-up, 5–10× the price; `references/cnc-enclosure.md`). Four options: the AskUserQuestion limit.
 
 ## B. PCB build (`references/pcb-layout-dfm.md`)
 **B1 Layers and thickness** [ee, both]. **RECOMMENDED: 4 layers, 1.6 mm, the fab's default stack-up template named in the yaml** — a solid GND plane under
@@ -214,10 +219,13 @@ window and lists every action taken.
 | A0 | `project.scope` | CLAUDE.md scope line, GATES.md rows (scaffold), KICKOFF_ANSWERS `n/a (scope)` rows |
 | A1–A4 | `kickoff.product_class`, `kickoff.quantity`, `kickoff.fab`, `print_targets.<t>` (vendor, process, material, rating) | SPEC §1, §8; D rows |
 | B1–B8 | `board.layers / thickness / copper / stackup_template / impedance / finish / mask / silk / min_package / link_parts / sides / test_points / panel` | SPEC §4–§6 (R-M01…), `design/<board>_board.yaml`, `design/dfm_thresholds.json` (source + date) |
-| C1–C10 | `kickoff.enclosure` (pieces, retention, coupling, feet, labelling, fan, light_pipe, targets, marks, kit_recipient, fit_decider) | SPEC §8, `design/case.yaml` presets + `fits` knobs; START_HERE report-back recipient |
+| C1–C10 | `kickoff.enclosure` (pieces, retention, coupling, feet, labelling, fan, light_pipe, targets, marks, kit_recipient, fit_decider); C8a `print_targets.<t>.dfm_process` | SPEC §8, `design/case.yaml` presets + `fits` knobs; START_HERE report-back recipient |
 | D1–D3 | `fab_dfm.bar`, `print_targets.<t>.design_margin / tolerance / accepted` | GATES.md `{{D-BAR}}` row id, CLAUDE.md rule 9 |
-| E1–E4 | `kickoff.verification` (rounds, external_models, coupons, fea) | GATES prerequisites, `workflows/` model list |
+| E1–E4 | `kickoff.verification` (rounds, visual, fea), `kickoff.coupons` (E3) | GATES prerequisites, `workflows/` model list |
 | F1–F2 | `kickoff.sourcing` (sources, stock_floor, attrition) | PARTS_VERIFICATION header, BLOCKERS |
 | G1–G2 | `kickoff.software` (modes, posture) | SOFTWARE_ARCHITECTURE.md §1/§3, test_criteria.yaml header |
 | H1–H4 | `kickoff.release` (reports, cut, ci, retro) | production_cut.yaml, ci templates, SKILL §13 |
-| I1–I4 | `kickoff.identity` (envelope, branding, debug_access, delegation) | SPEC §1, §4; CLAUDE.md conventions; the pause-point owner list |
+| I1–I4 | `kickoff.identity` (envelope, branding, delegation), `kickoff.debug_access` (I3) | SPEC §1, §4; CLAUDE.md conventions; the pause-point owner list |
+
+The template `templates/project.yaml` carries every key above as a slot (`kickoff:` mapping, `board:` block); `scripts/project.py kickoff --check`
+reads KICKOFF_ANSWERS.md and fails on an answered row whose `Written to` key is still missing from project.yaml.

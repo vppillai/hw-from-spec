@@ -13,6 +13,10 @@ CLI (for shell scripts):
   scripts/project.py scaffold --scope S FILE...   # resolve the {{ee,both}}-style scope tags of copied templates in place: a tagged line stays only
                                               # when S is in its list (tag removed); untagged lines stay. Then `grep -rn '{{'` must print nothing.
   scripts/project.py gates-required           # exit 1 when an artefact exists (schematic, board, the STL set) and gates.adopt has no gate line for it
+  scripts/project.py slots [FILE|DIR ...]     # the unfilled {{...}} slots per file (default: CLAUDE.md SPEC.md project.yaml docs design); lines between
+                                              # `<!-- skeleton: begin -->` / `<!-- skeleton: end -->` are skipped; exit 1 while any slot remains
+  scripts/project.py kickoff --check          # every answered KICKOFF_ANSWERS row (not n/a, not a slot) has its `Written to` project.yaml keys set
+                                              # and a real D row id; exit 1 otherwise
   scripts/project.py --selftest
 
 Record signing (print_dfm / thin_wall_census records): `sig` = sha256 of the canonical JSON body (sorted keys, no `sig`) + the tool VERSION;
@@ -174,6 +178,92 @@ def required_gate_lines(P):
     return bad
 
 
+SLOT = re.compile(r"\{\{[^{}]*\}\}")
+SLOT_DEFAULT = ("CLAUDE.md", "SPEC.md", "project.yaml", "docs", "design")
+
+
+def slots(paths, root="."):
+    """{relpath: sorted distinct slots} for every text file under `paths` (dirs walked; .md / .yaml / .yml / .json / .csv), skeleton blocks skipped."""
+    out = {}
+    files = []
+    for p in paths:
+        q = os.path.join(root, p)
+        if os.path.isdir(q):
+            files += sorted(os.path.join(dp, f) for dp, _, fs in os.walk(q) for f in fs if f.endswith((".md", ".yaml", ".yml", ".json", ".csv")))
+        elif os.path.isfile(q):
+            files.append(q)
+    for f in files:
+        found, skip = set(), False
+        for line in open(f, encoding="utf-8", errors="replace"):
+            if "<!-- skeleton: begin" in line:
+                skip = True
+            if not skip:
+                found.update(SLOT.findall(line))
+            if "<!-- skeleton: end" in line:
+                skip = False
+        if found:
+            out[os.path.relpath(f, root)] = sorted(found)
+    return out
+
+
+KEY_RE = re.compile(r"`((?:project|kickoff|board|print_targets|fab_dfm)\.[A-Za-z0-9_.*<>{}/ -]+?)`")
+
+
+def kickoff_check(P):
+    """Every answered row of the kickoff answers file names project.yaml keys in `Written to`; each must exist (print_targets.<t>.x / .*.x = some
+    target has x). A row whose answer or D-row cell is still a slot, or whose D row is not in the decision log, is a problem. -> problem list."""
+    path = P.path("kickoff.answers") if isinstance(P.get("kickoff"), dict) else None
+    path = path or os.path.join(P.root, "docs", "governance", "KICKOFF_ANSWERS.md")
+    if not os.path.exists(path):
+        return [f"kickoff answers file missing: {os.path.relpath(path, P.root)}"]
+    dec_ids = set()
+    dp = P.path("decisions")
+    for line in open(dp, encoding="utf-8") if dp and os.path.exists(dp) else []:
+        if line.startswith("|"):
+            m = re.search(r"\b([A-Z]+-\d+[a-z]?)\b", split_row(line)[0] if split_row(line) else "")
+            if m:
+                dec_ids.add(m.group(1))
+    bad = []; n = 0
+    for line in open(path, encoding="utf-8"):
+        if not line.startswith("|"):
+            continue
+        c = split_row(line)
+        if len(c) < 6 or not re.fullmatch(r"[A-I]\d+[a-z]?", c[0]):
+            continue
+        q, answer, drow, written = c[0], c[2], c[4], c[5]
+        if answer.lower().startswith("n/a") or answer.upper() == "OPEN":
+            continue
+        n += 1
+        if SLOT.search(answer):
+            bad.append(f"{q}: answer still a slot ({answer})"); continue
+        ids = re.findall(r"\b[A-Z]+-\d+[a-z]?\b", drow)
+        if SLOT.search(drow) or not ids:
+            bad.append(f"{q}: no D row id in `{drow}`")
+        elif dec_ids and not any(i in dec_ids for i in ids):
+            bad.append(f"{q}: D row {ids[0]} is not in {P.get('paths.decisions')}")
+        for key in KEY_RE.findall(written):
+            key = key.split(":")[0].strip().replace("print_targets.<t>", "print_targets.*")
+            if key.startswith("print_targets.*") or key.startswith("print_targets.{{"):
+                sub = key.split(".", 2)[2] if key.count(".") >= 2 else None
+                ts = P.get("print_targets") or {}
+                ok = bool(ts) and (sub is None or any(isinstance(t, dict) and _has(t, sub.split("/")[0].strip()) for t in ts.values()))
+            else:
+                ok = P.get(key.split(" ")[0].split("/")[0].strip()) is not None
+            if not ok:
+                bad.append(f"{q}: `{key}` is not set in project.yaml")
+    if n == 0:
+        bad.append("no answered rows in the kickoff answers file")
+    return bad
+
+
+def _has(d, dotted):
+    for k in dotted.split("."):
+        if not isinstance(d, dict) or k not in d:
+            return False
+        d = d[k]
+    return d is not None
+
+
 def split_row(line):
     """Cells of a markdown table row; a backslash-escaped pipe inside a cell is content, not a separator."""
     return [c.strip() for c in re.split(r"(?<!\\)\|", line.strip())[1:-1]]
@@ -207,7 +297,19 @@ def selftest():
     P.cfg["gates"]["adopt"] += ["$PY scripts/thin_wall_census.py --gate-dir out/x/census", "$PY scripts/print_dfm.py --gate out/x/dfm"]
     assert required_gate_lines(P) == []
     os.makedirs(f"{d}/k"); open(f"{d}/k/k.kicad_sch", "w").write("x"); assert "erc_gate.py" in required_gate_lines(P)[0]
-    print("selftest OK (defaults, paths, ids, scope, record md5, scaffold, record signing, OPEN rows, required gate lines)")
+    # slots (skeleton skipped) and the kickoff check
+    open(f"{d}/S.md", "w").write("a {{X}} b {{Y}}\n<!-- skeleton: begin -->\n{{SKEL}}\n<!-- skeleton: end -->\n{{X}}\n")
+    assert slots(["S.md", "nope.md"], d) == {"S.md": ["{{X}}", "{{Y}}"]}, slots(["S.md"], d)
+    os.makedirs(f"{d}/docs/governance"); open(f"{d}/docs/governance/KICKOFF_ANSWERS.md", "w").write(
+        "| Q | Question | Answer | Rec. | D row | Written to |\n|---|---|---|---|---|---|\n| A1 | product class | sample | yes | D-02 | `kickoff.product_class`; SPEC §1 |\n"
+        "| B1 | layers | 4 | yes | D-03 | `board.layers`, `board.thickness_mm` |\n| C2 | retention | n/a (scope) | - | - | `kickoff.enclosure.retention` |\n"
+        "| C8a | rows | jlc | yes | D-{{nn}} | `print_targets.<t>.dfm_process` |\n| D1 | bar | {{zero}} | yes | D-04 | `fab_dfm.bar` |\n")
+    P.cfg.update(kickoff={"answers": "docs/governance/KICKOFF_ANSWERS.md", "product_class": "sample"}, board={"layers": 4}, print_targets={"t": {"dfm_process": "x"}}, fab_dfm={"bar": {"open": 0}})
+    P.cfg["paths"]["decisions"] = "D.md"; open(f"{d}/D.md", "a").write("| **D-02** | d | **APPROVED** | a | p | r |\n| **D-03** | d | **APPROVED** | b | p | r |\n")
+    bad = kickoff_check(P); assert len(bad) == 3 and "board.thickness_mm" in bad[0] and bad[1].startswith("C8a: no D row") and bad[2].startswith("D1: answer still a slot"), bad
+    P.cfg["board"]["thickness_mm"] = 1.6; open(f"{d}/docs/governance/KICKOFF_ANSWERS.md", "a").write("| E1 | rounds | one | yes | D-99 | `kickoff.verification.rounds` |\n")
+    bad = kickoff_check(P); assert any("D-99 is not in" in b for b in bad) and any("kickoff.verification.rounds" in b for b in bad), bad
+    print("selftest OK (defaults, paths, ids, scope, record md5, scaffold, record signing, OPEN rows, required gate lines, slots, kickoff check)")
     return 0
 
 
@@ -216,13 +318,23 @@ def main(argv):
         sys.exit(selftest())
     if len(argv) > 1 and argv[1] in ("--help", "-h"):
         print(__doc__); return
-    if len(argv) < 2 or argv[1] not in ("get", "path", "root", "scope", "record", "scaffold", "gates-required"):
+    if len(argv) < 2 or argv[1] not in ("get", "path", "root", "scope", "record", "scaffold", "gates-required", "slots", "kickoff"):
         sys.exit(__doc__)
     if argv[1] == "scaffold":
         if len(argv) < 5 or argv[2] != "--scope":
             sys.exit(__doc__)
         print(f"scaffold {argv[3]}: {scaffold(argv[3], argv[4:])} line(s) dropped in {len(argv) - 4} file(s)"); return
+    if argv[1] == "slots":
+        found = slots(argv[2:] or list(SLOT_DEFAULT), os.getcwd()); total = sum(len(v) for v in found.values())
+        for f, v in found.items():
+            print(f"{f}: {len(v)} slot(s): {' '.join(v)[:200]}")
+        print(f"slots: {total} unfilled in {len(found)} file(s)"); sys.exit(1 if total else 0)
     P = Project.find()
+    if argv[1] == "kickoff":
+        bad = kickoff_check(P)
+        for b in bad:
+            print("KICKOFF:", b)
+        print(f"kickoff check: {len(bad)} problem(s)"); sys.exit(1 if bad else 0)
     if argv[1] == "gates-required":
         bad = required_gate_lines(P)
         for b in bad:

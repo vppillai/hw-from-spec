@@ -1,6 +1,7 @@
 // workflows/blind-deep-review.js — TEMPLATE: extensive double-blind review, N specialties × (1 in-session + 2 external models) → adversarial
 // verifiers → merge. Replace every double-brace placeholder (workflows/README.md lists them); delete roles you do not need. ROLE_SET 'spec'
-// is the G0 round (the briefing is SPEC.md; header rows for board/package/case read MISSING by design), 'board' every later round.
+// is the G0 round (the briefing is SPEC.md; header rows for board/package/case read MISSING by design), 'board' every later round in ee / both,
+// 'mech' the M1 / M2 / case-order rounds of a mech-scope project (case_dfm + mechanical intent + hardware sourcing + gates; no electrical role).
 // Generalised from the source project's final deep review (five audits, 8 roles × 3 reviewers).
 export const meta = {
   name: '{{PROJECT}}-deep-review-{{ROUND}}',
@@ -21,7 +22,7 @@ const TODAY = '{{DATE}}'
 const KPY = '{{CAD_PYTHON}}'            // the CAD's Python for parsing board/schematic files (or 'grep')
 
 // One entry per specialty: key (file-name safe), title, brief (what to look at — files, nets, decisions; numbers come from the hand-off, not from here).
-const ROLE_SET = '{{ROLE_SET}}'          // 'spec' at G0 (SPEC.md is the artefact), 'board' at G1 / G2 / order
+const ROLE_SET = '{{ROLE_SET}}'          // 'spec' at G0 (SPEC.md is the artefact), 'board' at G1 / G2 / order, 'mech' at M1 / M2 / case order (mech scope)
 const SPEC_ROLES = [
   { key: 'spec', title: 'Spec coherence: requirements, interfaces, numbers that must agree, VERIFY items', brief: '{{BRIEF_SPEC}}' },
   { key: 'parts', title: 'Parts and sourcing: every named part fetchable, tags, alternates, stock for the run', brief: '{{BRIEF_PARTS}}' },
@@ -40,7 +41,13 @@ const BOARD_ROLES = [
   { key: 'coherence', title: 'Requirements, decisions and traceability coherence', brief: '{{BRIEF_COHERENCE}}' },
   { key: 'gates', title: 'Gates, generators and release tooling', brief: '{{BRIEF_GATES}}' },
 ]
-const ROLES = ROLE_SET === 'spec' ? SPEC_ROLES : BOARD_ROLES
+const MECH_ROLES = [
+  BOARD_ROLES.find(r => r.key === 'case_dfm'),
+  { key: 'mech', title: 'Mechanical intent: envelope, fit input of record (STEP / envelope md5 + tag), clearances, retention, assembly', brief: '{{BRIEF_MECH}}' },
+  { key: 'parts', title: 'Bought hardware: inserts, magnets, feet, screws, adhesives — every line [V] on the manufacturer page + TDS', brief: '{{BRIEF_PARTS}}' },
+  { key: 'gates', title: 'Gates, generators, census + print-DFM records and the kit', brief: '{{BRIEF_GATES}}' },
+]
+const ROLES = ROLE_SET === 'spec' ? SPEC_ROLES : ROLE_SET === 'mech' ? MECH_ROLES : BOARD_ROLES
 
 // external models available to the Cursor agent CLI (`agent --list-models`): AT LEAST TWO distinct entries; role i gets MODELS[i] and MODELS[i+1]
 // (cyclic), so every role sees two different models whatever the list length

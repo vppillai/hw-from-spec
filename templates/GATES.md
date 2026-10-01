@@ -1,24 +1,27 @@
-# GATES.md — owner approvals (scope {{SCOPE}}: ee = G0 → G1 → G2 → board order; mech = G0 → M1 → M2 → case order; both = G0 → G1 → G2 → board order + case order)
+# GATES.md — owner approvals (scope ee: G0 → G1 → G2 → board order → release) {{ee}}
+# GATES.md — owner approvals (scope mech: G0 → M1 → M2 → case order → release) {{mech}}
+# GATES.md — owner approvals (scope both: G0 → G1 → G2 → board order + case order → release) {{both}}
 
 The owner writes the approval cells and the release line; **agents never write either** — they ask (skill `SKILL.md` §1.1) and wait. A valid
 approval cell reads `<owner name>, <YYYY-MM-DD>, <what was approved: SPEC rev / schematic commit / board md5-8 / case version + record md5-8 (M1, M2)>`; an empty cell is
 `_not yet approved_`. The release reports read this file and stay DRAFT until the owner writes the release phrase (the words named by
 `markers.release_regex` in project.yaml — do not quote them in prose anywhere in this file) **into the Release row's approval cell** and commits it
-as `project.owner` (`scripts/gate_check.py --release` reads the cell and the line's git author; `scripts/gate_check.py G1` reads a gate cell — the
+as `project.owner` (`scripts/gate_check.py --release` reads the cell and the line's git author; `scripts/gate_check.py <gate>` reads a gate cell — the
 next phase's generators refuse to run while it says NOT approved). A chat approval is quoted verbatim (date/time) under the table; the cell stays the owner's.
 
 **One review round** (skill `SKILL.md` §5) = for every role of the round's role set, one in-session reviewer + two external models (or the
 in-session fallback), an adversarial verifier per role, one merged report in `docs/reviews/<round>_merged.md`. Every gate below needs one.
 
-**The manufacturability bar** (owner decision {{D-BAR}} from the kickoff questionnaire; default = zero / zero / no waivers): board — CAD DRC
-0 errors / 0 unconnected / **0 warnings**, fab DFM mirror **0 open (0 Danger, 0 Warning)** unless a dated `dfm_accepted` entry with reason and
-vendor evidence names the refdes; printed enclosure — census **0 unaccepted FAIL** per body per preset, zero slicer warnings, vendor checker
-**no flag by API read**, no yellow / red on the heat map; CNC — vendor DFM clean. A waiver is a dated decision row plus a machine-readable
-accept entry, never prose.
+**The manufacturability bar** (owner decision {{D-BAR}} from the kickoff questionnaire; default = zero / zero / no waivers), enforced by scripts:
+board — CAD DRC 0 errors / 0 unconnected / **0 warnings**, fab DFM mirror **0 open (0 Danger, 0 Warning)** unless a dated `dfm_accepted` entry with {{ee,both}}
+reason and vendor evidence names the refdes; ERC `scripts/erc_gate.py` green. {{ee,both}}
+printed enclosure — census **0 unaccepted FAIL** per body per preset, `print_dfm.py` PASS on every body, zero slicer warnings, vendor checker {{mech,both}}
+**no flag by API read**, no yellow / red on the heat map; CNC — vendor DFM clean. {{mech,both}}
+A waiver is a dated decision row plus a machine-readable accept entry the gate re-reads every run, never prose.
 
 | Gate | Meaning | Prerequisites | Owner approval (name, date, revision approved) |
 |---|---|---|---|
-| **G0** | SPEC approved for design work (ee / both: schematic capture; mech: geometry) | SPEC complete (`SPEC.md` from the skeleton, every `VERIFY` tag listed in `docs/design/VERIFY.md`; mech: envelope, interfaces, materials, print / CNC target, fit inputs — board STEP or dimensions — each tagged [V] or [K]), kickoff answers recorded (`docs/governance/KICKOFF_ANSWERS.md` → D rows, `project.yaml print_targets` / `fab_dfm`), one review round (role set `spec`) merged in `docs/reviews/G0_merged.md`, SPEC revised, `docs/parts/PARTS_VERIFICATION.md` with no [K] left on a fitted part, every VERIFY item (skill `SKILL.md` §4) closed in `docs/datasheet_notes/` or BLOCKED | _not yet approved_ |
+| **G0** | SPEC approved for design work (ee / both: schematic capture; mech: geometry) | SPEC complete (`SPEC.md` from the skeleton, every `VERIFY` tag listed in `docs/design/VERIFY.md`; mech: envelope, interfaces, materials, print / CNC target, fit inputs — board STEP or dimensions — each tagged [V] or [K]), kickoff answers recorded (`docs/governance/KICKOFF_ANSWERS.md` → D rows; `scripts/project.py kickoff --check` green), one review round (role set `spec`) merged in `docs/reviews/G0_merged.md`, SPEC revised, `docs/parts/PARTS_VERIFICATION.md` with no [K] left on a fitted part, every VERIFY item (skill `SKILL.md` §4) closed in `docs/datasheet_notes/` or BLOCKED | _not yet approved_ |
 | **G1** | Schematic approved for layout | `scripts/erc_gate.py` green (ERC zero errors, every warning an entry of `design/erc_accept.yaml` with its decision row — no prose waivers), map checks pass (`references/schematic-phase.md` §3), `out/G1/` review pack (§4 there, incl. `EVIDENCE.md` + `REVIEW_NOTES.md`), one review round merged in `docs/reviews/G1_merged.md`, critical footprints verified against vendor drawings — one row per part in `docs/datasheet_notes/<part>.md` (pinout / package check) | _not yet approved_ | {{ee,both}}
 | **G2** | Layout approved for fabrication outputs | DRC 0 errors / 0 unconnected / 0 warnings unless a dated waiver row (canary fires exactly once, classes enforced), schematic parity 0, route quality 0 unjustified HIGH, **fab DFM mirror 0 open (0 Danger / 0 Warning; accepted items dated with vendor evidence)**, silk check 0 + legibility read, `out/G2/` review pack (`references/pcb-layout-dfm.md` §1.3), one review round merged + the routing inspection, adopt gates + clone gate green | _not yet approved_ | {{ee,both}}
 | **Order (board)** | The fab order | package of record built and checked, **the fab's own DFM viewer run on the board AND the panel upload with 0 Danger / 0 Warning or a dated accepted row per item** (PDF under `docs/quotes/<date>/`), quote captured, stock verified live with the run-relative minimum, KNOWN_ISSUES §2.1 empty, rotation preview checked for every polarised part | owner's click — never an agent's | {{ee,both}}
