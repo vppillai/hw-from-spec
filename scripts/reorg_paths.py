@@ -24,7 +24,7 @@ Paths with non-ASCII characters: run the `git ls-files -s` dumps with `git -c co
 """
 import argparse, hashlib, os, re, subprocess, sys, tempfile
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 from project import Project  # noqa: E402
 
 TEXT_EXT = {".md", ".py", ".yaml", ".yml", ".js", ".json", ".sh", ".txt", ".csv", ".env", ".rules", ".svg", ".xml", ".scad", ".html", ".css",

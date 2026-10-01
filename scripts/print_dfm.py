@@ -536,7 +536,7 @@ def main():
         table, p = processes(); ap.error(f"--process <row> is required; rows of {p}: {', '.join(table)}")
     missing = [p for p in a.stl if not os.path.isfile(p)]
     if missing:
-        sys.exit(f"print_dfm: no such file: {', '.join(missing)}")
+        print(f"print_dfm: no such file: {', '.join(missing)}", file=sys.stderr); return 2
     rc = 0
     for p in a.stl:
         r = analyse(p, a.process, n_s=a.samples, lands=a.land, out_dir=a.out, piece=a.piece, render=a.render)

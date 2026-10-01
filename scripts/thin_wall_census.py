@@ -208,7 +208,7 @@ def pure_gate(dirs):
 
 def target_settings(name, project_arg=None):
     """print_targets.<name> from project.yaml -> dict of the census knobs (None where the target does not say)."""
-    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
     from project import Project  # noqa: E402 — pyyaml only when a target is named
     P = Project.find(arg=project_arg)
     t = (P.cfg.get("print_targets") or {}).get(name)

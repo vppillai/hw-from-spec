@@ -13,7 +13,7 @@ import datetime, hashlib, json, os, re, subprocess, sys, tempfile
 
 import yaml
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 from project import Project  # noqa: E402
 from release_report import Ctx as RCtx, pkg_for_board  # noqa: E402
 
