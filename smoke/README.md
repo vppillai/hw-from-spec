@@ -16,3 +16,6 @@ the mesh libraries in the interpreter the smoke picks: the caller's project `.ve
 record) → release_report (DRAFT) → every `--check` OK → handoff_header MATCH/clean → adopt_gates.sh green incl. the clone gate on `git archive HEAD`
 and the read-only guard (tree unchanged by the gates) → an owner clear-to-build line flips the reports to RELEASED
 and `--check` catches the stale report until regenerated.
+
+Runtime: about two minutes on a laptop with the mesh libraries installed (the print-DFM selftest is ~50 s of it; without the libraries
+section 0d is skipped and the run takes ~1 min). Step 0c runs the two skill lints (`doc_voice_lint.py`, `generic_lint.py`); step 5d the arrival checklist.

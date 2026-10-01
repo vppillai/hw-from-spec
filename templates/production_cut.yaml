@@ -10,7 +10,7 @@
 case_yaml: design/case.yaml {{mech,both}}
 package_root: docs/production            # -> docs/production/{md5}/
 records_dir: records                     # docs/production/{md5}/records/ — THE records folder (photos, press logs, first-article caliper table, test results, calibration, order captures); RELEASE_NOTES points here
-doc_id_prefix: {{PRODUCT}}               # <product>-<type>-<nnn>
+doc_id_prefix: {{PROJECT}}               # <project>-<type>-<nnn>
 
 deliverables:
   - {id: pcb_design_report, doc_id: DR-001, title: PCB design report, kind: generated, path: docs/release/PCB_DESIGN_REPORT.md, {{ee,both}}

@@ -1,13 +1,76 @@
 # CHANGELOG — hw-from-spec
 
-## UNRELEASED — retro aec-tester (2026-09-30) <!-- retro: aec-tester 2026-09-30 -->
+## Current state (0.10.0) — read this instead of replaying the entries below
 
-### Added (draft from scripts/skill_retro.py --apply; edit before the release)
-- **`references/dfm-printed-enclosure.md`**: Per-object print settings DO work headless: write them as Bambu object-level `<metadata key="..." value="..."/>` entries under `<object>` in; A "did my setting land" proof must be spatial and comparative: per-object footprints from the exported plate json, feature points (Ironing /; Two 'robust CSG' habits made the two p2s shell slivers: a cutter overshoot (+1 above the trough floor) that is air inside the channel but a 
-- **`references/part-verification.md`**: Vendor TDS PDFs on Shopify / bblcdn CDNs fetch fine with curl + a browser UA and read with `pdftotext -layout`; WebFetch returns binary garb
-- **`references/pcb-layout-dfm.md`**: Blind reviewers re-find decided items at a 1:1 ratio (H-A: 16 of 27 were on record, H-B: 4 of 28) — the merge is cheap when every decision r
-- **`references/pitfalls.md`**: A dust cap cannot damage a QSFP-DD plug if it only ever meets the smooth 18.35 x 8.5 shell: the paddle card is recessed >= 2.2 behind the le; "ESD-safe" on a filament page is not a class: the CNT-loaded flexible grades with datasheets (3DXTech ESD-TPU 60D 10^3 Ω/sq IEC 62631-3-2, E; JLC's paid 'Confirm Production file' and 'Confirm Parts Placement' options are not guaranteed to raise a dialog or mail — the order went Rev; A footprint's 3D model can sit off its pads and nobody notices until a blind reviewer measures the exported mesh: the XYECONN USB-C STEP is ; Blind mechanical reviews re-find decided items at ~1:2 (10 of 23 were owner decisions whose numbers still hold, 2 refuted); the two that mat; A fake that NACKs for 50 ms after EVERY write breaks read_id before the code under test is reached; model the hold-off from the write you wa
-- **`references/release-and-cut.md`**: One-liner coordinator rules land as generator features, not as hand edits: 'coupons are self-documenting' became a yaml marker block + a sha
+- **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
+  twelve batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
+  (zero errors / zero warnings / no waivers, enforced by scripts), generated-only, the decision log, parts tags [V] / [K] / [K owner-read] / [S],
+  blind reviews with a record-reading verifier, layout + fab DFM mirror, the case pipeline with two PURE mesh gates (census margin, print-DFM
+  floor), the software track, release cut + production cut + the arrival checklist + spec errata, agent operations with a resource budget, the retro.
+- **Scripts** (`project.yaml`-driven, every one with `--selftest`, exit 0 / 1 / 2): `project.py` (reader, scaffold, slots, kickoff --check,
+  gates-required, record, env), `known_issues`, `traceability`, `release_report`, `collect_renders`, `assembly_guide`, `reorg_paths`, `dfm_check`,
+  `erc_gate`, `gate_check`, `handoff_header`, `thin_wall_census` (design-margin gate), `print_dfm` (printability-floor gate + `--validate`),
+  `thin_wall_check` (quick look + pinch), `scad_lint`, `step2stl`, `arrival_checklist`, `skill_retro` (+ `--apply`), `jobs.sh` (the heavy-job
+  pool), `adopt_gates.sh`, `clone_gate.sh`, `doc_voice_lint`, `generic_lint`.
+- **Templates**: CLAUDE.md, project.yaml (kickoff / board / print_targets / fab_dfm / arrival_checklist / host), SPEC + VERIFY + SPEC_ERRATA,
+  the governance records, PARTS_VERIFICATION + PROCUREMENT, TEST_PLAN, REVIEW_HANDOFF, DFM_ROUND, VENDOR_REVIEW_RECORD, CENSUS_GATE_ROWS,
+  design/{traceability, erc_accept, dfm_processes, arrival_checklist}.yaml, production_cut.yaml, datasheet note, G1 pack, CI workflows + Makefile.
+- **References**: project-yaml, kickoff-questionnaire, schematic-phase, pcb-layout-dfm, fab-dfm, case-pipeline, dfm-printed-enclosure,
+  print-dfm, print-kit, fdm-print-optimisation, cnc-enclosure, fea-stage, part-verification, software-track, release-and-cut, vendor-review,
+  agent-ops, pitfalls — one home per rule, the others link.
+- **Checks**: `smoke/run_smoke.sh` (2 min 27 s with the mesh libraries: every selftest, the rule greps, the enforcement negatives, both lints, the evals), 16 evals
+  with mechanical checks, `docs/reviews/INDEX.md` and `docs/retro/INDEX.md` list every review and retro.
+
+## 0.10.0 — 2026-09-30 — the fifth retro folded, the skill audited and made generic
+
+### Added (retro of the source project's landing round)
+- **Arrival / first-article checklist, generated** (`scripts/arrival_checklist.py`, `templates/design/arrival_checklist.yaml`; SKILL §10.1,
+  `release-and-cut.md` §10; cut deliverable REC-002; `project.py gates-required` demands the `--check` line once the yaml exists): before shipment
+  (the fab's photos), bench checks in gate order with what each row opens, software gates with their closing commit, case first article, owner
+  decisions still OPEN with their trigger; status grammar + evidence enforced; smoke step 5d, eval 15.
+- **SPEC errata** (`templates/SPEC_ERRATA.md`, `release-and-cut.md` §11): a frozen spec's deviations as OPEN E-rows, never an edit; the
+  hand-off's §3.3 and the arrival checklist §E carry them.
+- **`[K owner-read]`** tag (SKILL §4, `part-verification.md`, CLAUDE.md rule 1).
+- **Review protocol with a record-reading verifier** (SKILL §5, `agent-ops.md` §4, `blind-deep-review.js`): reviewers of a second model family get
+  artefacts + checklist only; one verifier with record access classifies CONFIRMED / ALREADY DECIDED / REFUTED / PARTLY / UNVERIFIABLE with a
+  `rev_impact` column; every finding is verified; nothing is applied without the verifier's row; a CONFIRMED bench item becomes a checklist row.
+- Kickoff **C10** `fit_result` landing key (an owner-picks-after-a-print answer has a home) and **C11** slicer optimisation target.
+- **`references/fdm-print-optimisation.md`** (owner addition): waste / strength / quality knobs, each with what it buys, costs, when it applies, how
+  it is PROVEN from the g-code / sidecar, and the slicer keys; default knob sets per C11 answer; flush-into-infill only where the change sits above
+  the first infill layer. Sources fetched (Bambu wiki, Prusa KB) tagged [V] / [K]. Linked from SKILL §8, `print-kit.md` §4.1, the enclosure
+  reference §8. Eval 16.
+- **`print_dfm.py` rule B**: an open-ended ceiling's span by rays from the inscribed-circle centre (bounded all round → inscribed circle; one axis
+  with both ends on material → that chord; never a bbox extent or a raster run); constructs: pi 32 FLAG / pi 6 silent / tunnel 2 + 15 /
+  lands-split rebate ~6 / relief ring + open groove 1.4 / debossed word letters separate. Rule-set VERSION 0.10.0.
+- **Resource budget** (owner addition; `agent-ops.md` §8, `scripts/jobs.sh`, `templates/ci/Makefile`, `project.py env`, ENV host row): one heavy-job
+  pool per machine sized from the host (cores // 4, memory floor max(2 GB, 15 % RAM), nice, load gate, wall + RSS logged), caching policy
+  (regenerate geometry, cache only slicer / PDF / index steps with a `--check`), serialized record round, Manifold backend (`--backend=Manifold` [V]),
+  previews not renders for pictures, inline edits for one-value tweaks.
+- 18 pitfalls lines (generalised by hand); the two project-named process rows of the retro were not carried (the template's `home_fdm_04` rows
+  are the generic equivalents).
+
+### Changed (audit — `docs/reviews/AUDIT_0.10.0.md`)
+- **One home per rule**: SKILL §8.1 items 1 / 4 / 5 trimmed to commands + pointers; `vendor-review.md` §3 / §4, `fab-dfm.md` §4 / §6 and
+  `case-pipeline.md` §Census shortened to pointers at their homes.
+- **Present tense, no history in rules**: `scripts/doc_voice_lint.py` (changelog voice + version numbers in prose; 47 hits → 0) runs in the smoke;
+  README carries one version line and no counts.
+- **Generic, not one project**: `scripts/generic_lint.py` + `scripts/generic_lint_terms.yaml` (project names, parts, record ids as citations, owner /
+  machine, preset names, this design's dimensions; one fenced worked-example block per file; 181 hits → 0) runs in the smoke; pitfalls.md's evidence
+  pointers replaced by dates; the enclosure reference keeps one worked-example block (§7.1).
+- Stale mentions fixed: `print_dfm.py --gate` beside the census line in CENSUS_GATE_ROWS, GATES M1 / Case order, RELEASE_NOTES, DFM_ROUND, the
+  `case_dfm` verifier; ERC wording in G1/EVIDENCE; `tools.slicer` key; the fab's grade names ("Danger / Warning") no longer the vocabulary; CAD-neutral
+  CI image placeholder (`{{PROJECT_CAD_IMAGE}}`) and ENV row; `{{GEOMETRY_CLI_PATH}}` in every mech file; `doc_id_prefix: {{PROJECT}}`; the smoke's
+  record path without `<board>/`; workflow README lists every `{{BRIEF_*}}` and the shared wrapper / blindness paragraphs; `{{SILK_METRICS}}`.
+- Scripts: `Project.find` exits 2 (ten scripts at once), every usage / missing-input path exits 2, `print_dfm --processes PATH` that does not
+  exist is an error, `handoff_header` takes one package, `collect_renders` has a description, the shell gates answer `-h` and refuse unknown flags,
+  `run_evals.py --selftest` + absolute `--python`, `release_report` reads `fab_dfm.report`, `scratch_links` default `[]`, defaults in `DEFAULTS`,
+  `thin_wall_check` imports its core from `thin_wall_census`, `skill_retro` uses `project.split_row`, dead imports / no-op lines removed.
+- Evals 2 / 3 / 4 / 5 / 7 / 10 gained mechanical checks (16 of 16 carry them); eval 8's batch count corrected.
+
+### Not done
+- No shared `_common.py`: the duplicated helpers net under 100 lines once written; `decision_status` moved into `project.py`, the rest stays.
+- `print_dfm.py`'s selftest keeps naming template rows (a data table under test by design).
+- The two lints are word lists, not grammars: a sentence can narrate history without a listed word; the blind review reads for that.
 
 ## 0.9.2 — 2026-09-30 — self-documenting coupons
 

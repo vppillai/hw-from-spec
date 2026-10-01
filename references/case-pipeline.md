@@ -51,7 +51,7 @@ Everything under `out/<board>/mechanical/case/<preset>/` is generated; `ASSEMBLY
   vertical / clean top, legends RAISED cap 4 / stroke 1.0 / 0.6 on a face-up top, screws or magnets over slit tabs, coupons and a board dummy before
   the part, slicer projects with embedded presets (`references/dfm-printed-enclosure.md` §8). Colour on TOP faces in ONE Z band per part (a coloured vertical
   flank costs a filament swap per layer).
-- Print service (MJF / SLA, target e.g. `jlc_mjf`): every wall AND every void ≥ the checker's grey line (`print_targets.<t>.wall_gate` /
+- Print service (MJF / SLA, target e.g. `vendor_mjf`): every wall AND every void ≥ the checker's grey line (`print_targets.<t>.wall_gate` /
   `void_gate`; JLC3DP 2026-09-28: 1.2 — design at + `design_margin` under a no-yellow bar), no free-standing wedge (tangent fillets into walls are
   fine), engraved text only with stroke ≥ the void gate, snap features only with the slit ≥ the void gate and an engineered arm, closed rims;
   **nothing "stays thinner" — a listed-below-minimum row is a waiver, and the waived lip cracked on all five parts**
@@ -60,7 +60,7 @@ Everything under `out/<board>/mechanical/case/<preset>/` is generated; `ASSEMBLY
 - Two versions from one yaml (vendor + home): variant-only lines behind hook tokens that expand to the original text for the other presets, own version
   key per preset, byte identity of the vendor SCAD proven against HEAD before committing (`references/dfm-printed-enclosure.md` §9).
 
-## Census (every row = a check with yaml value, measured value, gate, FAIL/WARN/OK)
+## Census (every row = a check with yaml value, measured value, gate, FAIL/WARN/OK) — the gate rules are `references/dfm-printed-enclosure.md` §2
 - Wall thickness by ray-cast, **bucketed by entry surface** (a blind-hole bottom skin is not the recess floor); report each entry class with its own
   count and gate.
 - Connected components per piece (one), membranes (thin sheets), support area, mass from the measured STL volume (not the design estimate — write
@@ -72,10 +72,9 @@ Everything under `out/<board>/mechanical/case/<preset>/` is generated; `ASSEMBLY
 - An STL md5 is not a geometry signature (CGAL export order moves every md5) UNLESS the export is rewritten canonically (sorted triangles, own binary
   writer with normals recomputed from the float32 vertices — `references/dfm-printed-enclosure.md` §7.2); without that, "only piece X changed" is
   proven by facet count / volume / area / bbox per piece, not by md5s.
-- **The census is a FAIL gate per print preset, not a review aid** (`scripts/thin_wall_census.py --target <t>`): inward rays = walls, outward rays =
-  voids, clusters below `gate − 0.05` classified wall / wedge by the opposite-face angle; walls, voids, wedges over the band width and opposing
-  faces in any direction gate; a dated `accepted` entry with vendor evidence is the only pass; a NOISE-FLOOR row (false positives, not recall); `--gate-dir <census dir>` in the adopt list proves md5 + 0 unaccepted FAIL against the committed STL
-  (`references/dfm-printed-enclosure.md` §2, rows in `templates/CENSUS_GATE_ROWS.md`). Concentricity and every face render come from the mesh too.
+- **The census is a FAIL gate per print preset, not a review aid** (`scripts/thin_wall_census.py --target <t>`; `--gate-dir <census dir>` in the adopt
+  list proves md5 + 0 unaccepted FAIL against the committed STL): what it gates, how clusters are classed and what the only exception path is —
+  `references/dfm-printed-enclosure.md` §2, rows in `templates/CENSUS_GATE_ROWS.md`. Concentricity and every face render come from the mesh too.
 
 ## Point contacts (mark-shaped bodies and pockets: inlay plates, badges, debosses)
 - A traced outline of touching shapes (potrace) is ONE path pinched to 0.003–0.03 mm at every contact; extruded, the body is lobes held by
@@ -114,8 +113,9 @@ Silhouettes + sections from the STLs of record (trimesh/shapely), dimension line
 geometry together), per-piece and assembly STEP (OCP/cadquery), `--check` = md5 sidecar keyed on the STL md5s. Run AFTER the final STL pass.
 
 ## Process rules
-- A 25–35 min render + STL + interference chain: process pool for views and STL export, `--renders` off in check mode, STL cache by preset hash; kill it
-  early when an owner addition arrives.
+- The render + STL + interference chain runs through the job pool (`references/agent-ops.md` §8): every body regenerated on every run with a fast
+  engine (no STL cache — a previous md5 is a determinism check only; a CGAL-only install keys STL exports on the SCAD text instead and says so in
+  ENV.md), previews for pictures, `--render` for geometry of record; kill it early when an owner addition arrives.
 - Never run a case "check" in the working tree if it writes tracked files — the traceability sandbox copies `gen/ + design/` and symlinks the mesh.
 - Print sheets and order sheets list filaments / processes per piece, orientation, supports, post-process, the material rating (UL 94 / Tg from the
   TDS), insert type / bore / temperature per material (from the insert TDS, `dfm-printed-enclosure.md` §1.1), and the insert temperature/time and

@@ -60,14 +60,14 @@ tools:
   kicad_python: /Applications/KiCad/KiCad.app/Contents/Frameworks/Python.framework/Versions/Current/bin/python3   # {KPY} — the CAD's Python (python3 when it has none)
 traceability:
   scratch_links: [lib]                    # symlinked next to the scratch copy of the board dir so ${KIPRJMOD}/../../lib resolves
-fab_dfm:                                  # the board's fab-DFM mirror (references/fab-dfm.md); the old block name `dfm:` is still read
+fab_dfm:                                  # the board's fab-DFM mirror (references/fab-dfm.md); `dfm:` is read as an alias of this block
   thresholds: design/dfm_thresholds.json  # the fab's numbers, with source URL + date
   items: out/dfm_items.json               # written by the project's measurer
   accept: design/board.yaml               # yaml with key dfm_accepted: [{check, refs: [..] | {REF: n}, reason, date, evidence}]
   report: out/dfm.json                    # written by every plain scripts/dfm_check.py run (--check compares); read by release_report section dfm
   bar: {open: 0, warnings_fail: true, accepted_requires: [reason, date, evidence]}   # the owner's manufacturability bar (SKILL §1.2): an acceptance missing a field is ignored
 print_targets:                            # one entry per print target; scripts/thin_wall_census.py --target <name> reads it — no gate constant lives in a script; `dfm_process` names the design/dfm_processes.yaml row scripts/print_dfm.py gates on
-  jlc_mjf:                                # vendor / process / material / wall_gate / void_gate / red_line [checker]; design_margin [owner bar];
+  vendor_mjf:                             # vendor / process / material / wall_gate / void_gate / red_line [checker]; design_margin [owner bar];
     vendor: JLC3DP                        # wedge_band (convention 1.5); tolerance + tolerance_source [vendor sheet, replaced by the first-article spread];
     process: MJF                          # max_bbox_for_rule (the size the length-dependent rule was calibrated at); checker_url + checker_date;
     material: PA12-HP                     # samples_per_mm2 (census density); post_process; rating {ul94, tg_c, source}; accepted [{class, bbox, reason, date, evidence}]

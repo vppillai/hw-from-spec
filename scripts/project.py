@@ -13,7 +13,8 @@ CLI (for shell scripts):
   scripts/project.py scaffold --scope S FILE...   # resolve the {{ee,both}}-style scope tags of copied templates in place: a tagged line stays only
                                               # when S is in its list (tag removed); untagged lines stay; the {{SCOPE}} slot becomes S. Then `slots`.
   scripts/project.py gates-required           # exit 1 when an artefact exists (schematic, board, the STL set) and gates.adopt has no gate line for it
-  scripts/project.py slots [FILE|DIR ...]     # the unfilled {{...}} slots per file (default: CLAUDE.md SPEC.md project.yaml docs design); lines between
+  scripts/project.py slots [FILE|DIR ...]     # the unfilled {{...}} slots per file (default: CLAUDE.md SPEC.md project.yaml docs design — CI workflow
+                                              # files are the ci/README's own `{{PROJECT_` grep); lines between
                                               # `<!-- skeleton: begin -->` / `<!-- skeleton: end -->` are skipped; exit 1 while any slot remains
   scripts/project.py kickoff --check          # every answered KICKOFF_ANSWERS row (not n/a, not a slot) has its `Written to` project.yaml keys set
                                               # and a real D row id; exit 1 otherwise
@@ -42,7 +43,8 @@ DEFAULTS = {
               "traceability_out": "docs/governance/TRACEABILITY.md", "test_plan": "docs/design/TEST_PLAN.md",
               "parts_verification": "docs/parts/PARTS_VERIFICATION.md", "datasheet_notes": "docs/datasheet_notes", "reviews_dir": "docs/reviews",
               "quotes_dir": "docs/quotes", "production_dir": "docs/production", "fab_dir": "out/fab", "release_dir": "docs/release",
-              "collateral_dir": "docs/release/collateral", "mech_record": "out/mechanical/case/*/stl/*.stl"},
+              "collateral_dir": "docs/release/collateral", "mech_record": "out/mechanical/case/*/stl/*.stl", "kickoff_answers": "docs/governance/KICKOFF_ANSWERS.md",
+              "reorg_rewrites": "docs/reviews/REORG_REWRITES.txt"},
     "tools": {"python": ".venv/bin/python", "kicad_cli": "kicad-cli", "kicad_python": "python3"},
 }
 
@@ -69,7 +71,7 @@ class Project:
             if os.path.exists(c):
                 return cls(c)
             if os.path.dirname(d) == d:
-                sys.exit("project.yaml not found (walk up from cwd, or set HWFS_PROJECT / --project)")
+                print("project.yaml not found (walk up from cwd, or set HWFS_PROJECT / --project)", file=sys.stderr); sys.exit(2)
             d = os.path.dirname(d)
 
     def get(self, dotted, default=None):
@@ -223,7 +225,7 @@ def kickoff_check(P):
     """Every answered row of the kickoff answers file names project.yaml keys in `Written to`; each must exist (print_targets.<t>.x / .*.x = some
     target has x). A row whose answer or D-row cell is still a slot, or whose D row is not in the decision log, is a problem. -> problem list."""
     ans = P.get("kickoff.answers") if isinstance(P.get("kickoff"), dict) else None
-    path = os.path.join(P.root, ans) if ans else os.path.join(P.root, "docs", "governance", "KICKOFF_ANSWERS.md")
+    path = os.path.join(P.root, ans) if ans else P.path("kickoff_answers")
     if not os.path.exists(path):
         return [f"kickoff answers file missing: {os.path.relpath(path, P.root)}"]
     dec_ids = set()
@@ -296,6 +298,20 @@ def host_row(h=None):
             f"(cores // 4), memory floor {h['min_free_gb']} GB (max of 2 GB, 15 % of RAM) — `scripts/jobs.sh`; project.yaml `host:` overrides | this machine | {datetime.date.today().isoformat()} |")
 
 
+def decision_status(path, id_re=None):
+    """{id: status cell with bold stripped and the history after `(was:` dropped} of a decision log; ids by `id_re` (default: any PREFIX-nn)."""
+    out = {}
+    rx = id_re or re.compile(r"\b([A-Z]+-\d+[a-z]?)\b")
+    for line in open(path, encoding="utf-8") if path and os.path.exists(path) else []:
+        if line.startswith("|"):
+            c = split_row(line)
+            if len(c) >= 3:
+                st = re.split(r"\(was:", re.sub(r"\*", "", c[2]), maxsplit=1)[0].strip()
+                for i in rx.findall(c[0]):
+                    out.setdefault(i, st)
+    return out
+
+
 def split_row(line):
     """Cells of a markdown table row; a backslash-escaped pipe inside a cell is content, not a separator."""
     return [c.strip() for c in re.split(r"(?<!\\)\|", line.strip())[1:-1]]
@@ -312,6 +328,8 @@ def selftest():
     assert P.tool("python") == f"{d}/.venv/bin/python" and P.tool("kicad_cli") == "kicad-cli"
     assert P.id_re().findall("D-01 AG-002 B-03 CC-004") == ["D-01", "AG-002", "B-03"] and P.decision_re().findall("D-2a AG-002 B-03") == ["D-2a", "AG-002"]
     assert split_row("| a | b \\| c | d |") == ["a", "b \\| c", "d"], "an escaped pipe is content"
+    open(f"{d}/DS.md", "w").write("| ID | Date | Status | T | P | R |\n|---|---|---|---|---|---|\n| **D-03** | d | **APPROVED** (was: OPEN) | t | p | r |\n| CC-010 | d | APPLIED (!) | t | p | r |\n")
+    assert decision_status(f"{d}/DS.md") == {"D-03": "APPROVED", "CC-010": "APPLIED (!)"} and decision_status(f"{d}/nope.md") == {}, decision_status(f"{d}/DS.md")
     # scope + record id: board md5 in ee / both, the STL set in mech, MISSING when absent
     assert P.scope() == "both" and P.record_md5()[1] is None, "no board: MISSING"
     os.makedirs(f"{d}/out/mechanical/case/v1/stl"); open(f"{d}/out/mechanical/case/v1/stl/a.stl", "wb").write(b"A")
@@ -371,6 +389,8 @@ def main(argv):
         print(f"slots: {total} unfilled in {len(found)} file(s)"); sys.exit(1 if total else 0)
     P = Project.find()
     if argv[1] == "kickoff":
+        if argv[2:] != ["--check"]:
+            sys.exit(__doc__)
         bad = kickoff_check(P)
         for b in bad:
             print("KICKOFF:", b)
@@ -386,6 +406,8 @@ def main(argv):
         print(P.scope())
     elif argv[1] == "record":
         lbl, m = P.record_md5(); print(f"{lbl} md5 {m or 'MISSING'}")
+    elif len(argv) < 3:
+        sys.exit(__doc__)
     elif argv[1] == "path":
         print(P.path(argv[2]) or "")
     else:

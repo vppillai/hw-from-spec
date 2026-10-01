@@ -9,7 +9,7 @@ yaml (`case.version`, optional: paths.case_yaml) and the board-mesh provenance s
 verbatim under "## 0" of the hand-off; nothing in it is typed by hand. A hand-off from a dirty tree, or one that names a board the frozen
 worktree does not carry, invalidates the review — both are printed as MISMATCH / DIRTY, never silently.
 """
-import datetime, hashlib, json, os, re, subprocess, sys, tempfile
+import datetime, hashlib, json, os, subprocess, sys, tempfile
 
 import yaml
 
@@ -98,6 +98,6 @@ def selftest():
 
 if __name__ == "__main__":
     import argparse
-    ap = argparse.ArgumentParser(description=__doc__.split("\n")[0]); ap.add_argument("--selftest", action="store_true"); ap.add_argument("--project"); ap.add_argument("args", nargs="*")
+    ap = argparse.ArgumentParser(description=__doc__.split("\n")[0]); ap.add_argument("--selftest", action="store_true"); ap.add_argument("--project"); ap.add_argument("args", nargs="?")
     a = ap.parse_args()
-    sys.exit(selftest() if a.selftest else print(header(Project.find(arg=a.project), *a.args)))
+    sys.exit(selftest() if a.selftest else print(header(Project.find(arg=a.project), a.args)))

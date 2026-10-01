@@ -14,13 +14,13 @@ check:            ## the adopt gates + the clone gate (read-only; the PR check)
 gates:            ## the adopt gates without the clone gate
 	scripts/adopt_gates.sh --no-clone
 
-case:             ## geometry chain: ONLY the bodies whose SCAD md5 changed (the generator's own cache); one heavy slot
-	$(JOBS) --tag case -- $(PY) gen/case.py --only-changed
+case:             ## geometry chain: every body regenerated (no geometry cache with a fast engine; the old md5 is a determinism check); one heavy slot
+	$(JOBS) --tag case -- $(PY) gen/case.py
 
 slice:            ## slicer: one process per plate, plates whose STL md5 or settings md5 changed (sidecar); never parallel plates
 	$(JOBS) --tag slice -- $(PY) gen/plates.py --only-changed
 
-renders:          ## renders keyed on the SCAD text + camera args: skipped when the key matches
+renders:          ## previews regenerated with the geometry (seconds with --preview); the collector re-grades every copy
 	$(JOBS) --tag renders -- $(PY) scripts/collect_renders.py
 
 pdf:              ## PDF render of the documents whose source md5 changed, one headless browser instance reused

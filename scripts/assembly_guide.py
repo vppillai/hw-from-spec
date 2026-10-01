@@ -74,14 +74,14 @@ def build_md(cfg, pgs, k, doc_name, size):
 
 
 def run(P, check=False):
-    A = P.get("assembly_guide") or sys.exit("project.yaml has no assembly_guide: block (references/project-yaml.md)")
+    A = P.get("assembly_guide") or (print("project.yaml has no assembly_guide: block (references/project-yaml.md)"), sys.exit(2))
     yaml_p, scad = os.path.join(P.root, A["yaml"]), os.path.join(P.root, A["scad"])
     cfg = yaml.safe_load(open(yaml_p)); size = str(A.get("size", "1920,1440")); doc_name = A.get("doc_name", "VISUAL_ASSEMBLY_GUIDE.md")
     k = {"yaml": md5(yaml_p), "scad": md5(scad)}
     steps = {}
     if A.get("steps_md"):
         sp = os.path.join(P.root, A["steps_md"]); steps = parse_steps(open(sp).read()); k["steps"] = md5(sp)
-        steps or sys.exit(f"no '### Step N - title' headings parsed from {A['steps_md']}")
+        steps or (print(f"no '### Step N - title' headings parsed from {A['steps_md']}"), sys.exit(2))
     board = P.path("board"); k["board"] = md5(board) if board and os.path.exists(board) else "MISSING"
     cy = P.path("case_yaml"); k["case"] = str(yaml.safe_load(open(cy)).get("case", {}).get("version", "MISSING")) if cy and os.path.exists(cy) else "MISSING"
     od = os.path.join(P.root, A["out_dir"].replace("{MD5_8}", k["board"]).replace("{CASE_VERSION}", k["case"])); gd = os.path.join(od, "guide")

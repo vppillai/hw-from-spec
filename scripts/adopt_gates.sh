@@ -9,6 +9,7 @@
 set -e
 trap 'echo "adopt gates: aborted at line $LINENO (rc $?)" >&2' ERR
 HERE=$(cd "$(dirname "$0")" && pwd -P)
+case "${1:-}" in -h|--help) sed -n '2,12p' "$0"; exit 0;; ""|--selftest|--no-clone) ;; *) echo "adopt_gates.sh: unknown option $1 (usage: scripts/adopt_gates.sh [--no-clone] | --selftest)" >&2; exit 2;; esac
 if [[ "$1" == "--selftest" ]]; then
   T=$(mktemp -d /tmp/hwfs_ag_XXXX); trap 'rm -rf $T' EXIT
   mkdir -p $T/r && cd $T/r && git init -q

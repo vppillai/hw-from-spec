@@ -48,6 +48,7 @@ ACC_TOL = 1.0            # mm: an accepted entry's bbox covers a cluster bbox wi
 
 # ---------------------------------------------------------------- pure-python core (selftested) -----------------------------------------------
 def first_hit_beyond(dists, self_hit):
+    """The thickness a ray reports: the first hit farther than self_hit (the nudged origin's own face returns ~0.000); shared with thin_wall_check."""
     for x in dists:
         if x > self_hit:
             return x
@@ -248,7 +249,7 @@ def target_settings(name, project_arg=None):
     P = Project.find(arg=project_arg)
     t = (P.cfg.get("print_targets") or {}).get(name)
     if not t:
-        sys.exit(f"thin_wall_census: print_targets.{name} not found in {P.file} (references/project-yaml.md)")
+        print(f"thin_wall_census: print_targets.{name} not found in {P.file} (references/project-yaml.md)", file=sys.stderr); sys.exit(2)
     return dict(gate=t.get("wall_gate"), void_gate=t.get("void_gate"), red=t.get("red_line"), wedge_band=t.get("wedge_band"),
                 density=t.get("samples_per_mm2"), accepted=t.get("accepted") or [], design_margin=t.get("design_margin"))
 
@@ -261,7 +262,7 @@ def need(*mods):
         try:
             out.append(importlib.import_module(name))
         except ImportError:
-            sys.exit(f"thin_wall_census: this mode needs {', '.join(mods)} ({name} is not installed): pip install {' '.join(mods)}")
+            print(f"thin_wall_census: this mode needs {', '.join(mods)} ({name} is not installed): pip install {' '.join(mods)}", file=sys.stderr); sys.exit(2)
     return out
 
 
@@ -490,7 +491,7 @@ def main(argv):
         t = target_settings(a.target, a.project) if a.target else dict(gate=None, void_gate=None, red=None, wedge_band=None, density=None, accepted=[])
         gate = a.gate if a.gate is not None else t["gate"]; void_gate = a.void_gate if a.void_gate is not None else t["void_gate"]
         if gate is None or void_gate is None:
-            sys.exit("thin_wall_census: name a print target (--target NAME, project.yaml print_targets) or give --gate and --void-gate — no gate value lives in this script")
+            print("thin_wall_census: name a print target (--target NAME, project.yaml print_targets) or give --gate and --void-gate — no gate value lives in this script", file=sys.stderr); sys.exit(2)
         red = a.red if a.red is not None else (t["red"] if t["red"] is not None else 0.5)
         wedge_band = a.wedge_band if a.wedge_band is not None else t["wedge_band"]
         density = a.samples_per_mm2 if a.samples_per_mm2 is not None else t["density"]

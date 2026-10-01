@@ -159,7 +159,7 @@
    "checks": [
     {
      "name": "length-dependence + full-length probe rules in the reference, probes section in DFM_ROUND",
-     "run": "grep -q \"LENGTH-DEPENDENT\" \"$SKILL\"/references/dfm-printed-enclosure.md && grep -q \"40 mm AND to the full part length\" \"$SKILL\"/references/dfm-printed-enclosure.md && grep -q \"^## 5. Probes\" \"$SKILL\"/templates/DFM_ROUND.md"
+     "run": "grep -q \"LENGTH-DEPENDENT\" \"$SKILL\"/references/dfm-printed-enclosure.md && grep -q \"a short length AND to the full part\" \"$SKILL\"/references/dfm-printed-enclosure.md && grep -q \"^## 5. Probes\" \"$SKILL\"/templates/DFM_ROUND.md"
     }
    ]
   },

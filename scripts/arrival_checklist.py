@@ -115,16 +115,18 @@ def selftest():
          "rows": [{"id": "E-1", "item": "fit knob after the bracket print", "trigger": "first print", "status": "DONE 2026-01-02", "evidence": "D-09"}]}]}
     yaml.safe_dump(good, open(f"{d}/design/arrival_checklist.yaml", "w"))
     assert validate(good) == [], validate(good)
-    P = Project.find(start=d)
-    assert main(["x"]) == 0 if os.chdir(d) is None else False
+    import contextlib, io
+    os.chdir(d); assert main(["x"]) == 0
     md = open(f"{d}/docs/production/ARRIVAL_CHECKLIST.md").read()
     assert "| A-1 |" in md and "| E | 1 | 1 | 0 | 0 |" in md and "| **all** | 2 | 1 | 0 | 1 |" in md and "GENERATED" in md, md
     assert main(["x", "--check"]) == 0
     open(f"{d}/docs/production/ARRIVAL_CHECKLIST.md", "a").write("hand edit\n"); assert main(["x", "--check"]) == 1, "a hand-edited markdown is stale"
     bad = dict(good); bad["sections"] = [dict(good["sections"][0], rows=[dict(good["sections"][0]["rows"][0], status="done"), dict(good["sections"][0]["rows"][0], status="DONE 2026-01-03", evidence="", extra=1)])]
     b = validate(bad); assert any("not TODO" in x for x in b) and any("without evidence" in x for x in b) and any("duplicate" in x for x in b) and any("keys not in" in x for x in b), b
-    yaml.safe_dump(bad, open(f"{d}/design/arrival_checklist.yaml", "w")); assert main(["x", "--check"]) == 1 and main(["x"]) == 1, "rule breaks fail both modes"
-    os.remove(f"{d}/design/arrival_checklist.yaml"); assert main(["x", "--check"]) == 2, "missing yaml = 2"
+    yaml.safe_dump(bad, open(f"{d}/design/arrival_checklist.yaml", "w"))
+    with contextlib.redirect_stdout(io.StringIO()):
+        assert main(["x", "--check"]) == 1 and main(["x"]) == 1, "rule breaks fail both modes"
+        os.remove(f"{d}/design/arrival_checklist.yaml"); assert main(["x", "--check"]) == 2, "missing yaml = 2"
     print("selftest OK (render, counts, --check stale, status grammar, DONE needs evidence, duplicate ids, foreign keys, missing yaml = 2)")
     return 0
 
