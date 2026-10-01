@@ -247,6 +247,12 @@ numbers are **[owner bar]** for a 0.4 nozzle at 0.20 mm and live in `print_targe
 - **Test coupons BEFORE the part** (15–25 min prints, generated from the SAME yaml numbers and SCAD modules): text strokes × caps in the real font
   (raised face-up, debossed face-up, debossed face-down), wall thicknesses, mating clearances, **an insert + screw coupon (three bosses: install,
   torque to failure, record)** (B-42); the numbers they decide are a yaml parameter block. Ship the coupons in every kit.
+- **Coupons are self-documenting** (owner rule, 2026-09-30): every test coupon and every variant on a bracket plate carries its own
+  identifier and the value it tests ON the part — debossed or raised text with the number (e.g. `W1.6 R0.20`, `WALL 1.6`, `CLR 0.30`), on an
+  ironed top face or a face-up plate, cap ≥ 4 mm, stroke ≥ 1.0 raised / ≥ 0.45 debossed, lands ≥ 0.45 between glyphs (measured, FAIL-gated),
+  never on a bridge underside or a deep inner wall. A coupon the user has to look up in a README to identify is a coupon that gets mixed up on
+  the bench; the slicer's object names are gone the moment the part comes off the plate. The marker is generated from the same yaml value it
+  tests, so it cannot disagree with the geometry.
 - **Board dummy, never the raw CAD mesh** (sheet metal, 0402s, 0.1 mm pins are unprintable): slab + holes + solid envelopes + fins at printable
   thickness, in the board frame, bbox stated against the mesh of record. **Two versions, both kept**: the two-piece glue version (a scribed locator
   ring 0.6 × 0.2 OUTSIDE the tall part's footprint locates it without a pocket — a compensating plinth lifts an overhang off the bed = a

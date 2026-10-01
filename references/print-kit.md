@@ -52,6 +52,8 @@ The gate reads the forbidden tokens from the preset (fastener, material, marks o
 START_HERE, every README and print sheet, and the generated ASSEMBLY.md; the run FAILS on a hit; the row is in the census record.
 
 ## 4. Coupon, ONE part, then the plate
+- Coupons and bracket variants carry their identifier and tested value as printed text on the part (dfm-printed-enclosure.md
+  "Coupons are self-documenting"); START_HERE refers to them by that printed text, not by slicer object names.
 - A mark coupon proves GEOMETRY and first-layer behaviour, not the thermal state of a 99-minute print (warp, sag on a long span, colour
   opacity at depth): after the coupon, print **one part** (one cap, one plate) before the multi-object plate; START_HERE says so per step.
 - **Snug-fit features ship as a bracket plate** (`dfm-printed-enclosure.md` §8.5): e.g. crush ribs at 0.20 / 0.25 / 0.30, one object each, NAMED

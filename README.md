@@ -4,7 +4,7 @@ A Claude Code skill that takes a board, an enclosure, or both from a written spe
 owner-gated phases, generated-only artefacts, a zero-warning manufacturability bar, blind reviews,
 and a retro that folds every project's learnings back into the skill.
 
-`version 0.9.1` · MIT · `SKILL.md` is the procedure, everything else is reference, template or tool.
+`version 0.9.2` · MIT · `SKILL.md` is the procedure, everything else is reference, template or tool.
 0.9.1 mirrors the print-DFM rule set of the source project (knife-edge tip band, sliver aspect test, 3-D legend boxes, rule Z / C, bridge span, geometry-grouped validation; CHANGELOG). 0.9.0 closed the 28-finding blind review of 0.8.0: every gate the bar names is enforced by a script
 (`gate_check.py`, `erc_gate.py`, signed census / print-DFM records, STL-set-aware gates) and every documented command runs as written.
 
