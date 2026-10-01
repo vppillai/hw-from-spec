@@ -11,16 +11,24 @@
 #   wall_reco     Y    the vendor's recommended / heat-map grey line (INFO only; the design margin belongs to print_targets.<t>.wall_gate + the census gate)
 #   feature_min   F/K  smallest formable feature: a short sub-minimum feature or the thin end of a taper below it does not form / breaks off
 #   detail_min    V    smallest engraved / embossed detail width: a void narrower than it closes
-#   void_min      V    a slot narrower than this and longer than slender x void_min does not clear powder / resin (FDM: cannot be extruded cleanly)
+#   void_min      V    MEDIA processes only: a slot narrower than this and longer than slender x void_min does not clear its powder / resin; `null` on FDM
+#                      (nobody extrudes a void — a slot wider than one line is two walls with air between, nothing to clear; detail_min = one line width is the FDM floor)
 #   hole_min      H    smallest hole that clears
 #   neck_max      P    point contact: two surfaces closer than this on a section plane = one line of contact (arrives as pieces) [K: 0.05 = below any process' resolution; the 0.01 contacts a vendor's engineer refused]
-#   sliver_area   F/K/V/H  a sub-minimum region smaller than this (mm2) is a tangency / boolean sliver or a cosmetic notch at the size of the process'
-#                 detail cell: it fills or vanishes without functional loss — listed in row L, not flagged [K judgment: 5 mm2 = a 2 x 2 patch; a designed pin / rib end / glyph is larger]
-#   slender       W/K/V  thin-plate boundary L/t (Kirchhoff plate criterion: a plate is thin when its span exceeds ~10 x its thickness) [K textbook]
-#   overhang_max_deg / bridge_max / supports   O/B (FDM only): overhang from vertical, unsupported horizontal span, where supports are allowed
+#   sliver_area   F/K/V/H  a sub-minimum region smaller than this (mm2) AND no longer than twice its own thickness is a tangency / boolean sliver: it fills
+#                 or vanishes without functional loss — listed in row L, not flagged [K judgment: 5 mm2 = a 2 x 2 patch]; anything longer than 2 x its
+#                 thickness is a FEATURE whatever its area (a Ø0.4 x 3.5 pin is 4.4 mm2 and must flag)
+#   slender       W/K/V  [K] slenderness heuristic L/t: a sub-minimum strip at least ~10 x longer than it is thick bends / cracks under depowdering, cleaning
+#                 and handling (a 141 x 0.88 tray lip cracked on five parts); shorter = a feature. Not a published limit ('Kirchhoff L/t >= 10' is the
+#                 thin-plate THEORY's validity condition, not a manufacturability number); the HP MJF wall-vs-aspect table (BLOCKED, hp_mjf_guide row) would replace it
+#   media         C/V    what an un-fused void holds: powder (MJF / SLS) / resin (SLA) / none (FDM) — a sealed cavity traps it (rule C), a long narrow slot does not clear it (rule V)
+#   layer / skin_min_layers   Z (layer processes only): a wall-class region whose normals are within 30 deg of the print Z is a horizontal SKIN = a layer count,
+#                 judged against skin_min_layers x layer, not wall_min (a 0.6 sheet flat on the bed is three layers and prints; stood up it is a 0.6 wall)
+#   overhang_max_deg / bridge_max / supports   O/B (layer processes): overhang from vertical, unsupported SPAN (the shortest crossing between supported edges of a
+#                 ceiling, never its long side), whether supports are allowed — the PROCESS default; `print_dfm.py --supports` passes the BODY's own slicer setting
 #                 (`none` -> O / B FLAG; `interior` / `any` -> O / B INFO, the slicer g-code check owns the visible faces)
 #   part_min / build_max   S   the vendor's minimum part size and build volume (sorted extents compared)
-#   legend_land_min / legend_void_min   inside legend land boxes (`--land x0 y0 x1 y1`, the FDM coupon rule) — absent = legends are walls like any other
+#   legend_land_min / legend_void_min   inside legend boxes (`--boxes <piece>.boxes.json`, 3-D in the print frame; `--land x0 y0 x1 y1` spans every Z; the FDM coupon rule) — absent = legends are walls like any other
 #   published     free-text figures the rules do not use yet (tolerance, gaps, escape holes) — kept with their tag for the order sheet
 #   validated_on  [] until a vendor verdict on a body of THIS process is on record; then one entry per round: {date, bodies, rules, evidence}
 processes:
@@ -33,9 +41,10 @@ processes:
     detail_min: 0.8     # [V] JLC3DP MJF "embossed & engraved details 0.8 mm deep & 0.8 mm wide" (same page); [V] Hubs SLS PA12 pins / protrusions >= 0.8 https://www.hubs.com/knowledge-base/how-design-parts-sls-3d-printing/ (2026-09-30)
     void_min: 0.8       # [K] powder escape from a slot: no published number for a slot; the detail minimum is used (JLC assembled-part gap 0.2..0.4, moving parts 0.6 [V] are clearance figures, not slots)
     hole_min: 1.5       # [V] JLC3DP MJF "minimum hole 1.5 mm"; [V] Hubs SLS "holes larger than 1.5 mm"
+    media: powder       # [V] MJF fuses PA12 powder; an enclosed void keeps its powder (Hubs SLS: escape hole >= 3.5 mm)
     neck_max: 0.05      # [K] a traced-outline logo whose arms met at 0.01 mm contacts: the vendor's engineer refused the plate its automatic check had passed (2026-09-22)
-    slender: 10         # [K] Kirchhoff thin-plate criterion L/t >= 10
-    sliver_area: 5.0    # [K] see the header
+    slender: 10         # [K] slenderness heuristic (header)
+    sliver_area: 5.0    # [K] see the header (with the 2 x thickness aspect test)
     build_max: [370, 276, 360]   # [V] JLC3DP PA12-HP build 370 x 276 x 360
     published: {tolerance: "+/-0.3 mm or 0.4 % [V JLC]", gap_assembled: "0.2..0.4 [V JLC]", gap_moving: "0.6 [V JLC]", escape_hole: "3.5 mm [V Hubs SLS]", text_height: ">= 2 mm [V Hubs SLS]", engraving_depth: "1.0 [V Hubs SLS]"}
     validated_on: []    # the skill's reference (references/print-dfm.md §4) records the source project's 32-verdict validation: W / R / K validated, P by the engineer, F / V / H / S not decidable
@@ -48,6 +57,7 @@ processes:
     detail_min: 0.5     # [K] not fetched; the map's red line
     void_min: 1.0       # [K] the resin-drain minimum used as the slot floor; no published number
     hole_min: 1.0       # [K] as void_min
+    media: resin        # [K] SLA: a sealed cavity keeps liquid resin (bursts / leaks in post-cure); a drain hole is needed
     neck_max: 0.05
     slender: 10
     sliver_area: 5.0
@@ -59,13 +69,16 @@ processes:
     wall_min: 0.9       # [V] Prusa "2 perimeters 0.9 mm; walls thinner than two perimeters are not printable" https://help.prusa3d.com/article/modeling-with-3d-printing-in-mind_164135 (2026-09-30); [V] Hubs "all 3D printers print walls > 0.8 mm"
     wall_reco: 1.2      # [K] the JLC upload-time map's grey line
     feature_min: 0.45   # [V] Prusa one perimeter 0.45 mm (nothing thinner prints)
-    detail_min: 0.45
-    void_min: 1.0       # [K] a 0.4 nozzle clears a 1.0 slot (2.5 line widths; the home-FDM void gate)
-    hole_min: 1.0       # [K]
+    detail_min: 0.45    # [V] one perimeter 0.45: a void narrower than one line is closed by the line's squish / the slicer's gap fill
+    void_min: null      # [K] no long-slot rule on FDM: nothing to clear — a slot wider than one line is two walls with air between; a project's void gate is a DESIGN rule (print_targets.<t>.void_gate), not a printability floor
+    hole_min: 1.0       # [K] a hole under ~2 line widths closes with the squish
+    media: none         # FDM: a sealed cavity is printed hollow / with infill by the slicer (rule C is INFO)
+    layer: 0.2          # [K] the 0.20 mm standard profile
+    skin_min_layers: 3  # [K] a horizontal skin under three layers has pinholes / sags (Bambu / Prusa profiles use >= 3 bottom, 5 top layers); judgment, no published number
     neck_max: 0.05
     slender: 10
     sliver_area: 5.0
-    overhang_max_deg: 45   # [V] Prusa "45 to 60 degrees" — the conservative end
+    overhang_max_deg: 45   # [V] Prusa "45 to 60 degrees" — the conservative end (+1 deg tolerance in the tool)
     bridge_max: 10         # [K] visible-bridge rule of the home-FDM preset (Prusa: "short bridges", no number)
     supports: any          # JLC prints with supports -> O / B are INFO
     part_min: [30, 30, 10] # [K] JLC3DP quote-page refusal "ASA is unavailable for ... (Min: 30x30x10mm)" (2026-09-21)
@@ -76,18 +89,42 @@ processes:
     wall_min: 0.9       # [V] Prusa two perimeters 0.9 — the printability floor; the DESIGN rule (walls 1.6 / ribs 1.2) is print_targets.home_fdm + the census gate
     wall_reco: 1.2      # [K] the rib gate of the home-FDM preset
     feature_min: 0.45   # [V] one perimeter
-    detail_min: 0.45
-    void_min: 1.0       # [K] a 0.4 nozzle clears a 1.0 slot
-    hole_min: 1.0
+    detail_min: 0.45    # [V] one line width: a void narrower than one line is closed by the line's squish / gap fill (it must be printed as a GAP between two extrusions)
+    void_min: null      # [K] no long-slot rule on FDM: nothing to clear; the 1.0 void gate of a case preset is a DESIGN rule (print_targets.<t>.void_gate + the census), not a printability floor
+    hole_min: 1.0       # [K] a hole under ~2 line widths closes with the squish
+    media: none         # FDM: a sealed cavity is printed hollow / with infill by the slicer (rule C is INFO)
+    layer: 0.2          # [K] the 0.20 mm standard profile of the home printer — set it to the profile the plates are sliced with
+    skin_min_layers: 3  # [K] a horizontal skin under three layers has pinholes / sags (the profiles use >= 3 bottom, 5 top layers); judgment, no published number
     neck_max: 0.05
     slender: 10
     sliver_area: 5.0
-    legend_land_min: 0.45   # [K] coupon rule: a debossed legend's lands may be one line wide, raised strokes 1.0 (references/dfm-printed-enclosure.md §8)
+    legend_land_min: 0.45   # [K] coupon rule: a debossed legend's lands may be one line wide, raised strokes 1.0 (references/dfm-printed-enclosure.md §8) — applies INSIDE the 3-D legend boxes only (the generator passes the legend's Z band)
     legend_void_min: 0.4    # [K] letter counters one nozzle width
-    overhang_max_deg: 45    # [V] Prusa 45..60 (design the lead-ins at 45 deg; exactly 45.0 is AT the limit, §8.5)
+    overhang_max_deg: 45    # [V] Prusa 45..60 (design the lead-ins at 45 deg; +1 deg tolerance in the tool, §8.5)
     bridge_max: 10          # [K] visible bridge <= 10, interior <= 20 (the interior gets slicer supports)
-    supports: interior      # [K] interior supports allowed, none on a visible face -> O / B rows are INFO (the slicer g-code check owns the visible faces)
-    validated_on: []        # no vendor verdict exists for a home printer; the slicer + the first prints are the validation (KNOWN_ISSUES)
+    supports: interior      # [K] the PROCESS default: interior supports allowed, none on a visible face -> O / B rows are INFO; the generator passes the BODY's own setting (`--supports none` for a body sliced without supports -> O / B are gates)
+    validated_on: []        # NO vendor verdict and no recorded print verdict: every FDM rule above is physics / published-guide only until a first-article print verdict is recorded here
+  home_fdm_04_colour_body:
+    vendor: in-house FDM printer
+    process: "FDM colour body fused into a host part (a multi-material object: accents, legend marks) - the body lies INSIDE the host's bed layers"
+    wall_min: 0.9       # [V] as home_fdm_04: the body's XY strokes are walls like any other (two perimeters)
+    wall_reco: 1.2      # [K] as home_fdm_04
+    feature_min: 0.45   # [V] one perimeter
+    detail_min: 0.45    # [V] one line width
+    void_min: null      # [K] FDM: no long-slot rule
+    hole_min: 1.0       # [K] as home_fdm_04
+    media: none
+    layer: 0.2          # [K] the host's profile
+    skin_min_layers: 1  # [K] a colour body's Z thickness is the colour depth (1..3 layers by design; the host skin under it carries the part) — one layer is the floor
+    neck_max: 0.05      # [K] as MJF
+    slender: 10         # [K] slenderness heuristic (header)
+    sliver_area: 5.0    # [K] see the header
+    legend_land_min: 0.45   # [K] inside the host's mark boxes the arms' point contacts fuse over one line width by design
+    legend_void_min: 0.4    # [K]
+    overhang_max_deg: 45    # [V] Prusa
+    bridge_max: 10          # [K] as home_fdm_04
+    supports: none          # [K] the colour body lies on the bed
+    validated_on: []        # no print verdict recorded
   xometry_mjf_pa12:
     vendor: Xometry
     process: HP MJF PA12
@@ -97,6 +134,7 @@ processes:
     detail_min: 0.8     # [K] as JLC / Hubs SLS
     void_min: 0.8
     hole_min: 1.5       # [K] Hubs SLS
+    media: powder       # [K] MJF powder bed
     neck_max: 0.05
     slender: 10
     sliver_area: 5.0
@@ -112,6 +150,7 @@ processes:
     detail_min: 0.5     # [V] "raised text / cosmetic features smaller than 0.5 mm might not survive post-processing"
     void_min: 0.8       # [K] as JLC
     hole_min: 1.5       # [K] Hubs SLS
+    media: powder       # [K] MJF powder bed
     neck_max: 0.05
     slender: 10
     sliver_area: 5.0
@@ -127,6 +166,7 @@ processes:
     detail_min: 0.8
     void_min: 0.8
     hole_min: 1.5
+    media: powder       # [K] MJF powder bed
     neck_max: 0.05
     slender: 10
     sliver_area: 5.0

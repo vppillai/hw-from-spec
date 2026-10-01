@@ -1,6 +1,6 @@
 ---
 name: hw-from-spec
-version: 0.9.0
+version: 0.9.1
 description: Run a hardware project (a PCB, a printed or CNC enclosure, or both — scope chosen at kickoff; contract fab such as JLCPCB) from a written specification to a production cut with an owner-gated, generated-only, blind-reviewed workflow — a kickoff questionnaire that asks every owner decision up front with recommended answers, a zero-warning manufacturability bar, and a retro that folds each project's learnings back into the skill. Use this whenever someone starts a board or enclosure project from a spec, asks to set up gates, a decision log, generators, part verification, a fab DFM mirror, a case pipeline, FEA, blind reviews, a release report or a production cut for one, or resumes such a project, or wants the skill improved from a finished project — even if they only say "new KiCad board", "order this at JLC", "review the layout", "cut the release" or "what did we learn".
 ---
 
@@ -298,17 +298,21 @@ checker (2026-09-28, ~150 mm parts) and a 0.4-nozzle FDM printer — substitute 
    beside the md5, concentricity, retention feature present in the mesh, worst-case clearance per mating pair, six face renders. The only
    exception path is a dated `accepted` entry with vendor evidence, re-asserted every run. The census gates the DESIGN margin (the vendor's grey
    line); the printability FLOOR is the print-DFM check below — both run, both are PURE gates.
-   **The print-DFM loop — vendor-independent, self-improving (`references/print-dfm.md`; `scripts/print_dfm.py`, rules M W R F K P V H O B S +
-   INFO rows L Y from physics + the published minimums in `design/dfm_processes.yaml`, every number `[V]` / `[K]`; M = watertight + consistent
+   **The print-DFM loop — vendor-independent, self-improving (`references/print-dfm.md`; `scripts/print_dfm.py`, rules M C W R Z F K P V H O B S +
+   INFO rows L Y from physics + the published minimums in `design/dfm_processes.yaml`, every number `[V]` / `[K]`; M = manifold edges + consistent
    winding + the expected body count (`--bodies N`, default 1 — an open STEP→STL export or two un-unioned solids FLAG before any thickness is
-   trusted); a horizontal ceiling with one supported end is a cantilever under O, a bridge (B) has two; ray + opposing-face tangent ball, so a root
-   under a rim that every ray misses is read):**
+   trusted); C = a sealed cavity (FLAG where it traps powder / resin); Z = a horizontal skin judged by layers on a layer process; K by the tip band
+   of the ridge (included angle < 53°); a sliver is a patch no longer than twice its thickness, anything longer is a feature; a horizontal ceiling
+   with one supported end is a cantilever under O, a bridge (B) spans the shortest crossing between its supported edges; `--supports` is the body's
+   own setting, `--boxes <piece>.boxes.json` the generator's 3-D legend boxes (a rerun reproduces the record byte for byte); ray + opposing-face
+   tangent ball, so a root under a rim that every ray misses is read):**
    - **(a) before every vendor upload**: `scripts/print_dfm.py --process <row> --out out/…/<preset>/dfm <stl>` → `PASS` or `FLAG` + one line per
      rule (area × extent, min / median, bbox). FLAG = a real sub-minimum region on the MESH: fix the generator, re-export, rerun; no waiver field.
      `scripts/print_dfm.py --gate out/…/<preset>/dfm` in `gates.adopt` beside the census `--gate-dir` (exit 1: a body of the STL set without a
      same-md5 record, md5 drift, a record whose signature / rule-set version / thresholds do not match, a record checked against a row other than
-     `print_targets.<t>.dfm_process`, a FLAG without `--open <tag>/<piece>=<id>` where `<id>` must be an OPEN row of the decision log — any other
-     string fails; the record still says FLAG, the row owns the fix). The vendor's PASS is necessary, never sufficient.
+     `print_targets.<t>.dfm_process`, a FLAG without `--open <tag>/<piece>=<id>` where `<id>` must be an OPEN row of the decision log naming the piece — any other
+     string fails — or `--expect <tag>/<piece>=<reason>` for a body that FLAGs BY DESIGN (a coupon that tests the limit); both are printed on every run,
+     the record still says FLAG, the row owns the fix). The vendor's PASS is necessary, never sufficient.
    - **(b) after every vendor DFM verdict**: append `{stl, md5, process, vendor, date, verdict, evidence}` to `docs/quotes/dfm_verdicts.yaml`
      (evidence = the saved API JSON at `parseStatus == 2` / screenshot / mail), then `scripts/print_dfm.py --validate` → confusion matrix, rules
      fired, `docs/reviews/PRINT_DFM_VALIDATION.md`. **Vendor FLAG + ours PASS = `RULE DEFECT` (exit 1)**: the rule lacks physics — fix it in
