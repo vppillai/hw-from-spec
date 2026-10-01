@@ -34,6 +34,12 @@
   Found on the beest: drive behind the legs, CoG 21 mm behind the hip, −17 mm margin at a third of the crank angles; fixed by moving the drive
   over the feet and the frame forward, then proven by the row.
 
+### Fixed
+- **`scripts/print_dfm.py` rule P** read a tessellation detour as a neck: where a section plane crosses a plate's bottom edge at a slant, the ring
+  carries two vertices ~0.02 mm apart two steps along the ring, facing away from each other, and every such plate FLAGged "neck 0.006". The pair
+  now also needs the shorter ring path between the two points to exceed 10 × `neck_max` — a neck has material on both sides of it. Selftest: a
+  slab turned 7° produces no P finding; the touching-cube and hairline constructs still FLAG.
+
 ## 0.10.2 — 2026-10-01 — two mechanical-only project retros folded (wankel 2026-09-30, beest 2026-10-01): census OPP rows honour legend lands, `embreex`, legend geometry, colour-body target, linkage sweeps, arranger facts; `--gate-dir` resolves STLs in its own tree
 
 Sources: `docs/retro/wankel_2026-09-30.md` (a hand-crank Wankel engine model, 11 bodies, 3 plates, scope `mech` on 0.8.0 → 0.9.0; 15 learnings,
