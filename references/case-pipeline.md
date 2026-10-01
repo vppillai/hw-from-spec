@@ -114,6 +114,21 @@ owner addition arrives. Budget the bump before promising "full release pipeline"
 - Sweep 360 steps of every body PAIR per level with pins / pegs / caps as discs; min distance and overlap area per pair as a CHECKS row (`contacts = 0`).
   A bar-only sweep or any single-pose render misses touching bosses and a peg grazing a bar.
 
+## Stability (anything that stands, rocks, walks or is set down free)
+- A free-standing piece has a support polygon (the convex hull of what touches the ground) and a centre of gravity; it stays up only while the
+  CoG's ground projection lies inside that polygon by a margin. This is GEOMETRY, computed from the STL set of record — never judged from a render.
+  `scripts/stability.py`: `cog_of_assembly([(stl, 4x4, density)])` (volume centroids through the assembly transforms, an infill factor per body:
+  sparse-infill plates weigh 0.5–0.7 of solid, pins and bars ~1.0; the factor matters only where it differs front to back) and
+  `support_margin(cog_xy, footprints)` → signed distance to the hull edge. A CHECKS row: **min margin over every pose ≥ a stated value**
+  (a walker: every crank angle with the feet in their ground phase as footprints; a rocking or hinged piece: every position; a part set down: each
+  face it can rest on). A piece that moves is judged at its WORST pose — a six-leg walker stands on one foot per side for a third of the cycle, and
+  there the hull is the length of a shoe.
+- The CoG goes where the heavy parts are, not where the designer looks: a drive, gears, winders and bands hung behind the legs put a walker's CoG
+  21 mm behind its hip (margin −17 mm at a third of the poses). Fix by LAYOUT (drive over the feet, frame extended forward), never by ballast
+  bolted on afterwards; then the row proves it. Kickoff **C12** asks whether the piece stands free; the row is mandatory when it does.
+- Lateral stability follows from symmetric feet; the longitudinal margin is the one that fails. State the mass model (solid density × infill
+  factors) on the row so a heavier print (more walls) or a bought part (a band, a battery) is re-judged, not assumed.
+
 ## Drawings
 Silhouettes + sections from the STLs of record (trimesh/shapely), dimension lines carry the yaml numbers (so a yaml change moves the number and the
 geometry together), per-piece and assembly STEP (OCP/cadquery), `--check` = md5 sidecar keyed on the STL md5s. Run AFTER the final STL pass.

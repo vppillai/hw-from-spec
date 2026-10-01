@@ -27,6 +27,7 @@ kickoff:                                      # the owner's kickoff answers, mac
     fit_decider: {{C10_FIT_DECIDER}}          # C10: who picks the fit knob after the bracket print {{mech,both}}
     fit_result: {{C10_FIT_RESULT}}            # C10: the value the owner picked after the bracket print — "pending: bracket print" until then; ARRIVAL_CHECKLIST E-FIT closes it {{mech,both}}
     optimise: {{C11_OPTIMISE}}                # C11: speed | strength | surface | minimal waste — the default slicer knob set (references/fdm-print-optimisation.md §4) {{mech,both}}
+    stands_free: {{C12_STANDS_FREE}}          # C12: yes -> a CoG-vs-support-polygon row at the worst pose is a gate (scripts/stability.py) {{mech,both}}
   verification: {rounds: {{E1_ROUNDS}}, visual: {{E2_VISUAL}}, fea: {{E4_FEA}}}   # E1 / E2 / E4
   coupons: {{E3_COUPONS}}                     # E3 {{mech,both}}
   sourcing: {sources: {{F1_SOURCES}}, stock_floor: {{F2_STOCK}}}   # F1 / F2

@@ -1,6 +1,6 @@
 ---
 name: hw-from-spec
-version: 0.10.2
+version: 0.10.3
 description: Run a hardware project (a PCB, a printed or CNC enclosure, or both — scope chosen at kickoff; contract fab such as JLCPCB) from a written specification to a production cut with an owner-gated, generated-only, blind-reviewed workflow — a kickoff questionnaire that asks every owner decision up front with recommended answers, a zero-warning manufacturability bar, and a retro that folds each project's learnings back into the skill. Use this whenever someone starts a board or enclosure project from a spec, asks to set up gates, a decision log, generators, part verification, a fab DFM mirror, a case pipeline, FEA, blind reviews, a release report or a production cut for one, or resumes such a project, or wants the skill improved from a finished project — even if they only say "new KiCad board", "order this at JLC", "review the layout", "cut the release" or "what did we learn".
 ---
 
@@ -288,6 +288,10 @@ FEA: Gmsh + scikit-fem; fTetWild for CGAL STLs; caches keyed on content; compact
 - **Imported body.** A part the owner already has as CAD enters the chain through `scripts/step2stl.py part.step --out …/stl/<piece>.stl --tag V|K`
   (cadquery / FreeCAD CLI / `--canonical` on a CAD STL export; canonical STL + provenance sidecar + the OPEN decision row it prints), then is
   censused and print-DFM-checked like a generated body (`references/case-pipeline.md` §0; the M1 row accepts it under its row).
+- **Stability.** Anything that stands, rocks, walks or is set down free gets a CoG-vs-support-polygon row at its WORST pose (`scripts/stability.py`,
+  `references/case-pipeline.md` §Stability): centre of gravity from the STL set with an infill factor per body, through the assembly transforms,
+  against the hull of the ground footprints; min margin over every pose ≥ a stated value. A render cannot show it; a walker with its drive behind
+  the legs had −17 mm at a third of its crank angles.
 - **Point contacts.** Before any mark-shaped body or pocket (inlay plate, badge, deboss) run `scripts/thin_wall_check.py --pinch <stl>`: a traced
   outline of touching shapes pinches to 0.01 mm and the part arrives as lobes; a wall census cannot see it. Bridge with web discs clipped to the
   outline's closing, add the neck row, keep the components = 1 row (`references/case-pipeline.md` §Point contacts).

@@ -383,6 +383,30 @@
      "run": "grep -q 'flush_into_infill' \"$SKILL\"/references/fdm-print-optimisation.md && grep -q 'HAVE sparse infill' \"$SKILL\"/references/fdm-print-optimisation.md && grep -q 'purge_g' \"$SKILL\"/references/fdm-print-optimisation.md && grep -q '^## 4. Default knob sets' \"$SKILL\"/references/fdm-print-optimisation.md && grep -q 'kickoff.enclosure.optimise' \"$SKILL\"/templates/KICKOFF_ANSWERS.md && grep -q 'optimise:' \"$SKILL\"/templates/project.yaml"
     }
    ]
+  },
+  {
+   "id": 17,
+   "name": "free-standing-piece-stability-row",
+   "prompt": "Mechanical-only project: a desk-top walking toy, six legs driven by a hand crank, with the gearbox and a wound band hung behind the hips. Every sweep, census and print-DFM row is green and the walking animation looks fine. Is it ready to print?",
+   "expected_output": "Says no until the stability row exists: kickoff C12 (does the piece stand free) is 'yes', so the generator computes the centre of gravity from the STL set of record (volume centroids through the assembly transforms, an infill factor per body) and its signed margin against the convex hull of the ground footprints at EVERY crank angle, reads the WORST pose (one foot per side down), finds the drive behind the legs puts the CoG behind the hull, and fixes it by LAYOUT (drive over the feet, frame forward) before any ballast, then shows the row with the mass model stated.",
+   "files": [],
+   "assertions": [
+    "the agent refuses to judge stability from the animation or any render and computes CoG vs the support hull from the STL set",
+    "the worst pose is the one judged (fewest feet down), not the average or the standing pose",
+    "the fix proposed is layout, with ballast named as the last resort",
+    "the mass model (density x infill factor per body) is stated on the row so a heavier print re-judges it",
+    "the volume centroid is used (an area-weighted centroid is called out as wrong if the agent reaches for it)"
+   ],
+   "checks": [
+    {
+     "name": "the case pipeline carries the stability rule and the questionnaire asks C12",
+     "run": "grep -q '^## Stability' \"$SKILL\"/references/case-pipeline.md && grep -q 'C12' \"$SKILL\"/references/kickoff-questionnaire.md && grep -q 'stands_free' \"$SKILL\"/templates/project.yaml"
+    },
+    {
+     "name": "scripts/stability.py uses the volume centroid and its selftest proves it on an asymmetric body",
+     "run": "grep -q 'center_mass' \"$SKILL\"/scripts/stability.py && ! grep -q 'm\\.centroid' \"$SKILL\"/scripts/stability.py && \"$PY\" \"$SKILL\"/scripts/stability.py --selftest >/dev/null"
+    }
+   ]
   }
  ]
 }

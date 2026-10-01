@@ -125,6 +125,7 @@ PYEOF
 "$PY" scripts/scad_lint.py --selftest
 if [[ -n "$MESH" ]]; then
 "$PY" scripts/print_dfm.py --selftest
+"$PY" scripts/stability.py --selftest
 "$PY" - <<'PYEOF'
 import sys, os; sys.path.insert(0, "scripts"); import trimesh, print_dfm
 trimesh.creation.extrude_polygon(print_dfm.rim_profile(0.5), 90.0).export("out/eval14_root05.stl"); trimesh.creation.extrude_polygon(print_dfm.rim_profile(1.3), 90.0).export("out/eval14_root13.stl")

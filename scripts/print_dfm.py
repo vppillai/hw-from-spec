@@ -92,7 +92,7 @@ except ImportError as e:  # the generic scripts need pyyaml only; this one needs
 HERE = os.path.dirname(os.path.realpath(__file__))   # realpath: in a project `scripts` is a symlink into vendor/hw-from-spec — the template table must resolve through it
 sys.path.insert(0, HERE)
 from project import record_sig, verify_sig, open_decisions  # noqa: E402
-VERSION = "0.10.0"        # rule-set version stamped into every record (the validation cache is keyed on it); bump when a rule or a measure changes
+VERSION = "0.10.3"        # rule-set version stamped into every record (the validation cache is keyed on it); bump when a rule or a measure changes
 WALL_DEG = 30.0          # limiting face within 30 deg of parallel = wall / neck / root; otherwise wedge (census convention)
 COS_OPP = 0.7            # main field: a face 'opposes' the sample when its normal is within ~45 deg of the inverse normal (a 45 deg ramp under a skin counts, a 90 deg side face does not)
 COS_K = 0.05             # knife field: any face that faces back at all (included angle < ~87 deg); a 90 deg side face still does not
@@ -307,9 +307,13 @@ def pinches(m, neck_max, levels=(0.1, 0.3, 0.5, 0.7, 0.9)):
                 def outn(e):
                     v = np.c_[e[:, 1], -e[:, 0]] * (1 if ccw else -1); return v / (np.linalg.norm(v, axis=1)[:, None] + 1e-12)
                 N = outn(R - np.roll(R, 1, axis=0)) + outn(np.roll(R, -1, axis=0) - R); N /= (np.linalg.norm(N, axis=1)[:, None] + 1e-12)
+                seg = np.linalg.norm(np.roll(R, -1, axis=0) - R, axis=1); cum = np.concatenate([[0.0], np.cumsum(seg)])   # arc length along the ring
                 for a, b in cKDTree(R).query_pairs(neck_max, output_type="ndarray"):
                     if min((a - b) % n, (b - a) % n) <= 1 or N[a] @ N[b] >= 0:
                         continue
+                    i0, i1 = sorted((a, b)); path = cum[i1] - cum[i0]; path = min(path, cum[-1] - path)   # the shorter way round the ring between the two points
+                    if path < 10 * neck_max:
+                        continue                                           # a two-vertex detour of the tessellation (a bottom edge crossed at a slant), not two surfaces: a neck has material on both sides of it
                     d = R[b] - R[a]; kind = "neck" if (N[a] @ d < 0 and N[b] @ (-d) < 0) else "hairline slit"
                     pt = (R3[a] + R3[b]) / 2
                     out.append(dict(x=round(float(pt[0]), 3), y=round(float(pt[1]), 3), z=round(float(pt[2]), 3), width=round(float(np.linalg.norm(d)), 4), kind=kind, axis="xyz"[ax]))
@@ -766,6 +770,11 @@ def selftest():
     PATHS = dict(PATHS, processes=TEMPLATE_TABLE if os.path.exists(TEMPLATE_TABLE) else PATHS["processes"])
     ROOT0 = ROOT; MJF, FDM = "jlc_mjf_pa12", "home_fdm_04"
     fired = lambda r: {x.split()[0] for x in r["flagged"]}
+    # P must not read a tessellation detour as a neck: a slab turned 7 deg has section rings whose bottom-edge crossing leaves two vertices
+    # 0.02 mm apart two steps along the ring (facing away from each other); the arc-length test keeps them out
+    slab = trimesh.creation.box((40.0, 12.0, 3.5)); slab.apply_translation((0.0, 0.0, 1.75))
+    slab.apply_transform(trimesh.transformations.rotation_matrix(np.radians(7.0), (0, 0, 1))); slab = slab.subdivide().subdivide()
+    assert not pinches(slab, 0.05), "a slanted plate edge is not a point contact"
     with tempfile.TemporaryDirectory() as d:
         ROOT = d                                                                      # records store the STL path relative to the project root
         # the ray reads the plate; W on a 0.8 plate, R SILENT (a free plate is not a root); every FLAG row carries a fix
