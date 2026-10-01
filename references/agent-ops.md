@@ -123,44 +123,88 @@
 - **Paths in old records:** after a re-layout, frozen paragraphs spell the old paths; the pause point says "paths older than this: `scripts/reorg_paths.py --map`".
 
 ## 8. Resource budget and speed — without losing quality or the machine
-The source project's host panicked twice (kernel watchdog) when several agents each ran the geometry kernel, the slicer on a stack of plates,
-headless-browser PDF renders and the gate set at the same time — memory pressure, not CPU, is the likely trigger. Nothing below is a machine
-constant: every number is derived from the host at run time or set in `project.yaml host:`; the host's facts (cores, RAM, the derived pool and
-floor) are the ENV.md row `scripts/project.py env` prints on day 1.
+A host panics (kernel watchdog) when several agents each run the geometry kernel, the slicer on a stack of plates, headless-browser PDF renders
+and the gate set at the same time — stacked per-tool pools, memory pressure and load, not one slow tool. Nothing below is a machine constant:
+every number is derived from the host at run time or set in `project.yaml host:`; the host's facts (cores, RAM, the derived pool and floor) are
+the ENV.md row `scripts/project.py env` prints on day 1. The rules are in the order they are applied: measure, audit, then change.
 1. **ONE heavy-job pool per machine — `scripts/jobs.sh -- <cmd>`**: a slot semaphore (pool = `host.jobs_max`, default max(1, cores // 4)),
    `nice -n 10`, and a gate that does not START a job while free memory < `host.min_free_gb` (default max(2 GB, 15 % of RAM)) or load1 > cores
    (it waits, then exits 2 after `--wait-max`); START / DONE lines with wall time and peak RSS in the pool's log. Every generator chain, slice
    run, render, FEA solve and record round goes through it; **agents never call the geometry kernel, the slicer or the renderer directly**
-   (the Makefile pattern `templates/ci/Makefile` wires the targets through it).
-2. **Caching policy — regenerate the geometry, cache only the expensive non-geometry steps.** With a fast geometry engine (the Manifold backend,
-   item 5) the geometry of record and every row computed on it — STL exports, census, print DFM, clearances, previews — are regenerated on every
-   chain run: a cache there is a source of stale-record and kit-parity defects, and the regeneration is cheap. A previous-md5 file may remain only
-   as a DETERMINISM check (same SCAD → same md5; a difference is a finding, not a cache miss). Caching is reserved for expensive steps that are
-   deterministic in their inputs and not geometry: slicer runs (keyed on STL md5 + settings md5, both in the sidecar — `--only-changed` the default,
-   `--all` explicit), browser PDF renders (document md5), index builds; each cached step ships a `--check` that re-derives the md5s, so skipping is
-   safe by construction. The job wrapper (item 1) is in place BEFORE the regenerate-everything policy, so a chain cannot overload the host. With a
-   slow engine (a CGAL-only install) the policy inverts for STL exports only — exports keyed on the SCAD text, every consumer re-run after the final
-   export pass (`case-pipeline.md`) — and the project says so in ENV.md.
-3. **Serialize the record round**: one lock on the machine (`make record-round`: an atomic `mkdir` lock), once per batch of commits, never per
-   agent; agents commit generators + outputs and leave the round to the coordinator or the last agent. The documented order (`release-and-cut.md`
-   §3.1) is a fixed point: the second `release_report` pass runs only when `traceability --check` says the matrix changed.
-4. **Concurrency budget**: ≤ 3 writing agents with heavy work at once (the pool refuses the fourth job, not the agent), read-only reviewers
-   unlimited but told not to re-slice or re-render; one worktree per writing agent (§2).
-5. **Geometry engine**: the 2021.01 OpenSCAD release's CGAL kernel is the slow part (minutes per body); the snapshot build ships the Manifold
-   backend — `--backend=Manifold` (`openscad --help` of a snapshot lists `--backend arg: 'CGAL' (old/slow) [default] or 'Manifold' (new/fast)`
-   **[V, OpenSCAD manual, wikibooks "Using OpenSCAD in a command line environment", 2026-09-30]**; `--enable=manifold` on older snapshots **[K]**),
-   typically 10–100 × faster on the same files **[K, source project's reading]**, installs beside the release (`brew install --cask
-   openscad@snapshot` on macOS; the AppImage / `openscad-nightly` package on Linux). The case pipeline detects the snapshot binary
-   (`tools.geometry_cli_snapshot`, or `openscad --help | grep -q backend`) and passes the flag; tessellation differs slightly, so every STL md5
-   moves on the first regeneration — acceptable (records regenerate per run) but **an engine switch is followed by one record round in one commit:
-   "engine switch, md5s re-baselined"**, never mixed with a geometry change. `-q` always; per-body exports, never a whole-assembly re-render.
-6. **Preview, not render, for pictures**: concept / review / kit `faces/` PNGs use the OpenCSG preview (`openscad -o x.png --preview`, seconds);
+   (the Makefile pattern `templates/ci/Makefile` wires the targets through it). A generator's own pool (`--jobs`) equals the host pool and nests
+   inside ONE slot (a chain holds one slot; a job started inside a held slot passes straight through). **A multithreaded tool (the CAD CLI, the
+   slicer, the geometry kernel's parallel passes) counts as a whole slot and still exceeds it**: the load gate, not the slot count, is the control
+   that sees it — one CLI selftest or four gate steps can push the 1-min load past twice the core count on its own.
+2. **Measure first, then audit, then change.** (a) Measure serially: a detached worktree replica (`git worktree add --detach`), one stage at a
+   time under `nice` with `/usr/bin/time -l` (macOS; `-v` on Linux) and `uptime`, wall + peak RSS per chain, per plate, per record-round step, per
+   gate step — the wrapper writes the same two numbers into the pool log on every job, so the retro sees where the time goes before anyone
+   parallelises (`pitfalls.md`: a selftest sleeping was most of a "slow" chain; a fresh checkout's one artefact is an mtime freshness guard that
+   fails). (b) Audit redundancy from git, not from memory: diff the sidecars per commit over the day — slices on unchanged inputs (a sliced plate
+   file carries a fresh UUID, so every redundant slice is a tracked-file change), byte-identical re-renders, record rounds per day. (c) Only then
+   change, one knob per commit, and name each gain correctly in the trade table (an incremental-slice rule is a records-churn fix when the slicer
+   itself costs seconds; a wrapper is a stability fix; an engine switch is a time fix).
+3. **Caching policy.** Previews regenerate on every run (seconds with the preview engine, item 6). **Expensive geometry of record may be cached
+   ONLY on an inputs + engine key** (the SCAD text and every file it includes, the preset's merged yaml, the engine binary and its version), and
+   every export — cached or fresh — carries the sidecar md5 as a **determinism check**: canonicalise the mesh (`dfm-printed-enclosure.md` §7.2),
+   THEN record the md5; a different md5 under an unchanged key is a FAIL row, never a cache miss; `--no-cache` forces the export. Caching of the
+   non-geometry steps stays behind a `--check` that re-derives the md5s so skipping is safe by construction: slicer runs (STL md5 + settings md5 in
+   the sidecar — the incremental rule is the default, `--all` explicit), browser PDF renders (document md5), index builds. **Regenerating everything
+   once is the best audit of the records**: a full regeneration with the caches off is what finds a sampler that was never seeded (every recorded
+   census one random draw) and a body that a canonicaliser had left non-watertight for weeks — the caches had hidden both. Do it once per engine
+   switch, once per rule-set change, and once before a cut. The job wrapper (item 1) is in place BEFORE a regenerate-everything run so the chain
+   cannot overload the host.
+4. **Serialize the record round**: one lock on the machine (`make record-round`: an atomic `mkdir` lock), once per batch of commits, never per
+   agent or per commit; agents commit generators + outputs and leave the round to the coordinator or the last agent of the batch. The documented
+   order (`release-and-cut.md` §3.1) is a fixed point: the second `release_report` pass runs only when `traceability --check` says the matrix
+   changed; the index and PDF steps are skipped when their `--check` passes.
+5. **Concurrency budget**: at most `host.jobs_max` writing agents with heavy work at once (the pool refuses the next job, not the agent),
+   read-only reviewers unlimited but told not to re-slice or re-render; one worktree per writing agent (§2).
+6. **Geometry engine — previews on the fast engine, geometry of record on the engine that passes the mesh gates.** The 2021.01 OpenSCAD release's
+   CGAL kernel is slow (minutes per body); the snapshot build ships the Manifold backend — `--backend=Manifold` (`openscad --help` of a snapshot
+   lists `--backend arg: 'CGAL' (old/slow) [default] or 'Manifold' (new/fast)` **[V, OpenSCAD manual, wikibooks "Using OpenSCAD in a command
+   line environment", 2026-09-30]**; `--enable=manifold` on older snapshots **[K]**), installs beside the release (`brew install --cask
+   openscad@snapshot` on macOS; the AppImage / `openscad-nightly` package on Linux), **measured 100–270 × faster per body and byte-deterministic
+   [V, the worked example below]**. But faster and "the same bbox and volume" is not rule-equivalent: on real bodies the Manifold meshes can carry
+   odd edges (not watertight in any export format), a membrane, sub-minimum regions under print DFM and a spurious intersection the CGAL meshes do
+   not have — and a signed-volume sum cancels internal faces, so volume agreement proves nothing. **The rule**: Manifold for every PREVIEW / PNG
+   (seconds, pixel-indistinguishable); **STL exports OF RECORD stay on the engine that passes the chain's own mesh gates** (watertight, census,
+   print DFM, interference) on the bodies of record — an engine is judged by those gates, never by bbox / volume agreement. `engine:` is a
+   per-preset yaml key (`case.presets.<name>.engine`, `case-pipeline.md`); the case pipeline detects the snapshot binary (`tools.geometry_cli_snapshot`,
+   or `openscad --help | grep -q backend`) and passes the flag for previews. Re-test Manifold per OpenSCAD release (one full regeneration through
+   the gates, item 3); when a release passes, the switch is one record round in one commit — "engine switch, md5s re-baselined" — never mixed with
+   a geometry change (tessellation differs, every STL md5 moves). `-q` always; per-body exports, never a whole-assembly re-render.
+7. **Preview, not render, for pictures**: concept / review / kit `faces/` PNGs use the OpenCSG preview (`openscad -o x.png --preview`, seconds);
    `--render` (the full kernel) only for geometry of record — STL exports and gates — and for a picture whose rule needs the booleans resolved
    (a mark coupon's recess floor, a section view): the render set says which it is per image.
-7. **Slicer / browser**: the slicer CLI one process per plate, never parallel plates (one plate is already multi-threaded); PDF rendering one
+8. **Slicer / browser**: the slicer CLI one process per plate, never parallel plates (one plate is already multi-threaded); PDF rendering one
    headless browser instance reused across the document set.
-8. **Measure**: every chain prints its wall time and peak RSS (`/usr/bin/time -l` on macOS, `-v` on Linux — the wrapper does it) into its sidecar /
-   the pool log, so the retro can see where the time goes before anyone parallelises (`pitfalls.md`: 25.1 of 25.8 s was a selftest sleeping).
 9. **Shorter loop for small tweaks**: a subagent round trip costs minutes of overhead. Criterion: **one yaml value or one emitter string = the
    coordinator edits it and runs ONE preview through the wrapper inline; a new feature, a new gate, or anything touching the records = an agent
-   with its own worktree.** Restructures and full rounds are delegated; colour, a position, a label text are not.
+   with its own worktree.** Restructures and full rounds are delegated; colour, a position, a label text are not. A value no generator reads (a
+   sidecar row, a text cell) is an inline edit with no chain re-run: run the generator whose `--check` says STALE, nothing more.
+10. **The project's CLAUDE.md carries the five operating lines** (`templates/CLAUDE.md` "Agent operations": wrapper only, ≤ pool writing agents,
+    one record round per batch, the caching + engine policy, one-knob changes inline) with the host's pool number filled from `scripts/project.py env`.
+
+<!-- worked example: begin (source project, 2026-09-30 — the one fenced example of this reference; the rules above are the generic form) -->
+Worked example — one measured round on a 14-core / 24 GB laptop, three agents, a two-piece printed case with a lid chain and a caps chain:
+- Trigger: two kernel watchdog panics in one day at load ~40 — two OpenSCAD chains (each a cores-2 pool), the adopt gates (4 steps) and the
+  traceability matrix at once = 36–40 runnable processes on 14 cores. Measured alone: the adopt gates at 4 steps reach load 35; ONE `kicad-cli`
+  panelize selftest reaches load 30 (a multithreaded tool counts as one slot and still floods the host).
+- Measured serially in a detached worktree replica (`nice`, `/usr/bin/time -l`), cold caches, CGAL 2021.01: lid chain 373 s / 5.2 GB peak RSS
+  (65 pair / iso PNG views alone 123–136 s), caps chain 192 s / 8.1 GB, slicer 0.7–6 s per plate, record round 2.5 min, adopt gates 51 s.
+- Redundancy audit from the day's 38 commits, sidecars diffed per commit: 93 slices of which 24 on unchanged inputs (the .3mf carries a fresh
+  UUID per slice, so each was a tracked-file change), 1119 OpenSCAD runs of which 755 produced byte-identical output, 9 record rounds in one day.
+- Changes, one per commit: wrapper (pool = 14 // 4 = 3 slots, floor max(2 GB, 15 % × 24 GB) = 3.6 GB, load gate 14, every OpenSCAD / slicer /
+  Chrome / chain / `make check` through it; generator pools 3 instead of 12); incremental slicing by the `--check` rule (20 plates current, 0
+  re-sliced on an unchanged tree); `make record-round` under one lock with the second report pass only when the matrix changed.
+- Engine test, same SCAD of record, one body at a time: snapshot 2026.09.30 `--backend Manifold` exports 100–270 × faster, bbox equal, volume
+  equal to 2.4e-6, PNGs byte-deterministic — and FAILS the chain's own mesh gates: 11 and 6 odd edges on the tray and the shell (not watertight in
+  every export format tried), a shell membrane, sub-0.9 mm regions under print DFM, a 18.6 mm³ fixture–board intersection absent from the CGAL
+  meshes. Decision: Manifold for every PNG preview (the 65 views 123–136 s → 13–15 s per chain), STL exports of record stay CGAL per preset
+  (`engine:` key), re-test per snapshot.
+- Regenerating everything once with the caches off found two latent record defects: the census sampler was seeded through `np.random.seed`
+  only (trimesh ≥ 4 ignores it — every census JSON of record was one random draw; seeded explicitly, records re-baselined, 0 FAIL everywhere), and
+  the STL canonicaliser dropped a 2e-5 mm sliver that carried the connectivity between two near-coincident vertices, leaving one cap non-watertight
+  for sixteen releases (snap the closest pair first, then drop what collapsed; bodies without slivers keep their bytes).
+- Steady state after the round: lid chain 129 s warm / 5.8 GB through the wrapper, zero panics, one record round per batch.
+<!-- worked example: end -->

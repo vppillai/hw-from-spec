@@ -48,7 +48,19 @@ written specification, for fabrication and assembly at {{FAB}}. Humans review at
 - Geometry CLI: `{{GEOMETRY_CLI_PATH}}` (e.g. openscad); slicer CLI: `{{SLICER_CLI_PATH}}`; project venv `.venv` (Python ≥ 3.11) with {{VENV_PACKAGES}}. {{mech}}
 - All tool paths live in `project.yaml tools:`; generators read them from there (`scripts/project.py`), never hard-code them.
 - Heavy tools (geometry kernel, slicer, renderer, FEA, the record round) run through `scripts/jobs.sh -- <cmd>` (one pool per machine, sized from
-  the host; `make <target>`), never directly; regenerate only what an md5 says changed (`references/agent-ops.md` §8).
+  the host; `make <target>`), never directly — the "Agent operations" block below (`references/agent-ops.md` §8).
+
+## Agent operations
+- **Heavy jobs only via `scripts/jobs.sh`** (geometry kernel, slicer, headless browser, chains, FEA, `make check`): slot pool = {{JOBS_POOL}}
+  (cores // 4), memory floor {{MIN_FREE_GB}} GB, load gate = cores, `nice`; the generators and the Makefile route through it — never a bare
+  geometry / slicer / chain call, never a `--jobs` above the pool. Numbers from `scripts/project.py env` (the ENV.md host row).
+- **At most {{JOBS_POOL}} agents writing or running chains at once**; readers are free. Stacked per-tool pools panic the host.
+- **One record round per batch** (`make record-round`, locked), after the last generator of the batch — never one per commit.
+- **Caching policy:** previews regenerate every run (the fast engine, seconds); STL exports of record stay on the preset's `engine:` (the one that
+  passes the mesh gates), cached only on the inputs + engine key, and the sidecar md5 is a determinism check on every export (`--no-cache`
+  forces; drift under an unchanged key = FAIL). Cache only the slicer / PDF / index steps, each behind its `--check`; slice incrementally by default.
+- **One-knob changes are inline edits** (a yaml value, a sidecar row, a text cell): no chain re-run for a value no generator reads; run the
+  generator whose `--check` says STALE, nothing more.
 
 ## Repository layout
 ```
