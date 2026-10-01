@@ -23,6 +23,17 @@
 - **Checks**: `smoke/run_smoke.sh` (2 min 27 s with the mesh libraries: every selftest, the rule greps, the enforcement negatives, both lints, the evals), 16 evals
   with mechanical checks, `docs/reviews/INDEX.md` and `docs/retro/INDEX.md` list every review and retro.
 
+## UNRELEASED — static stability as a gate (owner rule, 2026-10-01)
+
+### Added
+- **`scripts/stability.py`**: centre of gravity of an assembly from the STL set of record (volume centroids through the assembly transforms, a
+  density / infill factor per body) and the signed margin of its ground projection against the support polygon (convex hull of the footprints);
+  `sweep()` over poses names the worst one; `--selftest`. SKILL §8 bullet, `case-pipeline.md` §Stability, kickoff **C12** "does the piece stand
+  free" (→ `kickoff.enclosure.stands_free`, a commented slot in `templates/project.yaml`, a row in `templates/KICKOFF_ANSWERS.md`), one pitfall.
+  Owner rule: anything that stands, rocks, walks or is set down free carries a CoG-vs-support row at its worst pose; a render cannot show it.
+  Found on the beest: drive behind the legs, CoG 21 mm behind the hip, −17 mm margin at a third of the crank angles; fixed by moving the drive
+  over the feet and the frame forward, then proven by the row.
+
 ## 0.10.2 — 2026-10-01 — two mechanical-only project retros folded (wankel 2026-09-30, beest 2026-10-01): census OPP rows honour legend lands, `embreex`, legend geometry, colour-body target, linkage sweeps, arranger facts; `--gate-dir` resolves STLs in its own tree
 
 Sources: `docs/retro/wankel_2026-09-30.md` (a hand-crank Wankel engine model, 11 bodies, 3 plates, scope `mech` on 0.8.0 → 0.9.0; 15 learnings,
