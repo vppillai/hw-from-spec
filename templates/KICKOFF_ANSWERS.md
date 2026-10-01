@@ -19,7 +19,7 @@ answered question is a defect; changing an answer is a new D row that supersedes
 | B3 | controlled impedance | {{none, pairs < N cm}} | yes | D-{{nn}} | `board.impedance` | {{ee,both}}
 | B4 | finish / mask / silk | {{ENIG green white}} | yes | D-{{nn}} | `board.finish`, `board.mask`, `board.silk` | {{ee,both}}
 | B5 | component size + link policy | {{no 0201, 0402 min, 0603 / 1206 links}} | yes | D-{{nn}} | `board.min_package`, `board.link_parts`; R-P02 | {{ee,both}}
-| B6 | assembly sides | {{both}} | yes | D-{{nn}} | `board.sides`; R-M03 | {{ee,both}}
+| B6 | assembly sides | {{top and bottom}} | yes | D-{{nn}} | `board.sides`; R-M03 | {{ee,both}}
 | B7 | test points + silk labels | {{per rail / bus, labelled}} | yes | D-{{nn}} | `board.test_points`; R-S01 | {{ee,both}}
 | B8 | panel + fiducials | {{customer panel long rails}} | yes | D-{{nn}} | `board.panel` | {{ee,both}}
 | C1 | pieces | {{tray + shell}} | yes | D-{{nn}} | `kickoff.enclosure.pieces`; SPEC §8 | {{mech,both}}

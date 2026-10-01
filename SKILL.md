@@ -23,7 +23,8 @@ reference when you reach that step, not before. Nothing here is specific to one 
    `.venv` only when run from the skill repo, and skips the mesh section with a NOTE when the libraries are absent); the shell gates take the first
    interpreter that imports yaml and print which. **Every Python command in this document that reads `project.yaml` is run as `.venv/bin/python
    scripts/<tool>.py …`** — the scripts are executable, but their shebang is the system `python3`, which has no pyyaml on a stock machine; only
-   `scripts/project.py scaffold | slots`, `step2stl.py`, `scad_lint.py`, the two `thin_wall_*` selftests and the `.sh` gates run bare.
+   `scripts/project.py scaffold | slots`, `step2stl.py`, `scad_lint.py` and the two `thin_wall_*` selftests run bare; the `.sh` gates take the first
+   interpreter that imports yaml (`$PYTHON`, the project `.venv`, `python3`) and print which.
    **Then the kickoff questionnaire (§0.1)** — A0 scope first, then every owner decision the scope needs, asked up front with recommended
    defaults, written into `project.yaml` and `docs/governance/DECISIONS.md` before any CAD.
 2. **Copy the templates and resolve the scope** — the one copy block, runnable from the project root, is README "Use in a new project" step 4
@@ -42,16 +43,17 @@ reference when you reach that step, not before. Nothing here is specific to one 
    The docs/ layout (`references/project-yaml.md` §Layout) is the one the defaults name; re-laying it out later is a decision row + a `reorg:` block +
    `scripts/reorg_paths.py --apply/--check/--proof`, never a hand sweep. `{{SKILL_COMMIT}}` = `git -C vendor/hw-from-spec rev-parse --short HEAD`;
    `{{DATE}}` = today; `{{SKILL_VERSION}}` = the `version:` line of `vendor/hw-from-spec/SKILL.md`; `project.owner` = the person who writes the gate
-   cells (`scripts/gate_check.py --release` compares the release line's git author with it); the CC-001 row ships in the template — its evidence
-   cell is filled after step 6 (selftests / smoke / adopt gates green at a named commit), not before.
+   cells (`scripts/gate_check.py --release` compares the release line's git author with it); the CC-001 row (the template's own first agent row:
+   "process = this skill at commit X") ships in DECISIONS.md — its evidence cell is filled after step 6 (selftests / smoke / adopt gates green at a
+   named commit), not before. Slots inside a path (`kicad/{{BOARD}}/…`) are filled unquoted.
 3. **project.yaml** (from `templates/project.yaml`: paths, id prefixes, markers, tools, the day-1 gate lists; the G1/G2 lines stay commented
    until those artefacts exist). Everything a script needs is there; no script carries a project constant (`references/project-yaml.md`).
 4. **docs/governance/ENV.md**: tool versions, the CAD CLI paths, which endpoints answer (verify each by running it); run the CAD CLI once on a trivial
    file and note the file-format version; the host row from `scripts/project.py env` (cores, RAM, the heavy-job pool and memory floor
    `scripts/jobs.sh` derives — `references/agent-ops.md` §8). Put every tool path behind the `tools:` block — twenty generators with hard-coded
    paths cost a CI day later (`references/pitfalls.md` ci/tooling).
-5. **Prove the toolchain**: `export PYTHONDONTWRITEBYTECODE=1; for s in scripts/*.py; do .venv/bin/python $s --selftest; done; scripts/clone_gate.sh --selftest;
-   scripts/adopt_gates.sh --selftest; vendor/hw-from-spec/smoke/run_smoke.sh; .venv/bin/python vendor/hw-from-spec/evals/run_evals.py` — all green
+5. **Prove the toolchain** (README step 3): `export PYTHONDONTWRITEBYTECODE=1; for s in scripts/*.py; do .venv/bin/python $s --selftest; done; for s in
+   scripts/*.sh; do $s --selftest; done; vendor/hw-from-spec/smoke/run_smoke.sh; .venv/bin/python vendor/hw-from-spec/evals/run_evals.py` — all green
    before the spec is read (the smoke's enforcement section proves with negative cases that a tampered record, an uncensused body, a commented
    gate line and a non-owner release line all FAIL).
 6. **First records** (the smoke's sequence, in a new project; `PY=.venv/bin/python`): fill the slots of CLAUDE.md / project.yaml / the records
@@ -108,10 +110,11 @@ The release cut = reports RELEASED, collateral, tag; the production cut = docume
   and refuses while it is 1 (the placement script before G1, the case geometry before G0 / M1, the fab package before G2). If the owner delegates
   ("proceed, I retro-approve"), quote the instruction in `docs/governance/GATES.md` under the table and keep the approval cells empty.
 - **One review round precedes every gate** — defined once, used everywhere: for every role of the round's role set, one in-session reviewer +
-  two external models (or the in-session fallback), an adversarial verifier per role, one merged report (§5). "Two reviews" in an older record
+  two external models of a second model family (or the in-session fallback, said so in the merge), one verifier with record access per role, one
+  merged report (§5). "Two reviews" in an older record
   means one round.
-- Never quote the release phrase in prose anywhere the regex can see it (a GATES.md sentence explaining the rule turned every report RELEASED
-  in the smoke project) — describe the marker indirectly (`references/pitfalls.md` process).
+- Never quote the release phrase in prose anywhere the regex can see it (a sentence that explains the rule matches the regex) — describe the
+  marker indirectly (`references/pitfalls.md` process).
 
 **Who decides what** (D rows carry the owner's decisions — the agent transcribes the owner's words into them, quoted; agents write CC rows and ask):
 
@@ -162,14 +165,14 @@ order. A WARN that is "known" is not a bar; it is either fixed or a dated, evide
 - Byte-stable output: rewrite UUIDs deterministically, process items in sorted order, pin the locale of every `sort` (`LC_ALL=C`)
   (`references/pitfalls.md` tooling/identity).
 - A generator that owns part of a file another generator also writes must re-read and merge that part or refuse to run in place
-  (a schematic `--check` that rewrote the project file dropped 400 lines of design rules — `references/pitfalls.md` tooling/gates).
+  (a generator rewriting a shared file drops the other generator's content — `references/pitfalls.md` tooling/gates).
 - Exceptions to the rule (an in-place hand-routed board, an owner GUI step) are allowed only as a logged decision row plus a "chain of record"
   table (commit, step, file md5, content signature); assert the content signature, keep the md5 informational (`references/pitfalls.md` layout).
 - Order of the chain after a change to the record of record (copper in ee / both, the STL set in mech): drawing / FEA → collector → commit → `clone_gate.sh --regen` → commit. Reports are regenerated LAST,
   in the same commit as their inputs (`references/release-and-cut.md` §3).
 - **Every checker is read-only on the tree.** A `--check` builds in a temp dir and exports nowhere; `scripts/adopt_gates.sh` fails when
-  `git status --porcelain` differs before and after the gates, and the PR-check template ends with the same guard (a schematic `--check` once
-  replaced the ERC of record with a temp copy's warnings). Probe a script's usage from its docstring, never by running it without arguments.
+  `git status --porcelain` differs before and after the gates, and the PR-check template ends with the same guard (a checker that exports into
+  the tree replaces a record). Probe a script's usage from its docstring, never by running it without arguments.
 - **Layout changes are generated too.** The docs/ layout the defaults name is in `references/project-yaml.md` §Layout; moving files later is a
   decision row + a `reorg:` block + `scripts/reorg_paths.py --plan → --apply → regenerate → --check → --proof` (zero-loss on two `git ls-files -s`
   dumps); frozen records keep the old paths and `--map` explains them (`references/release-and-cut.md` §9).
@@ -179,12 +182,13 @@ order. A WARN that is "known" is not a bar; it is either fixed or a dated, evide
 `docs/governance/DECISIONS.md` is one table, six cells: `ID | Date | Status | Topic | Proposal / decision | Reason`.
 
 - **D-nn** rows are the owner's (text as issued); **CC-nnn** rows are the agent's. Status words: OPEN (needs the owner), APPROVED, DECIDED
-  (within delegated authority), APPLIED (!) (applied ahead of the nod — the nod marker), REJECTED, SUPERSEDED, CLOSED. History follows the
+  (within delegated authority), APPLIED (!) (applied ahead of the owner's look — the `(!)` is "the nod marker": the owner's nod is still wanted),
+  REJECTED, SUPERSEDED, CLOSED. History follows the
   literal history marker `(was:` inside the status cell; generators stop reading there.
 - Rule 2: a value, part, topology or pin assignment named in the spec is never changed silently. Write the CC row (reason, options, recommendation),
   mark it OPEN, ask. Apply only after approval, or ship it behind an optional flag that warns when omitted so the code path is tested now
   (`references/pitfalls.md` process).
-- `docs/governance/KNOWN_ISSUES.md` is generated from the log: OPEN rows, rows mentioning OPEN, provisional rows, the nod section (§2.1), blockers, the
+- `docs/governance/KNOWN_ISSUES.md` is generated from the log: OPEN rows, rows mentioning OPEN, provisional rows, the nod section (KNOWN_ISSUES §2.1), blockers, the
   test plan's UNVERIFIED markers. Section 1 is hand-curated between markers (`scripts/known_issues.py`). Describe the nod marker indirectly in
   status cells or the generator re-triggers on the description.
 - A literal `|` inside a cell is `\|`; the generator refuses a row with the wrong cell count. An ID is reserved only when its row is in HEAD:
@@ -258,8 +262,8 @@ The layout chain (placement CSV → router session → post-pass → silk → ex
 capability / physics / owner choice (stack-up, impedance, copper minimums vs the fab table, via-in-pad, thermal reliefs, mask / paste / stencil,
 part-size policy, two-sided assembly, rotation / CPL, fiducials / test points, silk, courtyards, creepage, panel) and the DRC census live in
 `references/pcb-layout-dfm.md`. A routed board is adopted only when, on the committed tree: CAD DRC 0 errors / 0 unconnected / **0 warnings
-unless a dated waiver row** / schematic parity 0 with the net classes enforced (prove it with a canary rule that must fire exactly once — the CLI
-may ignore class patterns), route-quality 0 unjustified HIGH, the fab DFM mirror 0 open (§7, §1.2), silk check 0, every generator `--selftest`
+unless a dated waiver row** / schematic parity 0 with the net classes enforced (prove it with a canary rule — a deliberately violated generated
+DRC rule that must fire exactly once — the CLI may ignore class patterns), route-quality 0 unjustified HIGH, the fab DFM mirror 0 open (§7, §1.2), silk check 0, every generator `--selftest`
 and `--check` green, and the fresh-checkout gate passes on `git archive HEAD`.
 `scripts/adopt_gates.sh` runs the `gates.adopt` list then `scripts/clone_gate.sh`; the routed board + its router session file are the artefacts of
 record (routing is never re-run to reproduce them) (`references/pitfalls.md` layout, kicad/drc).
@@ -287,19 +291,19 @@ FEA: Gmsh + scikit-fem; fTetWild for CGAL STLs; caches keyed on content; compact
 - **Point contacts.** Before any mark-shaped body or pocket (inlay plate, badge, deboss) run `scripts/thin_wall_check.py --pinch <stl>`: a traced
   outline of touching shapes pinches to 0.01 mm and the part arrives as lobes; a wall census cannot see it. Bridge with web discs clipped to the
   outline's closing, add the neck row, keep the components = 1 row (`references/case-pipeline.md` §Point contacts).
-- **A case-version bump re-runs every keyed stage** (every STL md5 moves, every FEA mesh rebuilds — ≈ 45 min on the source project's machine, the
-  worked example in `references/case-pipeline.md`): run case FEA / PCB FEA / drawings / the alternative preset as background jobs and block on
+- **A case-version bump re-runs every keyed stage** (every STL md5 moves, every FEA mesh rebuilds — tens of minutes; the cost table is in
+  `references/case-pipeline.md`): run case FEA / PCB FEA / drawings / the alternative preset through the job pool as background jobs and block on
   their EXIT lines; budget it before promising the full pipeline.
 
 ### 8.1 DFM for printed enclosures [mech, both] (before the FIRST quote — `references/dfm-printed-enclosure.md`; CNC: `references/cnc-enclosure.md`)
 
 Acceptance bar (§1.2, owner row at kickoff): **0 FAIL / 0 WARN in every check table and census · zero slicer warnings · no vendor flag by API
 read · no yellow, no red on the vendor's heat map · every face rendered and looked at · no waivers.** A row is PASS / FAIL on a MEASURED value
-(from the MESH, never the yaml) or it is INFO (no verdict, own table, the reason stated); "kept below minimum (listed)" is a waiver, and the waived
-long sub-minimum lip cracked on every part of one order. **Every number is a `project.yaml print_targets.<target>` value** (vendor, process, material, wall /
+(from the MESH, never the yaml) or it is INFO (no verdict, own table, the reason stated); "kept below minimum (listed)" is a waiver, and a waived
+sub-minimum wall cracks in service. **Every number is a `project.yaml print_targets.<target>` value** (vendor, process, material, wall /
 void / red gates, design margin, tolerance + source, max bbox the rule was calibrated at, checker URL + date, post-process, rating, `accepted`
-list) tagged **[checker]** / **[vendor sheet]** / **[physics]** / **[owner bar]** in the reference; the worked-example numbers below are JLC3DP's
-checker (2026-09-28, ~150 mm parts) and a 0.4-nozzle FDM printer — substitute yours, keep the mechanism.
+list) tagged **[checker]** / **[vendor sheet]** / **[physics]** / **[owner bar]** in the reference; the numbers below are one MJF checker's line on
+~150 mm parts and a 0.4-nozzle FDM printer's — substitute yours, keep the mechanism.
 1. **Two PURE mesh gates on every body of every preset, before the first upload** — the census gates the DESIGN margin, the print-DFM check the
    printability FLOOR; both read the MESH, never the yaml; both glob the STL set of record and sign their records:
    - `scripts/thin_wall_census.py <stl> --target <t> --json out/…/census/<piece>.json` (rows `templates/CENSUS_GATE_ROWS.md`; walls AND voids
@@ -331,18 +335,21 @@ checker (2026-09-28, ~150 mm parts) and a 0.4-nozzle FDM printer — substitute 
    to upload quoted in the decision row; ONE STL per page session; the verdict of record is the vendor's analysis API response, never a page
    reading (the flag is computed at upload, independent of the material on the line — set the material anyway for price and legend); the RAW
    JSON saved; vendor volume / area / bbox = ours; the heat map read on every face; the coordinator re-reads a worker's "no flag" itself; nothing
-   saved, carted, agreed or paid. **The vendor's thin-wall metric is length-dependent** (§7.1): a coupon or short probe passing proves nothing about
+   saved, carted, agreed or paid. **The vendor's thin-wall metric is length-dependent** (the reference's §7.1): a coupon or short probe passing proves nothing about
    the full-length body — when a body is flagged and the census is clean, slice the body of record into capped slabs and build full-length one-knob
    probes, upload each alone, adopt the first full-length pass.
 5. **Home FDM preset (`home_fdm`)** (`references/dfm-printed-enclosure.md` §8–§9, the kit `references/print-kit.md`, slicer knobs
    `references/fdm-print-optimisation.md`; kickoff C9 / C10 / C11): printer-first FAIL rows from `print_targets.home_fdm` (walls, ribs, voids, 2 × line
    width, elephant foot, hole shrink, seam as per-preset `fits` knobs; raised legends; every external face on the bed / vertical / clean top asserted
-   from the g-code), coupons and BOTH board dummies before the part, brand marks as an ironed top-face feature or a flush AMS colour body (never a
-   bed-face or vertical-wall deboss; mark coupon first; FAIL-gated mark rows), hood roof-down by `rotate()` never `mirror()`, slicer projects with
+   from the g-code), coupons and both board dummies (printable stand-ins for the board: a two-piece and a one-piece version) before the part, brand
+   marks as an ironed top-face feature or a flush colour body laid down by the printer's multi-filament unit (AMS) in the bed layers (never a
+   bed-face or vertical-wall deboss; mark coupon first; FAIL-gated mark rows), a roof-down hood turned by `rotate()` never `mirror()` (a mirror flips
+   handedness and prints every asymmetric mark backwards), slicer projects with
    project-named presets, a floating-region warning = FAIL, auto-orientation. **Every vendor DFM decision is mirrored into this preset the same day**
    under its own version key (hook tokens keep the vendor SCAD byte-identical; every hook variable asserted defined; duplicate yaml keys gated).
-   ONE kit folder = pieces + coupons + both dummies + READMEs **+ a generated START_HERE**, every kit text through the kit text gate; glued plates
-   rest on the LANDS with the bridged strips one layer below; snug fits ship as a bracket plate the owner picks from — the picked value lands in
+   ONE kit folder = pieces + coupons + both dummies + READMEs **+ a generated START_HERE**, every kit text through the kit text gate (the FAIL check
+   over every emitted kit text, `print-kit.md` §3); glued plates rest on the lands (the flat bed-face seats) with the bridged strips one layer below;
+   snug fits ship as a bracket plate (one object per candidate value) the owner picks from — the picked value lands in
    `kickoff.enclosure.fit_result` and closes its arrival-checklist row; watertight row per STL; sidecars drift-checked against the 3MF config.
 6. **When a vendor reports a cracked part**: measure the RECEIVED part (caliper table → the target's tolerance), photo protocol, fractography
    basics, then the ORDERED STL (sections + census with span and class), separate design intent from defect with the vendor-fault table, draft the
@@ -381,9 +388,9 @@ folder `docs/production/<md5-8>/records/`** (the cut yaml's `records_dir`; RELEA
   page, `--check`), registered as a cut deliverable (`references/release-and-cut.md` §8).
 
 ### 10.1 Before the order ships: the arrival checklist and the spec errata
-- **The arrival / first-article checklist is GENERATED** (`design/arrival_checklist.yaml` → `scripts/arrival_checklist.py` →
-  `docs/production/ARRIVAL_CHECKLIST.md`; `--check` in `gates.adopt` — `project.py gates-required` demands the line once the yaml exists; a cut
-  deliverable). Written at the order, from the merged reviews' "what the parts must prove" rows and the OPEN decision rows, in the order of the day:
+- **The arrival / first-article checklist is GENERATED** (copy `templates/design/arrival_checklist.yaml` to `design/` AT THE ORDER, not on day 1 →
+  `scripts/arrival_checklist.py` → `docs/production/ARRIVAL_CHECKLIST.md`; uncomment the `--check` line in `gates.adopt` the same commit —
+  `project.py gates-required` demands it once the yaml exists; a cut deliverable). Written at the order, from the merged reviews' "what the parts must prove" rows and the OPEN decision rows, in the order of the day:
   **before shipment** (the fab's assembly photos — a paid "confirm placement" option is not guaranteed to raise a dialog, the photo confirmation is
   the one human polarity look) → **bench checks in gate order** [ee, both] (each row says what it `opens`; nothing powered or plugged before its row)
   → **software gates before the first high-power step** [ee, both] (each with the commit that closed it) → **case first article** [mech, both]
@@ -397,8 +404,8 @@ folder `docs/production/<md5-8>/records/`** (the cut yaml's `records_dir`; RELEA
 ## 11. Agent operations
 
 Parallel agents own disjoint files; explicit-path commits do not isolate hunks inside a shared file (stage the exact edit); re-read before every
-append; hand out record IDs with the task; **commit after every meaningful step** (a four-hour agent tree sat uncommitted through twelve rebuilds
-until a `WIP … not yet gated` checkpoint; a subagent that hits its turn limit loses everything not in HEAD — checkpoint commits, then the gated one);
+append; hand out record IDs with the task; **commit after every meaningful step** (a subagent that hits its turn limit loses everything not in
+HEAD — `WIP … not yet gated` checkpoint commits, then the gated one);
 block in-process on background jobs (`until ! kill -0 $pid; do sleep 20; done`; the per-call ceiling is stated once in `references/agent-ops.md` §5);
 heartbeat every ~25 min; time-box every long task; pause points with a resume list in `docs/governance/STATUS.md`; keep the machine awake; resume by message
 with the measured state, never from memory; kill a long render early when an owner addition arrives (`references/agent-ops.md`).
@@ -406,7 +413,8 @@ Memory holds resume pointers and owner feedback, never project facts; a numbered
 through with date + record as they close) and a Resume line; an owner-only item is listed, never attempted, and a chat delegation is quoted in the
 decision row before the named actions are done (`references/agent-ops.md` §7). **Resources**: every heavy command runs through the one job pool
 `scripts/jobs.sh` (sized from the host, memory / load gate, wall + RSS logged), regeneration is incremental by md5, the record round is serialized
-under one lock, previews not renders for pictures, the Manifold backend for geometry, and a one-value tweak is done inline rather than delegated
+under one lock, previews not renders for pictures, OpenSCAD's Manifold backend (the fast geometry kernel of the snapshot builds) for geometry, and
+a one-value tweak is done inline rather than delegated; the pool log is `${TMPDIR:-/tmp}/hwfs_jobs/jobs.log` or `jobs.sh --log FILE`
 (`references/agent-ops.md` §8).
 
 ### 11.1 Resume (after a crash, a sleep, a new session)
@@ -431,7 +439,7 @@ PARTIAL / NEW, "costly" when the text names a failure that cost a round), compar
 {version}`) with `SKILL.md`, and writes `docs/retro/<project>_<date>.md` in the skill repo: the NEW and PARTIAL tables, a CHANGELOG entry draft,
 one reference patch stub per target file, an eval stub per costly NEW entry, the owner decision topics the kickoff questionnaire does not
 ask yet, and the DFM process-table drift (`design/dfm_processes.yaml` vs the skill's template: NEW rows, CHANGED numbers with their citation,
-VALIDATED rows — §8.1 (c)); every dated bullet it cannot parse is listed in §0, never dropped; the project's `ids.owner_prefix` and
+VALIDATED rows — §8.1 item 1); every dated bullet it cannot parse is listed in §0, never dropped; the project's `ids.owner_prefix` and
 `paths.dfm_processes` are honoured. **`--apply`** then performs the mechanical folds in the skill repo, idempotently: one pitfalls line per NEW
 learning, every NEW process row with its citations into the template (`validated_on: []`), a CHANGELOG `UNRELEASED` stub. Then, by hand: fold
 the NEW lines into the named reference (generalised, the source number as the labelled worked example), extend the PARTIAL sections, add the

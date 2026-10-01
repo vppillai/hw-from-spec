@@ -1,7 +1,7 @@
 # fdm-print-optimisation.md — slicer-level knobs for waste, strength and quality, each one PROVEN from the sliced output
 
-Owner (2026-09-30): *"purge into infill is an optimization to reduce waste that the skill can use. there are also other possible strength and
-quality knobs you can use to optimize."* This is the one home for slicer-side optimisation; the geometry rules stay in
+Slicer-side knobs buy waste, strength or surface — purging a colour change into infill instead of the chute is the plainest of them. This is the
+one home for slicer-side optimisation; the geometry rules stay in
 `references/dfm-printed-enclosure.md` §8 and the kit mechanics in `references/print-kit.md` — both link here, neither repeats a row.
 
 **The rule.** Every knob used is set in the plate yaml (`design/bambu_plates.yaml` or the project's equivalent — per plate, or per object through
@@ -36,7 +36,7 @@ guessed URLs — the live index is `wiki.bambulab.com/en/bambu-studio/parameter`
 
 | Knob | What it buys | What it costs | When it applies | How it is PROVEN | Keys |
 |---|---|---|---|---|---|
-| **Wall loops** | strength comes mostly from the perimeters, not the infill (Prusa) **[V]**; 4 loops at 0.42 = the 1.6 wall rule of the home preset (`dfm-printed-enclosure.md` §8) | time, mass | every structural body; bosses and latch roots | `wall_loops` read back from the embedded config; the census wall row on the mesh (geometry side) | `wall_loops` [Prusa: *Perimeters*] |
+| **Wall loops** | strength comes mostly from the perimeters, not the infill (Prusa) **[V]**; 4 loops at a 0.42 line ≈ 1.7 mm = the home preset's 1.6 wall rule with its margin (`dfm-printed-enclosure.md` §8) | time, mass | every structural body; bosses and latch roots | `wall_loops` read back from the embedded config; the census wall row on the mesh (geometry side) | `wall_loops` [Prusa: *Perimeters*] |
 | **Wall sequence** | `inner/outer` (default) best for overhangs — the inner wall carries the outer; `outer/inner` crisper surface, seam more visible; `inner/outer/inner` best outer finish on thick walls **[V]** | overhang quality vs surface | legend / mark faces: `inner/outer/inner`; overhanging bodies: `inner/outer` | `wall_sequence` in the config | `wall_sequence` [Prusa: *External perimeters first*] |
 | **Infill pattern + density** | gyroid: equal strength in every direction, no self-crossing in a layer; cubic / adaptive cubic: ~¼ less material than rectilinear at equal top support, denser near the walls; 100 % forces rectilinear **[V]** | time; adaptive cubic has large central cavities (fine for a case shell) | shells and trays: gyroid 15–20 %; bosses: see modifiers; never `sparse_infill_density: 100%` on the CLI (rc −18, §8.3) — a solid column is `top_shell_layers` / `bottom_shell_layers` | `sparse_infill_pattern` / `sparse_infill_density` in the config; `filament_g` | `sparse_infill_pattern`, `sparse_infill_density` [Prusa: *Fill pattern / density*] |
 | **Shell layers vs thickness** | top shell ≥ recess depth + 1.0 under an ironed mark (§8.1 a); ≥ 3 bottom / 5 top layers at 0.20 is the profile default **[V, Bambu profiles]** | time, mass | every top face that is seen; every rebate / recess floor | `top_shell_layers`, `top_shell_thickness` read back; rule Z of `print_dfm.py` on the MESH | `top_shell_layers`, `top_shell_thickness`, `bottom_shell_layers` |

@@ -121,7 +121,6 @@ cp "$T/PARTS_VERIFICATION.md" docs/parts/
 cp "$T/TEST_PLAN.md" "$T/design/VERIFY.md" docs/design/
 cp -R "$T/datasheet_notes" docs/
 cp "$T/design/traceability.yaml" "$T/production_cut.yaml" design/
-cp "$T/design/arrival_checklist.yaml" design/           # filled at the order
 cp "$T/design/dfm_processes.yaml" design/                # mech, both
 cp "$T/docs/quotes/dfm_verdicts.yaml" docs/quotes/       # mech, both
 cp "$T/design/erc_accept.yaml" design/                  # ee, both
@@ -134,7 +133,8 @@ scripts/project.py slots                              # the count to drive to 0 
 ```                                                   #  project.yaml before any reader runs)
 
 5. Follow `SKILL.md` §0: the kickoff questionnaire, ENV record (`scripts/project.py env` prints the
-host row), first records, adopt gates, then G0. Scripts find `project.yaml` by walking up from the
+host row), first records, adopt gates, then G0. Fill slots that sit inside a path unquoted
+(`kicad/sensor/sensor.kicad_pcb`). `templates/design/arrival_checklist.yaml` is copied at the order (SKILL §10.1). Scripts find `project.yaml` by walking up from the
 cwd (or `HWFS_PROJECT=…`); the shell gates print which interpreter they use. Never put the submodule
 AT `scripts/`. Project-specific generators (schematic builder, placement, routing, export, fab
 package, panel, silk, case, drawings, FEA measurer) stay in the project's `gen/`, read constants
