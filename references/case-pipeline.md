@@ -1,5 +1,19 @@
 # case-pipeline.md — enclosure from one yaml to prints and quotes
 
+
+## 0. Imported body — the owner already has the CAD (`scripts/step2stl.py`)
+
+The chain of record assumes every body is generated from `design/case.yaml`. A part that exists as a STEP (the owner's bracket, a vendor's
+housing) enters M1 as a **generated-only exception** (SKILL §2): `scripts/step2stl.py part.step --out out/mechanical/case/<target>/stl/<piece>.stl
+--tag V|K` converts it (cadquery in the venv, else the FreeCAD CLI, else `--canonical` on an STL exported from the CAD — the routes are printed
+when none is available; OpenSCAD cannot read STEP), writes the **canonical STL** (sorted triangles, float32 normals: the md5 is the geometry) and
+`<piece>.stl.provenance.json` (source, source md5, tag, converter, tolerance, stl md5, geometry signature, date), and prints the decision row:
+OPEN, "imported body <piece>", the chain of record (source md5 → converter → STL md5 + signature; a changed source or signature = a new row).
+From there the body is gated like a generated one — `thin_wall_census.py --target <t> --json .../census/<piece>.json` and `print_dfm.py --process
+<row> --out .../dfm` records of the same md5, six face renders, clearance rows — and `gen/<geometry>.py --check` is replaced in the M1 row by
+`scripts/step2stl.py --canonical <export> --out <piece>.stl` reproducing the committed md5 (the provenance sidecar's `stl_md5`). A body whose
+source changes re-enters through a new conversion and a new row; editing the STL by hand is never a route.
+
 ## Chain (one yaml, one generator, every step keyed on content)
 ```
 design/case.yaml ──> OpenSCAD source (generated) ──> renders (views) ──> STL per piece
