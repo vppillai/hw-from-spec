@@ -10,7 +10,7 @@ title: "ARRIVAL_CHECKLIST.md — {{PROJECT}} rev {{REV}} (order {{ORDER_ID}}, re
 sections:
   - key: A {{ee,both}}
     title: Before shipment approval — the fab's assembly photos (no board in hand yet) {{ee,both}}
-    note: "A paid 'confirm production file / placement' option is not guaranteed to raise a dialog (one order went Reviewed -> In Production in 14 h with neither offered): the photo confirmation is the one human look before shipment. Approve shipment only with every row DONE or N/A." {{ee,both}}
+    note: "A paid 'confirm production file / placement' option is not guaranteed to raise a dialog before production starts: the photo confirmation is the one human look before shipment. Approve shipment only with every row DONE or N/A." {{ee,both}}
     columns: [id, item, how, fail, opens, status, evidence] {{ee,both}}
     rows: {{ee,both}}
       - {id: A-1, item: "cathode bars / pin-1 of every polarised part vs the silk mark ({{POLARISED_REFDES}})", how: "zoom the fab's images; compare with the top / bottom renders of record", fail: "reversed -> ask the fab to re-place BEFORE shipment (a bench rework is a hot-air job)", opens: "B-2", status: TODO, evidence: ""} {{ee,both}}

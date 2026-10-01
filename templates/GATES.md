@@ -9,8 +9,9 @@ approval cell reads `<owner name>, <YYYY-MM-DD>, <what was approved: SPEC rev / 
 as `project.owner` (`scripts/gate_check.py --release` reads the cell and the line's git author; `scripts/gate_check.py <gate>` reads a gate cell — the
 next phase's generators refuse to run while it says NOT approved). A chat approval is quoted verbatim (date/time) under the table; the cell stays the owner's.
 
-**One review round** (skill `SKILL.md` §5) = for every role of the round's role set, one in-session reviewer + two external models (or the
-in-session fallback), an adversarial verifier per role, one merged report in `docs/reviews/<round>_merged.md`. Every gate below needs one.
+**One review round** (skill `SKILL.md` §5) = for every role of the round's role set, one in-session reviewer + two external models of a second
+model family (or the in-session fallback, said so in the merge), one verifier with record access per role, one merged report in
+`docs/reviews/<round>_merged.md`. Every gate below needs one.
 
 **The manufacturability bar** (owner decision {{D-BAR}} from the kickoff questionnaire; default = zero / zero / no waivers), enforced by scripts:
 board — CAD DRC 0 errors / 0 unconnected / **0 warnings**, fab DFM mirror **0 open at either of the fab's grades** (e.g. Danger / Warning) unless a dated `dfm_accepted` entry with {{ee,both}}
