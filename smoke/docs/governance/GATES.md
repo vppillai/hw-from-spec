@@ -1,6 +1,6 @@
 # GATES.md — owner approvals
 
-The owner writes the approval line; agents never edit the approval cells. The release reports read this file: they say DRAFT until the owner writes the release line here (the three words the regex in project.yaml `markers.release_regex` names — never quote them in prose, or the report turns RELEASED by accident).
+The owner writes the approval cells; agents never edit them. The release reports read the Release row's approval cell: they say DRAFT until the owner writes the release phrase there (the three words the regex in project.yaml `markers.release_regex` names — never quote them in prose) and commits it as `project.owner` (`scripts/gate_check.py --release`).
 
 | Gate | Meaning | Prerequisites | Owner approval (name, date, revision) |
 |---|---|---|---|

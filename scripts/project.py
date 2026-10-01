@@ -32,7 +32,7 @@ DEFAULTS = {
     # production/<md5-8>/, datasheet_notes/ — a re-layout is a `reorg:` block + scripts/reorg_paths.py, never a hand sweep
     "paths": {"decisions": "docs/governance/DECISIONS.md", "blockers": "docs/governance/BLOCKERS.md", "gates": "docs/governance/GATES.md",
               "known_issues": "docs/governance/KNOWN_ISSUES.md", "status": "docs/governance/STATUS.md", "learnings": "docs/governance/LEARNINGS_LOG.md",
-              "erc_waivers": "docs/governance/ERC_WAIVERS.md", "env": "docs/governance/ENV.md", "traceability_yaml": "design/traceability.yaml",
+              "erc_accept": "design/erc_accept.yaml", "env": "docs/governance/ENV.md", "traceability_yaml": "design/traceability.yaml",
               "traceability_out": "docs/governance/TRACEABILITY.md", "test_plan": "docs/design/TEST_PLAN.md",
               "parts_verification": "docs/parts/PARTS_VERIFICATION.md", "datasheet_notes": "docs/datasheet_notes", "reviews_dir": "docs/reviews",
               "quotes_dir": "docs/quotes", "production_dir": "docs/production", "fab_dir": "out/fab", "release_dir": "docs/release",

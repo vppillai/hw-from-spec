@@ -1,6 +1,7 @@
 # smoke/project.yaml — the smallest project that drives every generic hw-from-spec script (schema: references/project-yaml.md).
 project:
   name: smoke
+  owner: {name: smoke, email: s@s}            # the smoke commits as `smoke <s@s>`; gate_check.py --release compares the release line's author with this
   description: one sheet, five parts, a two-piece printed case — the automated dry run of the skill
 skill: {repo: local, commit: smoke, version: 0.5.0}   # scripts/skill_retro.py reads `version`
 ids: {owner_prefix: D, agent_prefix: CC, blocker_prefix: B}

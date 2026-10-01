@@ -6,6 +6,7 @@ project:
   name: {{PROJECT}}
   description: {{ONE_LINE_DESCRIPTION}}
   scope: {{SCOPE}}                            # kickoff A0: ee (PCB/PCBA only) | mech (enclosure / printed / CNC parts only) | both (a housed board) — SKILL.md §1
+  owner: {name: {{OWNER_NAME}}, email: {{OWNER_EMAIL}}}   # who writes the gate cells and the release line; scripts/gate_check.py --release checks the line's git author against this
 skill: {repo: {{SKILL_REPO_URL}}, commit: {{SKILL_COMMIT}}, version: {{SKILL_VERSION}}}   # the hw-from-spec commit + SKILL.md version this project follows; scripts/skill_retro.py reads `version`
 kickoff: docs/governance/KICKOFF_ANSWERS.md   # the owner's answers to references/kickoff-questionnaire.md (D rows); written before any CAD
 ids: {owner_prefix: D, agent_prefix: CC, blocker_prefix: B}
@@ -23,7 +24,9 @@ paths:
   test_plan: docs/design/TEST_PLAN.md
   traceability_yaml: design/traceability.yaml
   traceability_out: docs/governance/TRACEABILITY.md
-  board: kicad/{{BOARD}}/{{BOARD}}.kicad_pcb  # the board of record once it exists (G1+); until then handoff_header says "no board in HEAD" {{ee,both}}
+  schematic: kicad/{{BOARD}}/{{BOARD}}.kicad_sch   # the generated schematic root (G0+); once it exists gates.adopt must carry the erc_gate.py line {{ee,both}}
+  board: kicad/{{BOARD}}/{{BOARD}}.kicad_pcb  # the board of record once it exists (G1+); until then handoff_header says "no board in HEAD"; once it exists gates.adopt must carry a DRC gate {{ee,both}}
+  erc_accept: design/erc_accept.yaml          # the machine-checked ERC acceptances scripts/erc_gate.py reads (no prose waivers) {{ee,both}}
   netlist: out/{{BOARD}}.xml {{ee,both}}
   fab_dir: out/fab {{ee,both}}
   mech_record: "out/mechanical/case/*/stl/*.stl"   # mech scope: the STL set of record; its md5 (scripts/project.py record) keys collateral, reports and the cut {{mech}}
@@ -31,7 +34,7 @@ paths:
   release_dir: docs/release
   collateral_dir: docs/release/collateral
   case_yaml: design/case.yaml {{mech,both}}
-  # learnings / erc_waivers / env / parts_verification / datasheet_notes / reviews_dir / quotes_dir / production_dir default to the docs/ layout (references/project-yaml.md)
+  # learnings / env / parts_verification / datasheet_notes / reviews_dir / quotes_dir / production_dir default to the docs/ layout (references/project-yaml.md)
 tools:
   python: .venv/bin/python
   kicad_cli: {{CAD_CLI_PATH}}                 # the key names are historical: put YOUR CAD's CLI here ({KICAD_CLI} in commands), whatever the CAD (mech: openscad) {{ee,both}}
@@ -116,6 +119,7 @@ gates:
     # - "$PY gen/build_sch.py --selftest" {{ee,both}}
     # - "$PY gen/build_sch.py --check" {{ee,both}}
     # - "$PY gen/check_maps.py --check" {{ee,both}}
+    # - "$PY scripts/erc_gate.py out/{{BOARD}}/erc.json"   # 0 errors, every warning in design/erc_accept.yaml with a decision row (scripts/project.py gates-required FAILS the adopt run while the schematic exists and this line is commented) {{ee,both}}
     # G2 (routed board): DRC census / parity / route quality / DFM mirror / renders (references/pcb-layout-dfm.md §1, SKILL §6) {{ee,both}}
     # - "$PY gen/drc_gate.py --check"          # DRC 0 errors / 0 unconnected / 0 warnings-or-waived + canary fires once + parity 0 {{ee,both}}
     # - "$PY gen/route_quality.py" {{ee,both}}

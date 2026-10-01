@@ -24,7 +24,8 @@ written specification, for fabrication and assembly at {{FAB}}. Humans review at
 6. **{{SHEET_AND_REFDES_CONVENTION}}** (e.g. one generated sheet file per instance; refdes = sheet × 100 + n). {{ee,both}}
 6. **{{GEOMETRY_CONVENTION}}** (e.g. one module per piece, presets `base + overrides` deep-merged, a version key per preset, canonical STL export). {{mech}}
 7. **Validate after every generation:** ERC/DRC via the CAD CLI with all severities, zero errors (`references/schematic-phase.md` §2 has the {{ee,both}}
-   command); warnings fixed or justified in `docs/governance/ERC_WAIVERS.md`. {{ee,both}}
+   command); `scripts/erc_gate.py out/<board>/erc.json` green — a warning passes only through an entry of `design/erc_accept.yaml` naming its {{ee,both}}
+   decision row (no prose waivers; a GUI exclusion is a hidden waiver and fails). {{ee,both}}
 7. **Validate after every generation:** census `--gate-dir` 0 unaccepted FAIL on every body of every preset, `print_dfm.py --process <row>` PASS on {{mech}}
    every body before any upload (`--gate` in the adopt list; a vendor verdict → `dfm_verdicts.yaml` → `--validate`, a RULE DEFECT fixes the rule), {{mech}}
    `thin_wall_check.py --pinch` on every mark-shaped body, `scad_lint.py` on every generated SCAD, slicer log 0 warnings, every face rendered and {{mech}}
@@ -50,7 +51,7 @@ written specification, for fabrication and assembly at {{FAB}}. Humans review at
 ```
 CLAUDE.md  SPEC.md  project.yaml  .gitignore   (parts_seed.csv: the spec's part list, if the owner supplies one) {{ee,both}}
 CLAUDE.md  SPEC.md  project.yaml  .gitignore   (the fit input: the board STEP / envelope named in paths.mesh_provenance) {{mech}}
-design/        <board>.yaml parts.yaml <board>_board.yaml placement.csv case.yaml traceability.yaml dfm_thresholds.json   (references/schematic-phase.md §1) {{ee,both}}
+design/        <board>.yaml parts.yaml <board>_board.yaml placement.csv case.yaml traceability.yaml erc_accept.yaml dfm_thresholds.json   (references/schematic-phase.md §1) {{ee,both}}
 design/        case.yaml parts.yaml (hardware) traceability.yaml   (references/case-pipeline.md) {{mech}}
 gen/           project generators (build_sch, check_maps, place_pcb, export, fab_package, case, fea, drawings, …) — each with --check / --selftest {{ee,both}}
 gen/           project generators (case geometry, drawings, fea, kits, production_cut) — each with --check / --selftest {{mech}}
@@ -59,7 +60,7 @@ lib/           fetched symbols/footprints/3D (vendor-licensed data never leaves 
 lib/           vendor STEPs, TDS PDFs, hardware drawings (vendor-licensed data never leaves the repo) {{mech}}
 <cad>/<board>/ generated CAD project (e.g. kicad/<board>/)      out/   generated packages, renders, checks, G1/ and G2/ review packs {{ee,both}}
 out/mechanical/case/<preset>/  STL set of record (paths.mech_record — its md5 is the record id), census, renders, kits {{mech}}
-docs/          governance/ (ENV DECISIONS BLOCKERS GATES STATUS KNOWN_ISSUES TRACEABILITY ERC_WAIVERS LEARNINGS_LOG)  design/ (TEST_PLAN VERIFY briefs) {{ee,both}}
+docs/          governance/ (ENV DECISIONS BLOCKERS GATES STATUS KNOWN_ISSUES TRACEABILITY LEARNINGS_LOG)  design/ (TEST_PLAN VERIFY briefs) {{ee,both}}
 docs/          governance/ (ENV DECISIONS BLOCKERS GATES STATUS KNOWN_ISSUES TRACEABILITY LEARNINGS_LOG)  design/ (TEST_PLAN VERIFY briefs, mechanical notes) {{mech}}
                parts/ (PARTS_VERIFICATION PROCUREMENT parts_check.json)  reviews/ (hand-offs, merged reports)  release/ (reports, collateral/<md5-8>/)
                quotes/<date>/ (fab evidence, never inside a package)  production/<md5-8>/ (the cut)  datasheet_notes/
