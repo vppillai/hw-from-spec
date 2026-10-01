@@ -35,7 +35,7 @@ const BOARD_ROLES = [
   { key: 'layout', title: 'Layout, signal integrity and fab DFM', brief: '{{BRIEF_LAYOUT}}' },
   { key: 'fab', title: 'Fab package, BOM/CPL and the order', brief: '{{BRIEF_FAB}}' },
   { key: 'mech', title: 'Mechanical, thermal and the case', brief: '{{BRIEF_MECH}}' },
-  { key: 'case_dfm', title: 'Printed-enclosure DFM: walls / voids / wedges / opposing faces vs print_targets, inserts and retention present in the mesh, tolerance stack, closed rims, orientation (checklist = templates/CENSUS_GATE_ROWS.md + references/dfm-printed-enclosure.md §1; verifier re-runs scripts/thin_wall_census.py --target on the frozen STLs)', brief: '{{BRIEF_CASE_DFM}}' },
+  { key: 'case_dfm', title: 'Printed-enclosure DFM: walls / voids / wedges / opposing faces vs print_targets, inserts and retention present in the mesh, tolerance stack, closed rims, orientation (checklist = templates/CENSUS_GATE_ROWS.md + references/dfm-printed-enclosure.md §1; verifier re-runs scripts/thin_wall_census.py --target AND scripts/print_dfm.py --process <row> on the frozen STLs)', brief: '{{BRIEF_CASE_DFM}}' },
   { key: 'silk', title: 'Silkscreen, UX and operator documentation', brief: '{{BRIEF_SILK}}' },
   { key: 'software', title: 'Software, bring-up and test plan', brief: '{{BRIEF_SOFTWARE}}' },
   { key: 'coherence', title: 'Requirements, decisions and traceability coherence', brief: '{{BRIEF_COHERENCE}}' },

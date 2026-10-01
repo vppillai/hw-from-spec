@@ -12,6 +12,7 @@
 set -e -o pipefail
 trap 'echo "clone gate: aborted at line $LINENO (rc $?)" >&2' ERR
 HERE=$(cd "$(dirname "$0")" && pwd -P)
+case "${1:-}" in -h|--help) sed -n '2,12p' "$0"; exit 0;; ""|--selftest|--regen) ;; *) echo "clone_gate.sh: unknown option $1 (usage: scripts/clone_gate.sh [--regen] | --selftest)" >&2; exit 2;; esac
 if [[ "$1" == "--selftest" ]]; then
   T=$(mktemp -d /tmp/hwfs_cg_XXXX); trap 'rm -rf $T' EXIT
   mkdir -p $T/r/docs $T/r/vendor/hw-from-spec && cd $T/r && git init -q && git -c user.name=t -c user.email=t@t commit -q --allow-empty -m init

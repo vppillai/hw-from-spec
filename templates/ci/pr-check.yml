@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     container:
-      image: {{PROJECT_KICAD_IMAGE}}
+      image: {{PROJECT_CAD_IMAGE}}
       options: --user root
     steps:
       - uses: actions/checkout@v4

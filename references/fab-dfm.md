@@ -53,7 +53,7 @@ first quote and make it part of the adopt rule.
   warnings — a remark sentence or a separate NPTH drill settles it.
 
 ## 5. Quote form traps (worked example: JLCPCB, 2026-09-20/22)
-- Options easy to miss: press-fit holes (+35 on a 5-panel order), "Edge Rails/Fiducials = Added by Customer", "Panel by Customer" REQUIRES the panel
+- Options easy to miss: press-fit holes (+35 on a 5-panel order), "Edge Rails/Fiducials = Added by Customer" (the form's wording) <!-- voice: ok -->, "Panel by Customer" REQUIRES the panel
   format column × row, precision outline, "confirm production file". The first two PCBA quotes were both wrong.
 - The order remark is GENERATED from the rule file + board (copper minimums, solder-free holes, THT neighbours); only the vendor-drawing paragraph is
   static. Typed remarks rotted twice.
@@ -100,7 +100,7 @@ The morning after an order is placed the live stock gate turns against its own p
 - **Rule:** a package whose order is PLACED — an owner row in the decision log matching `markers.placed_regex` AND naming the package folder — is
   judged on `stock_snapshot.json` inside the package: the stock records of its BOM codes as at the build commit, frozen once by
   `--freeze-stock` and hashed in the package MANIFEST. `--check` on a placed package without the snapshot says so (run `--freeze-stock`) instead
-  of grading on live data. Live re-checks after the order are still recorded in `PARTS_VERIFICATION.md`; they no longer grade a frozen package.
+  of grading on live data. Live re-checks after the order are still recorded in `PARTS_VERIFICATION.md`; they do not grade a frozen package.
 - **Selftest fixture:** the selftest never reads the live stock file — it builds a fixture (every record in stock, dated today) and points the
   checker at it; the package logic is under test, not the market.
 - The frozen package: fab files, panel/, board_id.txt byte-identical forever (a rebuild re-exports the panel and re-stamps the commit — never on

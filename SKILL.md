@@ -1,6 +1,6 @@
 ---
 name: hw-from-spec
-version: 0.9.2
+version: 0.10.0
 description: Run a hardware project (a PCB, a printed or CNC enclosure, or both — scope chosen at kickoff; contract fab such as JLCPCB) from a written specification to a production cut with an owner-gated, generated-only, blind-reviewed workflow — a kickoff questionnaire that asks every owner decision up front with recommended answers, a zero-warning manufacturability bar, and a retro that folds each project's learnings back into the skill. Use this whenever someone starts a board or enclosure project from a spec, asks to set up gates, a decision log, generators, part verification, a fab DFM mirror, a case pipeline, FEA, blind reviews, a release report or a production cut for one, or resumes such a project, or wants the skill improved from a finished project — even if they only say "new KiCad board", "order this at JLC", "review the layout", "cut the release" or "what did we learn".
 ---
 
@@ -179,8 +179,8 @@ order. A WARN that is "known" is not a bar; it is either fixed or a dated, evide
 `docs/governance/DECISIONS.md` is one table, six cells: `ID | Date | Status | Topic | Proposal / decision | Reason`.
 
 - **D-nn** rows are the owner's (text as issued); **CC-nnn** rows are the agent's. Status words: OPEN (needs the owner), APPROVED, DECIDED
-  (within delegated authority), APPLIED (!) (applied ahead of the nod — the nod marker), REJECTED, SUPERSEDED, CLOSED. History goes after
-  `(was: …)` in the status cell; generators stop reading there.
+  (within delegated authority), APPLIED (!) (applied ahead of the nod — the nod marker), REJECTED, SUPERSEDED, CLOSED. History follows the
+  literal history marker `(was:` inside the status cell; generators stop reading there.
 - Rule 2: a value, part, topology or pin assignment named in the spec is never changed silently. Write the CC row (reason, options, recommendation),
   mark it OPEN, ask. Apply only after approval, or ship it behind an optional flag that warns when omitted so the code path is tested now
   (`references/pitfalls.md` process).
@@ -286,7 +286,7 @@ FEA: Gmsh + scikit-fem; fTetWild for CGAL STLs; caches keyed on content; compact
   censused and print-DFM-checked like a generated body (`references/case-pipeline.md` §0; the M1 row accepts it under its row).
 - **Point contacts.** Before any mark-shaped body or pocket (inlay plate, badge, deboss) run `scripts/thin_wall_check.py --pinch <stl>`: a traced
   outline of touching shapes pinches to 0.01 mm and the part arrives as lobes; a wall census cannot see it. Bridge with web discs clipped to the
-  outline's closing, add the neck row, keep the components = 1 row; `--census` turns a fab heat-map colour into a number (`references/case-pipeline.md`).
+  outline's closing, add the neck row, keep the components = 1 row (`references/case-pipeline.md` §Point contacts).
 - **A case-version bump re-runs every keyed stage** (every STL md5 moves, every FEA mesh rebuilds — ≈ 45 min on the source project's machine, the
   worked example in `references/case-pipeline.md`): run case FEA / PCB FEA / drawings / the alternative preset as background jobs and block on
   their EXIT lines; budget it before promising the full pipeline.
@@ -296,43 +296,27 @@ FEA: Gmsh + scikit-fem; fTetWild for CGAL STLs; caches keyed on content; compact
 Acceptance bar (§1.2, owner row at kickoff): **0 FAIL / 0 WARN in every check table and census · zero slicer warnings · no vendor flag by API
 read · no yellow, no red on the vendor's heat map · every face rendered and looked at · no waivers.** A row is PASS / FAIL on a MEASURED value
 (from the MESH, never the yaml) or it is INFO (no verdict, own table, the reason stated); "kept below minimum (listed)" is a waiver, and the waived
-0.88 × 141 mm lip cracked on five parts. **Every number is a `project.yaml print_targets.<target>` value** (vendor, process, material, wall /
+long sub-minimum lip cracked on every part of one order. **Every number is a `project.yaml print_targets.<target>` value** (vendor, process, material, wall /
 void / red gates, design margin, tolerance + source, max bbox the rule was calibrated at, checker URL + date, post-process, rating, `accepted`
 list) tagged **[checker]** / **[vendor sheet]** / **[physics]** / **[owner bar]** in the reference; the worked-example numbers below are JLC3DP's
 checker (2026-09-28, ~150 mm parts) and a 0.4-nozzle FDM printer — substitute yours, keep the mechanism.
-1. **Census as a FAIL gate on every body of every preset** (`scripts/thin_wall_census.py --target <t> --json`, rows `templates/CENSUS_GATE_ROWS.md`,
-   pure `--gate-dir` in `gates.adopt`): walls AND voids ≥ the target's gates (MJF checker 1.2 → design 1.3 under a no-yellow bar; FDM 1.6 / voids
-   1.0 at 0.4 nozzle), **wedges gated by the width of their sub-gate band**, **the nearest opposing face in ANY direction gated** (the ring-root /
-   ledge class every normal-ray census missed), samples ∝ surface area, a NOISE-FLOOR row (not a recall proof), bodies = 1, geometry signature
-   beside the md5, concentricity, retention feature present in the mesh, worst-case clearance per mating pair, six face renders. The only
-   exception path is a dated `accepted` entry with vendor evidence, re-asserted every run. The census gates the DESIGN margin (the vendor's grey
-   line); the printability FLOOR is the print-DFM check below — both run, both are PURE gates.
-   **The print-DFM loop — vendor-independent, self-improving (`references/print-dfm.md`; `scripts/print_dfm.py`, rules M C W R Z F K P V H O B S +
-   INFO rows L Y from physics + the published minimums in `design/dfm_processes.yaml`, every number `[V]` / `[K]`; M = manifold edges + consistent
-   winding + the expected body count (`--bodies N`, default 1 — an open STEP→STL export or two un-unioned solids FLAG before any thickness is
-   trusted); C = a sealed cavity (FLAG where it traps powder / resin); Z = a horizontal skin judged by layers on a layer process; K by the tip band
-   of the ridge (included angle < 53°); a sliver is a patch no longer than twice its thickness, anything longer is a feature; a horizontal ceiling
-   with one supported end is a cantilever under O, a bridge (B) spans the shortest crossing between its supported edges; `--supports` is the body's
-   own setting, `--boxes <piece>.boxes.json` the generator's 3-D legend boxes (a rerun reproduces the record byte for byte); ray + opposing-face
-   tangent ball, so a root under a rim that every ray misses is read):**
-   - **(a) before every vendor upload**: `scripts/print_dfm.py --process <row> --out out/…/<preset>/dfm <stl>` → `PASS` or `FLAG` + one line per
-     rule (area × extent, min / median, bbox). FLAG = a real sub-minimum region on the MESH: fix the generator, re-export, rerun; no waiver field.
-     `scripts/print_dfm.py --gate out/…/<preset>/dfm` in `gates.adopt` beside the census `--gate-dir` (exit 1: a body of the STL set without a
-     same-md5 record, md5 drift, a record whose signature / rule-set version / thresholds do not match, a record checked against a row other than
-     `print_targets.<t>.dfm_process`, a FLAG without `--open <tag>/<piece>=<id>` where `<id>` must be an OPEN row of the decision log naming the piece — any other
-     string fails — or `--expect <tag>/<piece>=<reason>` for a body that FLAGs BY DESIGN (a coupon that tests the limit); both are printed on every run,
-     the record still says FLAG, the row owns the fix). The vendor's PASS is necessary, never sufficient.
-   - **(b) after every vendor DFM verdict**: append `{stl, md5, process, vendor, date, verdict, evidence}` to `docs/quotes/dfm_verdicts.yaml`
-     (evidence = the saved API JSON at `parseStatus == 2` / screenshot / mail), then `scripts/print_dfm.py --validate` → confusion matrix, rules
-     fired, `docs/reviews/PRINT_DFM_VALIDATION.md`. **Vendor FLAG + ours PASS = `RULE DEFECT` (exit 1)**: the rule lacks physics — fix it in
-     `print_dfm.py` (never a vendor fudge, never a moved threshold), bump its `VERSION`, re-validate, run `scripts/skill_retro.py` so the rule
-     change flows back to the skill. Vendor PASS + ours FLAG = stricter: list it with its physical reason under the doc's hand marker; the rule stands.
-   - **(c) a new vendor or process** = ONE new row in `design/dfm_processes.yaml`: published minimums `[V]` (URL + date; a 404 = BLOCKED, value
-     `null`, the row refuses to gate), the rest `[K]` with the source named, `validated_on: []`; kickoff C8 names the row per print target
-     (`print_targets.<t>.dfm_process`). The retro's §8 diffs the project table against `templates/design/dfm_processes.yaml`: NEW rows, CHANGED
-     numbers (with the citation on the line) and VALIDATED rows are retro items for the template.
-   - **(d) check rows read the MESH, never the yaml**; generated code is linted — `scripts/scad_lint.py <generated.scad>` on every emit (a `//`
-     comment mid-line silently drops every statement after it; a plate lost its webs for two days while the yaml and the check row read right).
+1. **Two PURE mesh gates on every body of every preset, before the first upload** — the census gates the DESIGN margin, the print-DFM check the
+   printability FLOOR; both read the MESH, never the yaml; both glob the STL set of record and sign their records:
+   - `scripts/thin_wall_census.py <stl> --target <t> --json out/…/census/<piece>.json` (rows `templates/CENSUS_GATE_ROWS.md`; walls AND voids
+     against the target's gates, wedges by the width of their sub-gate band, the nearest OPPOSING face in any direction, samples ∝ area, a
+     NOISE-FLOOR row, bodies = 1, geometry signature, retention present in the mesh, worst-case clearance per mating pair, six face renders; the
+     only exception path is a dated `accepted` entry with vendor evidence, re-matched every run) — the rules: `references/dfm-printed-enclosure.md` §2.
+   - `scripts/print_dfm.py --process <row> --out out/…/dfm <stl>` → `PASS` or `FLAG` + one line per rule (M C W R Z F K P V H O B S + INFO L Y from
+     physics + the cited minimums of `design/dfm_processes.yaml`); FLAG = a real sub-minimum region on the mesh: fix the generator, re-export, rerun —
+     no waiver field. The rules, the sidecars (`--boxes`, `--supports`) and the loop: `references/print-dfm.md`.
+   - In `gates.adopt`: `thin_wall_census.py --gate-dir` and `print_dfm.py --gate` (exit 1 on a body without a same-md5 record, md5 or signature
+     drift, a rule-set / threshold mismatch, a FLAG without `--open <tag>/<piece>=<OPEN decision row naming the piece>` or
+     `--expect <tag>/<piece>=<reason>` for a body that FLAGs BY DESIGN — both printed on every run, the record still says FLAG).
+   - After every vendor verdict: append the row to `docs/quotes/dfm_verdicts.yaml`, run `print_dfm.py --validate`; **vendor FLAG + ours PASS =
+     RULE DEFECT (exit 1)** — fix the physics in the rule, bump its `VERSION`, re-validate, run `scripts/skill_retro.py`; vendor PASS + ours FLAG =
+     stricter, reason recorded, the rule stands. A new vendor or process = ONE cited row in `design/dfm_processes.yaml` (`[V]` URL + date or `[K]`
+     with the source; a 404 = `null`, the row refuses to gate); kickoff C8a names the row per target (`print_targets.<t>.dfm_process`).
+   - Generated code is linted on every emit (`scripts/scad_lint.py`: a mid-line `//` silently drops the rest of the statement line).
 2. **Geometry rules — checker vs material**: no FREE-STANDING wedge (rail tips, lips, non-tangent coves, knife edges) **[checker]**; chamfers
    and **tangent fillets cut into ≥ gate walls are fine and recommended at stress risers** **[physics]**; **snap features are possible in PA12**
    **[physics]** — under a no-yellow bar at JLC3DP the ≥ void-gate slit rarely fits, so screws + inserts or magnets (`§1.1` of the reference) are the
@@ -343,34 +327,23 @@ checker (2026-09-28, ~150 mm parts) and a 0.4-nozzle FDM printer — substitute 
    clean in its space budget goes; every wall change reruns the whole table.
 3. **Canonical STL + geometry signature** (own binary writer, sorted triangles, normals from the float32 vertices; volume / area / bbox / facets
    beside the md5) so the md5 IS the geometry; the census gate, vendor uploads and the cut key on it.
-4. **Vendor quote page**: owner consent to upload quoted in the decision row; ONE STL per session (reload between uploads; uploads work signed
-   out), process + material set on the line first (price, map legend — the flag itself is computed at upload and does not depend on it),
-   **verdict = the analysis API at `parseStatus == 2` (`getFileAnalyzeResult` → `modelAnalysisVO.thinWall`) — a DOM read before that is invalid**,
-   the RAW JSON saved with URL + timestamp, vendor volume / area / bbox = ours (scale sanity), the price per body, the legend thresholds as
-   displayed, a capability-page snapshot per round, then the heat map (`previewUrl`) on every face, screenshots named with the md5, one
-   `templates/DFM_ROUND.md` per session under `docs/quotes/<date>/`; endpoint gone → BLOCKERS row, verdict class downgraded, round NOT YET; a
-   verdict that flips → both reads API reads, then compare signatures and diff the meshes, before touching the generator; the coordinator re-reads
-   a worker's "no flag" itself. Nothing saved, carted, agreed or paid (§10 boundaries).
-   **The vendor's thin-wall metric is length-dependent** (`references/dfm-printed-enclosure.md` §7.1, with the bbox-resolution hypothesis and its
-   test): a rim over a skirt-lap step ≥ 2.0 OR the undercut filled (JLC3DP checker, 147 mm part); a coupon or 40 mm probe that passes proves
-   nothing about a 150 mm body — when a body is flagged and the census is clean, slice the body of record into capped slabs and build 40 mm AND
-   full-length one-knob profile probes, upload each alone, read the API, adopt the first full-length pass.
-5. **Home FDM preset (`home_fdm`)** (printer-first, its own version key, hook tokens keep the vendor SCAD byte-identical; every hook variable
-   asserted defined per preset; duplicate yaml keys gated): coupons (text, walls, fits, insert + torque) and a board dummy (two-piece AND one-piece
-   at final dimensions — the one-piece nose on a break-away shim the README calls out as a removable "PCB lip"; section symmetric difference 0 mm²
-   between the two) before the part; walls ≥ 1.6 / ribs 1.2 / voids 1.0 at 0.4 nozzle, min feature 2 × line width, elephant foot, hole shrink and
-   seam handled as per-preset `fits` knobs; raised legends cap 4 / stroke 1.0 / 0.6; brand marks = a top-face feature under `ironing_type: top` or a flush AMS colour body in the bed
-   layers, never a bed-face or vertical-wall deboss, mark coupon first, FAIL-gated mark rows (`dfm-printed-enclosure.md` §8.1, owner C9); fan bosses = fan holes; hood roof-down by `rotate()`, never
-   `mirror()`; slicer projects with project-named presets + `different_settings_to_system`; floating-region warning = FAIL; supports read from the
-   g-code, not the intent; auto-orientation. **Every vendor DFM decision is mirrored into this preset the same day** in the same yaml under its own
-   version key; its census + slicer log clean; ONE kit folder = pieces + coupons + BOTH dummies + READMEs **+ a generated START_HERE** (print
-   order with the project-file names, assembly sequence with magnets-dry-then-CA and feet-last, numeric report-back with a recipient), every kit
-   text from the knobs through the **kit text gate** (`None` / `nan` / `{name}`, repo paths, dead file names, tokens of disabled features = FAIL);
-   glued plates rest on the LANDS with the bridged strips one layer below (§8.4); snug fits ship as a bracket plate the owner picks from (§8.5) —
-   the picked value lands in `kickoff.enclosure.fit_result` and closes its arrival-checklist row; watertight row per STL; sidecars drift-checked
-   against the 3MF config (`references/print-kit.md`, questionnaire C10). **Slicer-level optimisation** (purge into infill / support, flush
-   calibration, prime tower, wall loops and sequence, infill, modifier meshes for local strength, EF / XY compensation, seam, ironing, fuzzy skin,
-   per-object overrides) is one table with a PROOF column per knob in `references/fdm-print-optimisation.md`; kickoff C11 picks the default set.
+4. **Vendor quote page** (`references/dfm-printed-enclosure.md` §7, record `templates/DFM_ROUND.md` under `docs/quotes/<date>/`): owner consent
+   to upload quoted in the decision row; ONE STL per page session; the verdict of record is the vendor's analysis API response, never a page
+   reading (the flag is computed at upload, independent of the material on the line — set the material anyway for price and legend); the RAW
+   JSON saved; vendor volume / area / bbox = ours; the heat map read on every face; the coordinator re-reads a worker's "no flag" itself; nothing
+   saved, carted, agreed or paid. **The vendor's thin-wall metric is length-dependent** (§7.1): a coupon or short probe passing proves nothing about
+   the full-length body — when a body is flagged and the census is clean, slice the body of record into capped slabs and build full-length one-knob
+   probes, upload each alone, adopt the first full-length pass.
+5. **Home FDM preset (`home_fdm`)** (`references/dfm-printed-enclosure.md` §8–§9, the kit `references/print-kit.md`, slicer knobs
+   `references/fdm-print-optimisation.md`; kickoff C9 / C10 / C11): printer-first FAIL rows from `print_targets.home_fdm` (walls, ribs, voids, 2 × line
+   width, elephant foot, hole shrink, seam as per-preset `fits` knobs; raised legends; every external face on the bed / vertical / clean top asserted
+   from the g-code), coupons and BOTH board dummies before the part, brand marks as an ironed top-face feature or a flush AMS colour body (never a
+   bed-face or vertical-wall deboss; mark coupon first; FAIL-gated mark rows), hood roof-down by `rotate()` never `mirror()`, slicer projects with
+   project-named presets, a floating-region warning = FAIL, auto-orientation. **Every vendor DFM decision is mirrored into this preset the same day**
+   under its own version key (hook tokens keep the vendor SCAD byte-identical; every hook variable asserted defined; duplicate yaml keys gated).
+   ONE kit folder = pieces + coupons + both dummies + READMEs **+ a generated START_HERE**, every kit text through the kit text gate; glued plates
+   rest on the LANDS with the bridged strips one layer below; snug fits ship as a bracket plate the owner picks from — the picked value lands in
+   `kickoff.enclosure.fit_result` and closes its arrival-checklist row; watertight row per STL; sidecars drift-checked against the 3MF config.
 6. **When a vendor reports a cracked part**: measure the RECEIVED part (caliper table → the target's tolerance), photo protocol, fractography
    basics, then the ORDERED STL (sections + census with span and class), separate design intent from defect with the vendor-fault table, draft the
    reply from the template for the owner, then apply the learning design-wide (every body, every preset), not to the failed feature

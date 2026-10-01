@@ -29,7 +29,7 @@ batch with no applicable question is skipped — a mech-only owner never sees vi
 | 8 verification (cont.) + bought parts | E3, E4, F1, F2 | all (E3 mech/both) | the G0 review round, parts.yaml |
 | 9 software + reports | G1, G2, H1, H2 | all (G1–G2 ee/both) | the bring-up tool, the first release report |
 | 10 CI, retro, envelope, branding | H3, H4, I1, I2 | all | the spec is read |
-| 11 debug access, delegation, slicer optimisation | I3, I4, C11 | all (I3 ee/both, C11 mech/both) | the spec is read (I1–I4: found by the first retro — the owner rows the source project needed that no batch asked; C11 by the fifth) |
+| 11 debug access, delegation, slicer optimisation | I3, I4, C11 | all (I3 ee/both, C11 mech/both) | the spec is read |
 
 Twelve batches (0–11), none above four questions; a batch whose questions are all out of scope is skipped.
 
@@ -157,7 +157,7 @@ per surprise; not recommended.
 **D2 What may be waived (default: nothing).** **RECOMMENDED: nothing — an item is fixed through the generator, or a dated `accepted` / `dfm_accepted`
 entry with the vendor's written acceptance is the only exception, per refdes / per cluster, listed in the merge.** *Alt:* a named class waived
 (e.g. the fab's "sharp trace corner" presence check) — one decision row per class with the vendor's statement. *Alt:* prose waivers — forbidden
-(the waived 0.88 × 141 mm lip cracked on five parts).
+(a waived sub-minimum lip cracked on every part of one order).
 **D3 Design margin and tolerance source per target** [mech, both]. **RECOMMENDED: walls at the checker's line + 0.1 (MJF), first-article caliper table
 replaces the vendor's published tolerance after the first order, INFO until then** — no "PASS by design". *Alt:* design at the line — the mesh
 samples 0.01 under and the argument is lost. *Alt:* + 0.3 everywhere — heavy, slow, unnecessary on a 2 mm shell.
@@ -207,7 +207,7 @@ before every tag.
 drafts the skill's next changes and a retro report goes to the skill repo as a PR** — the skill gets better with each project (SKILL §13). *Alt:*
 no retro — the next project repeats this one's rounds.
 
-## I. Identity, envelope, delegation (added by the first retro — the owner rows that recurred and no question asked)
+## I. Identity, envelope, delegation (the owner rows that recur in every project and no earlier batch asks)
 **I1 Envelope: fixed or grows.** **RECOMMENDED: the board grows as routing needs, the case follows; connector positions and the form-factor
 class are fixed** — clean routing beats a millimetre. *Alt:* envelope fixed by a mating part (a cage, a rail, a pocket) — a routing budget
 per iteration and a decision row when it is missed. *Alt:* smallest possible — expect two placement iterations per connector.

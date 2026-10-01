@@ -63,7 +63,7 @@
   in two phases (generators, then outputs + kits) with small commits. The technician found the two BLOCKERs (an un-instructed irreversible step, a
   hardware list into the wrong pocket) that every mesh check had passed; the DFM persona found the seat that rocked. Trust the reviewer's
   measurements, re-measure only where the geometry changed, and state every deviation from a disposition openly in the decision row.
-- **The standard protocol (0.10.0, from two rounds that re-found decided items at 1:1 and 1:2):** reviewers = a second model family where one
+- **The standard protocol** (SKILL.md §5 is the home; the mechanics live here): reviewers = a second model family where one
   is available (Opus beside Claude Code, a Cursor CLI model) + the in-session agent, briefed with the artefacts and the role's checklist ONLY — no
   decision log, no earlier reviews; **one verifier WITH record access** (DECISIONS, KNOWN_ISSUES, BLOCKERS, SPEC + `SPEC_ERRATA.md`, the test plan,
   netlist / mesh of record) classifies every finding **CONFIRMED / ALREADY DECIDED (row id; does its number still hold?) / REFUTED / PARTLY /
@@ -132,10 +132,15 @@ floor) are the ENV.md row `scripts/project.py env` prints on day 1.
    (it waits, then exits 2 after `--wait-max`); START / DONE lines with wall time and peak RSS in the pool's log. Every generator chain, slice
    run, render, FEA solve and record round goes through it; **agents never call the geometry kernel, the slicer or the renderer directly**
    (the Makefile pattern `templates/ci/Makefile` wires the targets through it).
-2. **Incremental by md5**: slice only plates whose input STL md5 or settings md5 changed (the sidecar carries both — `--only-changed` is the
-   default, `--all` explicit); render only bodies / faces whose SCAD text + camera key changed; PDF-render only documents whose source md5 changed;
-   the record round's `--check` modes are the gate, regeneration is the exception. Caches are keyed by md5 of inputs + tool version, stored beside
-   the outputs, and verified by the `--check` — skipping is safe by construction, quality is unchanged.
+2. **Caching policy — regenerate the geometry, cache only the expensive non-geometry steps.** With a fast geometry engine (the Manifold backend,
+   item 5) the geometry of record and every row computed on it — STL exports, census, print DFM, clearances, previews — are regenerated on every
+   chain run: a cache there is a source of stale-record and kit-parity defects, and the regeneration is cheap. A previous-md5 file may remain only
+   as a DETERMINISM check (same SCAD → same md5; a difference is a finding, not a cache miss). Caching is reserved for expensive steps that are
+   deterministic in their inputs and not geometry: slicer runs (keyed on STL md5 + settings md5, both in the sidecar — `--only-changed` the default,
+   `--all` explicit), browser PDF renders (document md5), index builds; each cached step ships a `--check` that re-derives the md5s, so skipping is
+   safe by construction. The job wrapper (item 1) is in place BEFORE the regenerate-everything policy, so a chain cannot overload the host. With a
+   slow engine (a CGAL-only install) the policy inverts for STL exports only — exports keyed on the SCAD text, every consumer re-run after the final
+   export pass (`case-pipeline.md`) — and the project says so in ENV.md.
 3. **Serialize the record round**: one lock on the machine (`make record-round`: an atomic `mkdir` lock), once per batch of commits, never per
    agent; agents commit generators + outputs and leave the round to the coordinator or the last agent. The documented order (`release-and-cut.md`
    §3.1) is a fixed point: the second `release_report` pass runs only when `traceability --check` says the matrix changed.

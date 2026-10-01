@@ -13,8 +13,6 @@
 """
 import argparse, datetime, hashlib, json, math, os, re, shutil, struct, subprocess, sys, tempfile
 
-HERE = os.path.dirname(os.path.realpath(__file__))
-sys.path.insert(0, HERE)
 
 
 def md5(path):

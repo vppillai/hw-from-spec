@@ -72,11 +72,13 @@ def read_entries(path, since=None, unparsed=None):
 
 def read_decisions(path, owner_prefix="D"):
     """Table rows -> [{id, date, status, topic, text, owner}] (6-cell decisions table; a backslash-escaped pipe is content)."""
+    sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
+    from project import split_row
     rows = []
     for line in open(path, encoding="utf-8"):
         if not line.startswith("|"):
             continue
-        cells = [c.strip() for c in re.split(r"(?<!\\)\|", line.strip())[1:-1]]
+        cells = split_row(line)
         if len(cells) < 5 or cells[0].startswith("---") or cells[0].lower() == "id":
             continue
         m = re.search(r"\b([A-Z]+)-(\d+[a-z]?)\b", cells[0])
@@ -388,8 +390,8 @@ def selftest():
         "- see also the 2026-09-30 note that carries no leading date and must be LISTED as unparsed\n")
     open(os.path.join(proj, "docs", "governance", "DECISIONS.md"), "w").write(
         "| ID | Date | Status | Topic | Proposal | Reason |\n|---|---|---|---|---|---|\n"
-        "| **D-85 (owner)** | 2026-09-28 | APPROVED | Hood retention by magnets, standard easy-to-find size | Owner: magnets | words |\n"
-        "| **D-86 (owner)** | 2026-09-28 | APPROVED | Purple anodised aluminium badge with laser artwork | Owner: badge | words |\n"
+        "| **D-85 (owner)** | 2026-09-28 | APPROVED | Lid retention by magnets, a standard disc size | Owner: magnets | words |\n"
+        "| **D-86 (owner)** | 2026-09-28 | APPROVED | Anodised metal badge with laser artwork | Owner: badge | words |\n"
         "| CC-208 | 2026-09-28 | APPLIED | magnet pockets | two pairs | D-85 |\n")
     sections, idf = index_skill(skill)
     assert len(sections) == 4 and "census" in idf, sections   # frontmatter = a (top) section

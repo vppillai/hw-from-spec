@@ -1,7 +1,7 @@
 # workflows/ — blind-review workflow templates
 
 Four ES-module scripts for the Claude Code Workflow tool (`agent()`, `parallel()`, `pipeline()`, `phase()`, `log()` are provided by the runner).
-They are templates: every `{{PLACEHOLDER}}` must be replaced before a run; a leftover double brace is a bug (`grep -n '{{' gen/workflows/*.js`
+They are templates: every `{{PLACEHOLDER}}` must be replaced before a run; a leftover placeholder is a bug (`grep -nE '\{\{[A-Z_*]+\}\}' gen/workflows/*.js`
 must print nothing in the instantiated copy). Without a runner that provides `agent()/parallel()/pipeline()`, run the same prompts as sequential
 subagents in the order of the phases (Review → Verify → Merge) — the blindness clauses hold as long as each reviewer gets only the hand-off.
 
@@ -20,10 +20,10 @@ subagents in the order of the phases (Review → Verify → Merge) — the blind
    `{{CAD_PYTHON}}`, `{{CAD_CLI}}`, `{{EXTERNAL_MODELS}}` (quoted, comma-separated, **at least two distinct models** — role i gets entries i and i+1),
    `{{EXTERNAL_MODEL}}` (one model: inspection, silk), `{{FALLBACK_MODEL}}`, `{{ROLE_SET}}` (`spec` | `board` | `mech` — the M1 / case-order round of a mech-scope project: case_dfm, mechanical intent, hardware, gates),
    `{{VERDICT_OPTIONS}}` (e.g. `order the <md5> package as is / order after the REQUIRED list / do not order yet`; at G0 `approve the spec as is / after the REQUIRED edits / not yet`),
-   `{{BRIEF_*}}` (what each specialty looks at: files, nets, decision rows — numbers come from the hand-off, not the brief; G0 uses `BRIEF_SPEC`, `BRIEF_PARTS`, `BRIEF_MECH`, `BRIEF_TEST`; the board set adds `BRIEF_CASE_DFM`: the STL dir, the census JSONs, `print_targets`),
+   `{{BRIEF_*}}` (what each specialty looks at: files, nets, decision rows — numbers come from the hand-off, not the brief; `spec` set: `BRIEF_SPEC`, `BRIEF_PARTS`, `BRIEF_MECH`, `BRIEF_TEST`; `board` set: `BRIEF_POWER`, `BRIEF_DIGITAL`, `BRIEF_LAYOUT`, `BRIEF_FAB`, `BRIEF_MECH`, `BRIEF_CASE_DFM` (the STL dir, the census + print-DFM records, `print_targets`), `BRIEF_SILK`, `BRIEF_SOFTWARE`, `BRIEF_COHERENCE`, `BRIEF_GATES`; `mech` set: `BRIEF_CASE_DFM`, `BRIEF_MECH`, `BRIEF_PARTS`, `BRIEF_GATES`; delta audit adds `BRIEF_DOCS`),
    `{{ROUND_CONTEXT}}` / `{{CLAIMS}}` / `{{DELTA_ROLE_KEYS}}` (delta), `{{BOARD_FILE}}`, `{{BOARD_YAML}}`, `{{BOARD_STATE}}`, `{{RULES_OF_RECORD}}`,
    `{{INSPECTION_DIR}}`, `{{COPPER_LAYERS}}`, `{{CHECKLIST_SOURCE}}`, `{{NET_CLASS_HIGHLIGHTS}}`, `{{RUN_TAG}}`,
-   `{{SILK_REGEN_COMMAND}}`, `{{COPPER_SIGNATURE_COMMAND}}`, `{{EXPORT_COMMAND}}`, `{{CROPS_COMMAND}}`, `{{SILK_DESIGN_INTENT}}`, `{{RECROP_DIR}}`.
+   `{{SILK_REGEN_COMMAND}}`, `{{COPPER_SIGNATURE_COMMAND}}`, `{{EXPORT_COMMAND}}`, `{{CROPS_COMMAND}}`, `{{SILK_DESIGN_INTENT}}` (the board's silk feature set: straps, legends, LED labels), `{{SILK_METRICS}}` (measured glyph widths and the via-to-ink cost of THIS board).
 3. Freeze: commit, `git status --short --untracked-files=no` empty, `git worktree add --detach <frozen> HEAD`, then
    `git -C <frozen> submodule update --init` (a detached worktree leaves the skill submodule empty and the `scripts` link dangling); write the
    hand-off with `scripts/handoff_header.py` output under §0 (HEAD md5 MATCH, clean tree; at G0 board/package/case read MISSING by design) and
@@ -42,6 +42,15 @@ error). macOS has no `timeout`: background + PID + until-loops.
 **In-session-only fallback** (no CLI, no API keys): keep the in-session reviewer, replace each `external()` call with a second in-session agent
 given a different persona and a different reading order (`{ label: 'review:<role>:claude-2' }`), keep the verifier and the merge unchanged. It is
 weaker (same model family) — say so in the merged report's reviewer-quality section.
+
+## The two paragraphs every template repeats (kept inline in each file because a template runs alone)
+- **Wrapper contract** (every `external()` / wrapper agent): run the external CLI from the frozen worktree (or a scratch dir holding only the tiles),
+  prompt ≤ ~30 kB naming the files, launch in the background with the PID recorded and poll with until-loops under the per-call ceiling
+  (`references/agent-ops.md` §5), `test -s` the report — an EMPTY or error-only report is a failure: retry once with the fallback model and note the
+  substitution, else write the failure into the report and return zero findings; the wrapper never judges the artefact itself.
+- **Blindness clause** (every reviewer prompt): the only briefing is the hand-off in the frozen worktree; never read `docs/reviews/<TAG>_*`, earlier
+  merged reviews or the live repo except to write the own report; every finding cites file + line / coordinate / refdes / net and says how it was
+  checked; severity BLOCKER / MAJOR / MINOR / NOTE as the hand-off defines them.
 
 ## Why these shapes
 - Blindness is structural: a detached worktree, a hand-off as the only briefing, forbidden file patterns named in the prompt, reports written

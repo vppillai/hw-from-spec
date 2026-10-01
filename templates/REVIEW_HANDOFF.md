@@ -19,7 +19,7 @@ _(G0 round: board, package and case rows read MISSING by design — the artefact
 | `out/fab/<date>_<md5-8>/` | fab package of record | `{{md5 of MANIFEST}}` | {{ee,both}}
 | `design/case.yaml` / `out/.../case/<preset>/stl/*.stl` | case of record (record md5 = `scripts/project.py record` in mech) | `{{version}}` | {{mech,both}}
 | the fit input (`paths.mesh_provenance`: STEP / envelope) | what the case must fit, [V] / [K] | `{{source_md5}}` | {{mech}}
-| `docs/governance/DECISIONS.md` rows D-… / CC-… | decision trail for this round | |
+| `docs/governance/DECISIONS.md` rows D-… / CC-… | decision trail for the round | |
 
 ## 3. Known / open items with dispositions (from KNOWN_ISSUES.md — generated; do not add prose here)
 ### 3.1 Applied ahead of the owner's nod
@@ -29,7 +29,7 @@ _(G0 round: board, package and case rows read MISSING by design — the artefact
 ### 3.3 Spec errata (decided deviations of the frozen SPEC — `docs/spec_sections/SPEC_ERRATA.md`; a deviation listed here is ALREADY DECIDED, not a finding)
 {{SPEC_ERRATA rows or "none"}}
 
-## 4. Claims of this round (delta audits) — each with commit + evidence path
+## 4. Claims of the round (delta audits) — each with commit + evidence path
 | # | Claim | Commit | Evidence |
 |---|---|---|---|
 | 1 | {{claim}} | `{{sha}}` | `{{path}}` |

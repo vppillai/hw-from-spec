@@ -1,7 +1,7 @@
 # print-kit.md — the home-FDM print kit as a deliverable a technician can run without the repo
 
-Added 0.7.1 from a blind technician review of a kit as received (worked example: the source project's P2S kit, 2026-09-30 — two BLOCKERs, both in
-the one irreversible step). The rules are FAIL-gated where a generator can check them; the numbers are the worked example's.
+A kit is reviewed as a technician receives it — no repo, no git — and the two BLOCKERs such a review finds sit in the one irreversible step. The
+rules are FAIL-gated where a generator can check them; the numbers quoted are one kit's and stand for the mechanism.
 
 ## 1. One entry point: a generated `START_HERE.md` at the top of the kit
 Written by the slicer wrapper (it owns the minutes and grams) from a `kit_facts.json` the geometry generator writes — **numbers from the
@@ -17,8 +17,8 @@ sidecars, prose from the knobs, nothing typed**. Four blocks, in this order:
    down) → dry-fit body on tray → screws → **magnets dry, then CA** → legend plate (CA) → hood plate (CA on the lands only) → fixture = real
    board only → **feet LAST** over the screw counterbores (a foot fitted early is peeled and wasted).
 4. **Report-back table** with **numeric pass criteria per interface** (body-on-tray play ≤ 0.3 at the seam; plates ≈ 1.2 proud, LED holes
-   concentric; hood pulls itself down at both magnet pairs and holds upside down; cap mouth 18.55..18.65 × 8.7..8.8 by calliper; coupon: which
-   cap / stroke reads) **and a recipient** ("reply in the project chat" / a name). A kit without a recipient gets no answer.
+   concentric; hood pulls itself down at both magnet pairs and holds upside down; a cap mouth within its tolerance window by calliper; coupon:
+   which cap / stroke reads) **and a recipient** ("reply in the project chat" / a name). A kit without a recipient gets no answer.
 
 Rules the entry point makes checkable:
 - **Print-sheet names = project-file names** (`PRINT_SHEET_<piece>.md` names its `.3mf`; sheets called `shell` / `plate_ui` for projects called

@@ -78,27 +78,28 @@ tools:
   python: .venv/bin/python
   kicad_cli: {{CAD_CLI_PATH}}                 # the key names are historical: put YOUR CAD's CLI here ({KICAD_CLI} in commands), whatever the CAD (mech: openscad) {{ee,both}}
   kicad_cli: {{GEOMETRY_CLI_PATH}}            # mech scope: the geometry CLI ({KICAD_CLI} in render commands), e.g. openscad {{mech}}
+  slicer: {{SLICER_CLI_PATH}}                 # the slicer CLI of the home FDM preset (plates, g-code reads) {{mech,both}}
   kicad_python: {{CAD_PYTHON_PATH}}           # the CAD's own Python ({KPY}); python3 when the CAD has none {{ee,both}}
-fab_dfm:                                      # the board's fab-DFM mirror (references/fab-dfm.md; the old block name `dfm:` is still read) {{ee,both}}
+fab_dfm:                                      # the board's fab-DFM mirror (references/fab-dfm.md; `dfm:` is read as an alias) {{ee,both}}
   thresholds: design/dfm_thresholds.json      # the fab's numbers with source URL + date {{ee,both}}
   items: out/dfm_items.json                   # written by the project's measurer (G2) {{ee,both}}
   accept: design/{{BOARD}}_board.yaml         # key dfm_accepted: [{check, refs, reason, date, evidence}] {{ee,both}}
   report: out/dfm.json {{ee,both}}
-  bar: {open: 0, warnings_fail: true, accepted_requires: [reason, date, evidence]}   # owner decision {{D-BAR}}: 0 Danger / 0 Warning; an acceptance without all three fields does not count {{ee,both}}
+  bar: {open: 0, warnings_fail: true, accepted_requires: [reason, date, evidence]}   # owner decision {{D-BAR}}: 0 open at either of the fab's grades; an acceptance without all three fields does not count {{ee,both}}
 print_targets:                                # every printed body is censused against ONE named target; no number lives in a script (references/dfm-printed-enclosure.md) {{mech,both}}
-  {{VENDOR_TARGET}}:                          # e.g. jlc_mjf {{mech,both}}
+  {{VENDOR_TARGET}}:                          # e.g. vendor_mjf {{mech,both}}
     vendor: {{VENDOR}}                        # e.g. JLC3DP {{mech,both}}
     process: {{PROCESS}}                      # MJF | SLA | FDM | CNC {{mech,both}}
     material: {{MATERIAL}}                    # e.g. PA12-HP {{mech,both}}
     dfm_process: {{DFM_PROCESS}}              # row of design/dfm_processes.yaml scripts/print_dfm.py gates this target on (kickoff C8a; e.g. jlc_mjf_pa12) {{mech,both}}
-    wall_gate: {{WALL_GATE}}                  # the checker's grey line (JLC3DP 2026-09-28: 1.2)         [checker] {{mech,both}}
+    wall_gate: {{WALL_GATE}}                  # the vendor checker's grey line, read on checker_date       [checker] {{mech,both}}
     void_gate: {{VOID_GATE}}                  # slots / slits / engraved strokes (1.2)                    [checker] {{mech,both}}
     red_line: {{RED_LINE}}                    # the checker's red band (0.5)                              [checker] {{mech,both}}
     design_margin: {{DESIGN_MARGIN}}          # walls drawn at wall_gate + margin (0.1)                   [owner bar] {{mech,both}}
     wedge_band: 1.5                           # a wedge whose sub-gate band is wider FAILs unless accepted [convention] {{mech,both}}
-    tolerance: {{TOLERANCE}}                  # the vendor's published dimensional tolerance (MJF PA12 ±0.3 or ±0.3 %); replaced by the first-article spread {{mech,both}}
+    tolerance: {{TOLERANCE}}                  # the vendor's published dimensional tolerance (cite it: `published.tolerance` of the process row); replaced by the first-article spread {{mech,both}}
     tolerance_source: {{URL_AND_DATE}} {{mech,both}}
-    max_bbox_for_rule: {{MAX_BBOX_MM}}        # the largest part dimension the length-dependent rule was calibrated at (147) {{mech,both}}
+    max_bbox_for_rule: {{MAX_BBOX_MM}}        # the largest part dimension the length-dependent rule was calibrated at (your first vendor round) {{mech,both}}
     checker_url: {{CHECKER_URL}}              # the vendor's quote / DFM page {{mech,both}}
     checker_date: {{DATE}}                    # when checker_url and the numbers above were last read {{mech,both}}
     samples_per_mm2: 10                       # census density (a fixed count under-samples a large part) {{mech,both}}

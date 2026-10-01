@@ -141,7 +141,7 @@ def main():
     acc_path = a.accept or (os.path.join(P.root, cfg("accept")) if cfg("accept") else None)
     rep_path = a.json or (os.path.join(P.root, cfg("report")) if cfg("report") else None)
     if not os.path.exists(items_path):
-        print(f"MISSING: {items_path} — run the project's measurer first (references/fab-dfm.md §3)"); return 1
+        print(f"MISSING: {items_path} — run the project's measurer first (references/fab-dfm.md §3)"); return 2
     thresholds = json.load(open(th_path)) if os.path.exists(th_path) else {"checks": {}}
     graded, open_bad, report = run(json.load(open(items_path)), thresholds, load_accept(acc_path), a.top, cfg("bar") or {})
     print(report)

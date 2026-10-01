@@ -37,7 +37,7 @@ written specification, for fabrication and assembly at {{FAB}}. Humans review at
 9. **Fab constraints are hard:** {{FAB_CONSTRAINTS}}. **The manufacturability bar is zero / zero / no waivers** (owner row {{D-BAR}}), enforced by scripts:
    board — assembly sides, minimum package, link parts, excluded package families, parts on the verified list, fab code field on every fitted part, {{ee,both}}
    DNP marked and excluded from BOM/CPL, the fab's DFM checker mirrored in-repo (`design/dfm_thresholds.json`, `scripts/dfm_check.py`); DRC 0 errors / {{ee,both}}
-   0 warnings and fab DFM 0 Danger / 0 Warning unless a dated `dfm_accepted` entry with vendor evidence (`references/pcb-layout-dfm.md`). {{ee,both}}
+   0 warnings and fab DFM 0 open at either of the fab's grades unless a dated `dfm_accepted` entry with vendor evidence (`references/pcb-layout-dfm.md`). {{ee,both}}
    printed enclosure — wall / void / red gates, tolerance and rating per print target (`project.yaml print_targets`, never in a script); census 0 {{mech,both}}
    unaccepted FAIL, `print_dfm.py` PASS, slicer log clean, vendor checker no flag by API read; CNC — vendor DFM clean (`references/dfm-printed-enclosure.md`). {{mech,both}}
 10. **Say what you don't know.** If a datasheet, drawing or page cannot be fetched, mark the item BLOCKED in `docs/governance/BLOCKERS.md` and continue elsewhere.
@@ -45,7 +45,7 @@ written specification, for fabrication and assembly at {{FAB}}. Humans review at
 
 ## Environment (verify on first run, record in docs/governance/ENV.md)
 - CAD CLI: `{{CAD_CLI_PATH}}`; CAD Python: `{{CAD_PYTHON_PATH}}`; project venv `.venv` (Python ≥ 3.11) with {{VENV_PACKAGES}}. {{ee,both}}
-- Geometry CLI: `{{CAD_CLI_PATH}}` (e.g. openscad); slicer CLI: `{{SLICER_CLI_PATH}}`; project venv `.venv` (Python ≥ 3.11) with {{VENV_PACKAGES}}. {{mech}}
+- Geometry CLI: `{{GEOMETRY_CLI_PATH}}` (e.g. openscad); slicer CLI: `{{SLICER_CLI_PATH}}`; project venv `.venv` (Python ≥ 3.11) with {{VENV_PACKAGES}}. {{mech}}
 - All tool paths live in `project.yaml tools:`; generators read them from there (`scripts/project.py`), never hard-code them.
 - Heavy tools (geometry kernel, slicer, renderer, FEA, the record round) run through `scripts/jobs.sh -- <cmd>` (one pool per machine, sized from
   the host; `make <target>`), never directly; regenerate only what an md5 says changed (`references/agent-ops.md` §8).
@@ -77,4 +77,4 @@ docs/          governance/ (ENV DECISIONS BLOCKERS GATES STATUS KNOWN_ISSUES TRA
 - Symbol fields: `MPN, Manufacturer, {{FAB_CODE_FIELD}}, Datasheet, Confidence, Alt_MPN, Alt_{{FAB_CODE_FIELD}}`. {{ee,both}}
 - Units mm, µF/nF/pF, `4.7k` not `4k7`. Every sheet has a title block and a NOTES block (intent, key values, rework links, test points, checklist). {{ee,both}}
 - Envelope, interface positions, materials and fits: exactly as in the spec / fit input of record unless a logged decision changes them; units mm. {{mech}}
-- Decision rows: 6 cells, `\|` for a literal pipe; status history after `(was: …)`; the nod marker in a status cell means "applied, owner look wanted".
+- Decision rows: 6 cells, `\|` for a literal pipe; status history after the `(was:` marker; the nod marker in a status cell means "applied, owner look wanted".

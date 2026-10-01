@@ -15,7 +15,7 @@ fit input (a board STEP / mesh or dimensions) is a row in §4 tagged [V] (measur
 ## 2. Interfaces (connectors, buses, power in / out)
 | ID | Interface | Connector / part | Signals / rails | Numbers that must agree with |
 |---|---|---|---|---|
-| R-E01 | {{USB-C 5 V 3 A}} | {{MPN or [S] parameters}} `VERIFY` | | R-M02, R-T01 |
+| R-E01 | {{interface, e.g. power in: connector type, V, A}} | {{MPN or [S] parameters}} `VERIFY` | | R-M02, R-T01 |
 
 ## 3. Electrical requirements {{ee,both}}
 | ID | Requirement | Value / limit | Source | VERIFY | {{ee,both}}

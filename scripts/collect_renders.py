@@ -118,7 +118,6 @@ renders:
     idx = json.load(open(f"{out}/renders.json"))
     assert set(idx) == {"pcb_top.png", "panel_top.png", "case/case_iso.png", "tiny.png"} and idx["tiny.png"]["grade"] == "EMPTY", idx
     assert run(P, runner=fake) == 0 and len(calls) == 1, "idempotent: nothing redone"
-    open(f"{d}/project.yaml", "a").write("")
     P.cfg["renders"][0]["args"] = ["--side", "bottom"]
     assert run(P, dry=True, runner=fake) == 1 and len(calls) == 1, "--check: a rule that would be redone exits 1 and renders nothing"
     assert run(P, runner=fake) == 0 and len(calls) == 2, "a changed camera re-renders"
@@ -135,6 +134,6 @@ renders:
 
 
 if __name__ == "__main__":
-    ap = argparse.ArgumentParser(); ap.add_argument("--project"); ap.add_argument("--dry", "--check", action="store_true"); ap.add_argument("--selftest", action="store_true")
+    ap = argparse.ArgumentParser(description=__doc__.split("\n")[0]); ap.add_argument("--project"); ap.add_argument("--dry", "--check", action="store_true"); ap.add_argument("--selftest", action="store_true")
     a = ap.parse_args()
     sys.exit(selftest() if a.selftest else run(Project.find(arg=a.project), a.dry))

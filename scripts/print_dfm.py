@@ -7,7 +7,7 @@ here is tuned to one vendor. `references/print-dfm.md` carries the loop; this do
 
 Measures (per surface sample, area-weighted, fixed seed):
   t_ray  material thickness along the inverse normal (the census ray, origin nudged 1e-3 INTO the material — nudged the other way it hit its own
-         face and read inf on every sample while the ball hid the defect: 0.8.0 F1 / CC-215); the hit face's angle classifies wall (< 30 deg) / wedge
+         face and read inf on every sample while the ball hid the defect — assert the measure, not only the verdict); the hit face's angle classifies wall (< 30 deg) / wedge
   t_med  tangent-ball thickness limited by OPPOSING faces only (normals within ~45 deg of the inverse normal) = the largest inscribed ball tangent
          at the sample: reads a NECK / ROOT that no ray sees (a rim ring set inboard of its wall over a lap step stands on a root the width of
          the overlap while every ray through it reads the full rim) and does not read a convex 90 deg edge thin (a perpendicular face is not
@@ -37,11 +37,10 @@ Rules (each a row: process parameter + physical reason + fix; verdict FLAG / PAS
   H  hole: a round void (normals in two directions) with g < hole_min
   O  overhang (layer processes): down-facing faces steeper than overhang_max_deg (+1 deg tolerance) from vertical, not the bed, not a ceiling, whose
      footprint reaches further than bridge_max across (a shorter one is bridged from its edges: the round top of a slot, a shallow recess roof);
-     PLUS every horizontal ceiling with fewer than two supported ends (a CANTILEVER is a 90 deg overhang, not a bridge) longer than two line widths
-  B  bridge (layer processes): a horizontal ceiling above the bed with BOTH ends on material whose SPAN exceeds bridge_max — the span is the shortest
-     crossing between its supported edges, measured by RAYS from the inscribed-circle centre (bounded all round: the inscribed circle; one axis with
-     both ends on material: that chord — full-height lands inside a rebate split it into short strips the bbox extent would not see): a
-     2 x 40 tunnel roof bridges 2 mm, not 40. O / B FLAG when the body prints with supports = none (per body: --supports overrides the row), INFO otherwise
+  B  bridge (layer processes): a horizontal ceiling above the bed whose SPAN exceeds bridge_max — the span is measured by rays from the ceiling sample
+     nearest its inscribed-circle centre: both in-plane axes supported -> min(inscribed circle, chord_x, chord_y); exactly one axis -> that chord (a
+     pi roof open at the ends reads its width, a tunnel its width, a rebate split by full-height lands one strip); no axis -> the inscribed circle (a
+     relief ring reads its width). Never a bbox extent, never a raster run through the footprint mask.
   S  size: bbox against part_min / build_max
   L  INFO: regions inside legend boxes (the coupon rule owns them) and slivers
   Y  INFO: wall-class surface between wall_min and wall_reco (the vendor's grey line = the design margin; the census gate owns it)
@@ -133,7 +132,7 @@ def processes(path=None):
     if not os.path.exists(p) and not path and os.path.exists(TEMPLATE_TABLE):
         p = TEMPLATE_TABLE
     if not os.path.exists(p):
-        sys.exit(f"print_dfm: no process table at {p} (copy templates/design/dfm_processes.yaml to design/ or pass --processes)")
+        print(f"print_dfm: no process table at {p} (copy templates/design/dfm_processes.yaml to design/ or pass --processes)", file=sys.stderr); sys.exit(2)
     return yaml.safe_load(open(p))["processes"], p
 
 
@@ -184,7 +183,7 @@ def _tangent_ball(pts, nrm, sign, r0, cos_opps=(COS_OPP,), query=None):
 
 def _rays(m, pts, nrm, sign):
     """census ray from the sample nudged 1e-3 INTO the side it travels (sign -1 = into the material, +1 = into the air) along sign * normal, so the
-    first hit is the far face and not the origin face: (distance, hit face angle; 0 = parallel). Blind review 0.8.0 F1 / CC-215: nudged the other way
+    first hit is the far face and not the origin face: (distance, hit face angle; 0 = parallel). Nudged the other way
     every ray hit its own face at 0.001, was discarded as a self-hit and read inf — R then fired on every thin wall."""
     orig = pts + sign * nrm * 1e-3
     loc, ir, it = m.ray.intersects_location(orig, sign * nrm, multiple_hits=False)
@@ -248,17 +247,19 @@ def span_edt(P, spacing, cell=0.25):
 
 
 def span_rays(m, P, spacing, cell=0.25):
-    """Bridge span of a ceiling and how many of its ends rest on material, measured with RAYS from the inscribed-circle centre (0.10.0): the
-    origin is in the air just under the ceiling at the EDT maximum; along each in-plane axis a ray each way counts a hit only within the footprint
-    extent + 1 -> ends[a] in 0..2, chord[a] = the two hit distances summed. Bounded all round (ends [2, 2]) -> the inscribed circle; exactly one
-    axis with both ends on material -> that axis' chord (an open-ended rebate split by full-height lands reads one strip, not the bbox); else the
-    inscribed circle (the cantilever decision is rule O's). Not a raster chord: a run through a MERGED cluster reads any row of it (a 1.4 mm relief
-    ring around a sole read 44 mm) and the mask dilation erases lands thinner than ~2k cells (a debossed word merged into one 12.7 mm span)."""
+    """Bridge span of a ceiling and how many of its ends rest on material, measured with RAYS from the inscribed-circle centre: the origin is the
+    ceiling SAMPLE nearest the EDT maximum (a real point of the face, 0.05 below it); along each in-plane axis a ray each way counts a hit only within
+    the footprint extent + 1 -> ends[a] in 0..2, chord[a] = the two hit distances summed. ends [2, 2] -> min(inscribed circle, chord_x, chord_y) (a
+    merged word reads its stroke width, a rectangle its inscribed circle); exactly one axis with both ends on material -> that chord (a pi roof open
+    at the ends, a tunnel, a rebate split by full-height lands); otherwise the inscribed circle (a relief ring reads its width). Not a bbox extreme and
+    not a raster run: a run through a MERGED cluster reads any row of it and the mask dilation erases lands thinner than two cells."""
     from scipy.ndimage import distance_transform_edt
+    from scipy.spatial import cKDTree
     mask, k, cell, lo = _footprint_mask(P, spacing, cell)
     edt = distance_transform_edt(mask); c = np.unravel_index(int(np.argmax(edt)), edt.shape)
     edt_span = round(float(max(0.0, edt[c] - k) * 2 * cell), 1)
-    o = np.array([lo[0] + (c[0] + 0.5) * cell, lo[1] + (c[1] + 0.5) * cell, float(np.median(P[:, 2])) - 0.05])
+    centre = np.array([lo[0] + (c[0] + 0.5) * cell, lo[1] + (c[1] + 0.5) * cell])
+    o = P[cKDTree(P[:, :2]).query(centre)[1]].copy(); o[2] -= 0.05
     reach = float(np.ptp(P[:, :2], axis=0).max()) + 1.0
     ends, chord = [0, 0], [0.0, 0.0]
     for a in (0, 1):
@@ -270,7 +271,12 @@ def span_rays(m, P, spacing, cell=0.25):
                 if dist <= reach:
                     ends[a] += 1; chord[a] += dist
     two = [a for a in (0, 1) if ends[a] == 2]
-    span = edt_span if len(two) != 1 else round(chord[two[0]], 1)
+    if len(two) == 2:
+        span = round(min(edt_span, chord[0], chord[1]), 1)
+    elif len(two) == 1:
+        span = round(chord[two[0]], 1)
+    else:
+        span = edt_span
     return span, ends
 
 
@@ -338,10 +344,10 @@ def analyse(path, process, n_s=None, seed=0, boxes=None, out_dir=None, piece=Non
     t0 = time.time()
     table, table_path = processes()
     if process not in table:
-        sys.exit(f"print_dfm: process '{process}' is not a row of {table_path}; rows: {', '.join(table)}")
+        print(f"print_dfm: process '{process}' is not a row of {table_path}; rows: {', '.join(table)}", file=sys.stderr); sys.exit(2)
     pr = table[process]
     if pr.get("wall_min") is None:
-        sys.exit(f"print_dfm: row '{process}' has wall_min null (BLOCKED source) — fill the row before gating on it")
+        print(f"print_dfm: row '{process}' has wall_min null (BLOCKED source) — fill the row before gating on it", file=sys.stderr); sys.exit(2)
     boxes = norm_boxes(boxes if boxes is not None else lands)
     m = trimesh.load(path, force="mesh")
     area = float(m.area); ext = (m.bounds[1] - m.bounds[0])
@@ -351,7 +357,7 @@ def analyse(path, process, n_s=None, seed=0, boxes=None, out_dir=None, piece=Non
     media = pr.get("media", "powder"); sup = supports or pr.get("supports")
     F = field(m, n_s, seed=seed, r0=max(1.0, reco / 2 + 0.4), r0_void=max(0.75, max(vmin_ or 0.0, hmin) / 2 + 0.3))
     pts, nrm, t, ang, g = F["pts"], F["nrm"], F["t"], F["ang"], F["g"]
-    a_per = area / n_s; spacing = a_per ** 0.5; link = max(3.0 * spacing, 2.5)      # a 0.4 mm band holds ~3 samples / mm along its length: a density-scaled 1 mm link broke a 147 mm root band into 25 pieces; 2.5 keeps it whole
+    a_per = area / n_s; spacing = a_per ** 0.5; link = max(3.0 * spacing, 2.5)      # a 0.4 mm band holds ~3 samples / mm along its length: a density-scaled 1 mm link broke a long root band into pieces; 2.5 keeps it whole
     land = _in_boxes(pts, boxes) if (boxes and pr.get("legend_land_min") is not None) else np.zeros(n_s, bool)
     thr_w = np.where(land, pr.get("legend_land_min", wall_min), wall_min)
     thr_d = np.where(land, pr.get("legend_void_min", dmin), dmin)
@@ -387,7 +393,7 @@ def analyse(path, process, n_s=None, seed=0, boxes=None, out_dir=None, piece=Non
         "a slicer or vendor cannot tell inside from outside on an open mesh (every thickness below is unreliable); two solids that touch at a vertex / edge / face without a union, or a stray shell, print as pieces; legend arms that touch by design are listed (row L)",
         "union the solids and close the open edges in the CAD, re-export; pass --bodies N only when the file intentionally holds N parts")
     row("C closed cavity", f"{len(cav)} sealed internal void(s)" + (f": volumes {[round(-float(p.volume), 1) for p in cav[:4]]} mm3" if cav else ""),
-        ("none on a powder / resin process (escape hole >= " + str(pr.get("published", {}).get("escape_hole", "3.5 mm [V Hubs]")) + ")") if media in ("powder", "resin") else "listed (FDM hollows it)",
+        ("none on a powder / resin process (escape hole >= " + str(pr.get("published", {}).get("escape_hole", "the row's published escape_hole")) + ")") if media in ("powder", "resin") else "listed (FDM hollows it)",
         ("FLAG" if media in ("powder", "resin") else "INFO") if cav else "PASS", "; ".join(f"{-float(p.volume):.1f} mm3 at {np.round(p.bounds, 1).tolist()}" for p in cav[:4]),
         f"a sealed cavity traps un-fused {media} that cannot be removed (weight, leak, no clean-out)" if media != "none" else "a sealed cavity on FDM is printed hollow / with infill — no media to trap",
         "open an escape hole into the cavity, or fill it in the CAD")
@@ -401,7 +407,7 @@ def analyse(path, process, n_s=None, seed=0, boxes=None, out_dir=None, piece=Non
         f"[K] slenderness heuristic: a strip thinner than the process minimum over >= {S} x its thickness bends / cracks under depowdering, cleaning and handling; shorter = a feature (rule F)",
         f"thicken the strip to >= {wall_min} (or shorten it below {S} x t) in the CAD / generator, re-export, rerun")
     row("R root under a rim / ledge", f"{len(Rt)} of them read >= {wall_min} along the normal", f"no W region with ray >= wall_min {wall_min} (= a root)", "FLAG" if Rt else "PASS", _where(Rt),
-        "a rim set inboard of its wall over a step stands on a root the width of the overlap: the ball from the wall face is stopped by the rim's outer face while every ray reads the full rim — the construction that cracked on a 141 mm lip",
+        "a rim set inboard of its wall over a step stands on a root the width of the overlap: the ball from the wall face is stopped by the rim's outer face while every ray reads the full rim — the construction behind a cracked long lip",
         f"widen the overlap to >= {wall_min} (move the rim over the wall), fill the undercut or chamfer the step")
     if layer:
         row("Z skin (layers)", f"{len(Zs)} horizontal skin(s) (normals within {WALL_DEG:g} deg of the print Z) thinner than {skin_min} = {skin_layers} x {layer}; {len(skins)} skin region(s) below wall_min listed, not walls",
@@ -460,20 +466,15 @@ def analyse(path, process, n_s=None, seed=0, boxes=None, out_dir=None, piece=Non
         Oall = regions(pts, -nrm[:, 2], down & ~ceiling & ~bed, link, a_per, lambda s: dict(cls="overhang", deg=round(float(np.degrees(np.arcsin(np.clip(-nrm[s, 2].mean(), -1, 1)))), 0), span=span_edt(pts[s], spacing)))
         O = [r for r in Oall if r["span"] > pr["bridge_max"]]; Os = [r for r in Oall if r not in O]
         C = regions(pts, pts[:, 2], ceiling & ~bed, link, a_per, lambda s: dict(cls="ceiling", z=round(float(np.median(pts[s, 2])), 2), _s=s))
-        for r in C:                                                              # span + supported ends by rays from the inscribed-circle centre (span_rays): bounded -> inscribed circle; one open axis -> that chord; no axis with both ends on material -> a cantilever
-            P = pts[r.pop("_s")]; span, ea = span_rays(m, P, spacing); r["supported_ends"] = ea
-            if max(ea) >= 2:
-                r["cls"], r["span"] = "bridge", span
-            else:
-                r["cls"], r["span"] = "cantilever", r["extent"]
+        for r in C:                                                              # span + supported ends by rays from the inscribed-circle centre (span_rays); every ceiling is judged as a bridge, rule O owns overhangs
+            P = pts[r.pop("_s")]; r["span"], r["supported_ends"] = span_rays(m, P, spacing); r["cls"] = "bridge"
         B = [r for r in C if r["cls"] == "bridge" and r["span"] > pr["bridge_max"]]
-        Ct = [r for r in C if r["cls"] == "cantilever" and r["extent"] > 2 * fmin]
         hard = sup == "none"
-        row("O overhang (layers)", f"{len(O)} down-facing region(s) steeper than {pr['overhang_max_deg']} deg from vertical (+{OVERHANG_TOL:g} deg tolerance; not the bed, not a ceiling) reaching further than bridge_max {pr['bridge_max']} across ({len(Os)} shorter one(s) listed: the slicer bridges them); {len(Ct)} horizontal cantilever(s) (a ceiling with < 2 supported ends) longer than two line widths ({2 * fmin} mm); supports = {sup}",
-            "none when supports = none; listed otherwise", ("FLAG" if (O or Ct) else "PASS") if hard else "INFO", (_where(O, k="deg") or ("short overhangs (reach <= bridge_max): " + _where(Os, k="deg", n=4))) + (" || cantilevers: " + _where(Ct, k="extent") if Ct else ""),
-            "an FDM layer needs the layer below it: beyond ~45..60 deg from vertical it sags or needs support (Prusa: 45..60 deg); a steep region whose footprint spans less than bridge_max is bridged from its supported edges [K]; a horizontal face with one supported edge is a 90 deg overhang — only a span with material at BOTH ends is a bridge; the body's own support setting decides whether the rest is a defect",
-            "re-orient the part, add a 45 deg lead-in, support the free end, or allow supports there")
-        row("B bridge (layers)", f"{len(B)} horizontal ceiling(s) above the bed with both ends supported whose span (the shortest crossing between supported edges) exceeds bridge_max {pr['bridge_max']}; {len(C)} ceiling(s) read; supports = {sup}", "none when supports = none; listed otherwise", ("FLAG" if B else "PASS") if hard else "INFO",
+        row("O overhang (layers)", f"{len(O)} down-facing region(s) steeper than {pr['overhang_max_deg']} deg from vertical (+{OVERHANG_TOL:g} deg tolerance; not the bed, not a ceiling) reaching further than bridge_max {pr['bridge_max']} across ({len(Os)} shorter one(s) listed: the slicer bridges them); supports = {sup}",
+            "none when supports = none; listed otherwise", ("FLAG" if O else "PASS") if hard else "INFO", _where(O, k="deg") or ("short overhangs (reach <= bridge_max): " + _where(Os, k="deg", n=4)),
+            "an FDM layer needs the layer below it: beyond ~45..60 deg from vertical it sags or needs support (Prusa: 45..60 deg); a steep region whose footprint spans less than bridge_max is bridged from its supported edges [K]; the body's own support setting decides whether the rest is a defect",
+            "re-orient the part, add a 45 deg lead-in, or allow supports there")
+        row("B bridge (layers)", f"{len(B)} horizontal ceiling(s) above the bed whose span (the shortest crossing between supported edges, by rays from the inscribed-circle centre) exceeds bridge_max {pr['bridge_max']}; {len(C)} ceiling(s) read; supports = {sup}", "none when supports = none; listed otherwise", ("FLAG" if B else "PASS") if hard else "INFO",
             _where(B, k="span") or ("ceilings (span / long side): " + "; ".join(f"{r['cls']} span {r['span']} x {r['extent']} mm, {r['area']} mm2 at Z {r['z']}" for r in C[:5])),
             "bridge lines run the SHORTEST way between two supported edges: the span is that crossing, not the long side (a 2 x 40 tunnel roof bridges 2 mm); longer than bridge_max it droops", f"split the span below {pr['bridge_max']} with a rib, or allow interior supports")
     sz = []
@@ -664,14 +665,14 @@ def validate(write_doc=True, renders=()):
     bbox within 0.01 — a hash splits twins at a rounding boundary), write the validation doc: vendor verdict vs ours per geometry, confusion matrix,
     rules fired, coverage per mechanism, thresholds with their tags. Returns the summary; `looser` lists the RULE DEFECTS (vendor FLAG, ours PASS)."""
     if not os.path.exists(PATHS["verdicts"]):
-        sys.exit(f"print_dfm: no verdict record at {PATHS['verdicts']} (copy templates/docs/quotes/dfm_verdicts.yaml, append every vendor verdict)")
+        print(f"print_dfm: no verdict record at {PATHS['verdicts']} (copy templates/docs/quotes/dfm_verdicts.yaml, append every vendor verdict)", file=sys.stderr); sys.exit(2)
     labels = yaml.safe_load(open(PATHS["verdicts"]))["verdicts"] or []
     table, table_path = processes(); VAL_DIR = PATHS["val_dir"]
     os.makedirs(VAL_DIR, exist_ok=True); recs = []; sig = []
     for lb in labels:
         path = lb["stl"] if os.path.isabs(lb["stl"]) else os.path.join(ROOT, lb["stl"])
         if not os.path.exists(path):
-            sys.exit(f"print_dfm: labelled STL missing: {lb['stl']} (every verdict row needs its STL in the tree)")
+            print(f"print_dfm: labelled STL missing: {lb['stl']} (every verdict row needs its STL in the tree)", file=sys.stderr); sys.exit(2)
         h = md5(path)
         assert h.startswith(str(lb["md5"])), f"{lb['stl']}: md5 {h[:8]} != label {lb['md5']} — the file changed after the verdict; relabel"
         cj = os.path.join(VAL_DIR, f"{h[:8]}.json"); rec = json.load(open(cj)) if os.path.exists(cj) else None
@@ -832,14 +833,14 @@ def selftest():
             r = analyse(tp, FDM, n_s=40000, supports="none"); c = [x for x in r["ceilings"] if x["extent"] > 30]
             assert c and c[0]["cls"] == "bridge" and abs(c[0]["span"] - wid) <= 0.6, (wid, c[:1])
             assert ("B bridge (layers)" in r["flagged"]) == want and "B bridge (layers)" not in analyse(tp, FDM, n_s=40000, supports="interior")["flagged"], (wid, r["flagged"])
-        # cantilever vs bridge (0.8.0 F25): a T-section's 18 mm free arms are cantilevers (O), an upside-down U's 32 mm roof open at the ends is a 32 mm bridge (B), not a 10 mm one
+        # a T-section's 18 mm free arms have no axis with both ends on material: their span is the inscribed circle of the arm (10) -> silent; an upside-down U's
+        # 32 mm roof open at the ends has one supported axis -> a 32 mm bridge (B), not the 10 mm inscribed circle
         tee = _extrude(Polygon([(-2, 0), (2, 0), (2, 15), (20, 15), (20, 18), (-20, 18), (-20, 15), (-2, 15)]), 10.0, os.path.join(d, "tee.stl"), up=True)
-        r = analyse(tee, FDM, n_s=20000); ro = next(x for x in r["rows"] if x["rule"].startswith("O")); rb = next(x for x in r["rows"] if x["rule"].startswith("B"))
-        assert "2 horizontal cantilever(s)" in ro["value"] and rb["value"].startswith("0 horizontal") and ro["verdict"] == "INFO", (ro["value"], rb["value"])
-        assert "O overhang (layers)" in analyse(tee, FDM, n_s=20000, supports="none")["flagged"]
+        r = analyse(tee, FDM, n_s=20000, supports="none"); c = [x for x in r["ceilings"] if x["extent"] > 15]
+        assert c and all(max(x["supported_ends"]) < 2 and x["span"] <= 10.5 for x in c) and not ({"B", "O"} & fired(r)), ("tee arms: no supported axis, inscribed circle, silent", c[:2], r["flagged"])
         pi_ = _extrude(Polygon([(-20, 0), (-16, 0), (-16, 15), (16, 15), (16, 0), (20, 0), (20, 18), (-20, 18)]), 10.0, os.path.join(d, "pi.stl"), up=True)
-        r = analyse(pi_, FDM, n_s=20000, supports="none"); ro = next(x for x in r["rows"] if x["rule"].startswith("O")); rb = next(x for x in r["rows"] if x["rule"].startswith("B"))
-        assert "0 horizontal cantilever(s)" in ro["value"] and rb["value"].startswith("1 horizontal") and fired(r) == {"B"} and abs(r["ceilings"][0]["span"] - 32) < 1, (ro["value"], rb["value"], r["ceilings"][:1])
+        r = analyse(pi_, FDM, n_s=20000, supports="none"); rb = next(x for x in r["rows"] if x["rule"].startswith("B"))
+        assert rb["value"].startswith("1 horizontal") and fired(r) == {"B"} and abs(r["ceilings"][0]["span"] - 32) < 1, (rb["value"], r["ceilings"][:1])
         pi6 = _extrude(Polygon([(-7, 0), (-3, 0), (-3, 15), (3, 15), (3, 0), (7, 0), (7, 18), (-7, 18)]), 40.0, os.path.join(d, "pi6.stl"), up=True)
         r = analyse(pi6, FDM, n_s=40000, supports="none"); c = [x for x in r["ceilings"] if x["extent"] > 30]
         assert c and c[0]["cls"] == "bridge" and abs(c[0]["span"] - 6) <= 0.6 and "B bridge (layers)" not in r["flagged"], ("pi 6 x 40 must read 6 and stay silent", c[:1], r["flagged"])
@@ -855,7 +856,7 @@ def selftest():
         pts2 += [(-x0, 0), (-x0, 18), (x0, 18)]
         reb = _extrude(Polygon(pts2), 40.0, os.path.join(d, "rebate_lands.stl"), up=True)
         r = analyse(reb, FDM, n_s=60000, supports="none"); c = [x for x in r["ceilings"] if x["extent"] > 30]
-        assert c and all(x["cls"] == "bridge" for x in c) and max(x["span"] for x in c) <= w + 0.7 and "B bridge (layers)" not in r["flagged"], ("lands-split rebate must read ~6.1 per strip, never the 22.3 bbox", c[:3], r["flagged"])
+        assert c and all(x["cls"] == "bridge" for x in c) and max(x["span"] for x in c) <= w + 0.7 and "B bridge (layers)" not in r["flagged"], ("lands-split rebate must read ~6.1 per strip, never the whole-rebate bbox", c[:3], r["flagged"])
         # a 1.4 mm relief ring around a sole (an annular groove on the bottom face, by revolution — no boolean backend needed) and a 1.4 mm straight groove
         # open at both ends: each ceiling reads its WIDTH (~1.4), never the ring's circumference / the groove's 46 mm length
         ring = trimesh.creation.revolve(np.array([(0, 0), (10, 0), (10, 2), (11.4, 2), (11.4, 0), (22, 0), (22, 8), (0, 8)], float), sections=96); ring.export(os.path.join(d, "ring.stl"))
@@ -864,14 +865,15 @@ def selftest():
         gr = _extrude(Polygon([(-23, 0), (-0.7, 0), (-0.7, 2), (0.7, 2), (0.7, 0), (23, 0), (23, 8), (-23, 8)]), 46.0, os.path.join(d, "groove.stl"), up=True)
         r = analyse(gr, FDM, n_s=60000, supports="none"); c = [x for x in r["ceilings"] if x["cls"] == "bridge"]
         assert c and max(x["span"] for x in c) <= 2.0 and "B bridge (layers)" not in r["flagged"], ("an open groove must read its 1.4 width, not 46", [(x["span"], x["extent"]) for x in c], r["flagged"])
-        # a debossed word on the bottom face: three 2 mm letter grooves 1.0 apart link into ONE cluster — the span is one letter (2), never the 8 mm word
+        # a debossed word on the bottom face: five 1.0 mm strokes at 1.0 mm gaps link into ONE cluster whose dilated mask merges them — the span is one
+        # STROKE (1.0, the chord from a real sample), never the 9 mm word
         prof = [(-15, 0)]
-        for x0 in (-4.0, -1.0, 2.0):
-            prof += [(x0, 0), (x0, 1.2), (x0 + 2, 1.2), (x0 + 2, 0)]
+        for x0 in (-4.5, -2.5, -0.5, 1.5, 3.5):
+            prof += [(x0, 0), (x0, 1.0), (x0 + 1, 1.0), (x0 + 1, 0)]
         prof += [(15, 0), (15, 3), (-15, 3)]
         word = _extrude(Polygon(prof), 6.0, os.path.join(d, "word.stl"), up=True)
         r = analyse(word, FDM, n_s=40000, supports="none"); c = [x for x in r["ceilings"] if x["cls"] == "bridge"]
-        assert c and max(x["span"] for x in c) <= 2.6 and "B bridge (layers)" not in r["flagged"], ("debossed letters must not merge into one span", [(x["span"], x["extent"]) for x in c], r["flagged"])
+        assert c and max(x["span"] for x in c) <= 1.6 and "B bridge (layers)" not in r["flagged"], ("debossed strokes must read their 1.0 width", [(x["span"], x["extent"]) for x in c], r["flagged"])
         # overhang by reach: a 60 deg pitched slot roof 2 mm across is bridged (listed), a 24 mm one is an overhang defect with supports none (INFO with interior)
         for wid, want in ((2.0, False), (24.0, True)):
             apex = 2 + (wid / 2) * np.tan(np.radians(30))
@@ -889,7 +891,7 @@ def selftest():
             a = trimesh.creation.box((10.0, 10.0, 10.0)); b = trimesh.creation.box((10.0, 10.0, 10.0)); b.apply_translation(shift); tc = os.path.join(d, f"touch{shift[2]}.stl"); trimesh.util.concatenate([a, b]).export(tc)
             r = analyse(tc, MJF, n_s=20000); assert "M manifold / bodies" in r["flagged"], (shift, r["flagged"])
             assert ("M manifold / bodies" not in analyse(tc, MJF, n_s=20000, bodies_expected=2)["flagged"]) == two_ok, shift
-        # the gate (0.8.0 F5 / F6 / F7 / F28, 0.9.0 N2): FLAG fails; --open needs an OPEN decision row naming the piece; --expect needs a reason; a tampered
+        # the gate: FLAG fails; --open needs an OPEN decision row naming the piece; --expect needs a reason; a tampered
         # record, a changed STL, an uncensused STL of the record set, a laxer process row than the target's and a census record without a dfm record all fail
         def quiet(*a, **k):
             with contextlib.redirect_stdout(io.StringIO()):
@@ -931,7 +933,7 @@ def selftest():
     ROOT = ROOT0
     print("selftest OK: ray reads 0.8 on the 0.8 plate (W, no R) / 2.0 plate PASS / free ribs W no R / 0.5 root under a 2.0 rim x 90 -> W + R, root 1.3 PASS / SLA size / "
           "Z-limited legend box keeps W, full box lists it, records byte-identical, sidecar written + removed / 0.3 rib in a box listed not W / pins Ø0.4 Ø0.3 -> F, Ø1.2 PASS / "
-          "ridges 30-40-50 K, 60-90 read but pass / 0.6 sheet flat = skin PASS, 0.4 -> Z, stood up -> W / 0.6 slot V on MJF not FDM / 2 mm tunnel span 2, 15 mm -> B / tee arms cantilever O, pi roof 32 mm bridge B, pi 6 x 40 silent, lands-split rebate 3 x 6.1 silent, 1.4 relief ring + open groove read 1.4, debossed word letters not merged (span by rays from the inscribed-circle centre) / "
+          "ridges 30-40-50 K, 60-90 read but pass / 0.6 sheet flat = skin PASS, 0.4 -> Z, stood up -> W / 0.6 slot V on MJF not FDM / 2 mm tunnel span 2, 15 mm -> B / tee arms read their inscribed width (silent), pi roof 32 mm bridge B, pi 6 x 40 silent, lands-split rebate 3 x 6.1 silent, 1.4 relief ring + open groove read 1.4, debossed 1.0 strokes read 1.0 (span by rays from the ceiling sample nearest the inscribed-circle centre) / "
           "60 deg slot roof 2 mm bridged, 24 mm -> O / cavity C (MJF) INFO (FDM) / open mesh + touching cubes M, --bodies 2 / gate (FLAG, --open only an OPEN row naming the piece, --expect with a reason, tampered record, sidecar ignored, uncensused STL, laxer row, md5, orphan census) / validate (RULE DEFECT, geometry twins grouped, both label schemas)")
 
 
@@ -951,6 +953,8 @@ def main():
     for k in ("processes", "verdicts", "val_dir", "val_doc"):
         if getattr(a, k):
             PATHS[k] = os.path.abspath(getattr(a, k))
+    if a.processes and not os.path.exists(PATHS["processes"]):
+        print(f"print_dfm: --processes {a.processes} does not exist (the template fallback applies only when no table is named)", file=sys.stderr); return 2
     if a.selftest:
         selftest(); return 0
     if a.list:

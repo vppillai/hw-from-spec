@@ -97,7 +97,7 @@ step text (the case generator's `### Step N - title (T s)` + paragraph → the f
 record (marketing look: clean scheme, the ordered colours, legends readable → cameras on the side the legend is laid out for), keyed on
 (geometry md5 of the one scad file named — flatten includes or accept that included files do not move the key, defs, camera, size) so a text edit renders nothing and a case bump re-renders every page (≈ 1 min). Numbers stay in the SOP /
 manufacturing spec (one source); the guide names where the words are. Registered in `production_cut.yaml` as a deliverable with its `--check`;
-the SOP's companion cell points at it (a pointer, no revision bump). Worked example: the source project's VG-001 (D-76 / CC-199).
+the SOP's companion cell points at it (a pointer, no revision bump).
 
 ## 9. Repo re-layout and deletions at the order (`scripts/reorg_paths.py`)
 When the tree is a mess at the order: phase 1 deletions (superseded generated artefacts; git history + tags keep them), phase 2 re-layout after

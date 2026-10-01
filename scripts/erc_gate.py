@@ -13,7 +13,7 @@ Accept file (templates/design/erc_accept.yaml; paths.erc_accept): `accepted: [{t
 import argparse, json, os, re, sys
 
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
-from project import Project, split_row  # noqa: E402
+from project import Project, split_row, decision_status as _decision_status  # noqa: E402
 
 FIELDS = ("type", "ref", "reason", "decision", "date")
 
@@ -26,15 +26,8 @@ def violations(erc):
 
 
 def decision_status(path):
-    """{id: status (bold stripped, history after '(was:' dropped)} of the decision log."""
-    out = {}
-    for line in open(path, encoding="utf-8") if path and os.path.exists(path) else []:
-        if line.startswith("|"):
-            c = split_row(line)
-            m = re.search(r"\b([A-Z]+-\d+[a-z]?)\b", c[0]) if c else None
-            if m and len(c) >= 3:
-                out[m.group(1)] = re.sub(r"\*", "", c[2]).split("(was:")[0].strip().upper()
-    return out
+    """{id: STATUS} of the decision log (project.decision_status, upper-cased)."""
+    return {k: v.upper() for k, v in _decision_status(path).items()}
 
 
 def grade(ercs, accepted, decisions):
