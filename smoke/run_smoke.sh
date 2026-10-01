@@ -3,18 +3,22 @@
 # way a real project installs the skill: skill at vendor/hw-from-spec (stands in for the submodule; gitignored so `git archive HEAD` carries
 # no content there, exactly like a submodule), RELATIVE symlink scripts -> vendor/hw-from-spec/scripts, project .venv -> the skill's venv.
 set -e -o pipefail
-HERE=$(cd "$(dirname "$0")" && pwd -P); SKILL=$(dirname "$HERE")
+HERE=$(cd "$(dirname "$0")" && pwd -P); SKILL=$(dirname "$HERE"); CALLER=$PWD
 T=$(mktemp -d /tmp/hwfs_smoke_XXXX); [[ "$1" == "--keep" ]] || trap 'rm -rf $T' EXIT
 R=$T/smoke; cp -R "$HERE" "$R"; rm -f "$R/run_smoke.sh"
 mkdir -p "$R/vendor/hw-from-spec"; ln -s "$SKILL/scripts" "$R/vendor/hw-from-spec/scripts"; ln -s vendor/hw-from-spec/scripts "$R/scripts"
-if [[ -x "$SKILL/.venv/bin/python" ]]; then ln -s "$SKILL/.venv" "$R/.venv"; export PY="$R/.venv/bin/python"
-else echo "NOTE: no $SKILL/.venv (README step 2) — using python3 from PATH"; export PY=python3; fi
-"$PY" -c 'import yaml' || { echo "FAIL: $PY has no pyyaml"; exit 1; }
+# interpreter: the skill's .venv, else the caller's project .venv (README Quick start runs the smoke from the project root), else python3 — the first with pyyaml
+VENV=""; for c in "$SKILL/.venv" "$CALLER/.venv"; do [[ -x "$c/bin/python" ]] && "$c/bin/python" -c 'import yaml' 2>/dev/null && { VENV=$c; break; }; done
+if [[ -n "$VENV" ]]; then ln -s "$VENV" "$R/.venv"; export PY="$R/.venv/bin/python"; echo "python: $VENV/bin/python"
+else echo "NOTE: no .venv with pyyaml at $SKILL or $CALLER — using python3 from PATH"; export PY=python3; fi
+"$PY" -c 'import yaml' || { echo "FAIL: $PY has no pyyaml (README Install step 2: uv pip install --python .venv/bin/python pyyaml ...)"; exit 1; }
+if "$PY" -c 'import numpy, trimesh, scipy, shapely, rtree, networkx, mapbox_earcut' 2>/dev/null; then MESH=1; else MESH=""; echo "NOTE: mesh libraries absent in $PY — section 0d (print DFM on meshes) will be SKIPPED; install numpy trimesh scipy shapely rtree networkx mapbox-earcut to run it"; fi
+md5of_py() { "$PY" -c 'import hashlib,sys; print(hashlib.md5(open(sys.argv[1],"rb").read()).hexdigest())' "$1"; }
 printf 'vendor/hw-from-spec/\n.venv/\n' > "$R/.gitignore"
 cd "$R"; git init -q; git add -A; git -c user.name=smoke -c user.email=s@s commit -qm "smoke inputs"
 git archive HEAD | tar -tf - | grep -qx scripts || { echo "FAIL: the archive must carry the relative scripts symlink"; exit 1; }
 say() { printf -- '\n--- %s\n' "$*"; }
-md5of() { "$PY" -c 'import hashlib,sys; print(hashlib.md5(open(sys.argv[1],"rb").read()).hexdigest())' "$1"; }
+md5of() { md5of_py "$1"; }
 say "0 printed-enclosure DFM contract: the reference carries the measured rules and the census gate selftests without mesh libraries"
 REF="$SKILL/references/dfm-printed-enclosure.md"
 grep -q 'Every parallel-faced wall ≥ `wall_gate`, designed at `wall_gate + design_margin`' "$REF" || { echo "FAIL: $REF lost the wall rule"; exit 1; }
@@ -59,9 +63,22 @@ grep -q '^fab_dfm:' "$SKILL/templates/project.yaml" || { echo "FAIL: templates/p
 grep -q 'accepted_requires' "$SKILL/templates/project.yaml" || { echo "FAIL: templates/project.yaml lost the DFM bar"; exit 1; }
 grep -q '^## Quick start' "$SKILL/README.md" && grep -q '^## The retro loop' "$SKILL/README.md" && grep -q '^## The kickoff questionnaire' "$SKILL/README.md" || { echo "FAIL: README lost a required section"; exit 1; }
 awk '/^```/{f=!f; next} f && length($0) > 90 {bad=1} END {exit bad}' "$SKILL/README.md" || { echo "FAIL: a fenced README line is over 90 characters (GitHub scrolls)"; exit 1; }
-grep -q '^version: 0.8.0' "$SKILL/SKILL.md" && grep -q '^## 0.8.0' "$SKILL/CHANGELOG.md" || { echo "FAIL: SKILL.md version and CHANGELOG entry disagree"; exit 1; }
+grep -q '^version: 0.9.0' "$SKILL/SKILL.md" && grep -q '^## 0.9.0' "$SKILL/CHANGELOG.md" || { echo "FAIL: SKILL.md version and CHANGELOG entry disagree"; exit 1; }
 grep -q 'numpy trimesh scipy shapely rtree networkx mapbox-earcut' "$SKILL/README.md" || { echo "FAIL: README lost the mesh-library install line (C-06 / 0.8.0 print DFM deps)"; exit 1; }
-grep -q 'vendor/hw-from-spec/.venv' "$SKILL/README.md" || { echo "FAIL: README lost the one install block (C-02 / C-12)"; exit 1; }
+grep -q 'ONE venv' "$SKILL/README.md" && grep -q 'one venv' "$SKILL/SKILL.md" || { echo "FAIL: README / SKILL.md lost the one-venv rule (review 0.8.0 F1)"; exit 1; }
+# every script is executable with a shebang, has a --selftest, and --help / a probe never writes (review 0.8.0 F3)
+for s in "$SKILL"/scripts/*.py "$SKILL"/scripts/*.sh; do
+  [[ -x "$s" ]] || { echo "FAIL: $s is not executable"; exit 1; }; head -1 "$s" | grep -q '^#!' || { echo "FAIL: $s has no shebang"; exit 1; }
+  grep -q -- '--selftest' "$s" || { echo "FAIL: $s has no --selftest"; exit 1; }
+done
+(cd "$SKILL" && git ls-files -s scripts | awk '$1 != "100755" {bad=1; print "FAIL: git mode " $1 " on " $4} END {exit bad}') || exit 1
+grep -q 'abspath(__file__)' "$SKILL"/scripts/*.py && { echo "FAIL: a script resolves its own path with abspath (a symlinked scripts/ points at the project, not the skill — F4)"; exit 1; }
+python3 "$SKILL/scripts/project.py" scaffold --scope ee /dev/null >/dev/null || { echo "FAIL: project.py scaffold must run on a stock python3 without pyyaml (F2)"; exit 1; }
+grep -q 'kickoff --check' "$SKILL/SKILL.md" && grep -q '^kickoff:' "$SKILL/templates/project.yaml" && grep -q '^board:' "$SKILL/templates/project.yaml" || { echo "FAIL: the kickoff answers lost their machine-readable home (F10)"; exit 1; }
+grep -q 'erc_accept' "$SKILL/templates/project.yaml" && test -f "$SKILL/templates/design/erc_accept.yaml" && ! test -f "$SKILL/templates/ERC_WAIVERS.md" || { echo "FAIL: ERC acceptances must be the yaml the gate reads, not a prose table (F11)"; exit 1; }
+grep -rq 'ERC_WAIVERS' "$SKILL/SKILL.md" "$SKILL/README.md" "$SKILL/templates" "$SKILL/references" && { echo "FAIL: a prose ERC waiver table is still referenced (F11)"; exit 1; }
+grep -q 'submodules: recursive' "$SKILL/templates/ci/pr-check.yml" "$SKILL/templates/ci/nightly.yml" "$SKILL/templates/ci/release.yml" && ! grep -q 'scripts/ci' "$SKILL/templates/ci/README.md" "$SKILL/SKILL.md" || { echo "FAIL: CI templates must init the submodule and keep project files out of scripts/ (F9)"; exit 1; }
+"$PY" "$SKILL/evals/run_evals.py" --python "$PY" >/dev/null || { echo "FAIL: evals/run_evals.py reports a failed mechanical check (F27)"; exit 1; }
 test -f "$SKILL/references/kickoff-questionnaire.md" || { echo "FAIL: references/kickoff-questionnaire.md missing"; exit 1; }
 grep -q 'AskUserQuestion' "$SKILL/SKILL.md" && grep -q '^### 0.1 The kickoff questionnaire' "$SKILL/SKILL.md" || { echo "FAIL: SKILL.md lost the kickoff step (§0.1)"; exit 1; }
 grep -c 'RECOMMENDED' "$SKILL/references/kickoff-questionnaire.md" | awk '$1 >= 30 {ok=1} END {exit !ok}' || { echo "FAIL: the questionnaire lost its recommended answers"; exit 1; }
@@ -91,6 +108,7 @@ v = yaml.safe_load(open(sys.argv[1] + "/templates/docs/quotes/dfm_verdicts.yaml"
 print("templates: dfm_processes.yaml rows", len(t), "all validated_on: []; dfm_verdicts.yaml schema OK")
 PYEOF
 "$PY" scripts/scad_lint.py --selftest
+if [[ -n "$MESH" ]]; then
 "$PY" scripts/print_dfm.py --selftest
 "$PY" - <<'PYEOF'
 import sys, os; sys.path.insert(0, "scripts"); import trimesh, print_dfm
@@ -100,7 +118,80 @@ if "$PY" scripts/print_dfm.py --process jlc_mjf_pa12 --samples 40000 out/eval14_
 grep -q '^  FLAG  R root under a rim' out/eval14_flag.txt && grep -q '^  FLAG  W wall' out/eval14_flag.txt || { echo "FAIL: eval 14 FLAG lacks the W + R rows"; cat out/eval14_flag.txt; exit 1; }
 "$PY" scripts/print_dfm.py --process jlc_mjf_pa12 --samples 40000 out/eval14_root13.stl | grep -q 'eval14_root13.stl: PASS' || { echo "FAIL: the same geometry at root 1.3 must PASS"; exit 1; }
 "$PY" scripts/print_dfm.py --list | grep -q 'xometry_mjf_pa12' || { echo "FAIL: --list must show the template rows outside a project table"; exit 1; }
+# enforcement (review 0.8.0 F5 / F6 / F7 / F8 / F28), negative tests on a throwaway mech project: a tampered record, an uncensused body, a laxer process
+# row than the target's, --open with a non-OPEN id, an open mesh — each must FAIL the gate / the check
+E=$T/enf; mkdir -p $E/out/mechanical/case/pre/stl $E/out/mechanical/case/pre/dfm $E/docs/governance; cp -R "$R/scripts" $E/scripts 2>/dev/null || ln -s "$SKILL/scripts" $E/scripts
+printf 'project: {name: enf, scope: mech}\npaths: {mech_record: "out/mechanical/case/*/stl/*.stl"}\nprint_targets: {pre: {dfm_process: jlc_mjf_pa12}}\n' > $E/project.yaml
+printf '| ID | Date | Status | Topic | P | R |\n|---|---|---|---|---|---|\n| **D-07** | d | **OPEN** | widen the root | p | r |\n| CC-010 | d | APPLIED | x | p | r |\n' > $E/docs/governance/DECISIONS.md
+"$PY" - "$E" <<'PYEOF'
+import sys, trimesh
+E = sys.argv[1]; trimesh.creation.box((30.0, 30.0, 2.0)).export(f"{E}/out/mechanical/case/pre/stl/plate2.stl"); trimesh.creation.box((30.0, 30.0, 0.8)).export(f"{E}/out/mechanical/case/pre/stl/plate08.stl")
+b = trimesh.creation.box((20.0, 20.0, 5.0)); b.faces = b.faces[2:]; b.export(f"{E}/open.stl")
+PYEOF
+(cd $E
+ "$PY" scripts/print_dfm.py --process jlc_mjf_pa12 --samples 20000 --out out/mechanical/case/pre/dfm out/mechanical/case/pre/stl/plate2.stl >/dev/null || { echo "FAIL: the 2.0 plate must PASS"; exit 1; }
+ "$PY" scripts/print_dfm.py --gate out/mechanical/case/pre/dfm >/dev/null && { echo "FAIL (F5): plate08 sits in the STL set without a record and the gate passed"; exit 1; }
+ "$PY" scripts/print_dfm.py --process protolabs_mjf_pa12 --samples 20000 --out out/mechanical/case/pre/dfm out/mechanical/case/pre/stl/plate08.stl >/dev/null 2>&1 || true
+ "$PY" scripts/print_dfm.py --gate out/mechanical/case/pre/dfm >/dev/null && { echo "FAIL (F6): a record against a laxer row than print_targets.pre.dfm_process passed"; exit 1; }
+ "$PY" scripts/print_dfm.py --process jlc_mjf_pa12 --samples 20000 --out out/mechanical/case/pre/dfm out/mechanical/case/pre/stl/plate08.stl >/dev/null && { echo "FAIL: the 0.8 plate must FLAG"; exit 1; }
+ "$PY" scripts/print_dfm.py --gate out/mechanical/case/pre/dfm --open pre/plate08=WHATEVER >/dev/null && { echo "FAIL (F7): --open with a free string passed"; exit 1; }
+ "$PY" scripts/print_dfm.py --gate out/mechanical/case/pre/dfm --open pre/plate08=CC-010 >/dev/null && { echo "FAIL (F7): --open with an APPLIED row passed"; exit 1; }
+ "$PY" scripts/print_dfm.py --gate out/mechanical/case/pre/dfm --open pre/plate08=D-07 >/dev/null || { echo "FAIL: --open with the OPEN row D-07 must pass"; exit 1; }
+ sed -i.bak 's/"verdict": "FLAG"/"verdict": "PASS"/' out/mechanical/case/pre/dfm/plate08.json
+ "$PY" scripts/print_dfm.py --gate out/mechanical/case/pre/dfm >/dev/null && { echo "FAIL (F28): a record edited FLAG->PASS by hand passed the gate"; exit 1; }
+ "$PY" scripts/print_dfm.py --process jlc_mjf_pa12 --samples 5000 open.stl > open.txt && { echo "FAIL (F8): an open mesh must FLAG"; exit 1; }
+ grep -q '^  FLAG  M manifold' open.txt || { echo "FAIL (F8): rule M did not fire on the open mesh"; cat open.txt; exit 1; }
+ "$PY" scripts/print_dfm.py --process jlc_mjf_pa12 nonexist.stl >/dev/null 2>&1; [[ $? == 2 ]] || { echo "FAIL (F21): a missing file must exit 2"; exit 1; }
+ echo "enforcement (mesh): uncensused body, laxer row, free --open, tampered record, open mesh, missing file -> all FAIL as required")
 rm -f out/eval14_*
+else echo "   (0d SKIPPED: mesh libraries absent)"; fi
+say "0e enforcement without mesh libraries: a tampered / missing census record, a commented gate line, an unauthorised release line, the slot counter and the kickoff check"
+N=$T/nomesh; mkdir -p $N/out/mechanical/case/pre/stl $N/out/mechanical/case/pre/census $N/docs/governance; ln -s "$SKILL/scripts" $N/scripts
+printf 'solid a\nendsolid a\n' > $N/out/mechanical/case/pre/stl/a.stl; printf 'solid b\nendsolid b\n' > $N/out/mechanical/case/pre/stl/b.stl
+printf 'project: {name: nomesh, scope: mech, owner: {name: smoke, email: s@s}}\npaths: {mech_record: "out/mechanical/case/*/stl/*.stl"}\nprint_targets: {pre: {wall_gate: 1.2, void_gate: 1.2, accepted: []}}\ngates: {adopt: ["echo step1"], clone: []}\n' > $N/project.yaml
+"$PY" - "$N" <<'PYEOF'
+import sys, json, hashlib, os; N = sys.argv[1]; sys.path.insert(0, f"{N}/scripts"); from project import record_sig
+V = [l.split("=")[1].strip().strip('"') for l in open(f"{N}/scripts/thin_wall_census.py") if l.startswith("VERSION =")][0]
+for p in ("a", "b"):
+    stl = f"{N}/out/mechanical/case/pre/stl/{p}.stl"
+    r = dict(version=V, stl=stl, stl_md5=hashlib.md5(open(stl, "rb").read()).hexdigest(), target="pre", fails=[], accepted_fails=[]); r["sig"] = record_sig(r, V)
+    json.dump(r, open(f"{N}/out/mechanical/case/pre/census/{p}.json", "w"))
+PYEOF
+(cd $N
+ "$PY" scripts/thin_wall_census.py --gate-dir out/mechanical/case/pre/census >/dev/null || { echo "FAIL: two signed clean census records must pass"; exit 1; }
+ rm out/mechanical/case/pre/census/b.json
+ "$PY" scripts/thin_wall_census.py --gate-dir out/mechanical/case/pre/census >/dev/null && { echo "FAIL (F5): b.stl has no census record and the gate passed"; exit 1; }
+ sed -i.bak 's/"fails": \[\]/"fails": ["WALL 0.88 < 1.2"]/' out/mechanical/case/pre/census/a.json; sed -i.bak 's/"fails": \["WALL 0.88 < 1.2"\]/"fails": []/' out/mechanical/case/pre/census/a.json
+ "$PY" - <<'PYEOF'
+import json; p = "out/mechanical/case/pre/census/a.json"; r = json.load(open(p)); r["accepted_fails"] = [dict(fail="WALL 0.9", reason="r", date="2026-01-01", evidence="e")]; json.dump(r, open(p, "w"))   # body changed, sig kept
+PYEOF
+ rm out/mechanical/case/pre/stl/b.stl
+ "$PY" scripts/thin_wall_census.py --gate-dir out/mechanical/case/pre/census >/dev/null && { echo "FAIL (F28): a census record edited after signing passed the gate"; exit 1; }
+ git init -q && git add -A && git -c user.name=smoke -c user.email=s@s commit -qm nomesh
+ out=$(scripts/adopt_gates.sh --no-clone 2>&1 || true); echo "$out" | grep -q "GATE FAILED: an artefact exists whose gate line is missing" || { echo "FAIL (F11): an STL set with no census / print-DFM gate line in gates.adopt was green"; echo "$out"; exit 1; }
+ printf '# GATES\n| Gate | Meaning | Prerequisites | Owner approval |\n|---|---|---|---|\n| **G0** | spec | x | _not yet approved_ |\n| **Release** | reports | y | _not yet written_ |\n' > docs/governance/GATES.md
+ "$PY" scripts/gate_check.py G0 >/dev/null && { echo "FAIL (F12): an empty G0 cell read as approved"; exit 1; }
+ printf '| **Release** | reports | y | clear to build — smoke, 2026-01-04, record 0000 |\n' >> docs/governance/GATES.md
+ "$PY" scripts/gate_check.py --release >/dev/null && { echo "FAIL (F12): an UNCOMMITTED release line passed"; exit 1; }
+ git add -A && git -c user.name=agent -c user.email=a@a commit -qm "agent wrote the release line"
+ "$PY" scripts/gate_check.py --release >/dev/null && { echo "FAIL (F12): a release line committed by a non-owner passed"; exit 1; }
+ printf '\n' >> docs/governance/GATES.md; git add -A && git -c user.name=agent -c user.email=a@a commit -qm "touch"
+ printf '| **Release** | reports | y | clear to build — smoke, 2026-01-05, record 0001 |\n' >> docs/governance/GATES.md; git add -A && git -c user.name=smoke -c user.email=s@s commit -qm "owner line"
+ "$PY" scripts/gate_check.py --release >/dev/null || { echo "FAIL: the owner's committed release line must pass gate_check --release"; exit 1; }
+ echo "enforcement (no mesh): missing census record, tampered census record, commented gate line, empty gate cell, uncommitted / agent-authored release line -> all FAIL; owner line passes")
+# the slot counter: a scaffolded ee project shows its slots; trivially filled, zero (F24); the kickoff check fails on template rows and passes on filled ones (F10)
+K=$T/kick; mkdir -p $K/docs/governance $K/design; ln -s "$SKILL/scripts" $K/scripts
+cp "$SKILL/templates"/{project.yaml,CLAUDE.md,SPEC.md,STATUS.md} $K/; cp "$SKILL/templates"/{GATES,KICKOFF_ANSWERS,DECISIONS}.md $K/docs/governance/; cp "$SKILL/templates/design/traceability.yaml" $K/design/
+(cd $K
+ "$PY" scripts/project.py scaffold --scope ee project.yaml CLAUDE.md SPEC.md STATUS.md docs/governance/*.md design/*.yaml >/dev/null
+ "$PY" scripts/project.py slots >/dev/null && { echo "FAIL (F24): a fresh scaffold has slots; the counter must exit 1"; exit 1; }
+ "$PY" scripts/project.py slots | tail -1 | grep -q 'unfilled in' || { echo "FAIL (F24): slots must print the per-file count"; exit 1; }
+ "$PY" scripts/project.py kickoff --check >/dev/null && { echo "FAIL (F10): template kickoff rows (slots, D-{{nn}}) passed the kickoff check"; exit 1; }
+ for f in project.yaml CLAUDE.md SPEC.md STATUS.md docs/governance/*.md design/*.yaml; do sed -i.bak 's/{{[^{}]*}}/X/g' "$f"; rm -f "$f.bak"; done
+ "$PY" scripts/project.py slots | tail -1 | grep -q '^slots: 0 unfilled' || { echo "FAIL (F24): a trivially filled project must show zero slots"; "$PY" scripts/project.py slots | tail -3; exit 1; }
+ printf '| **D-02** | d | **APPROVED** | kickoff | owner | words |\n' >> docs/governance/DECISIONS.md; sed -i.bak 's/D-X/D-02/g' docs/governance/KICKOFF_ANSWERS.md
+ "$PY" scripts/project.py kickoff --check >/dev/null || { echo "FAIL (F10): a filled ee project must pass the kickoff check"; "$PY" scripts/project.py kickoff --check | tail -5; exit 1; }
+ echo "slots: fresh ee scaffold -> exit 1 with counts; trivially filled -> 0; kickoff --check: template rows FAIL, filled rows pass")
 say "0b scope: A0 asked first, every scope scaffolds from ONE template set and gets its own gate rows"
 grep -q '^\*\*A0 Project scope' "$SKILL/references/kickoff-questionnaire.md" && grep -q '^| A0 | scope' "$SKILL/templates/KICKOFF_ANSWERS.md" || { echo "FAIL: kickoff A0 (scope) missing"; exit 1; }
 grep -q '^## 1. Phase / gate model (per scope)' "$SKILL/SKILL.md" && grep -q '^## 6. Layout phase and the adopt rule \[ee, both\]' "$SKILL/SKILL.md" && grep -q '^## 8. Case pipeline and FEA \[mech, both\]' "$SKILL/SKILL.md" || { echo "FAIL: SKILL.md lost the scope model / heading tags"; exit 1; }
@@ -160,9 +251,14 @@ say "7 every --check must pass";                  $PY scripts/known_issues.py --
 say "8 commit + handoff header";                  git add -A; git -c user.name=smoke -c user.email=s@s commit -qm "generated records"; $PY scripts/handoff_header.py
 $PY scripts/handoff_header.py | grep -q 'MATCH' || { echo "FAIL: handoff header has no MATCH"; exit 1; }
 say "9 adopt gates incl. the clone gate on git archive HEAD"; scripts/adopt_gates.sh
-say "10 the owner's line flips the banner; --check catches the stale report"
+say "10 the owner's line in the Release row flips the banner; --check catches the stale report; gate_check --release wants the owner's commit"
+printf 'A sentence that quotes the words clear to build must not flip anything.\n' >> docs/governance/STATUS.md
 printf '| **Release** | Reports RELEASED | the owner line below | clear to build — owner, 2026-01-04, board %s |\n' ${MD5:0:8} >> docs/governance/GATES.md
 if $PY scripts/release_report.py --check >/dev/null; then echo "FAIL: --check missed the stale report"; exit 1; fi
 $PY scripts/release_report.py | grep -q RELEASED || { echo "FAIL: not RELEASED"; exit 1; }
+$PY scripts/gate_check.py --release >/dev/null && { echo "FAIL: an uncommitted release line passed gate_check"; exit 1; }
+git add -A; git -c user.name=smoke -c user.email=s@s commit -qm "owner release line"
+$PY scripts/gate_check.py --release || { echo "FAIL: the owner's committed release line must pass"; exit 1; }
+$PY scripts/gate_check.py G0 >/dev/null && { echo "FAIL: G0 has no owner cell in the smoke and must read NOT approved"; exit 1; }
 say "SMOKE OK — DRAFT report was $R/docs/release/PCB_DESIGN_REPORT.md (RELEASED after the owner line); traceability census:"
 grep -A4 '^## Census' docs/governance/TRACEABILITY.md | tail -3

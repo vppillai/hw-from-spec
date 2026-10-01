@@ -4,7 +4,9 @@ A Claude Code skill that takes a board, an enclosure, or both from a written spe
 owner-gated phases, generated-only artefacts, a zero-warning manufacturability bar, blind reviews,
 and a retro that folds every project's learnings back into the skill.
 
-`version 0.8.0` · MIT · `SKILL.md` is the procedure, everything else is reference, template or tool.
+`version 0.9.0` · MIT · `SKILL.md` is the procedure, everything else is reference, template or tool.
+0.9.0 closes the 28-finding blind review of 0.8.0: every gate the bar names is now enforced by a script
+(`gate_check.py`, `erc_gate.py`, signed census / print-DFM records, STL-set-aware gates) and every documented command runs as written.
 
 ## Quick start
 
@@ -17,7 +19,7 @@ uv pip install --python .venv/bin/python pyyaml numpy trimesh scipy shapely \
 vendor/hw-from-spec/smoke/run_smoke.sh
 ```
 
-(The mesh libraries serve `print_dfm.py` and the two thin-wall scripts: mech / both only.) Then `SKILL.md` §0: templates, the kickoff questionnaire, first records — before any CAD.
+ONE venv, the project's, mesh libraries included (without them the smoke skips the print-DFM section with a NOTE). Then `SKILL.md` §0: templates, the kickoff questionnaire, first records — before any CAD.
 
 No project yet, just a bracket STL and a vendor in mind? Clone, one venv, one command:
 
@@ -47,7 +49,8 @@ Exit 0 = PASS, 1 = FLAG with one line per rule (measured | limit | where | fix):
   (`references/pcb-layout-dfm.md`) and for MJF / FDM / SLA / CNC enclosures.
 - Generic, `project.yaml`-driven scripts with `--selftest` and read-only `--check`: decision log
   index, traceability matrix, DFM grader, thin-wall census gate, release report, collateral,
-  illustrated assembly guide, re-layout with a zero-loss proof, the retro.
+  illustrated assembly guide, re-layout with a zero-loss proof, gate-cell / release-line check
+  (git author = owner), ERC gate on a yaml accept file, STEP → canonical STL, the retro (`--apply`).
 - FDM brand marks as two first-class options (ironed top-face feature or flush AMS colour body in
   the bed layers) with FAIL-gated mark rows, dust-cap rules and the Bambu Studio CLI facts.
 - Blind-review workflow templates (in-session + external models, adversarial verifiers, merge).
@@ -60,10 +63,10 @@ Exit 0 = PASS, 1 = FLAG with one line per rule (measured | limit | where | fix):
 | `SKILL.md` | the procedure: setup + kickoff, gates, generated-only, decisions, parts, reviews, layout, DFM, case, software, release, agents, retro |
 | `references/` | detail per topic, read on demand (project-yaml, kickoff-questionnaire, schematic-phase, pcb-layout-dfm, fab-dfm, case-pipeline, dfm-printed-enclosure, print-dfm, print-kit, cnc-enclosure, fea-stage, part-verification, software-track, release-and-cut, vendor-review, agent-ops, pitfalls) |
 | `templates/` | CLAUDE.md, project.yaml, SPEC / VERIFY / KICKOFF_ANSWERS / governance records, review hand-off, DFM round, vendor review, census rows, print-DFM process table + verdict record, production cut yaml, CI workflows |
-| `scripts/` | 16 generic tools driven by `project.yaml` (`references/project-yaml.md` lists which are generators, graders, gates) |
+| `scripts/` | 19 generic tools driven by `project.yaml` (`references/project-yaml.md` lists which are generators, graders, gates) |
 | `workflows/` | four blind-review workflow templates + how to instantiate them |
 | `smoke/` | the automated dry run (`run_smoke.sh`) |
-| `evals/` | fourteen skill evals (start, review, release, vendor mail, re-layout, first DFM round, census-blind flag, kickoff, retro, AMS mark plate, mech-only bracket, ee-only board, print kit, print DFM root under a rim) |
+| `evals/` | fourteen skill evals + `run_evals.py` (runs the mechanical checks, lists the rest as manual) |
 | `docs/retro/` | retro reports, one per project fed back into the skill |
 | `CHANGELOG.md` | what changed per version and what was deliberately not done |
 
@@ -92,15 +95,14 @@ git submodule add https://github.com/vppillai/hw-from-spec.git vendor/hw-from-sp
 ln -s vendor/hw-from-spec/scripts scripts
 ```
 
-2. Two virtual environments, both gitignored (the skill venv takes the mesh libraries too so
-the smoke can run the print-DFM selftest). Without `uv`: `python3 -m venv` + `pip install`.
+2. ONE venv, the project's `.venv` (gitignored), with pyyaml and the mesh libraries; the smoke and
+every gate use it (a `vendor/hw-from-spec/.venv` is for developing the skill only). Without `uv`:
+`python3 -m venv` + `pip install`.
 
 ```sh
-MESH="numpy trimesh scipy shapely rtree networkx mapbox-earcut"
-uv venv vendor/hw-from-spec/.venv
-uv pip install --python vendor/hw-from-spec/.venv/bin/python pyyaml $MESH
 uv venv .venv
-uv pip install --python .venv/bin/python pyyaml $MESH
+uv pip install --python .venv/bin/python pyyaml numpy trimesh scipy shapely \
+  rtree networkx mapbox-earcut
 ```
 
 3. Prove the toolchain before reading the spec:
@@ -110,11 +112,13 @@ for s in scripts/*.py; do .venv/bin/python "$s" --selftest; done
 scripts/clone_gate.sh --selftest
 scripts/adopt_gates.sh --selftest
 vendor/hw-from-spec/smoke/run_smoke.sh
+.venv/bin/python vendor/hw-from-spec/evals/run_evals.py
 ```
 
 ## Use in a new project
 
-4. Copy the templates and fill every `{{…}}` slot (`T` is the templates folder):
+4. Copy the templates and resolve the scope (`T` is the templates folder); `project.py slots` counts the unfilled
+`{{…}}` slots per file — CLAUDE.md / project.yaml / records now, SPEC + KICKOFF_ANSWERS after the kickoff and the spec; 0 before the G0 ask:
 
 ```sh
 T=vendor/hw-from-spec/templates
@@ -129,12 +133,12 @@ cp -R "$T/datasheet_notes" docs/
 cp "$T/design/traceability.yaml" "$T/production_cut.yaml" design/
 cp "$T/design/dfm_processes.yaml" design/                # mech, both
 cp "$T/docs/quotes/dfm_verdicts.yaml" docs/quotes/       # mech, both
-cp "$T/ERC_WAIVERS.md" docs/governance/                 # ee, both
+cp "$T/design/erc_accept.yaml" design/                  # ee, both
 cp "$T/design/SOFTWARE_ARCHITECTURE.md" docs/design/     # ee, both
 cp "$T/parts/PROCUREMENT.md" docs/parts/                 # mech, both
 scripts/project.py scaffold --scope "$A0" CLAUDE.md SPEC.md project.yaml \
   docs/governance/*.md design/*.yaml                  # A0=ee | mech | both
-grep -rn '{{' CLAUDE.md project.yaml SPEC.md docs design
+scripts/project.py slots                              # the count to drive to 0
 ```
 
 5. Follow `SKILL.md` §0: the kickoff questionnaire, ENV record, first records, adopt gates, then
@@ -149,9 +153,9 @@ silk, case, drawings, FEA measurer) stay in the project's `gen/`, read constants
 
 Before the spec is read, the agent asks the scope (A0), then every decision class that scope needs
 — product, PCB build, enclosure architecture, the manufacturability bar, verification, bought parts,
-software, release, identity — in up to ten `AskUserQuestion` batches, each question with a marked RECOMMENDED answer and the
+software, release, identity — in up to twelve `AskUserQuestion` batches of at most four, each question with a marked RECOMMENDED answer and the
 alternatives' consequences. Answers become owner rows in `DECISIONS.md`, values in `project.yaml`
-(`kickoff`, `board`, `fab_dfm.bar`, `print_targets`) and `docs/governance/KICKOFF_ANSWERS.md`.
+(`kickoff`, `board`, `fab_dfm.bar`, `print_targets`; `project.py kickoff --check` proves they landed) and `docs/governance/KICKOFF_ANSWERS.md`.
 Detail: `references/kickoff-questionnaire.md`, `SKILL.md` §0.1.
 
 ## The retro loop
@@ -159,7 +163,7 @@ Detail: `references/kickoff-questionnaire.md`, `SKILL.md` §0.1.
 After a production cut, `scripts/skill_retro.py --project <root>` reads the project's learnings log
 and decision log, lists what the skill does not carry yet, and drafts the CHANGELOG entry, the
 reference patches, the evals and the questionnaire questions for the next version
-(`docs/retro/<project>_<date>.md`). The project pins the skill version it ran in
+(`docs/retro/<project>_<date>.md`); `--apply` folds the mechanical part (pitfalls lines, new process rows, a CHANGELOG stub), the rest stays a draft. The project pins the skill version it ran in
 `project.yaml skill: {repo, commit, version}`. Detail: `SKILL.md` §13.
 
 ## Versioning
