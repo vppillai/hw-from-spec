@@ -260,15 +260,16 @@ numbers are **[owner bar]** for a 0.4 nozzle at 0.20 mm and live in `print_targe
   never on a bridge underside or a deep inner wall. A coupon the user has to look up in a README to identify is a coupon that gets mixed up on
   the bench; the slicer's object names are gone the moment the part comes off the plate. The marker is generated from the same yaml value it
   tests, so it cannot disagree with the geometry.
-- **Coupon labels are debossed unless the plate is the mark coupon — and then ONE small mark proves the colour path, not every label.** Raised
-  labels in a second filament cost the purge: on one coupon plate 0.4 g of letters cost 3.9 g of the second colour and 8 filament changes, where
-  debossed labels cost nothing. Deboss the values; if the plate doubles as the mark coupon, add one short raised word in the second colour
-  (3 changes, ~1 g) and say so in the kit (owner decision, 2026-10-01).
+- **Coupon labels are never second-colour bodies — raised or debossed in the body's own filament (the legibility gate above decides which);
+  if the plate doubles as the mark coupon, ONE short raised word in the second colour proves the colour path, not every label.** A label in a
+  second filament costs the purge, not its own weight: on one coupon plate 0.4 g of letters cost 3.9 g of the second colour and 8 filament
+  changes, where the same values in the body's colour cost nothing. One raised word for the colour path is 3 changes and ~1 g; the kit text
+  says which plate carries it.
 - **Nothing that moves may sweep a raised feature.** A crank arm set on the face that carried the raised legends scraped the letters and
   jammed on the first print; every render had shown it clear because the gap to the FLAT face was fine. Raised text, bosses and lugs are
   bodies in the clearance check like any other: sweep every moving part against them (`case-pipeline.md` §Interference), and put legends on a
   face nothing crosses. On a display mechanism the operating side is the side AWAY from the viewing window: a hand turning a crank in front
-  of the window hides what the window is for (first article, 2026-10-01).
+  of the window hides what the window is for — 2026-10-01.
 - **Board dummy, never the raw CAD mesh** (sheet metal, 0402s, 0.1 mm pins are unprintable): slab + holes + solid envelopes + fins at printable
   thickness, in the board frame, bbox stated against the mesh of record. **Two versions, both kept**: the two-piece glue version (a scribed locator
   ring 0.6 × 0.2 OUTSIDE the tall part's footprint locates it without a pocket — a compensating plinth lifts an overhang off the bed = a
