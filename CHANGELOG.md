@@ -1,6 +1,6 @@
 # CHANGELOG — hw-from-spec
 
-## Current state (0.10.7) — read this instead of replaying the entries below
+## Current state (0.11.0) — read this instead of replaying the entries below
 
 - **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
   twelve batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
@@ -14,6 +14,10 @@
   `thin_wall_check` (quick look + pinch), `stability` (CoG vs support hull at the worst pose), `scad_lint`, `step2stl`, `arrival_checklist`, `skill_retro` (+ `--apply`), `jobs.sh` (the heavy-job
   pool), `adopt_gates.sh`, `clone_gate.sh`, `doc_voice_lint`, `generic_lint`. Mesh stack: `numpy trimesh scipy shapely rtree networkx
   mapbox-earcut embreex` (the Embree ray engine keeps a census in seconds under 1 GB).
+- **Layout** (`references/project-yaml.md` §Layout): ten numbered folders in the order of the project's life — `00-now` (five generated answer
+  pages) `10-spec` `20-design` `30-board` `40-case` `50-kits` `60-orders` `70-release` `80-reviews` `90-log` — plus the machinery (`gen/ scripts/
+  tools/ lib/ Makefile CLAUDE.md`). Names are nouns (a revision is `rev0`, a kit is its print target, the hash lives inside the folder), one current
+  thing per path, records beside what they describe; every path is a `paths:` key with these defaults; the templates folder mirrors the tree.
 - **Templates**: CLAUDE.md, project.yaml (kickoff / board / print_targets / fab_dfm / arrival_checklist / host), SPEC + VERIFY + SPEC_ERRATA,
   the governance records, PARTS_VERIFICATION + PROCUREMENT, TEST_PLAN, REVIEW_HANDOFF, DFM_ROUND, VENDOR_REVIEW_RECORD, CENSUS_GATE_ROWS,
   design/{traceability, erc_accept, dfm_processes, arrival_checklist}.yaml, production_cut.yaml, datasheet note, G1 pack, CI workflows + Makefile.
@@ -24,6 +28,39 @@
   `scripts/adopt_gates.sh --no-clone` (`make gates`), release `scripts/adopt_gates.sh` (`make check`); `smoke/run_smoke.sh` runs every script selftest, the rule greps, the enforcement negatives, both lints
   and the evals; 17 evals
   with mechanical checks, `80-reviews/INDEX.md` and `docs/retro/INDEX.md` list every review and retro.
+
+## 0.11.0 — 2026-10-02 — the navigable layout is the default: a numbered lifecycle tree, revision-named folders, the five answer pages of `00-now/`, the kit of record, the case set shape
+
+Spec: `docs/superpowers/specs/2026-10-02-navigable-layout-design.md`; plan: `docs/superpowers/plans/2026-10-02-navigable-layout-skill.md`
+(owner: "a better organization of the output from the skill that is intuitive to navigate … without a README").
+
+### Added
+- **`scripts/now_pages.py`**: `00-now/WHERE_THINGS_STAND.md`, `BLOCKED_ON_OWNER.md`, `WHAT_TO_PRINT.md`, `WHAT_TO_ORDER.md`,
+  `WHAT_TO_CHECK_ON_ARRIVAL.md` — each the answer to its own name, derived from the gates, decisions, status log, blockers, the arrival yaml, the
+  procurement table and the kit plate sidecars; `--check` fails the gates when a page is stale (template `gates.adopt`, smoke step 5e, the record
+  chain in `release-and-cut.md` §3.1, eval 18). Scope-aware: an ee project's print page says so; an empty project says "nothing" on every page.
+- **`project.revision`** (`Project.rev()`, default `rev0`) names the fab package (`30-board/fab/<rev>/`), the cut (`70-release/<rev>/`),
+  collateral and marketing folders; the record hash stays inside each (`board_id.txt`, `RENDERS.md`, `MANIFEST`); packages are still selected by
+  the md5 in `board_id.txt`, never by a folder name or an mtime.
+- **The kit of record** (`references/print-kit.md` §1): `50-kits/<kit>/` per print target with `START_HERE.md` at the root, `plates/` (+ `.3mf.json`
+  sidecars with `print_time_s`, `filament_g`, `objects`, optional `filament_changes`, `proves`, `order`), `parts/`, `sheets/`; mirrored
+  byte-identical to `~/Downloads/<project>_kits/<kit>/`; superseded kit folders reduced to a one-line `SUPERSEDED.md`.
+- **The case set shape** (`references/case-pipeline.md` Chain): `40-case/<set>/` per print target with `parts/` (STL of record), `checks/` (the only
+  place the census / print-DFM / interference gates look), `pictures/`, `build/` (gitignored, `templates/.gitignore`).
+- `templates/project.yaml`: the commented `paths:` block listing every default; `templates/CLAUDE.md`: the tree as the project's map.
+
+### Changed
+- `scripts/project.py` `DEFAULTS["paths"]`: every default under the numbered tree (`decisions: 90-log/DECISIONS.md`, `mech_record:
+  40-case/*/parts/*.stl`, `kits_dir: 50-kits`, `reports_dir: 70-release/reports`, …); an explicit key still wins unchanged.
+- Every path SKILL.md, README, the references, the templates, the scripts' fixtures, the smoke and the evals spell is the new tree (the sweep
+  table is in the plan, Task 3); the templates folder mirrors it (`templates/10-spec/`, `20-design/`, `60-orders/`, `90-log/`); the design
+  reports are written to `reports_dir`.
+- `scripts/reorg_paths.py`: whole-directory moves with frozen content, `--map` for sub-paths; the `reorg:` reference carries the migration from
+  a `docs/`-style layout to this tree as its worked example.
+
+### Not done
+- Existing projects are migrated by their own `reorg:` block (two phases: documents / kits / release / now-pages, then the `out/` split); this
+  release changes no record's content, md5 or rule-set version.
 
 ## 0.10.7 — 2026-10-02 — the inner-tier runner only; standard / release are the existing adopt-gates commands
 
