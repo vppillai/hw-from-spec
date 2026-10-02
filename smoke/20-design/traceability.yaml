@@ -1,7 +1,7 @@
 # one entry per traceable item; stages in yaml order; every D-/CC- row of DECISIONS must be cited by some entry's source
 stages:
   schematic:
-    reached: [{type: exists, path: 20-design/parts.yaml}, {type: exists, path: out/smoke.xml}]
+    reached: [{type: exists, path: 20-design/parts.yaml}, {type: exists, path: 30-board/layout/smoke.xml}]
   placement:
     requires: [schematic]
     reached: [{type: md5_in, path: 30-board/kicad/smoke/smoke.kicad_pcb, file: 30-board/fab/*/board_id.txt, regex: '^md5 ([0-9a-f]{32})'}]
