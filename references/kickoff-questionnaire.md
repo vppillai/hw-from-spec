@@ -5,8 +5,8 @@ can select."* The decision classes below are mined from one complete project's o
 **RECOMMENDED** answer (marked) and two or three alternatives with their one-line consequence. The agent asks them in the batches of §0 with the
 `AskUserQuestion` tool (≤ 4 questions per call, ≤ 4 options per question; the recommended answer listed first and labelled; **"accept every
 recommended answer of this batch" is the FIRST option of the batch's FIRST question** — so that question carries at most two alternatives, the
-others at most three; a question with more alternatives folds the rare ones into one "other (named in the reason)" option), records every answer in `docs/governance/KICKOFF_ANSWERS.md` (`templates/KICKOFF_ANSWERS.md`), writes
-one owner row per answer into `docs/governance/DECISIONS.md` (D rows, the owner's words quoted; a recommended default the owner accepted reads
+others at most three; a question with more alternatives folds the rare ones into one "other (named in the reason)" option), records every answer in `10-spec/KICKOFF_ANSWERS.md` (`templates/KICKOFF_ANSWERS.md`), writes
+one owner row per answer into `90-log/DECISIONS.md` (D rows, the owner's words quoted; a recommended default the owner accepted reads
 `accepted recommended`), copies the machine-readable values into `project.yaml` (`kickoff`, `board`, `fab_dfm.bar`, `print_targets`) and a
 traceability entry per row — **all before any CAD**. A question the owner defers is a D row `OPEN` and blocks the phase that needs it, never a
 silent assumption (rule 2). Re-asking an answered question is a defect; changing an answer is a new D row that supersedes the old one.
@@ -120,7 +120,7 @@ piece or a clear resin part.
 **C8 Two print targets and their fits** [mech, both]. **RECOMMENDED: one yaml, presets `base + overrides`, every fit clearance a per-preset knob decided by a
 coupon, every vendor DFM decision mirrored into `home_fdm` the same day** — two versions, one geometry of record. *Alt:* vendor target only — no
 mock-up before the order. *Alt:* separate generators — divergence nobody diffs.
-**C8a — which `design/dfm_processes.yaml` row each target gates on** (`print_targets.<t>.dfm_process`; `references/print-dfm.md`). Selectable rows of
+**C8a — which `20-design/dfm_processes.yaml` row each target gates on** (`print_targets.<t>.dfm_process`; `references/print-dfm.md`). Selectable rows of
 the shipped table: `jlc_mjf_pa12` · `jlc_sla_9600` · `jlc_fdm` · `xometry_mjf_pa12` · `protolabs_mjf_pa12` · `home_fdm_04` (`hp_mjf_guide` is BLOCKED
 until its page is fetched). **RECOMMENDED: the vendor's own row for the vendor target + `home_fdm_04` for `home_fdm`.** *Alt:* a vendor not in the
 table — ONE new row with its published minimums `[V]` (URL + date) and `validated_on: []` before the first upload; the retro carries it to the skill.
@@ -205,7 +205,7 @@ revision.
 **H1 Report set.** **RECOMMENDED: PCB + case design reports generated (DRAFT until the owner's line), release notes with a source per number, the
 renders / FEA composites as collateral, an annotated tag** — nothing hand-typed. *Alt:* release notes only — no traceability matrix.
 **H2 Production cut.** **RECOMMENDED: the full document set (manuals, manufacturing spec incl. material rating and label placement, SOPs with
-`[OWNER]` records, analysis index, compliance table) built by one generator into `docs/production/<md5-8>/`, records filed as they happen** —
+`[OWNER]` records, analysis index, compliance table) built by one generator into `70-release/<rev>/`, records filed as they happen** —
 `templates/production_cut.yaml`. *Alt:* manufacturing spec + SOP only — for an internal tool with one builder.
 **H3 CI and repository hygiene.** **RECOMMENDED: PR check = the adopt gates, nightly = the case chain selftests, release = the fresh-checkout gate;
 a re-layout + deletion pass at the order through `reorg_paths.py`** — the developer runs the same commands. *Alt:* no CI — the clone gate by hand
@@ -236,7 +236,7 @@ window and lists every action taken.
 | A0 | `project.scope` | CLAUDE.md scope line, GATES.md rows (scaffold), KICKOFF_ANSWERS `n/a (scope)` rows |
 | A1–A4 | `kickoff.product_class`, `kickoff.quantity`, `kickoff.fab`, `print_targets.<t>` (vendor, process, material, rating) | SPEC §1, §8; D rows |
 | B1–B8 | `board.layers / thickness / copper / stackup_template / impedance / finish / mask / silk / min_package / link_parts / sides / test_points / panel` | SPEC §4–§6 (R-M01…), `design/<board>_board.yaml`, `design/dfm_thresholds.json` (source + date) |
-| C1–C12 | `kickoff.enclosure` (pieces, retention, coupling, feet, labelling, fan, light_pipe, targets, marks, kit_recipient, fit_decider, fit_result, optimise, stands_free); C8a `print_targets.<t>.dfm_process` | SPEC §8, `design/case.yaml` presets + `fits` knobs; START_HERE report-back recipient; the plate yaml `optimise:` block; ARRIVAL_CHECKLIST E-FIT |
+| C1–C12 | `kickoff.enclosure` (pieces, retention, coupling, feet, labelling, fan, light_pipe, targets, marks, kit_recipient, fit_decider, fit_result, optimise, stands_free); C8a `print_targets.<t>.dfm_process` | SPEC §8, `20-design/case.yaml` presets + `fits` knobs; START_HERE report-back recipient; the plate yaml `optimise:` block; ARRIVAL_CHECKLIST E-FIT |
 | D1–D3 | `fab_dfm.bar`, `print_targets.<t>.design_margin / tolerance / accepted` | GATES.md `{{D-BAR}}` row id, CLAUDE.md rule 9 |
 | E1–E4 | `kickoff.verification` (rounds, visual, fea), `kickoff.coupons` (E3) | GATES prerequisites, `workflows/` model list |
 | F1–F2 | `kickoff.sourcing` (sources, stock_floor, attrition) | PARTS_VERIFICATION header, BLOCKERS |

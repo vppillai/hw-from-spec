@@ -7,10 +7,10 @@
 
 project.yaml:
   reports:
-    - name: PCB_DESIGN_REPORT              # -> paths.release_dir/<name>.md
+    - name: PCB_DESIGN_REPORT              # -> paths.reports_dir/<name>.md
       title: "PCB design report"
       sections: [banner, identity, decisions, known_issues, package, traceability, dfm, renders, inventory]   # any subset/order
-      extra_sources: [design/board.yaml]   # listed with md5 in the identity section; scalars printed (skips note/notes/description/reason)
+      extra_sources: [20-design/board.yaml]   # listed with md5 in the identity section; scalars printed (skips note/notes/description/reason)
 
 Sections: banner (DRAFT/RELEASED from paths.gates via markers.release_regex), identity (board md5, the recorded package commit, sources), decisions (OPEN census
 + every row as a 4-cell table), known_issues (§2 of the generated KNOWN_ISSUES), package (the fab package whose board_id.txt md5 == md5(board):
@@ -213,7 +213,7 @@ def render(P, rep):
 def run(P, check):
     rc = 0
     for rep in P.get("reports", []) or []:
-        out = os.path.join(P.path("release_dir"), f"{rep['name']}.md")
+        out = os.path.join(P.path("reports_dir"), f"{rep["name"]}.md")
         new = render(P, rep)
         if check:
             old = open(out, encoding="utf-8").read() if os.path.exists(out) else ""
@@ -230,38 +230,38 @@ def run(P, check):
 
 def selftest():
     d = tempfile.mkdtemp(prefix="hwfs_rr_")
-    for sub in ("docs/governance", "kicad/b", "out/fab/2026-01-01_x", "design"):
+    for sub in ("90-log", "30-board/kicad/b", "30-board/fab/2026-01-01_x", "20-design"):
         os.makedirs(f"{d}/{sub}")
     import subprocess
     subprocess.run(["git", "init", "-q"], cwd=d, check=True)
-    open(f"{d}/project.yaml", "w").write("project: {name: t, owner: {name: owner, email: o@o}}\npaths: {board: kicad/b/b.kicad_pcb}\nreports:\n  - {name: R, title: test report, sections: [banner, identity, decisions, known_issues, package, traceability, dfm, renders, inventory], extra_sources: [design/case.yaml]}\n")
-    open(f"{d}/kicad/b/b.kicad_pcb", "wb").write(b"(kicad_pcb)\n\xe9\r\n")   # a non-UTF-8 byte and a CRLF: the md5 is of the raw bytes
+    open(f"{d}/project.yaml", "w").write("project: {name: t, owner: {name: owner, email: o@o}}\npaths: {board: 30-board/kicad/b/b.kicad_pcb}\nreports:\n  - {name: R, title: test report, sections: [banner, identity, decisions, known_issues, package, traceability, dfm, renders, inventory], extra_sources: [20-design/case.yaml]}\n")
+    open(f"{d}/30-board/kicad/b/b.kicad_pcb", "wb").write(b"(kicad_pcb)\n\xe9\r\n")   # a non-UTF-8 byte and a CRLF: the md5 is of the raw bytes
     md5 = hashlib.md5(b"(kicad_pcb)\n\xe9\r\n").hexdigest()
-    open(f"{d}/out/fab/2026-01-01_x/board_id.txt", "w").write(f"board kicad/b/b.kicad_pcb\nmd5 {md5}\ncommit abc\n")
-    open(f"{d}/docs/governance/DECISIONS.md", "w").write("| ID | Date | Status | Topic | P | R |\n|---|---|---|---|---|---|\n| **D-01 (owner)** | d | **APPROVED** | t | p | r |\n| CC-001 | d | OPEN q | t2 | p | r |\n")
-    open(f"{d}/docs/governance/GATES.md", "w").write("prose: clear to build must not count here\n| **G0** | spec | x | _not yet approved_ |\n| **Release** | reports | y | _not yet written_ |\n")
-    open(f"{d}/design/case.yaml", "w").write("case: {version: v1, pieces: [tray, hood], note: skip me}\n")
+    open(f"{d}/30-board/fab/2026-01-01_x/board_id.txt", "w").write(f"board 30-board/kicad/b/b.kicad_pcb\nmd5 {md5}\ncommit abc\n")
+    open(f"{d}/90-log/DECISIONS.md", "w").write("| ID | Date | Status | Topic | P | R |\n|---|---|---|---|---|---|\n| **D-01 (owner)** | d | **APPROVED** | t | p | r |\n| CC-001 | d | OPEN q | t2 | p | r |\n")
+    open(f"{d}/90-log/GATES.md", "w").write("prose: clear to build must not count here\n| **G0** | spec | x | _not yet approved_ |\n| **Release** | reports | y | _not yet written_ |\n")
+    open(f"{d}/20-design/case.yaml", "w").write("case: {version: v1, pieces: [tray, hood], note: skip me}\n")
     P = Project(f"{d}/project.yaml")
     assert run(P, False) == 0
-    t = open(f"{d}/docs/release/R.md").read()
+    t = open(f"{d}/70-release/reports/R.md").read()
     assert "**STATUS: DRAFT**" in t and f"md5 **`{md5}`**" in t and "**1 OPEN**" in t and "CC-001" in t, t
-    assert "`out/fab/2026-01-01_x/` — md5" in t and "case.version: v1" in t and "case.pieces: ['tray', 'hood']" in t and "skip me" not in t
-    assert "MISSING: `docs/governance/KNOWN_ISSUES.md`" in t and "MISSING: `docs/governance/TRACEABILITY.md`" in t and "MISSING: `out/dfm.json`" in t and "MISSING: `docs/release/collateral/" in t
+    assert "`30-board/fab/2026-01-01_x/` — md5" in t and "case.version: v1" in t and "case.pieces: ['tray', 'hood']" in t and "skip me" not in t
+    assert "MISSING: `90-log/KNOWN_ISSUES.md`" in t and "MISSING: `90-log/TRACEABILITY.md`" in t and "MISSING: `out/dfm.json`" in t and "MISSING: `70-release/collateral/" in t
     assert run(P, True) == 0
     for f in glob.glob(f"{d}/**/*", recursive=True):
         os.utime(f, (0, 0))
     assert run(P, True) == 0, "--check must survive a mtime change (git archive / clone)"
-    open(f"{d}/docs/governance/GATES.md", "a").write("| **Release** | reports | y | clear to build — owner, 2026-01-02 |\n")
+    open(f"{d}/90-log/GATES.md", "a").write("| **Release** | reports | y | clear to build — owner, 2026-01-02 |\n")
     assert run(P, True) == 1, "a changed input makes the report STALE"
     run(P, False)
-    assert "**STATUS: DRAFT" in open(f"{d}/docs/release/R.md").read(), "an UNCOMMITTED release cell stays DRAFT"
+    assert "**STATUS: DRAFT" in open(f"{d}/70-release/reports/R.md").read(), "an UNCOMMITTED release cell stays DRAFT"
     subprocess.run(["git", "add", "-A"], cwd=d, check=True); subprocess.run(["git", "-c", "user.name=agent", "-c", "user.email=a@a", "commit", "-qm", "agent"], cwd=d, check=True)
-    run(P, False); assert "**STATUS: DRAFT" in open(f"{d}/docs/release/R.md").read(), "a release cell committed by a non-owner stays DRAFT (blind review 0.9.0 F2)"
-    open(f"{d}/docs/governance/GATES.md", "a").write("| **Release** | reports | y | clear to build — owner, 2026-01-03 |\n")
+    run(P, False); assert "**STATUS: DRAFT" in open(f"{d}/70-release/reports/R.md").read(), "a release cell committed by a non-owner stays DRAFT (blind review 0.9.0 F2)"
+    open(f"{d}/90-log/GATES.md", "a").write("| **Release** | reports | y | clear to build — owner, 2026-01-03 |\n")
     subprocess.run(["git", "add", "-A"], cwd=d, check=True); subprocess.run(["git", "-c", "user.name=owner", "-c", "user.email=o@o", "commit", "-qm", "owner"], cwd=d, check=True)
-    run(P, False); assert "**STATUS: RELEASED" in open(f"{d}/docs/release/R.md").read(), "the owner's committed cell releases"
-    open(f"{d}/out/fab/2026-01-01_x/board_id.txt", "a").write("")
-    os.makedirs(f"{d}/out/fab/2026-01-02_y"); open(f"{d}/out/fab/2026-01-02_y/board_id.txt", "w").write(f"md5 {md5}\n")
+    run(P, False); assert "**STATUS: RELEASED" in open(f"{d}/70-release/reports/R.md").read(), "the owner's committed cell releases"
+    open(f"{d}/30-board/fab/2026-01-01_x/board_id.txt", "a").write("")
+    os.makedirs(f"{d}/30-board/fab/2026-01-02_y"); open(f"{d}/30-board/fab/2026-01-02_y/board_id.txt", "w").write(f"md5 {md5}\n")
     try:
         run(P, False); raise AssertionError("two packages for one board must refuse")
     except SystemExit as e:

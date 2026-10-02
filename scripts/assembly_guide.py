@@ -123,31 +123,31 @@ def selftest():
     assert s[2] == ("Board into the tray", 10, "ESD: wrist strap on. Board onto the bosses, connector toward the rear.") and s[7] == ("Done - end-of-line check", None, "QA every unit. Fine."), s
     d = tempfile.mkdtemp(prefix="hwfs_ag_")
     w = lambda p, t: (os.makedirs(os.path.dirname(f"{d}/{p}"), exist_ok=True), open(f"{d}/{p}", "w").write(t))
-    w("project.yaml", "project: {name: t}\npaths: {case_yaml: design/case.yaml}\nassembly_guide:\n  yaml: design/assembly_guide.yaml\n  steps_md: out/ASSEMBLY.md\n"
-      "  scad: out/case.scad\n  out_dir: docs/production/{MD5_8}\n  doc_name: VISUAL_ASSEMBLY_GUIDE.md\n  size: '640,480'\n"
+    w("project.yaml", "project: {name: t}\npaths: {case_yaml: 20-design/case.yaml}\nassembly_guide:\n  yaml: 20-design/assembly_guide.yaml\n  steps_md: out/ASSEMBLY.md\n"
+      "  scad: out/case.scad\n  out_dir: 70-release/{MD5_8}\n  doc_name: VISUAL_ASSEMBLY_GUIDE.md\n  size: '640,480'\n"
       "  render_cmd: \"printf 'PNG %s %s %s' {CAMERA} {DEFS} {SIZE} > {OUT}\"\n")
-    w("design/case.yaml", "case: {version: v0.1-test}\n"); w("out/case.scad", "cube(1);\n"); w("out/ASSEMBLY.md", fx)
-    w("design/assembly_guide.yaml", "doc: {doc_id: VG-001, title: Illustrated assembly guide, revision: r1, date: 2026-01-01, companions: SOP-001}\nparts: [tray, board]\ntools: [driver]\n"
+    w("20-design/case.yaml", "case: {version: v0.1-test}\n"); w("out/case.scad", "cube(1);\n"); w("out/ASSEMBLY.md", fx)
+    w("20-design/assembly_guide.yaml", "doc: {doc_id: VG-001, title: Illustrated assembly guide, revision: r1, date: 2026-01-01, companions: SOP-001}\nparts: [tray, board]\ntools: [driver]\n"
       "defaults: {defs: {show_text: 'true'}}\npages:\n  - {id: P_pressfit, position: before, heading: 'P — Press-fit', defs: {part: '\"fixture\"'}, camera: '0,0,0,55,0,25,300', lines: [Press once.], parts: [fixture], tools: [press], check: 'flush'}\n"
       "  - {id: X_exploded, position: after, heading: 'X — Exploded view', defs: {part: '\"exploded\"'}, camera: '0,0,0,55,0,25,600'}\n"
       "step_defaults: {camera: '0,0,0,55,0,25,400', defs: {part: '\"step\"'}}\nsteps:\n  2: {camera: '0,0,0,55,0,215,400', parts: [board], tools: [strap], check: 'seated'}\n")
     P = Project(f"{d}/project.yaml")
     assert run(P, check=True) == 1, "check before build must be stale"
     assert run(P) == 0
-    od = f"{d}/docs/production/MISSING"; md = open(f"{od}/VISUAL_ASSEMBLY_GUIDE.md").read()
-    assert [p[0] for p in pages(yaml.safe_load(open(f"{d}/design/assembly_guide.yaml")), s)] == ["page_P_pressfit", "step_02", "step_07", "page_X_exploded"]
+    od = f"{d}/70-release/MISSING"; md = open(f"{od}/VISUAL_ASSEMBLY_GUIDE.md").read()
+    assert [p[0] for p in pages(yaml.safe_load(open(f"{d}/20-design/assembly_guide.yaml")), s)] == ["page_P_pressfit", "step_02", "step_07", "page_X_exploded"]
     assert "## Step 2 — Board into the tray (10 s)" in md and "![Step 2" in md and "| board | strap | seated |" in md and "case `v0.1-test`" in md, md
     png = open(f"{od}/guide/step_02.png").read(); assert "0,0,0,55,0,215,400" in png and "-Dstep=2" in png and "-Dpart=\"step\"" in png and "640,480" in png, png
     assert run(P, check=True) == 0, "fresh build must pass --check"
     side = json.load(open(f"{od}/guide/guide.json")); k2 = dict(side["renders"])
-    w("design/assembly_guide.yaml", open(f"{d}/design/assembly_guide.yaml").read().replace("Press once.", "Press once, firmly."))
+    w("20-design/assembly_guide.yaml", open(f"{d}/20-design/assembly_guide.yaml").read().replace("Press once.", "Press once, firmly."))
     assert run(P, check=True) == 1 and run(P) == 0 and json.load(open(f"{od}/guide/guide.json"))["renders"] == k2, "a text edit re-renders nothing"
     w("out/case.scad", "cube(2);\n")
     import io, contextlib
     with contextlib.redirect_stdout(io.StringIO()) as buf:
         assert run(P, check=True) == 1
     assert all(f"guide/{s}.png" in buf.getvalue() for s in ("page_P_pressfit", "step_02", "step_07", "page_X_exploded")), buf.getvalue()   # every render stale
-    w("design/assembly_guide.yaml", open(f"{d}/design/assembly_guide.yaml").read().replace("  - {id: X_exploded", "  # - {id: X_exploded"))
+    w("20-design/assembly_guide.yaml", open(f"{d}/20-design/assembly_guide.yaml").read().replace("  - {id: X_exploded", "  # - {id: X_exploded"))
     with contextlib.redirect_stdout(io.StringIO()) as buf:
         assert run(P, check=True) == 1 and "orphan" in buf.getvalue(), buf.getvalue()
     assert run(P) == 0 and not os.path.exists(f"{od}/guide/page_X_exploded.png") and "page_X_exploded" not in json.load(open(f"{od}/guide/guide.json"))["renders"], "orphan render pruned"

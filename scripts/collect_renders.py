@@ -9,7 +9,7 @@ project.yaml:
   renders:
     - {name: pcb_top, kind: kicad_render, args: ["--side", "top", "--zoom", "1"]}        # kicad-cli pcb render <args> -o <out> <board>
     - {name: pcb_top_2d, kind: command, cmd: "{KICAD_CLI} pcb export svg --layers F.Cu -o {OUT} {BOARD}"}
-    - {name: panel_top, kind: copy, src: "out/fab/*_{MD5_8}/panel/panel_top.png"}     # glob; {MD5_8} = board md5 prefix
+    - {name: panel_top, kind: copy, src: "30-board/fab/*_{MD5_8}/panel/panel_top.png"}     # glob; {MD5_8} = board md5 prefix
     - {name: case_iso, kind: copy, src: "out/case/{CASE_VERSION}/renders/iso.png", key: case}   # case-keyed items use the case version, not the board md5
 Freshness key = md5 of the source (or the board) + the FULL argument/command string, so a changed camera re-renders and an unchanged one does
 not; the index RENDERS.md / renders.json carries md5, bytes, source key and a grade (OK / EMPTY when the file is < min_bytes). Orphans (files
@@ -95,17 +95,17 @@ def run(P, dry=False, runner=None):
 
 def selftest():
     d = tempfile.mkdtemp(prefix="hwfs_cr_")
-    os.makedirs(f"{d}/kicad/b"); os.makedirs(f"{d}/out/fab/2026_dead/panel"); os.makedirs(f"{d}/design")
-    open(f"{d}/kicad/b/b.kicad_pcb", "w").write("(kicad_pcb)\n")
-    m8 = file_md5(f"{d}/kicad/b/b.kicad_pcb")[:8]
-    os.rename(f"{d}/out/fab/2026_dead", f"{d}/out/fab/2026_{m8}")
-    open(f"{d}/out/fab/2026_{m8}/panel/panel_top.png", "wb").write(b"x" * 100)
-    open(f"{d}/design/case.yaml", "w").write("case: {version: v9}\n")
+    os.makedirs(f"{d}/30-board/kicad/b"); os.makedirs(f"{d}/30-board/fab/2026_dead/panel"); os.makedirs(f"{d}/20-design")
+    open(f"{d}/30-board/kicad/b/b.kicad_pcb", "w").write("(kicad_pcb)\n")
+    m8 = file_md5(f"{d}/30-board/kicad/b/b.kicad_pcb")[:8]
+    os.rename(f"{d}/30-board/fab/2026_dead", f"{d}/30-board/fab/2026_{m8}")
+    open(f"{d}/30-board/fab/2026_{m8}/panel/panel_top.png", "wb").write(b"x" * 100)
+    open(f"{d}/20-design/case.yaml", "w").write("case: {version: v9}\n")
     os.makedirs(f"{d}/out/case/v9"); open(f"{d}/out/case/v9/iso.png", "wb").write(b"y" * 100)
-    open(f"{d}/project.yaml", "w").write(f"""paths: {{board: kicad/b/b.kicad_pcb, case_yaml: design/case.yaml}}
+    open(f"{d}/project.yaml", "w").write(f"""paths: {{board: 30-board/kicad/b/b.kicad_pcb, case_yaml: 20-design/case.yaml}}
 renders:
   - {{name: pcb_top, kind: kicad_render, args: ["--side", "top"]}}
-  - {{name: panel_top, kind: copy, src: "out/fab/*_{{MD5_8}}/panel/panel_top.png"}}
+  - {{name: panel_top, kind: copy, src: "30-board/fab/*_{{MD5_8}}/panel/panel_top.png"}}
   - {{name: case_iso, kind: copy, src: "out/case/{{CASE_VERSION}}/iso.png", sub: case}}
   - {{name: tiny, kind: copy, src: "out/case/{{CASE_VERSION}}/iso.png", min_bytes: 1000}}
 """)
@@ -114,7 +114,7 @@ renders:
         calls.append(cmd); open(cmd[cmd.index("-o") + 1], "wb").write(b"png" * 40)
     P = Project(f"{d}/project.yaml")
     assert run(P, runner=fake) == 0 and len(calls) == 1
-    out = f"{d}/docs/release/collateral/{m8}/renders"
+    out = f"{d}/70-release/collateral/{m8}/renders"
     idx = json.load(open(f"{out}/renders.json"))
     assert set(idx) == {"pcb_top.png", "panel_top.png", "case/case_iso.png", "tiny.png"} and idx["tiny.png"]["grade"] == "EMPTY", idx
     assert run(P, runner=fake) == 0 and len(calls) == 1, "idempotent: nothing redone"
@@ -127,8 +127,8 @@ renders:
     assert "| `case/case_iso.png` |" in open(f"{out}/RENDERS.md").read() and "`stale.png`" in open(f"{out}/RENDERS.md").read().split("Orphans")[1]
     P.cfg["renders"].append({"name": "gone", "kind": "copy", "src": "nowhere/*.png"})
     assert run(P, runner=fake) == 1, "a missing source is reported and exits 1"
-    P.cfg["paths"]["board"] = "kicad/none.kicad_pcb"
-    assert run(P, runner=fake) == 1 and not os.path.exists(f"{d}/docs/release/collateral/nomd5"), "no board: MISSING, no nomd5 folder"
+    P.cfg["paths"]["board"] = "30-board/kicad/none.kicad_pcb"
+    assert run(P, runner=fake) == 1 and not os.path.exists(f"{d}/70-release/collateral/nomd5"), "no board: MISSING, no nomd5 folder"
     print("selftest OK")
     return 0
 

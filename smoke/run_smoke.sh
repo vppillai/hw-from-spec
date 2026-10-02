@@ -127,7 +127,7 @@ for row, r in t.items():
             line = [l for l in txt.splitlines() if re.match(rf"^\s+{k}:", l)]
             assert line, (row, k)
 assert len(re.findall(r"\[V\]", txt)) >= 15 and "BLOCKED" in txt, "citations: [V] with URL + date, BLOCKED rows kept null"
-v = yaml.safe_load(open(sys.argv[1] + "/templates/docs/quotes/dfm_verdicts.yaml")); assert v == {"verdicts": []}, v
+v = yaml.safe_load(open(sys.argv[1] + "/templates/60-orders/quotes/dfm_verdicts.yaml")); assert v == {"verdicts": []}, v
 print("templates: dfm_processes.yaml rows", len(t), "all validated_on: []; dfm_verdicts.yaml schema OK")
 PYEOF
 "$PY" scripts/scad_lint.py --selftest
@@ -144,26 +144,26 @@ grep -q '^  FLAG  R root under a rim' out/eval14_flag.txt && grep -q '^  FLAG  W
 "$PY" scripts/print_dfm.py --list | grep -q 'xometry_mjf_pa12' || { echo "FAIL: --list must show the template rows outside a project table"; exit 1; }
 # enforcement (review 0.8.0 F5 / F6 / F7 / F8 / F28), negative tests on a throwaway mech project: a tampered record, an uncensused body, a laxer process
 # row than the target's, --open with a non-OPEN id, an open mesh — each must FAIL the gate / the check
-E=$T/enf; mkdir -p $E/out/mechanical/case/pre/stl $E/out/mechanical/case/pre/dfm $E/docs/governance; ln -s "$SKILL/scripts" $E/scripts
-printf 'project: {name: enf, scope: mech}\npaths: {mech_record: "out/mechanical/case/*/stl/*.stl"}\nprint_targets: {pre: {dfm_process: jlc_mjf_pa12}}\n' > $E/project.yaml
-printf '| ID | Date | Status | Topic | P | R |\n|---|---|---|---|---|---|\n| **D-07** | d | **OPEN** | thicken plate08 | p | r |\n| **D-08** | d | **OPEN** | another body | p | r |\n| CC-010 | d | APPLIED | x | p | r |\n' > $E/docs/governance/DECISIONS.md
+E=$T/enf; mkdir -p $E/40-case/pre/parts $E/40-case/pre/checks/dfm $E/90-log; ln -s "$SKILL/scripts" $E/scripts
+printf 'project: {name: enf, scope: mech}\npaths: {mech_record: "40-case/*/parts/*.stl"}\nprint_targets: {pre: {dfm_process: jlc_mjf_pa12}}\n' > $E/project.yaml
+printf '| ID | Date | Status | Topic | P | R |\n|---|---|---|---|---|---|\n| **D-07** | d | **OPEN** | thicken plate08 | p | r |\n| **D-08** | d | **OPEN** | another body | p | r |\n| CC-010 | d | APPLIED | x | p | r |\n' > $E/90-log/DECISIONS.md
 "$PY" - "$E" <<'PYEOF'
 import sys, trimesh
-E = sys.argv[1]; trimesh.creation.box((30.0, 30.0, 2.0)).export(f"{E}/out/mechanical/case/pre/stl/plate2.stl"); trimesh.creation.box((30.0, 30.0, 0.8)).export(f"{E}/out/mechanical/case/pre/stl/plate08.stl")
+E = sys.argv[1]; trimesh.creation.box((30.0, 30.0, 2.0)).export(f"{E}/40-case/pre/stl/plate2.stl"); trimesh.creation.box((30.0, 30.0, 0.8)).export(f"{E}/40-case/pre/stl/plate08.stl")
 b = trimesh.creation.box((20.0, 20.0, 5.0)); b.faces = b.faces[2:]; b.export(f"{E}/open.stl")
 PYEOF
 (cd $E
- "$PY" scripts/print_dfm.py --process jlc_mjf_pa12 --samples 20000 --out out/mechanical/case/pre/dfm out/mechanical/case/pre/stl/plate2.stl >/dev/null || { echo "FAIL: the 2.0 plate must PASS"; exit 1; }
- "$PY" scripts/print_dfm.py --gate out/mechanical/case/pre/dfm >/dev/null && { echo "FAIL (F5): plate08 sits in the STL set without a record and the gate passed"; exit 1; }
- "$PY" scripts/print_dfm.py --process protolabs_mjf_pa12 --samples 20000 --out out/mechanical/case/pre/dfm out/mechanical/case/pre/stl/plate08.stl >/dev/null 2>&1 || true
- "$PY" scripts/print_dfm.py --gate out/mechanical/case/pre/dfm >/dev/null && { echo "FAIL (F6): a record against a laxer row than print_targets.pre.dfm_process passed"; exit 1; }
- "$PY" scripts/print_dfm.py --process jlc_mjf_pa12 --samples 20000 --out out/mechanical/case/pre/dfm out/mechanical/case/pre/stl/plate08.stl >/dev/null && { echo "FAIL: the 0.8 plate must FLAG"; exit 1; }
- "$PY" scripts/print_dfm.py --gate out/mechanical/case/pre/dfm --open pre/plate08=WHATEVER >/dev/null && { echo "FAIL (F7): --open with a free string passed"; exit 1; }
- "$PY" scripts/print_dfm.py --gate out/mechanical/case/pre/dfm --open pre/plate08=CC-010 >/dev/null && { echo "FAIL (F7): --open with an APPLIED row passed"; exit 1; }
- "$PY" scripts/print_dfm.py --gate out/mechanical/case/pre/dfm --open pre/plate08=D-08 >/dev/null && { echo "FAIL (N2 0.9.0): an OPEN row that does not name plate08 passed"; exit 1; }
- "$PY" scripts/print_dfm.py --gate out/mechanical/case/pre/dfm --open pre/plate08=D-07 >/dev/null || { echo "FAIL: --open with the OPEN row D-07 must pass"; exit 1; }
- sed -i.bak 's/"verdict": "FLAG"/"verdict": "PASS"/' out/mechanical/case/pre/dfm/plate08.json
- "$PY" scripts/print_dfm.py --gate out/mechanical/case/pre/dfm >/dev/null && { echo "FAIL (F28): a record edited FLAG->PASS by hand passed the gate"; exit 1; }
+ "$PY" scripts/print_dfm.py --process jlc_mjf_pa12 --samples 20000 --out 40-case/pre/dfm 40-case/pre/stl/plate2.stl >/dev/null || { echo "FAIL: the 2.0 plate must PASS"; exit 1; }
+ "$PY" scripts/print_dfm.py --gate 40-case/pre/dfm >/dev/null && { echo "FAIL (F5): plate08 sits in the STL set without a record and the gate passed"; exit 1; }
+ "$PY" scripts/print_dfm.py --process protolabs_mjf_pa12 --samples 20000 --out 40-case/pre/dfm 40-case/pre/stl/plate08.stl >/dev/null 2>&1 || true
+ "$PY" scripts/print_dfm.py --gate 40-case/pre/dfm >/dev/null && { echo "FAIL (F6): a record against a laxer row than print_targets.pre.dfm_process passed"; exit 1; }
+ "$PY" scripts/print_dfm.py --process jlc_mjf_pa12 --samples 20000 --out 40-case/pre/dfm 40-case/pre/stl/plate08.stl >/dev/null && { echo "FAIL: the 0.8 plate must FLAG"; exit 1; }
+ "$PY" scripts/print_dfm.py --gate 40-case/pre/dfm --open pre/plate08=WHATEVER >/dev/null && { echo "FAIL (F7): --open with a free string passed"; exit 1; }
+ "$PY" scripts/print_dfm.py --gate 40-case/pre/dfm --open pre/plate08=CC-010 >/dev/null && { echo "FAIL (F7): --open with an APPLIED row passed"; exit 1; }
+ "$PY" scripts/print_dfm.py --gate 40-case/pre/dfm --open pre/plate08=D-08 >/dev/null && { echo "FAIL (N2 0.9.0): an OPEN row that does not name plate08 passed"; exit 1; }
+ "$PY" scripts/print_dfm.py --gate 40-case/pre/dfm --open pre/plate08=D-07 >/dev/null || { echo "FAIL: --open with the OPEN row D-07 must pass"; exit 1; }
+ sed -i.bak 's/"verdict": "FLAG"/"verdict": "PASS"/' 40-case/pre/dfm/plate08.json
+ "$PY" scripts/print_dfm.py --gate 40-case/pre/dfm >/dev/null && { echo "FAIL (F28): a record edited FLAG->PASS by hand passed the gate"; exit 1; }
  "$PY" scripts/print_dfm.py --process jlc_mjf_pa12 --samples 5000 open.stl > open.txt && { echo "FAIL (F8): an open mesh must FLAG"; exit 1; }
  grep -q '^  FLAG  M manifold' open.txt || { echo "FAIL (F8): rule M did not fire on the open mesh"; cat open.txt; exit 1; }
  rc=0; "$PY" scripts/print_dfm.py --process jlc_mjf_pa12 nonexist.stl >/dev/null 2>&1 || rc=$?; [[ $rc == 2 ]] || { echo "FAIL (F21): a missing file must exit 2 (got $rc)"; exit 1; }
@@ -171,52 +171,52 @@ PYEOF
 rm -f out/eval14_*
 else echo "   (0d SKIPPED: mesh libraries absent)"; fi
 say "0e enforcement without mesh libraries: a tampered / missing census record, a commented gate line, an unauthorised release line, the slot counter and the kickoff check"
-N=$T/nomesh; mkdir -p $N/out/mechanical/case/pre/stl $N/out/mechanical/case/pre/census $N/docs/governance; ln -s "$SKILL/scripts" $N/scripts
-printf 'solid a\nendsolid a\n' > $N/out/mechanical/case/pre/stl/a.stl; printf 'solid b\nendsolid b\n' > $N/out/mechanical/case/pre/stl/b.stl
-printf 'project: {name: nomesh, scope: mech, owner: {name: smoke, email: s@s}}\npaths: {mech_record: "out/mechanical/case/*/stl/*.stl"}\nprint_targets: {pre: {wall_gate: 1.2, void_gate: 1.2, accepted: []}}\ngates: {adopt: ["echo step1"], clone: []}\n' > $N/project.yaml
+N=$T/nomesh; mkdir -p $N/40-case/pre/parts $N/40-case/pre/checks/census $N/90-log; ln -s "$SKILL/scripts" $N/scripts
+printf 'solid a\nendsolid a\n' > $N/40-case/pre/parts/a.stl; printf 'solid b\nendsolid b\n' > $N/40-case/pre/parts/b.stl
+printf 'project: {name: nomesh, scope: mech, owner: {name: smoke, email: s@s}}\npaths: {mech_record: "40-case/*/parts/*.stl"}\nprint_targets: {pre: {wall_gate: 1.2, void_gate: 1.2, accepted: []}}\ngates: {adopt: ["echo step1"], clone: []}\n' > $N/project.yaml
 "$PY" - "$N" <<'PYEOF'
 import sys, json, hashlib, os; N = sys.argv[1]; sys.path.insert(0, f"{N}/scripts"); from project import record_sig; from thin_wall_census import VERSION as V
 for p in ("a", "b"):
-    stl = f"{N}/out/mechanical/case/pre/stl/{p}.stl"
+    stl = f"{N}/40-case/pre/stl/{p}.stl"
     r = dict(version=V, stl=stl, stl_md5=hashlib.md5(open(stl, "rb").read()).hexdigest(), target="pre", fails=[], accepted_fails=[]); r["sig"] = record_sig(r, V)
-    json.dump(r, open(f"{N}/out/mechanical/case/pre/census/{p}.json", "w"))
+    json.dump(r, open(f"{N}/40-case/pre/census/{p}.json", "w"))
 PYEOF
 (cd $N
- "$PY" scripts/thin_wall_census.py --gate-dir out/mechanical/case/pre/census >/dev/null || { echo "FAIL: two signed clean census records must pass"; exit 1; }
- rm out/mechanical/case/pre/census/b.json
- "$PY" scripts/thin_wall_census.py --gate-dir out/mechanical/case/pre/census >/dev/null && { echo "FAIL (F5): b.stl has no census record and the gate passed"; exit 1; }
- sed -i.bak 's/"fails": \[\]/"fails": ["WALL 0.88 < 1.2"]/' out/mechanical/case/pre/census/a.json; sed -i.bak 's/"fails": \["WALL 0.88 < 1.2"\]/"fails": []/' out/mechanical/case/pre/census/a.json
+ "$PY" scripts/thin_wall_census.py --gate-dir 40-case/pre/census >/dev/null || { echo "FAIL: two signed clean census records must pass"; exit 1; }
+ rm 40-case/pre/census/b.json
+ "$PY" scripts/thin_wall_census.py --gate-dir 40-case/pre/census >/dev/null && { echo "FAIL (F5): b.stl has no census record and the gate passed"; exit 1; }
+ sed -i.bak 's/"fails": \[\]/"fails": ["WALL 0.88 < 1.2"]/' 40-case/pre/census/a.json; sed -i.bak 's/"fails": \["WALL 0.88 < 1.2"\]/"fails": []/' 40-case/pre/census/a.json
  "$PY" - <<'PYEOF'
-import json; p = "out/mechanical/case/pre/census/a.json"; r = json.load(open(p)); r["accepted_fails"] = [dict(fail="WALL 0.9", reason="r", date="2026-01-01", evidence="e")]; json.dump(r, open(p, "w"))   # body changed, sig kept
+import json; p = "40-case/pre/census/a.json"; r = json.load(open(p)); r["accepted_fails"] = [dict(fail="WALL 0.9", reason="r", date="2026-01-01", evidence="e")]; json.dump(r, open(p, "w"))   # body changed, sig kept
 PYEOF
- rm out/mechanical/case/pre/stl/b.stl
- "$PY" scripts/thin_wall_census.py --gate-dir out/mechanical/case/pre/census >/dev/null && { echo "FAIL (F28): a census record edited after signing passed the gate"; exit 1; }
+ rm 40-case/pre/stl/b.stl
+ "$PY" scripts/thin_wall_census.py --gate-dir 40-case/pre/census >/dev/null && { echo "FAIL (F28): a census record edited after signing passed the gate"; exit 1; }
  git init -q && git add -A && git -c user.name=smoke -c user.email=s@s commit -qm nomesh
  out=$(scripts/adopt_gates.sh --no-clone 2>&1 || true); echo "$out" | grep -q "GATE FAILED: an artefact exists whose gate line is missing" || { echo "FAIL (F11): an STL set with no census / print-DFM gate line in gates.adopt was green"; echo "$out"; exit 1; }
- printf '# GATES\n| Gate | Meaning | Prerequisites | Owner approval |\n|---|---|---|---|\n| **G0** | spec | x | _not yet approved_ |\n| **Release** | reports | y | _not yet written_ |\n' > docs/governance/GATES.md
+ printf '# GATES\n| Gate | Meaning | Prerequisites | Owner approval |\n|---|---|---|---|\n| **G0** | spec | x | _not yet approved_ |\n| **Release** | reports | y | _not yet written_ |\n' > 90-log/GATES.md
  "$PY" scripts/gate_check.py G0 >/dev/null && { echo "FAIL (F12): an empty G0 cell read as approved"; exit 1; }
- printf '| **Release** | reports | y | clear to build — smoke, 2026-01-04, record 0000 |\n' >> docs/governance/GATES.md
+ printf '| **Release** | reports | y | clear to build — smoke, 2026-01-04, record 0000 |\n' >> 90-log/GATES.md
  "$PY" scripts/gate_check.py --release >/dev/null && { echo "FAIL (F12): an UNCOMMITTED release line passed"; exit 1; }
  git add -A && git -c user.name=agent -c user.email=a@a commit -qm "agent wrote the release line"
  "$PY" scripts/gate_check.py --release >/dev/null && { echo "FAIL (F12): a release line committed by a non-owner passed"; exit 1; }
- printf '\n' >> docs/governance/GATES.md; git add -A && git -c user.name=agent -c user.email=a@a commit -qm "touch"
- printf '| **Release** | reports | y | clear to build — smoke, 2026-01-05, record 0001 |\n' >> docs/governance/GATES.md; git add -A && git -c user.name=smoke -c user.email=s@s commit -qm "owner line"
+ printf '\n' >> 90-log/GATES.md; git add -A && git -c user.name=agent -c user.email=a@a commit -qm "touch"
+ printf '| **Release** | reports | y | clear to build — smoke, 2026-01-05, record 0001 |\n' >> 90-log/GATES.md; git add -A && git -c user.name=smoke -c user.email=s@s commit -qm "owner line"
  "$PY" scripts/gate_check.py --release >/dev/null || { echo "FAIL: the owner's committed release line must pass gate_check --release"; exit 1; }
  echo "enforcement (no mesh): missing census record, tampered census record, commented gate line, empty gate cell, uncommitted / agent-authored release line -> all FAIL; owner line passes")
 # the slot counter: a scaffolded ee project shows its slots; trivially filled, zero (F24); the kickoff check fails on template rows and passes on filled ones (F10)
-K=$T/kick; mkdir -p $K/docs/governance $K/design; ln -s "$SKILL/scripts" $K/scripts
-cp "$SKILL/templates"/{project.yaml,CLAUDE.md,SPEC.md,STATUS.md} $K/; cp "$SKILL/templates"/{GATES,KICKOFF_ANSWERS,DECISIONS}.md $K/docs/governance/; cp "$SKILL/templates/design/traceability.yaml" $K/design/
+K=$T/kick; mkdir -p $K/90-log $K/design; ln -s "$SKILL/scripts" $K/scripts
+cp "$SKILL/templates"/{project.yaml,CLAUDE.md,10-spec/SPEC.md,STATUS.md} $K/; cp "$SKILL/templates"/{GATES,KICKOFF_ANSWERS,DECISIONS}.md $K/90-log/; cp "$SKILL/templates/design/traceability.yaml" $K/20-design/
 (cd $K
- "$PY" scripts/project.py scaffold --scope ee project.yaml CLAUDE.md SPEC.md STATUS.md docs/governance/*.md design/*.yaml >/dev/null
- grep -q '{{SCOPE}}' project.yaml CLAUDE.md SPEC.md docs/governance/*.md && { echo "FAIL (0.9.0 F4): scaffold --scope must fill the {{SCOPE}} slot"; exit 1; }
+ "$PY" scripts/project.py scaffold --scope ee project.yaml CLAUDE.md 10-spec/SPEC.md STATUS.md 90-log/*.md design/*.yaml >/dev/null
+ grep -q '{{SCOPE}}' project.yaml CLAUDE.md 10-spec/SPEC.md 90-log/*.md && { echo "FAIL (0.9.0 F4): scaffold --scope must fill the {{SCOPE}} slot"; exit 1; }
  grep -q '^  scope: ee' project.yaml || { echo "FAIL (0.9.0 F4): project.scope not set by scaffold"; exit 1; }
  "$PY" scripts/project.py slots >/dev/null && { echo "FAIL (F24): a fresh scaffold has slots; the counter must exit 1"; exit 1; }
  { "$PY" scripts/project.py slots || true; } | tail -1 | grep -q 'unfilled in' || { echo "FAIL (F24): slots must print the per-file count"; exit 1; }
  out=$("$PY" scripts/project.py kickoff --check 2>&1 || true); echo "$out" | grep -q 'not valid YAML.*slots' || { echo "FAIL (0.9.0 F3): an unfilled project.yaml must name the slots as the cause, not traceback"; echo "$out" | tail -3; exit 1; }
- for f in project.yaml CLAUDE.md SPEC.md STATUS.md docs/governance/*.md design/*.yaml; do sed -i.bak -E 's/\{\{[^{}]*\}\}/X/g' "$f"; rm -f "$f.bak"; done
+ for f in project.yaml CLAUDE.md 10-spec/SPEC.md STATUS.md 90-log/*.md design/*.yaml; do sed -i.bak -E 's/\{\{[^{}]*\}\}/X/g' "$f"; rm -f "$f.bak"; done
  { "$PY" scripts/project.py slots || true; } | tail -1 | grep -q '^slots: 0 unfilled' || { echo "FAIL (F24): a trivially filled project must show zero slots"; "$PY" scripts/project.py slots | tail -3 || true; exit 1; }
  out=$("$PY" scripts/project.py kickoff --check 2>&1 || true); echo "$out" | grep -q '^KICKOFF: .*no D row id\|^KICKOFF: .*is not in' || { echo "FAIL (F10): kickoff rows with D-X ids passed the kickoff check"; echo "$out" | tail -3; exit 1; }
- printf '| **D-02** | d | **APPROVED** | kickoff | owner | words |\n' >> docs/governance/DECISIONS.md; sed -i.bak 's/D-X/D-02/g' docs/governance/KICKOFF_ANSWERS.md
+ printf '| **D-02** | d | **APPROVED** | kickoff | owner | words |\n' >> 90-log/DECISIONS.md; sed -i.bak 's/D-X/D-02/g' 10-spec/KICKOFF_ANSWERS.md
  "$PY" scripts/project.py kickoff --check >/dev/null || { echo "FAIL (F10): a filled ee project must pass the kickoff check"; "$PY" scripts/project.py kickoff --check | tail -5 || true; exit 1; }
  echo "slots: fresh ee scaffold -> exit 1 with counts; trivially filled -> 0; kickoff --check: unfilled yaml names the slots, D-X rows FAIL, filled rows pass")
 say "0b scope: A0 asked first, every scope scaffolds from ONE template set and gets its own gate rows"
@@ -224,7 +224,7 @@ grep -q '^\*\*A0 Project scope' "$SKILL/references/kickoff-questionnaire.md" && 
 grep -q '^## 1. Phase / gate model (per scope)' "$SKILL/SKILL.md" && grep -q '^## 6. Layout phase and the adopt rule \[ee, both\]' "$SKILL/SKILL.md" && grep -q '^## 8. Case pipeline and FEA \[mech, both\]' "$SKILL/SKILL.md" || { echo "FAIL: SKILL.md lost the scope model / heading tags"; exit 1; }
 "$PY" scripts/project.py --selftest
 for sc in ee mech both; do
-  S=$T/scope_$sc; mkdir -p $S; cp "$SKILL/templates"/{project.yaml,CLAUDE.md,GATES.md,SPEC.md,STATUS.md,KICKOFF_ANSWERS.md,ENV.md,production_cut.yaml,REVIEW_HANDOFF.md,RELEASE_NOTES.md} "$SKILL/templates/design/traceability.yaml" $S/
+  S=$T/scope_$sc; mkdir -p $S; cp "$SKILL/templates"/{project.yaml,CLAUDE.md,GATES.md,10-spec/SPEC.md,STATUS.md,KICKOFF_ANSWERS.md,ENV.md,production_cut.yaml,REVIEW_HANDOFF.md,RELEASE_NOTES.md} "$SKILL/templates/design/traceability.yaml" $S/
   "$PY" scripts/project.py scaffold --scope $sc $S/* >/dev/null
   grep -l '{{\(ee\|mech\|both\)\(,\(ee\|mech\|both\)\)*}}' $S/* && { echo "FAIL: a scope tag survived scaffold --scope $sc"; exit 1; }
   G=$(grep -o '^| \*\*[A-Za-z0-9 ()]*\*\*' $S/GATES.md | tr -d '*|' | tr -s ' \n' ' ')
@@ -243,27 +243,27 @@ for sc in ee mech both; do
 done
 # the ee scaffold must have dropped the same lines the ee grep above checks; a stray `ee`-only or `both`-only tag is caught by the tag grep
 say "0c mech scope end to end: the STL set is the record id (report identity, collateral, hand-off), no fab-package line, the fit input printed"
-M=$T/mech; mkdir -p $M/out/mechanical/case/v1/stl $M/out/mechanical $M/design $M/docs/governance $M/vendor/hw-from-spec; ln -s "$SKILL/scripts" $M/vendor/hw-from-spec/scripts; ln -s vendor/hw-from-spec/scripts $M/scripts
-printf 'solid a\nendsolid a\n' > $M/out/mechanical/case/v1/stl/bracket.stl; printf '{"source": "in/board.step", "source_md5": "abcdef0123456789", "tag": "V"}\n' > $M/out/mechanical/board.stl.provenance.json
-printf 'case: {version: v1}\n' > $M/design/case.yaml; printf '# GATES\n| Gate | Meaning | Prerequisites | Owner approval |\n|---|---|---|---|\n' > $M/docs/governance/GATES.md
-printf '# D\n| ID | Date | Status | Topic | Proposal | Reason |\n|---|---|---|---|---|---|\n| **D-01** | 2026-01-01 | **APPROVED** | start | owner | word |\n' > $M/docs/governance/DECISIONS.md
+M=$T/mech; mkdir -p $M/40-case/v1/parts $M/40-case/board_mesh $M/20-design $M/90-log $M/vendor/hw-from-spec; ln -s "$SKILL/scripts" $M/vendor/hw-from-spec/scripts; ln -s vendor/hw-from-spec/scripts $M/scripts
+printf 'solid a\nendsolid a\n' > $M/40-case/v1/parts/bracket.stl; printf '{"source": "in/board.step", "source_md5": "abcdef0123456789", "tag": "V"}\n' > $M/40-case/board_mesh/board.stl.provenance.json
+printf 'case: {version: v1}\n' > $M/20-design/case.yaml; printf '# GATES\n| Gate | Meaning | Prerequisites | Owner approval |\n|---|---|---|---|\n' > $M/90-log/GATES.md
+printf '# D\n| ID | Date | Status | Topic | Proposal | Reason |\n|---|---|---|---|---|---|\n| **D-01** | 2026-01-01 | **APPROVED** | start | owner | word |\n' > $M/90-log/DECISIONS.md
 cat > $M/project.yaml <<YAML
 project: {name: mech_smoke, scope: mech}
-paths: {case_yaml: design/case.yaml, mesh_provenance: out/mechanical/board.stl.provenance.json, collateral_dir: docs/release/collateral}
-renders: [{name: case_iso, kind: copy, src: "out/mechanical/case/{CASE_VERSION}/iso.png", sub: case}]
-reports: [{name: CASE_DESIGN_REPORT, title: mech case report, sections: [banner, identity, decisions, renders, inventory], extra_sources: [design/case.yaml]}]
+paths: {case_yaml: 20-design/case.yaml, mesh_provenance: 40-case/board_mesh/board.stl.provenance.json, collateral_dir: 70-release/collateral}
+renders: [{name: case_iso, kind: copy, src: "40-case/{CASE_VERSION}/iso.png", sub: case}]
+reports: [{name: CASE_DESIGN_REPORT, title: mech case report, sections: [banner, identity, decisions, renders, inventory], extra_sources: [20-design/case.yaml]}]
 YAML
-printf 'PNG-stub-------------------------------------------------------------------\n' > $M/out/mechanical/case/v1/iso.png
+printf 'PNG-stub-------------------------------------------------------------------\n' > $M/40-case/v1/iso.png
 (cd $M && git init -q && git add -A && git -c user.name=smoke -c user.email=s@s commit -qm mech >/dev/null
  REC=$("$PY" scripts/project.py record); echo "$REC"; [[ "$REC" == mechanical\ record*md5\ [0-9a-f]* ]] || { echo "FAIL: mech record id is not the STL set"; exit 1; }
  M8=$(echo "$REC" | sed 's/.*md5 //' | cut -c1-8)
- "$PY" scripts/collect_renders.py >/dev/null && test -f docs/release/collateral/$M8/renders/RENDERS.md || { echo "FAIL: mech collateral not keyed on the STL-set md5"; exit 1; }
- "$PY" scripts/release_report.py >/dev/null; grep -q "Mechanical record .* md5 \*\*\`" docs/release/CASE_DESIGN_REPORT.md || { echo "FAIL: mech report identity is not the mechanical record"; exit 1; }
- grep -q 'no package of record' docs/release/CASE_DESIGN_REPORT.md && { echo "FAIL: mech report carries a fab-package line"; exit 1; }
+ "$PY" scripts/collect_renders.py >/dev/null && test -f 70-release/collateral/$M8/renders/RENDERS.md || { echo "FAIL: mech collateral not keyed on the STL-set md5"; exit 1; }
+ "$PY" scripts/release_report.py >/dev/null; grep -q "Mechanical record .* md5 \*\*\`" 70-release/reports/CASE_DESIGN_REPORT.md || { echo "FAIL: mech report identity is not the mechanical record"; exit 1; }
+ grep -q 'no package of record' 70-release/reports/CASE_DESIGN_REPORT.md && { echo "FAIL: mech report carries a fab-package line"; exit 1; }
  H=$("$PY" scripts/handoff_header.py); echo "$H" | grep -q 'Fit input of record.*in/board.step.*\[V\]' && echo "$H" | grep -q 'Mechanical record' || { echo "FAIL: mech hand-off header lacks the fit input / mechanical record rows"; exit 1; })
 say "1 fab package of record keyed on the board md5"
-MD5=$(md5of kicad/smoke/smoke.kicad_pcb); PKG=out/fab/2026-01-03_${MD5:0:8}; mkdir -p $PKG
-printf 'board kicad/smoke/smoke.kicad_pcb\nmd5 %s\ncommit %s\nbuilt 2026-01-03\nsegments 1\nvias 0\n' $MD5 $(git rev-parse --short HEAD) > $PKG/board_id.txt
+MD5=$(md5of 30-board/kicad/smoke/smoke.kicad_pcb); PKG=30-board/fab/2026-01-03_${MD5:0:8}; mkdir -p $PKG
+printf 'board 30-board/kicad/smoke/smoke.kicad_pcb\nmd5 %s\ncommit %s\nbuilt 2026-01-03\nsegments 1\nvias 0\n' $MD5 $(git rev-parse --short HEAD) > $PKG/board_id.txt
 printf 'PNG-stub-panel-top-render-------------------------------------------------\n' > $PKG/panel_top.png
 mkdir -p out/case/v0.1-smoke; printf 'PNG-stub-case-iso-render----------------------------------------------------\n' > out/case/v0.1-smoke/iso.png
 say "2 known_issues (generated index)";          $PY scripts/known_issues.py
@@ -273,30 +273,30 @@ say "5 collect_renders";                          $PY scripts/collect_renders.py
 say "5b assembly_guide (keyed renders via the stub renderer)"; $PY scripts/assembly_guide.py; $PY scripts/assembly_guide.py --check
 say "5c reorg_paths --check (layout of record: no old literal, no dangling docs/ path)"; $PY scripts/reorg_paths.py --check
 say "5d arrival_checklist (yaml -> md; DONE needs evidence; gates-required demands the adopt line)"; $PY scripts/arrival_checklist.py; $PY scripts/arrival_checklist.py --check
-grep -q '| E-2 | case first-article clearance |' docs/production/ARRIVAL_CHECKLIST.md && grep -q '| \*\*all\*\* | 4 | 1 | 0 | 3 |' docs/production/ARRIVAL_CHECKLIST.md || { echo "FAIL: ARRIVAL_CHECKLIST.md rows / counts wrong"; exit 1; }
-cp design/arrival_checklist.yaml /tmp/ac.$$ && sed -i.bak 's/evidence: "records\/first_article.md (caliper table)"/evidence: ""/' design/arrival_checklist.yaml && rm -f design/arrival_checklist.yaml.bak
-$PY scripts/arrival_checklist.py --check >/dev/null && { echo "FAIL: a DONE row without evidence must fail the checklist"; exit 1; }; mv /tmp/ac.$$ design/arrival_checklist.yaml
+grep -q '| E-2 | case first-article clearance |' 60-orders/ARRIVAL_CHECKLIST_rev0.md && grep -q '| \*\*all\*\* | 4 | 1 | 0 | 3 |' 60-orders/ARRIVAL_CHECKLIST_rev0.md || { echo "FAIL: ARRIVAL_CHECKLIST.md rows / counts wrong"; exit 1; }
+cp 20-design/arrival_checklist.yaml /tmp/ac.$$ && sed -i.bak 's/evidence: "records\/first_article.md (caliper table)"/evidence: ""/' 20-design/arrival_checklist.yaml && rm -f 20-design/arrival_checklist.yaml.bak
+$PY scripts/arrival_checklist.py --check >/dev/null && { echo "FAIL: a DONE row without evidence must fail the checklist"; exit 1; }; mv /tmp/ac.$$ 20-design/arrival_checklist.yaml
 sed -i.bak 's/scripts\/arrival_checklist.py --check/true/' project.yaml && rm -f project.yaml.bak; $PY scripts/project.py gates-required >/dev/null && { echo "FAIL: gates-required must demand the arrival_checklist line while the yaml exists"; exit 1; }; git checkout -q -- project.yaml
 say "6 release_report (DRAFT expected)";          $PY scripts/release_report.py
-grep -q '^\*\*STATUS: DRAFT\*\*' docs/release/PCB_DESIGN_REPORT.md || { echo "FAIL: report not DRAFT"; exit 1; }
+grep -q '^\*\*STATUS: DRAFT\*\*' 70-release/reports/PCB_DESIGN_REPORT.md || { echo "FAIL: report not DRAFT"; exit 1; }
 say "7 every --check must pass";                  $PY scripts/known_issues.py --check; $PY scripts/assembly_guide.py --check; $PY scripts/arrival_checklist.py --check; $PY scripts/traceability.py --check; $PY scripts/dfm_check.py --check; $PY scripts/collect_renders.py --check; $PY scripts/release_report.py --check
 say "8 commit + handoff header";                  git add -A; git -c user.name=smoke -c user.email=s@s commit -qm "generated records"; $PY scripts/handoff_header.py
 $PY scripts/handoff_header.py | grep -q 'MATCH' || { echo "FAIL: handoff header has no MATCH"; exit 1; }
 say "9 adopt gates incl. the clone gate on git archive HEAD"; scripts/adopt_gates.sh
 say "10 the owner's line in the Release row flips the banner; --check catches the stale report; gate_check --release wants the owner's commit"
-printf 'A sentence that quotes the words clear to build must not flip anything.\n' >> docs/governance/STATUS.md
-printf '| **Release** | Reports RELEASED | the owner line below | clear to build — owner, 2026-01-04, board %s |\n' ${MD5:0:8} >> docs/governance/GATES.md
+printf 'A sentence that quotes the words clear to build must not flip anything.\n' >> 90-log/STATUS.md
+printf '| **Release** | Reports RELEASED | the owner line below | clear to build — owner, 2026-01-04, board %s |\n' ${MD5:0:8} >> 90-log/GATES.md
 $PY scripts/release_report.py | grep -q DRAFT || { echo "FAIL (0.9.0 F2): an UNCOMMITTED release cell must stay DRAFT"; exit 1; }
 $PY scripts/gate_check.py --release >/dev/null && { echo "FAIL: an uncommitted release line passed gate_check"; exit 1; }
 git add -A; git -c user.name=agent -c user.email=a@a commit -qm "an agent commits the owner's cell"
 $PY scripts/release_report.py | grep -q DRAFT || { echo "FAIL (0.9.0 F2): a release cell committed by a non-owner must stay DRAFT"; exit 1; }
-printf '| **Release** | Reports RELEASED | the owner line below | clear to build — owner, 2026-01-05, board %s |\n' ${MD5:0:8} >> docs/governance/GATES.md
+printf '| **Release** | Reports RELEASED | the owner line below | clear to build — owner, 2026-01-05, board %s |\n' ${MD5:0:8} >> 90-log/GATES.md
 git add -A; git -c user.name=smoke -c user.email=s@s commit -qm "owner release line"
 if $PY scripts/release_report.py --check >/dev/null; then echo "FAIL: --check missed the stale report"; exit 1; fi
 $PY scripts/release_report.py | grep -q RELEASED || { echo "FAIL: not RELEASED after the owner's commit"; exit 1; }
 $PY scripts/gate_check.py --release || { echo "FAIL: the owner's committed release line must pass"; exit 1; }
 HWFS_PROJECT=$PWD/project.yaml scripts/clone_gate.sh --regen >/dev/null || { echo "FAIL: the clone gate must regenerate RELEASED from the archive (HWFS_GIT_ROOT blame)"; exit 1; }
-grep -q '^\*\*STATUS: RELEASED' docs/release/PCB_DESIGN_REPORT.md || { echo "FAIL: the archive regen lost the RELEASED banner"; exit 1; }
+grep -q '^\*\*STATUS: RELEASED' 70-release/reports/PCB_DESIGN_REPORT.md || { echo "FAIL: the archive regen lost the RELEASED banner"; exit 1; }
 $PY scripts/gate_check.py G0 >/dev/null && { echo "FAIL: G0 has no owner cell in the smoke and must read NOT approved"; exit 1; }
-say "SMOKE OK — DRAFT report was $R/docs/release/PCB_DESIGN_REPORT.md (RELEASED after the owner line); traceability census:"
-grep -A4 '^## Census' docs/governance/TRACEABILITY.md | tail -3
+say "SMOKE OK — DRAFT report was $R/70-release/reports/PCB_DESIGN_REPORT.md (RELEASED after the owner line); traceability census:"
+grep -A4 '^## Census' 90-log/TRACEABILITY.md | tail -3

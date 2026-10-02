@@ -1,7 +1,7 @@
-# design/dfm_processes.yaml — process rows for scripts/print_dfm.py, the vendor-independent manufacturability check for printed bodies.
+# 20-design/dfm_processes.yaml — process rows for scripts/print_dfm.py, the vendor-independent manufacturability check for printed bodies.
 # Every number is a published process minimum or a physical limit, cited: [V] = fetched (URL + date), [K] = known, source named, not fetched.
 # A value line WITHOUT a tag repeats the value of the first tagged occurrence of the same key above it (search upward) — tag it when it differs.
-# NOTHING here is fitted to a vendor's verdicts: the verdicts (docs/quotes/dfm_verdicts.yaml) are the VALIDATION set (`print_dfm.py --validate`).
+# NOTHING here is fitted to a vendor's verdicts: the verdicts (60-orders/quotes/dfm_verdicts.yaml) are the VALIDATION set (`print_dfm.py --validate`).
 # A new vendor or process = ONE new row: its published minimums [V] and `validated_on: []`; the retro (scripts/skill_retro.py) carries new rows and
 # changed numbers back to the skill's template. Re-fetch the [V] numbers before the first order (design-guide pages move; a 404 = BLOCKED, keep the
 # value null and the row refuses to gate — never fill a blank from memory).

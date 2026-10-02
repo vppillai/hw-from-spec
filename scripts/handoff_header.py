@@ -46,7 +46,7 @@ def header(P, pkg=None):
         rows.append(("Mechanical record", f"{label} md5 **`{m}`**" if m else f"**MISSING** — no file matches `{P.get('paths.mech_record')}`; expected before M1"))
     else:
         rows.append(("Board of record", f"**MISSING** — no package under `{P.get('paths.fab_dir')}` carries board_id.txt for the HEAD board `{head_md5[:8]}`" if head_md5
-                     else f"**MISSING** — no board in HEAD (`{board}`); expected before G1 (spec review: the briefing is SPEC.md, see references/schematic-phase.md)"))
+                     else f"**MISSING** — no board in HEAD (`{board}`); expected before G1 (spec review: the briefing is 10-spec/SPEC.md, see references/schematic-phase.md)"))
     cy = P.get("paths.case_yaml")
     if cy:
         case = yaml.safe_load(git(P.root, "show", f"HEAD:{cy}").decode("utf-8", "replace") or "{}") or {}
@@ -70,28 +70,28 @@ def header(P, pkg=None):
 
 def selftest():
     d = tempfile.mkdtemp(prefix="hwfs_ho_")
-    os.makedirs(f"{d}/kicad/b"); os.makedirs(f"{d}/design")
-    open(f"{d}/project.yaml", "w").write("paths: {board: kicad/b/b.kicad_pcb, fab_dir: out/fab, case_yaml: design/case.yaml}\n")
-    open(f"{d}/kicad/b/b.kicad_pcb", "wb").write(b"(kicad_pcb (version 1))\r\n\xe9\n")   # CRLF + a non-UTF-8 byte: hashed as bytes
-    open(f"{d}/design/case.yaml", "w").write("case: {version: v1.0-test}\n")
-    md5 = hashlib.md5(open(f"{d}/kicad/b/b.kicad_pcb", "rb").read()).hexdigest()
-    pkg = f"{d}/out/fab/2026-01-01_{md5[:8]}"; os.makedirs(pkg)
-    open(f"{pkg}/board_id.txt", "w").write(f"board kicad/b/b.kicad_pcb\nmd5 {md5}\ncommit abc1234\nbuilt 2026-01-01\nsegments 12\n")
+    os.makedirs(f"{d}/30-board/kicad/b"); os.makedirs(f"{d}/20-design")
+    open(f"{d}/project.yaml", "w").write("paths: {board: 30-board/kicad/b/b.kicad_pcb, fab_dir: 30-board/fab, case_yaml: 20-design/case.yaml}\n")
+    open(f"{d}/30-board/kicad/b/b.kicad_pcb", "wb").write(b"(kicad_pcb (version 1))\r\n\xe9\n")   # CRLF + a non-UTF-8 byte: hashed as bytes
+    open(f"{d}/20-design/case.yaml", "w").write("case: {version: v1.0-test}\n")
+    md5 = hashlib.md5(open(f"{d}/30-board/kicad/b/b.kicad_pcb", "rb").read()).hexdigest()
+    pkg = f"{d}/30-board/fab/2026-01-01_{md5[:8]}"; os.makedirs(pkg)
+    open(f"{pkg}/board_id.txt", "w").write(f"board 30-board/kicad/b/b.kicad_pcb\nmd5 {md5}\ncommit abc1234\nbuilt 2026-01-01\nsegments 12\n")
     run = lambda *a: subprocess.run(["git", *a], cwd=d, capture_output=True, text=True, check=True)
     run("init", "-q"); run("add", "-A"); run("-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "init")
-    other = f"{d}/out/fab/2026-01-02_zzzzzzzz"; os.makedirs(other)   # a NEWER package for another board: must not be picked
-    open(f"{other}/board_id.txt", "w").write("board kicad/b/b.kicad_pcb\nmd5 0000\ncommit ffff\nbuilt 2026-01-02\n")
+    other = f"{d}/30-board/fab/2026-01-02_zzzzzzzz"; os.makedirs(other)   # a NEWER package for another board: must not be picked
+    open(f"{other}/board_id.txt", "w").write("board 30-board/kicad/b/b.kicad_pcb\nmd5 0000\ncommit ffff\nbuilt 2026-01-02\n")
     run("add", "-A"); run("-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "pkg2")
     P = Project(f"{d}/project.yaml")
     h = header(P)
     assert "**MATCH**" in h and "segments 12" in h and "v1.0-test" in h and "**clean**" in h and f"2026-01-01_{md5[:8]}" in h and "zzzzzzzz" not in h, h
-    open(f"{d}/kicad/b/b.kicad_pcb", "a").write(";edit\n")
+    open(f"{d}/30-board/kicad/b/b.kicad_pcb", "a").write(";edit\n")
     h = header(P)
     assert "DIRTY" in h and "**MATCH**" in h, "a working-copy edit is DIRTY but HEAD still matches the package"
     run("-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qam", "edit")
     h = header(P)
     assert "MISSING" in h and "no package" in h, ("HEAD now carries a board no package records", h)
-    P.cfg["paths"]["board"] = "kicad/none.kicad_pcb"
+    P.cfg["paths"]["board"] = "30-board/kicad/none.kicad_pcb"
     assert "no board in HEAD" in header(P), "a project before G1 has no board: say so, no slicing of a message"
     print("selftest OK")
 

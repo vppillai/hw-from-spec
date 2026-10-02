@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """scripts/print_dfm.py — vendor-independent manufacturability check for printed bodies (MJF / SLA / FDM), run on the MESH before every upload.
 
-Rules come from physics and the published process minimums, parameterised per process row in `design/dfm_processes.yaml` (every number cited
-[V] fetched / [K] known); a vendor's DFM verdicts (`docs/quotes/dfm_verdicts.yaml`) are a VALIDATION set, never a fitting target. Nothing in
+Rules come from physics and the published process minimums, parameterised per process row in `20-design/dfm_processes.yaml` (every number cited
+[V] fetched / [K] known); a vendor's DFM verdicts (`60-orders/quotes/dfm_verdicts.yaml`) are a VALIDATION set, never a fitting target. Nothing in
 here is tuned to one vendor. `references/print-dfm.md` carries the loop; this docstring carries the mechanism.
 
 Measures (per surface sample, area-weighted, fixed seed):
@@ -669,7 +669,7 @@ def validate(write_doc=True, renders=()):
     bbox within 0.01 — a hash splits twins at a rounding boundary), write the validation doc: vendor verdict vs ours per geometry, confusion matrix,
     rules fired, coverage per mechanism, thresholds with their tags. Returns the summary; `looser` lists the RULE DEFECTS (vendor FLAG, ours PASS)."""
     if not os.path.exists(PATHS["verdicts"]):
-        print(f"print_dfm: no verdict record at {PATHS['verdicts']} (copy templates/docs/quotes/dfm_verdicts.yaml, append every vendor verdict)", file=sys.stderr); sys.exit(2)
+        print(f"print_dfm: no verdict record at {PATHS['verdicts']} (copy templates/60-orders/quotes/dfm_verdicts.yaml, append every vendor verdict)", file=sys.stderr); sys.exit(2)
     labels = yaml.safe_load(open(PATHS["verdicts"]))["verdicts"] or []
     table, table_path = processes(); VAL_DIR = PATHS["val_dir"]
     os.makedirs(VAL_DIR, exist_ok=True); recs = []; sig = []
@@ -909,7 +909,7 @@ def selftest():
         assert quiet(G) == 1, "FLAG must fail"
         assert quiet(G, [f"{tag}/root05=D-00"]) == 1, "--open without a project / decision log must fail"
         assert quiet(G, expected=[f"{tag}/root05="]) == 1 and quiet(G, expected=[f"{tag}/root05=tests the 0.5 root limit"]) == 0, "--expect needs a reason; with one the by-design FLAG is printed, not failed"
-        os.makedirs(os.path.join(d, "docs", "governance")); open(os.path.join(d, "docs", "governance", "DECISIONS.md"), "w").write("| ID | Date | Status | Topic | P | R |\n|---|---|---|---|---|---|\n| **D-07** | d | **OPEN** | widen the root of root05 | p | r |\n| CC-010 | d | APPLIED | x | p | r |\n")
+        os.makedirs(os.path.join(d, "90-log")); open(os.path.join(d, "90-log", "DECISIONS.md"), "w").write("| ID | Date | Status | Topic | P | R |\n|---|---|---|---|---|---|\n| **D-07** | d | **OPEN** | widen the root of root05 | p | r |\n| CC-010 | d | APPLIED | x | p | r |\n")
         open(os.path.join(d, "project.yaml"), "w").write(f"project: {{name: t, scope: mech}}\npaths: {{mech_record: 'stl/*.stl'}}\nprint_targets: {{{tag}: {{dfm_process: jlc_mjf_pa12}}}}\n")
         assert quiet(G, [f"{tag}/root05=WHATEVER"]) == 1 and quiet(G, [f"{tag}/root05=CC-010"]) == 1, "a free string or an APPLIED row is not an OPEN decision"
         assert quiet(G, [f"{tag}/root13=D-07"]) == 1, "an OPEN row that does not name the piece is not its licence (blind review 0.9.0 N2)"

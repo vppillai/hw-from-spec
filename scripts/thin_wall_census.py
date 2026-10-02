@@ -398,7 +398,7 @@ def selftest():
     assert opps[0]["kind"] == "wall" and any(f.startswith("OPP 0.4") for f in gate_rows([], [], 1.2, 1.2, opps=opps)[0]), "a 0.4 root between opposing faces FAILs"
     assert gate_rows([], [], 1.2, 1.2, opps=opp_rows([(0, 0, 0)], [1.1], [1]))[0] and gate_rows([], [], 1.6, 1.0, opps=opp_rows([(0, 0, 0)], [1.1], [1]))[0] == [], "a void-kind opposing pair gates at the void gate"
     # accepted list: same class + covering bbox + reason / date / evidence moves the FAIL; a bare entry does not
-    acc = [dict(**{"class": "wall"}, bbox=[-1, -1, -1, 30, 30, 1], reason="vendor accepted in writing", date="2026-09-28", evidence="docs/quotes/2026-09-28/mail.eml")]
+    acc = [dict(**{"class": "wall"}, bbox=[-1, -1, -1, 30, 30, 1], reason="vendor accepted in writing", date="2026-09-28", evidence="60-orders/quotes/2026-09-28/mail.eml")]
     f, a = gate_rows(rows, [], 1.2, 1.2, accepted=acc)
     assert f == [] and len(a) == 1 and a[0]["evidence"].endswith(".eml"), (f, a)
     assert gate_rows(rows, [], 1.2, 1.2, accepted=[dict(acc[0], evidence="")])[0], "an entry without evidence does not count"
@@ -486,7 +486,7 @@ def selftest():
         assert r["fails"] and all(f.startswith("OPP") for f in r["fails"]) and abs(float(r["fails"][0].split()[1]) - 0.4) < 0.15, ("the 0.4 root", r["fails"], r["clusters"][:3])
         assert r["frac_below"]["1.0"] < 0.01, "normal rays read the wall (2.0) and the ring (1.3) — the root is invisible to them"
         # the same root accepted with evidence passes and is carried in accepted_fails; the pure gate re-asserts the fields
-        acc = [dict(**{"class": "opp"}, bbox=[0, 8, -1, 3, 12, 41], reason="root widened next round; vendor accepted this batch", date="2026-09-28", evidence="docs/quotes/2026-09-28/DFM_ROUND.md")]
+        acc = [dict(**{"class": "opp"}, bbox=[0, 8, -1, 3, 12, 41], reason="root widened next round; vendor accepted this batch", date="2026-09-28", evidence="60-orders/quotes/2026-09-28/DFM_ROUND.md")]
         assert census(os.path.join(d, "root.stl"), None, 1.2, 1.2, 3.0, 0.02, 0.5, None, None, os.path.join(d, "root.stl.json"), wedge_band=1.5, density=10, accepted=acc) == 0
         r = json.load(open(os.path.join(d, "root.stl.json"))); assert r["fails"] == [] and len(r["accepted_fails"]) >= 1
         for n in ("plate10", "rib", "slit"):

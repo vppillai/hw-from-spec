@@ -14,7 +14,7 @@ project:
                                           # `scripts/project.py scaffold --scope` resolves the templates' {{ee,both}} / {{mech,both}} / {{mech}} line tags
 skill: {repo: <url>, commit: <sha>, version: <SKILL.md version>}   # the hw-from-spec commit + version the project follows; scripts/skill_retro.py reports drift
 kickoff:                                  # the owner's kickoff answers, machine-readable (templates/project.yaml carries every class as a slot;
-  answers: docs/governance/KICKOFF_ANSWERS.md   #   `scripts/project.py kickoff --check` proves each answered row landed): product_class, quantity, fab,
+  answers: 10-spec/KICKOFF_ANSWERS.md   #   `scripts/project.py kickoff --check` proves each answered row landed): product_class, quantity, fab,
   product_class: engineering sample       #   enclosure{pieces … fit_decider}, verification{rounds, visual, fea}, coupons, sourcing{…}, software{…},
   # …                                     #   release{…}, identity{envelope, branding, delegation}, debug_access
 board: {layers: 4, thickness_mm: 1.6, copper: "1 oz / 0.5 oz", …}   # ee / both: the PCB build from kickoff B1–B8 (SPEC R-M01 cites it)
@@ -29,31 +29,31 @@ markers:
   placed_regex: '\bPLACED\b'              # an owner row with this word + a package folder name = placed order → judged on frozen stock (fab-dfm §8)
   hand_curated: ["<!-- hand-curated: begin -->", "<!-- hand-curated: end -->"]
 paths:
-  decisions: docs/governance/DECISIONS.md            # 6-cell table (ID | Date | Status | Topic | Proposal | Reason)
-  blockers: docs/governance/BLOCKERS.md              # 6-cell table (ID | Date | Item | Tried | Result | Impact)
-  gates: docs/governance/GATES.md
-  status: docs/governance/STATUS.md
-  known_issues: docs/governance/KNOWN_ISSUES.md      # written by scripts/known_issues.py
-  test_plan: docs/design/TEST_PLAN.md            # optional
-  traceability_yaml: design/traceability.yaml
-  traceability_out: docs/governance/TRACEABILITY.md  # written by scripts/traceability.py
-  learnings: docs/governance/LEARNINGS_LOG.md  # append-only (CLAUDE.md rule 11)
-  erc_accept: design/erc_accept.yaml       # ee / both: the machine-checked ERC acceptances scripts/erc_gate.py reads (no prose waivers)
-  schematic: kicad/<board>/<board>.kicad_sch   # ee / both: once it exists, gates.adopt must carry the erc_gate.py line (scripts/project.py gates-required)
-  env: docs/governance/ENV.md
-  parts_verification: docs/parts/PARTS_VERIFICATION.md
-  datasheet_notes: docs/datasheet_notes
-  reviews_dir: docs/reviews                # hand-offs, per-round reports, merged reports
-  quotes_dir: docs/quotes                  # <date>/ fab evidence (quotes, DFM exports, review mails, order screenshots) — never inside a package
-  production_dir: docs/production          # <md5-8>/ the production cut
-  board: kicad/<board>/<board>.kicad_pcb  # ee / both: the board of record; its md5 keys packages, collateral, reports (`scripts/project.py record`)
-  mech_record: "out/mechanical/case/*/stl/*.stl"   # mech: the STL set of record; record md5 = md5 of the sorted "<relpath> <md5>" lines (moves when any STL moves)
-  netlist: out/<board>.xml                # kicadxml netlist for netlist_net checks (optional)
-  fab_dir: out/fab                        # packages <date>_<md5-8>/ each with board_id.txt (keys: board, md5, commit, built, + counts)
-  release_dir: docs/release
-  collateral_dir: docs/release/collateral # <md5-8>/renders/ from scripts/collect_renders.py
-  case_yaml: design/case.yaml             # optional; `case.version` is read by handoff_header / collect_renders
-  mesh_provenance: out/mechanical/board.stl.provenance.json   # optional; {board_md5, board_commit, mesh_md5, facets} (both) or, for an imported STEP / envelope (mech), {source, source_md5, tag: V|K}
+  decisions: 90-log/DECISIONS.md            # 6-cell table (ID | Date | Status | Topic | Proposal | Reason)
+  blockers: 90-log/BLOCKERS.md              # 6-cell table (ID | Date | Item | Tried | Result | Impact)
+  gates: 90-log/GATES.md
+  status: 90-log/STATUS.md
+  known_issues: 90-log/KNOWN_ISSUES.md      # written by scripts/known_issues.py
+  test_plan: 20-design/TEST_PLAN.md            # optional
+  traceability_yaml: 20-design/traceability.yaml
+  traceability_out: 90-log/TRACEABILITY.md  # written by scripts/traceability.py
+  learnings: 90-log/LEARNINGS_LOG.md  # append-only (CLAUDE.md rule 11)
+  erc_accept: 20-design/erc_accept.yaml       # ee / both: the machine-checked ERC acceptances scripts/erc_gate.py reads (no prose waivers)
+  schematic: 30-board/kicad/<board>/<board>.kicad_sch   # ee / both: once it exists, gates.adopt must carry the erc_gate.py line (scripts/project.py gates-required)
+  env: 90-log/ENV.md
+  parts_verification: 60-orders/PARTS_VERIFICATION.md
+  datasheet_notes: 10-spec/datasheet_notes
+  reviews_dir: 80-reviews                # hand-offs, per-round reports, merged reports
+  quotes_dir: 60-orders/quotes                  # <date>/ fab evidence (quotes, DFM exports, review mails, order screenshots) — never inside a package
+  production_dir: 70-release          # <md5-8>/ the production cut
+  board: 30-board/kicad/<board>/<board>.kicad_pcb  # ee / both: the board of record; its md5 keys packages, collateral, reports (`scripts/project.py record`)
+  mech_record: "40-case/*/parts/*.stl"   # mech: the STL set of record; record md5 = md5 of the sorted "<relpath> <md5>" lines (moves when any STL moves)
+  netlist: 30-board/layout/<board>.xml                # kicadxml netlist for netlist_net checks (optional)
+  fab_dir: 30-board/fab                        # packages <date>_<md5-8>/ each with board_id.txt (keys: board, md5, commit, built, + counts)
+  release_dir: 70-release
+  collateral_dir: 70-release/collateral # <md5-8>/renders/ from scripts/collect_renders.py
+  case_yaml: 20-design/case.yaml             # optional; `case.version` is read by handoff_header / collect_renders
+  mesh_provenance: 40-case/board_mesh/board.stl.provenance.json   # optional; {board_md5, board_commit, mesh_md5, facets} (both) or, for an imported STEP / envelope (mech), {source, source_md5, tag: V|K}
 tools:
   python: .venv/bin/python                # {PY} in traceability commands; a leading "." makes it root-relative
   kicad_cli: /Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli   # {KICAD_CLI} — the key names are HISTORICAL: put your CAD's CLI here whatever the CAD
@@ -63,10 +63,10 @@ traceability:
 fab_dfm:                                  # the board's fab-DFM mirror (references/fab-dfm.md); `dfm:` is read as an alias of this block
   thresholds: design/dfm_thresholds.json  # the fab's numbers, with source URL + date
   items: out/dfm_items.json               # written by the project's measurer
-  accept: design/board.yaml               # yaml with key dfm_accepted: [{check, refs: [..] | {REF: n}, reason, date, evidence}]
+  accept: 20-design/board.yaml               # yaml with key dfm_accepted: [{check, refs: [..] | {REF: n}, reason, date, evidence}]
   report: out/dfm.json                    # written by every plain scripts/dfm_check.py run (--check compares); read by release_report section dfm
   bar: {open: 0, warnings_fail: true, accepted_requires: [reason, date, evidence]}   # the owner's manufacturability bar (SKILL §1.2): an acceptance missing a field is ignored
-print_targets:                            # one entry per print target; scripts/thin_wall_census.py --target <name> reads it — no gate constant lives in a script; `dfm_process` names the design/dfm_processes.yaml row scripts/print_dfm.py gates on
+print_targets:                            # one entry per print target; scripts/thin_wall_census.py --target <name> reads it — no gate constant lives in a script; `dfm_process` names the 20-design/dfm_processes.yaml row scripts/print_dfm.py gates on
   vendor_mjf:                             # vendor / process / material / wall_gate / void_gate / red_line [checker]; design_margin [owner bar];
     vendor: JLC3DP                        # wedge_band (convention 1.5); tolerance + tolerance_source [vendor sheet, replaced by the first-article spread];
     process: MJF                          # max_bbox_for_rule (the size the length-dependent rule was calibrated at); checker_url + checker_date;
@@ -92,37 +92,37 @@ reorg:                                    # scripts/reorg_paths.py — only when
   trim: [out/old_dir]                     # git rm -r (name the tag that keeps them in the decision row)
   untrack: ['out/**/logs/*.log']          # git rm --cached, files stay on disk
   gitignore: ['out/**/logs/*.log']        # lines appended to .gitignore by --apply (skipped when present; usually = untrack)
-  frozen: [out/fab/]                      # never rewritten, never checked (uploaded packages, archived records)
+  frozen: [30-board/fab/]                      # never rewritten, never checked (uploaded packages, archived records)
   skip: [lib/]                            # never touched
-  allow_old_files: [docs/reviews/REORG_PLAN.md]   # files that legitimately spell the old names (this script and project.yaml are exempt already)
-  no_existence: ['.py', '.js', docs/governance/DECISIONS.md, docs/governance/STATUS.md, docs/governance/LEARNINGS_LOG.md, docs/reviews/]
+  allow_old_files: [80-reviews/REORG_PLAN.md]   # files that legitimately spell the old names (this script and project.yaml are exempt already)
+  no_existence: ['.py', '.js', 90-log/DECISIONS.md, 90-log/STATUS.md, 90-log/LEARNINGS_LOG.md, 80-reviews/]
                                           # suffixes / prefixes whose literals are old-literal-checked but need not exist (fixture strings, dated records)
-  allow_missing: ['^docs/production/[0-9a-f]{8}/']   # regexes of literals allowed to be dangling (deliverables named before they exist, negative checks)
-  rewrites_record: docs/reviews/REORG_REWRITES.txt   # written by --apply; read by --proof
+  allow_missing: ['^70-release/[0-9a-f]{8}/']   # regexes of literals allowed to be dangling (deliverables named before they exist, negative checks)
+  rewrites_record: 80-reviews/REORG_REWRITES.txt   # written by --apply; read by --proof
 assembly_guide:                           # scripts/assembly_guide.py (release-and-cut §8)
-  yaml: design/assembly_guide.yaml        # authored short text: doc, parts, tools, defaults{defs}, pages (before/after), step_defaults, steps{n: camera/parts/tools/check}, where_the_words_are[]
-  steps_md: out/mechanical/case/ASSEMBLY.md   # optional generated step source: '### Step N - title (T s)' + paragraph
-  scad: out/mechanical/case/<preset>/case.scad   # geometry of record; the md5 of this ONE file keys every render (flatten includes, or accept that they do not move the key)
-  out_dir: docs/production/{MD5_8}        # {MD5_8} board md5-8, {CASE_VERSION}
+  yaml: 20-design/assembly_guide.yaml        # authored short text: doc, parts, tools, defaults{defs}, pages (before/after), step_defaults, steps{n: camera/parts/tools/check}, where_the_words_are[]
+  steps_md: 40-case/ASSEMBLY.md   # optional generated step source: '### Step N - title (T s)' + paragraph
+  scad: 40-case/<preset>/case.scad   # geometry of record; the md5 of this ONE file keys every render (flatten includes, or accept that they do not move the key)
+  out_dir: 70-release/{MD5_8}        # {MD5_8} board md5-8, {CASE_VERSION}
   doc_name: VISUAL_ASSEMBLY_GUIDE.md
   size: '1920,1440'
-  render_cmd: "openscad -o {OUT} --camera={CAMERA} --imgsize={SIZE} --colorscheme=Tomorrow {DEFS} out/mechanical/case/<preset>/case.scad"   # {DEFS} = -Dk=v …
+  render_cmd: "openscad -o {OUT} --camera={CAMERA} --imgsize={SIZE} --colorscheme=Tomorrow {DEFS} 40-case/<preset>/case.scad"   # {DEFS} = -Dk=v …
 renders:                                  # scripts/collect_renders.py rules; {MD5_8} {CASE_VERSION} {BOARD} {KICAD_CLI} {OUT} expand
   - {name: pcb_top, kind: kicad_render, args: ["--side", "top", "--quality", "high", "--background", "opaque"]}
   - {name: pcb_iso, kind: kicad_render, args: ["--side", "top", "--perspective", "--rotate", "-45,0,135"]}
-  - {name: panel_top, kind: copy, src: "out/fab/*_{MD5_8}/panel/panel_top.png"}
+  - {name: panel_top, kind: copy, src: "30-board/fab/*_{MD5_8}/panel/panel_top.png"}
   - {name: case_iso, kind: copy, src: "out/case/{CASE_VERSION}/renders/iso.png", sub: case, min_bytes: 2000}
 reports:                                  # scripts/release_report.py; one file per entry under paths.release_dir
   - name: PCB_DESIGN_REPORT
     title: PCB design report
     sections: [banner, identity, decisions, known_issues, package, traceability, dfm, renders, inventory]
-    extra_sources: [design/board.yaml, design/parts.yaml]
+    extra_sources: [20-design/board.yaml, 20-design/parts.yaml]
 gates:
   quiet_regex: 'Fontconfig|wxApp|Debug:'  # stderr lines filtered per line by adopt_gates.sh (never a whole-stream 2>/dev/null)
   iteration:                              # scripts/iteration_gate.sh [-- <cmd> ...]: the INNER tier (fast loop), read-only guarded (as adopt_gates.sh)
     inner:                                # the project's standing fast set; a change's own commands follow `--` on the command line; empty + none given = refused
       - "$PY gen/case.py --check"
-      - "$PY scripts/print_dfm.py --gate out/mechanical/case/<preset>/dfm"
+      - "$PY scripts/print_dfm.py --gate 40-case/<preset>/dfm"
                                           # the other tiers are existing commands: standard = scripts/adopt_gates.sh --no-clone (make gates), release = scripts/adopt_gates.sh (make check)
   adopt:                                  # scripts/adopt_gates.sh: run in order, exit 1 on the first failure; $PY is exported
     - "$PY scripts/known_issues.py --selftest"
@@ -133,26 +133,26 @@ gates:
     - "$PY scripts/release_report.py --check"
     - "$PY scripts/reorg_paths.py --check"   # when a reorg: block exists: no old literal, no dangling docs/ path in structural files
     - "$PY scripts/assembly_guide.py --check"   # production cut
-    - "$PY scripts/thin_wall_census.py --gate-dir out/<board>/mechanical/case/<preset>/census"   # every printed body: census record md5 = STL of record, 0 unaccepted FAIL, accepted entries dated with evidence
-    - "$PY scripts/print_dfm.py --gate out/<board>/mechanical/case/<preset>/dfm"   # every censused body: a print_dfm record of the same md5, verdict PASS (or --open <tag>/<piece>=<decision>)
-    - "$PY scripts/scad_lint.py out/<board>/mechanical/case/<preset>/*.scad"       # generated SCAD: no statement behind a `//`
+    - "$PY scripts/thin_wall_census.py --gate-dir 30-board/layout/mechanical/case/<preset>/census"   # every printed body: census record md5 = STL of record, 0 unaccepted FAIL, accepted entries dated with evidence
+    - "$PY scripts/print_dfm.py --gate 30-board/layout/mechanical/case/<preset>/dfm"   # every censused body: a print_dfm record of the same md5, verdict PASS (or --open <tag>/<piece>=<decision>)
+    - "$PY scripts/scad_lint.py 30-board/layout/mechanical/case/<preset>/*.scad"       # generated SCAD: no statement behind a `//`
   clone:                                  # scripts/clone_gate.sh: run inside `git archive HEAD`
     - "$PY scripts/release_report.py --check"
   regen:                                  # clone_gate.sh --regen: run inside the archive, then copy regen_copy_back into the tree
     - "$PY scripts/release_report.py"
-  regen_copy_back: [docs/release/PCB_DESIGN_REPORT.md]
+  regen_copy_back: [70-release/reports/PCB_DESIGN_REPORT.md]
 ```
 
 ## Layout the defaults name
 ```
-docs/governance/   DECISIONS STATUS GATES BLOCKERS KNOWN_ISSUES TRACEABILITY LEARNINGS_LOG ENV KICKOFF_ANSWERS   (records the generators read and write)
-docs/design/       TEST_PLAN VERIFY SOFTWARE_ARCHITECTURE briefs, design notes, mechanical notes                      (intent)
-docs/parts/        PARTS_VERIFICATION PROCUREMENT parts_check.json compliance json
-docs/reviews/      REVIEW_HANDOFF, <ROUND>_<role>_<model>.md, *_merged.md, REORG_* inventories
-docs/release/      reports, RELEASE_NOTES, collateral/<md5-8>/, marketing/
-docs/quotes/<date>/  fab evidence: quote captures, DFM exports, vendor review mails + images, order screenshots (never inside a package)
-docs/production/<md5-8>/  the production cut (MANIFEST, STATUS, documents, records/ = THE records folder, pdf/)
-docs/datasheet_notes/
+90-log/   DECISIONS STATUS GATES BLOCKERS KNOWN_ISSUES TRACEABILITY LEARNINGS_LOG ENV KICKOFF_ANSWERS   (records the generators read and write)
+20-design/       TEST_PLAN VERIFY SOFTWARE_ARCHITECTURE briefs, design notes, mechanical notes                      (intent)
+60-orders/        PARTS_VERIFICATION PROCUREMENT parts_check.json compliance json
+80-reviews/      REVIEW_HANDOFF, <ROUND>_<role>_<model>.md, *_merged.md, REORG_* inventories
+70-release/reports/      reports, RELEASE_NOTES, collateral/<md5-8>/, marketing/
+60-orders/quotes/<date>/  fab evidence: quote captures, DFM exports, vendor review mails + images, order screenshots (never inside a package)
+70-release/<rev>/  the production cut (MANIFEST, STATUS, documents, records/ = THE records folder, pdf/)
+10-spec/datasheet_notes/
 ```
 Every `docs/…` path in SKILL.md / references / templates spells this layout. Changing it later is a decision row + a `reorg:` block +
 `scripts/reorg_paths.py` (release-and-cut §9) — never a hand sweep; frozen records keep the old paths and `--map` explains them.

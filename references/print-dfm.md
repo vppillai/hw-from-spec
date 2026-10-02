@@ -4,7 +4,7 @@
 logo arms touched at 0.01 mm; the engineer refused it), length-tolerant (a 0.5 mm root under a rim passed up to ~60 mm and flagged at
 longer lengths — a long lip built that way cracked on five parts), and tied to one vendor. The owner's framing: *"this need not be tuned to JLC, just
 that that is where we saw good results."* So the rules are physics + the published process minimums, one row per process in
-`design/dfm_processes.yaml` with a citation on every number; the vendors' verdicts are a **validation set**, never a fitting target. The tool
+`20-design/dfm_processes.yaml` with a citation on every number; the vendors' verdicts are a **validation set**, never a fitting target. The tool
 runs on the exported MESH (never the yaml) before every upload, and the census (`thin_wall_census.py`) keeps the DESIGN margin (`wall_gate`,
 the vendor's grey line) — print DFM gates the printability floor, the census gates the margin; both are PURE adopt gates.
 
@@ -53,24 +53,24 @@ red), six faces + two isos — a per-sample field looks nothing like the vendor'
 | `scripts/print_dfm.py --list` | the process rows and their thresholds (BLOCKED rows named) | — |
 | `scripts/print_dfm.py --process <row> <stl>... [--out DIR] [--boxes <piece>.boxes.json] [--supports none\|interior\|any] [--bodies N] [--render]` | one `PASS` / `FLAG` line per body, then one line per rule (`value \| limit \| where` with area × extent, min / median, bbox, span / tip band); `DIR/<piece>.json` (+ `<piece>.boxes.json`, + PNGs) | exit 1: a FLAG row names a real sub-minimum region on the MESH and ends with `fix:` (thicken / widen / chamfer / re-orient) — change the CAD or the generator (never the yaml alone), re-export, rerun. No waiver field exists; exit 2 = usage / configuration |
 | `scripts/print_dfm.py --gate <dfm_dir>... [--open <tag>/<piece>=<id>] [--expect <tag>/<piece>=<reason>]` (adopt list) | `print_dfm gate: N bodies, M problem(s)`; every `OPEN <id>` and `EXPECTED FLAG (<reason>)` printed on every run; a stale `--open` / `--expect` entry is noted | exit 1: a record missing for a censused piece, an STL of the record set without a same-md5 record, a signature / rule-set version / threshold mismatch, a record against a row other than `print_targets.<t>.dfm_process`, or a verdict FLAG without `--open` naming an OPEN decision row that names the piece or `--expect` with the reason the body FLAGs BY DESIGN (a coupon that tests the limit, a dummy with real-part dimensions). Neither is a waiver: the record still says FLAG. A dir without a sibling `census/` is a record-only dir (coupons, dummies, colour bodies) and is checked the same way; `*.boxes.json` sidecars are skipped |
-| `scripts/print_dfm.py --validate` | `[val] <stl> <verdict> <s>` per uncached body, the unique-geometry count, confusion matrix + rules fired as JSON, `RULE DEFECT: …` lines; writes `docs/reviews/PRINT_DFM_VALIDATION.md` (body table per GEOMETRY, confusion matrix, rules fired, §3a coverage per mechanism, §3b thresholds with their `[V]` / `[K]` tags and the tool's judgment constants; the `<!-- hand: begin -->` reading is kept) | exit 1: a geometry the vendor FLAGGED that we PASS = a rule is missing physics. Fix the rule, re-validate, `skill_retro.py` |
+| `scripts/print_dfm.py --validate` | `[val] <stl> <verdict> <s>` per uncached body, the unique-geometry count, confusion matrix + rules fired as JSON, `RULE DEFECT: …` lines; writes `80-reviews/PRINT_DFM_VALIDATION.md` (body table per GEOMETRY, confusion matrix, rules fired, §3a coverage per mechanism, §3b thresholds with their `[V]` / `[K]` tags and the tool's judgment constants; the `<!-- hand: begin -->` reading is kept) | exit 1: a geometry the vendor FLAGGED that we PASS = a rule is missing physics. Fix the rule, re-validate, `skill_retro.py` |
 | `scripts/print_dfm.py --selftest` | `selftest OK: …` — a positive AND a negative construct per rule (the ray reads 0.8 on a 0.8 plate and R stays silent; the 0.5 root FLAGs W + R, 1.3 passes; pins Ø0.4 / Ø0.3 F, Ø1.2 pass; ridges 30 / 40 / 50° K, 60 / 90° read but pass; 0.6 sheet flat skin PASS, 0.4 Z, stood up W; 2 mm tunnel span 2, 15 mm B; tee arms read their inscribed width and stay silent, pi roof 32 mm bridge, pi 6 × 40 silent, a lands-split rebate 3 × 6.1 silent, a 1.4 relief ring and an open groove read 1.4, debossed 1.0 strokes read 1.0; 2 mm slot roof bridged, 24 mm O; cavity C; open mesh / touching cubes M; gate incl. `--expect`; validate incl. twin grouping) | the tool or its dependencies are broken — nothing else runs. A dead measure passes a verdict-only selftest (the ray read inf for a day while the ball covered every wall): assert every measure finite and near a known value, and assert the rule SILENT where it must be |
 | `scripts/scad_lint.py <generated.scad>...` | silent, or every line with a statement hidden behind `//` | exit 1: the generator emitted code after a comment; OpenSCAD dropped it (a plate lost its webs for two days while the yaml read right) — one statement per line, lint on every emit |
 
-Paths default to the project root (the nearest `project.yaml`): table `design/dfm_processes.yaml` (falls back to the skill's template when the
-project has none yet), verdicts `docs/quotes/dfm_verdicts.yaml`, records `out/dfm_validation/`, doc `docs/reviews/PRINT_DFM_VALIDATION.md`;
+Paths default to the project root (the nearest `project.yaml`): table `20-design/dfm_processes.yaml` (falls back to the skill's template when the
+project has none yet), verdicts `60-orders/quotes/dfm_verdicts.yaml`, records `out/dfm_validation/`, doc `80-reviews/PRINT_DFM_VALIDATION.md`;
 `--processes / --verdicts / --val-dir / --val-doc` override. Run time: 5–20 s per body (60 k–300 k samples ∝ area), ~1.5 s per heat-map view.
 
 ## 3. The loop (SKILL.md §8.1 — the commands are the procedure)
 
 - **(a) Before every vendor upload**: `scripts/print_dfm.py --process <row> --out out/.../dfm <stl>` must PASS; `--gate out/.../dfm` sits in
   `gates.adopt` beside the census `--gate-dir`. The vendor's PASS is necessary, never sufficient.
-- **(b) After every vendor verdict**: append the row to `docs/quotes/dfm_verdicts.yaml` (stl, md5-8, process, vendor, date, verdict, evidence =
+- **(b) After every vendor verdict**: append the row to `60-orders/quotes/dfm_verdicts.yaml` (stl, md5-8, process, vendor, date, verdict, evidence =
   the saved API JSON / screenshot / mail path), run `--validate`. Vendor FLAG + ours PASS = **RULE DEFECT**: find the physics the rule lacks (a
   measure that cannot see the feature, a missing class), fix it in `print_dfm.py`, bump `VERSION`, re-validate, run `scripts/skill_retro.py` so the
   change flows back to the skill. Vendor PASS + ours FLAG = **stricter**: write the physical reason under the hand marker of the validation doc;
   the rule stands (the vendor's checker is the weaker instrument). Never move a threshold to match a vendor.
-- **(c) A new vendor or process** = ONE new row in `design/dfm_processes.yaml`: its published minimums `[V]` with URL + date (a 404 = BLOCKED,
+- **(c) A new vendor or process** = ONE new row in `20-design/dfm_processes.yaml`: its published minimums `[V]` with URL + date (a 404 = BLOCKED,
   value `null`, the row refuses to gate), the rest `[K]` with the source named, `validated_on: []`. The retro (`skill_retro.py` §8) diffs the
   project's table against `templates/design/dfm_processes.yaml` and lists NEW rows, CHANGED numbers (with the citation on the line) and
   VALIDATED rows as items to carry into the template.

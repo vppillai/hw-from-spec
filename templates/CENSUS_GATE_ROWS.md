@@ -29,7 +29,7 @@ caliper table gives the process spread; the vendor's published tolerance is ±{{
 this row is INFO, not "PASS by design"); `build orientation` (vendor's choice, recorded when answered); `post-process` (`{{POST}}`, subtracted in
 the margin); `material rating` (UL 94 / Tg from the TDS, printed on the order sheet).
 
-Adopt-list lines (PURE gates, recompute nothing): `"$PY scripts/thin_wall_census.py --gate-dir out/mechanical/case/<preset>/census"` — every
+Adopt-list lines (PURE gates, recompute nothing): `"$PY scripts/thin_wall_census.py --gate-dir 40-case/<preset>/census"` — every
 `<piece>.json` must carry `stl_md5` = md5 of the committed `stl/<piece>.stl` beside it and an empty `fails` list (accepted clusters live in
-`accepted_fails` with their entry) — AND `"$PY scripts/print_dfm.py --gate out/mechanical/case/<preset>/dfm"` (the printability floor, `references/print-dfm.md`);
+`accepted_fails` with their entry) — AND `"$PY scripts/print_dfm.py --gate 40-case/<preset>/dfm"` (the printability floor, `references/print-dfm.md`);
 `scripts/project.py gates-required` demands both once the STL set exists.

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ci/release_archive.sh OUT — stage the release artefacts (copied from templates/ci/; project-owned): the fab package of the record md5
-# (`scripts/project.py record` -> paths.fab_dir/*_<md5-8>/), docs/release/, docs/production/<md5-8>/. REFUSES the whole stage when any staged
+# (`scripts/project.py record` -> paths.fab_dir/*_<md5-8>/), 70-release/reports/, 70-release/<rev>/. REFUSES the whole stage when any staged
 # path starts with $PROJECT_VENDOR_EXCLUDE (licensed vendor data never leaves the repo). Exit 1 when nothing is staged.
 set -e -o pipefail
 OUT=${1:?usage: ci/release_archive.sh OUT_DIR}; PY=${PYTHON:-.venv/bin/python}

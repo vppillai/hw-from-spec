@@ -33,7 +33,7 @@ first quote and make it part of the adopt rule.
 5. **Design strictly greater**: rules at limit + 0.01 (0.16 where the fab says 0.15), annular ring > the minimum, silk line ≥ the minimum + 0.01.
 6. **Fixture disagreements**: when the selftest fixture and the checker disagree, print the checker's REASON before touching either — the "extra"
    unconnected-via hits were correct (copper on one layer only); the fix was in the fixture.
-7. Run the fab's viewer on every upload (board AND panel) and diff its counts against the mirror; keep the exported PDF under `docs/quotes/<date>/`.
+7. Run the fab's viewer on every upload (board AND panel) and diff its counts against the mirror; keep the exported PDF under `60-orders/quotes/<date>/`.
 
 ## 3. Silk rules that the mirror needs
 - No via/PTH hole under a silk TEXT cell (via keep-out from the text bbox at route time); clipping silk at holes is for hairlines only — it mutilated

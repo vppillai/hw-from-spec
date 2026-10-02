@@ -1,19 +1,19 @@
-# design/traceability.yaml — one entry per traceable item; the matrix docs/governance/TRACEABILITY.md is generated (scripts/traceability.py).
-# Every D-/CC- row of docs/governance/DECISIONS.md must be cited by some entry's `source` (the census lists unmapped rows). Stages in yaml order.
+# 20-design/traceability.yaml — one entry per traceable item; the matrix 90-log/TRACEABILITY.md is generated (scripts/traceability.py).
+# Every D-/CC- row of 90-log/DECISIONS.md must be cited by some entry's `source` (the census lists unmapped rows). Stages in yaml order.
 stages:
   spec:
-    reached: [{type: exists, path: SPEC.md}]
+    reached: [{type: exists, path: 10-spec/SPEC.md}]
   schematic: {{ee,both}}
     requires: [spec] {{ee,both}}
     reached: [{type: exists, path: design/{{BOARD}}.yaml}]     # the schematic yaml exists once G0 is approved {{ee,both}}
   layout: {{ee,both}}
     requires: [schematic] {{ee,both}}
-    reached: [{type: exists, path: kicad/{{BOARD}}/{{BOARD}}.kicad_pcb}] {{ee,both}}
+    reached: [{type: exists, path: 30-board/kicad/{{BOARD}}/{{BOARD}}.kicad_pcb}] {{ee,both}}
   geometry: {{mech,both}}
     requires: [spec] {{mech,both}}
-    reached: [{type: exists, path: design/case.yaml}]          # M1 input; the STL set of record is paths.mech_record {{mech,both}}
+    reached: [{type: exists, path: 20-design/case.yaml}]          # M1 input; the STL set of record is paths.mech_record {{mech,both}}
 entries:
-  - {id: D-01.1, source: D-01, requirement: the project follows SPEC {{SPEC_REV}}, lands_in: SPEC.md, stage: spec,
-     checks: [{type: exists, path: SPEC.md}]}
+  - {id: D-01.1, source: D-01, requirement: the project follows SPEC {{SPEC_REV}}, lands_in: 10-spec/SPEC.md, stage: spec,
+     checks: [{type: exists, path: 10-spec/SPEC.md}]}
   - {id: CC-001.1, source: CC-001, requirement: process = hw-from-spec (project.yaml, templates, scripts, gates), lands_in: project.yaml, stage: spec,
-     checks: [{type: yaml_key, path: project.yaml, key: project.name}, {type: exists, path: docs/governance/GATES.md}, {type: exists, path: scripts/known_issues.py}]}
+     checks: [{type: yaml_key, path: project.yaml, key: project.name}, {type: exists, path: 90-log/GATES.md}, {type: exists, path: scripts/known_issues.py}]}

@@ -1,8 +1,8 @@
-# SPEC.md — {{PROJECT}} rev {{SPEC_REV}} ({{DATE}}) — the artefact at G0
+# 10-spec/SPEC.md — {{PROJECT}} rev {{SPEC_REV}} ({{DATE}}) — the artefact at G0
 
 Every requirement has an ID (`R-<family><nn>`: E electrical, M mechanical, P parts, S silk/UX, T test, W software; run `grep -o 'R-[A-Z]*' -r docs`
 before choosing a new family — a prefix collision happened once), a measurable statement, and a `VERIFY` tag where the value rests on a
-datasheet, drawing or standard nobody has read yet (skill `SKILL.md` §4; each is closed in `docs/datasheet_notes/<part>.md` or BLOCKED).
+datasheet, drawing or standard nobody has read yet (skill `SKILL.md` §4; each is closed in `10-spec/datasheet_notes/<part>.md` or BLOCKED).
 Numbers that must agree between sections are cross-referenced by ID, never repeated. Owner choices from the kickoff questionnaire are cited
 by their D row, not re-stated.
 
@@ -42,11 +42,11 @@ fit input (a board STEP / mesh or dimensions) is a row in §4 tagged [V] (measur
 R-S01 self-documenting labels at every switch, jumper, test point, header; R-S02 polarity mark on every polarised part; … {{ee,both}}
 
 ## 7. Software / test
-R-W01 bring-up tool with `--selftest` / `--dry-run`; R-T01 every requirement above has a T-nn row in `docs/design/TEST_PLAN.md`. {{ee,both}}
-R-T01 every requirement above has a T-nn row in `docs/design/TEST_PLAN.md` (fit, clearance, insert torque, drop / load where FEA is in scope). {{mech}}
+R-W01 bring-up tool with `--selftest` / `--dry-run`; R-T01 every requirement above has a T-nn row in `20-design/TEST_PLAN.md`. {{ee,both}}
+R-T01 every requirement above has a T-nn row in `20-design/TEST_PLAN.md` (fit, clearance, insert torque, drop / load where FEA is in scope). {{mech}}
 
 ## 8. Enclosure concept (inputs the case generator reads) {{mech,both}}
 Pieces, retention, coupling, feet, labelling, fan / vents / light pipe — as decided at kickoff (D rows); print targets = `project.yaml print_targets`. {{mech,both}}
 
-## 9. VERIFY list (generated view: `grep -n VERIFY SPEC.md` → `docs/design/VERIFY.md`)
+## 9. VERIFY list (generated view: `grep -n VERIFY 10-spec/SPEC.md` → `20-design/VERIFY.md`)
 ## 10. Open questions (each becomes a CC row OPEN, never a silent assumption)

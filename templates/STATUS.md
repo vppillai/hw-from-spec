@@ -1,11 +1,11 @@
 # STATUS.md — resume point
 
-Read this file first, then `docs/governance/DECISIONS.md` (OPEN rows = owner items, listed in `docs/governance/KNOWN_ISSUES.md` §2), then `git status`. The newest dated
+Read this file first, then `90-log/DECISIONS.md` (OPEN rows = owner items, listed in `90-log/KNOWN_ISSUES.md` §2), then `git status`. The newest dated
 paragraph below is the state; earlier paragraphs are history. A **PAUSE POINT** paragraph lists exactly what the owner must do and what an agent
 resumes with.
 
 ## STATE NOW
-- Phase: {{PHASE}} (gate {{NEXT_GATE}} pending — owner line in docs/governance/GATES.md)
+- Phase: {{PHASE}} (gate {{NEXT_GATE}} pending — owner line in 90-log/GATES.md)
 - Record of record (`scripts/project.py record`; scope {{SCOPE}}): `{{BOARD_PATH_OR_STL_SET}}` md5 `{{MD5_OR_NONE}}`
 - Package `{{PACKAGE_OR_NONE}}` {{ee,both}}
 - Case `{{CASE_VERSION_OR_NONE}}` {{mech,both}}
