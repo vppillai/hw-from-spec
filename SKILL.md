@@ -27,12 +27,11 @@ reference when you reach that step, not before. Nothing here is specific to one 
    interpreter that imports yaml (`$PYTHON`, the project `.venv`, `python3`) and print which.
    **Then the kickoff questionnaire (§0.1)** — A0 scope first, then every owner decision the scope needs, asked up front with recommended
    defaults, written into `project.yaml` and `90-log/DECISIONS.md` before any CAD.
-2. **Copy the templates and resolve the scope** — the one copy block, runnable from the project root, is README "Use in a new project" step 4
-   (`T=vendor/hw-from-spec/templates`; it copies CLAUDE.md, .gitignore, project.yaml, 10-spec/SPEC.md, the governance records, PARTS_VERIFICATION,
-   TEST_PLAN + `design/VERIFY.md`, datasheet_notes, traceability + production_cut yaml, `20-design/erc_accept.yaml` + SOFTWARE_ARCHITECTURE [ee, both],
-   dfm_processes + dfm_verdicts + PROCUREMENT [mech, both]), then **`scripts/project.py scaffold --scope <A0 answer> CLAUDE.md 10-spec/SPEC.md project.yaml
-   90-log/*.md design/*.yaml`** (later also the copied `REVIEW_HANDOFF.md` / `RELEASE_NOTES.md`) — template lines tagged `{{ee,both}}` /
-   `{{mech,both}}` / `{{mech}}` stay only in their scopes (one template set, no copies). **The slots are filled in two passes**: `scripts/project.py
+2. **Copy the templates and resolve the scope** — ONE copy block, runnable from the project root: README "Use in a new project" step 4. It sets
+   `A0` (the scope), creates the numbered folders the scope needs, copies the templates from the mirrored templates tree (`templates/90-log/*` →
+   `90-log/`, …) and ENDS with `scripts/project.py scaffold --scope "$A0" …` over every copied file and `scripts/project.py slots` — template
+   lines tagged `{{ee,both}}` / `{{mech,both}}` / `{{mech}}` stay only in their scopes (one template set, no copies). The arrival checklist yaml
+   is NOT copied on day 1 (§10.1: at the order). **The slots are filled in two passes**: `scripts/project.py
    slots` lists every unfilled `{{…}}` per file (the STATUS pause-point skeleton between its `<!-- skeleton -->` markers is excluded) — CLAUDE.md,
    project.yaml and the governance records are filled now from the kickoff answers (§0.1), 10-spec/SPEC.md / KICKOFF_ANSWERS / traceability after the spec
    is read (step 6); the count must read **0** before the G0 ask, not before the kickoff. What each scope creates: **ee** — the board
@@ -60,7 +59,7 @@ reference when you reach that step, not before. Nothing here is specific to one 
    first (`$PY scripts/project.py slots` names them; an unfilled `project.yaml` is not valid YAML and every reader says so) → `$PY scripts/known_issues.py`
    → `$PY scripts/traceability.py` (**exit 1 = a decision row without a traceability entry or a FAILED check; every D-/CC- row — the kickoff rows
    included — needs an entry in `20-design/traceability.yaml`, add it and rerun**) → `$PY scripts/release_report.py` (DRAFT, record MISSING — correct
-   before G1 / M1) → commit → `scripts/adopt_gates.sh` (day-1 list + clone gate) green → `$PY scripts/project.py kickoff --check` green (every answered kickoff row landed in project.yaml with a real D row) → fill the
+   before G1 / M1) → `$PY scripts/now_pages.py` (the five answers of `00-now/`; `--check` is in the day-1 gate list) → commit → `scripts/adopt_gates.sh` (day-1 list + clone gate) green → `$PY scripts/project.py kickoff --check` green (every answered kickoff row landed in project.yaml with a real D row) → fill the
    CC-001 evidence cell and the first STATUS paragraph → commit. Only now read the spec; fill 10-spec/SPEC.md / VERIFY / traceability; `scripts/project.py
    slots` reads 0 before the G0 ask (§1.1 says what happens at G0).
 7. **CI (optional, when the repo has a remote)**: `templates/ci/` holds pr-check / nightly / release workflows with `{{PROJECT_*}}` placeholders;
@@ -157,8 +156,8 @@ order. A WARN that is "known" is not a bar; it is either fixed or a dated, evide
 
 ## 2. Generated only
 
-- Source of truth = `design/*.yaml` (+ placement CSV, part rows). Generators write CAD files, reports, indexes, order sheets. Nothing under
-  `kicad/`, `out/`, generated `docs/*` is hand-edited; a review finding changes the YAML or the generator, then regenerates.
+- Source of truth = `20-design/*.yaml` (+ placement CSV, part rows). Generators write CAD files, reports, indexes, order sheets. Nothing under
+  `30-board/`, `40-case/`, the generated records is hand-edited; a review finding changes the YAML or the generator, then regenerates.
 - Every generator has `--check` (regenerate in memory, diff against the committed file, exit 1 when stale) and `--selftest` (works in a temp
   dir only, never touches repo files). A `--check` must pass on `git archive HEAD`: no mtimes, no absolute paths, no live git HEAD, no dates
   outside one volatile `Generated` line (`scripts/release_report.py`, `references/release-and-cut.md` §2).
@@ -227,7 +226,7 @@ Protocol (`workflows/README.md`, `references/agent-ops.md` §4):
 2. Hand-off document = the only briefing. Its header is generated by `scripts/handoff_header.py` (board of record, HEAD md5 MATCH, package,
    case version, clean tree) — a hand-off naming a board the worktree does not carry invalidates the review. Add the one-paragraph waiver list
    (no reasoning) so verifiers do not re-find accepted items each round.
-3. Reviewers (the review round of §1): per specialty one in-session agent + two external models of a **second model family** (Cursor agent CLI
+3. Reviewers (the review round of §1): per specialty one in-session agent + two external models of a **second model family** (an agent CLI of another model family
    `--mode ask`, read-only; the in-session fallback when no CLI — say so in the merge), identical inputs = the artefacts + the role's checklist,
    never each other's output, never the author's dispositions, never the decision log. Reports to `80-reviews/<ROUND>_<role>_<model>.md`.
 4. **One verifier WITH record access** (DECISIONS, KNOWN_ISSUES, BLOCKERS, SPEC + its errata, the test plan, the netlist / mesh of record) on
@@ -263,7 +262,7 @@ agent proposals: CC rows OPEN), the VERIFY list is closed or BLOCKED (§4), then
 
 ## 6. Layout phase and the adopt rule [ee, both] (G1→G2: `references/pcb-layout-dfm.md`; G0→G1: `references/schematic-phase.md`)
 
-The layout chain (placement CSV → router session → post-pass → silk → export → `out/G2/` pack), the PCB build rules tagged checker / fab
+The layout chain (placement CSV → router session → post-pass → silk → export → `80-reviews/G2/` pack), the PCB build rules tagged checker / fab
 capability / physics / owner choice (stack-up, impedance, copper minimums vs the fab table, via-in-pad, thermal reliefs, mask / paste / stencil,
 part-size policy, two-sided assembly, rotation / CPL, fiducials / test points, silk, courtyards, creepage, panel) and the DRC census live in
 `references/pcb-layout-dfm.md`. A routed board is adopted only when, on the committed tree: CAD DRC 0 errors / 0 unconnected / **0 warnings
@@ -271,11 +270,11 @@ unless a dated waiver row** / schematic parity 0 with the net classes enforced (
 DRC rule that must fire exactly once — the CLI may ignore class patterns), route-quality 0 unjustified HIGH, the fab DFM mirror 0 open (§7, §1.2), silk check 0, every generator `--selftest`
 and `--check` green, and the fresh-checkout gate passes on `git archive HEAD`.
 `scripts/adopt_gates.sh` runs the `gates.adopt` list then `scripts/clone_gate.sh`; the routed board + its router session file are the artefacts of
-record (routing is never re-run to reproduce them) (`references/pitfalls.md` layout, 30-board/kicad/drc).
+record (routing is never re-run to reproduce them) (`references/pitfalls.md` layout, kicad/drc).
 
 ## 7. Fab DFM mirror [ee, both]
 
-Mirror the fab's own DFM checker in-repo before the first quote: copy its thresholds into `design/dfm_thresholds.json` (source + date), let the
+Mirror the fab's own DFM checker in-repo before the first quote: copy its thresholds into `20-design/dfm_thresholds.json` (source + date), let the
 project's measurer emit items, grade with `scripts/dfm_check.py`. The rule every viewer used: a value EQUAL to the warning threshold is Warning —
 design strictly greater. **0 Danger / 0 Warning is the bar** (§1.2): acceptances are by refdes with reason, date and vendor evidence
 (`dfm_accepted`, fields named by `fab_dfm.bar.accepted_requires`); bare tracks/vias cannot be accepted. Run the fab's own checker on the board AND
@@ -295,8 +294,8 @@ FEA: Gmsh + scikit-fem; fTetWild for CGAL STLs; caches keyed on content; compact
   censused and print-DFM-checked like a generated body (`references/case-pipeline.md` §0; the M1 row accepts it under its row).
 - **Stability.** Anything that stands, rocks, walks or is set down free gets a CoG-vs-support-polygon row at its WORST pose (`scripts/stability.py`,
   `references/case-pipeline.md` §Stability): centre of gravity from the STL set with an infill factor per body, through the assembly transforms,
-  against the hull of the ground footprints; min margin over every pose ≥ a stated value. A render cannot show it; a walker with its drive behind
-  the legs had −17 mm at a third of its crank angles.
+  against the hull of the ground footprints; min margin over every pose ≥ a stated value. A render cannot show it: a walker with its drive behind
+   the legs tips at the poses where one foot per side is down, and every render looked fine.
 - **Point contacts.** Before any mark-shaped body or pocket (inlay plate, badge, deboss) run `scripts/thin_wall_check.py --pinch <stl>`: a traced
   outline of touching shapes pinches to 0.01 mm and the part arrives as lobes; a wall census cannot see it. Bridge with web discs clipped to the
   outline's closing, add the neck row, keep the components = 1 row (`references/case-pipeline.md` §Point contacts).
@@ -315,11 +314,11 @@ list) tagged **[checker]** / **[vendor sheet]** / **[physics]** / **[owner bar]*
 ~150 mm parts and a 0.4-nozzle FDM printer's — substitute yours, keep the mechanism.
 1. **Two PURE mesh gates on every body of every preset, before the first upload** — the census gates the DESIGN margin, the print-DFM check the
    printability FLOOR; both read the MESH, never the yaml; both glob the STL set of record and sign their records:
-   - `scripts/thin_wall_census.py <stl> --target <t> --json out/…/census/<piece>.json` (rows `templates/CENSUS_GATE_ROWS.md`; walls AND voids
+   - `scripts/thin_wall_census.py <stl> --target <t> --json 40-case/<set>/checks/census/<piece>.json` (rows `templates/CENSUS_GATE_ROWS.md`; walls AND voids
      against the target's gates, wedges by the width of their sub-gate band, the nearest OPPOSING face in any direction, samples ∝ area, a
      NOISE-FLOOR row, bodies = 1, geometry signature, retention present in the mesh, worst-case clearance per mating pair, six face renders; the
      only exception path is a dated `accepted` entry with vendor evidence, re-matched every run) — the rules: `references/dfm-printed-enclosure.md` §2.
-   - `scripts/print_dfm.py --process <row> --out out/…/dfm <stl>` → `PASS` or `FLAG` + one line per rule (M C W R Z F K P V H O B S + INFO L Y from
+   - `scripts/print_dfm.py --process <row> --out 40-case/<set>/checks/dfm <stl>` → `PASS` or `FLAG` + one line per rule (M C W R Z F K P V H O B S + INFO L Y from
      physics + the cited minimums of `20-design/dfm_processes.yaml`); FLAG = a real sub-minimum region on the mesh: fix the generator, re-export, rerun —
      no waiver field. The rules, the sidecars (`--boxes`, `--supports`) and the loop: `references/print-dfm.md`.
    - In `gates.adopt`: `thin_wall_census.py --gate-dir` and `print_dfm.py --gate` (exit 1 on a body without a same-md5 record, md5 or signature
@@ -332,7 +331,7 @@ list) tagged **[checker]** / **[vendor sheet]** / **[physics]** / **[owner bar]*
    - Generated code is linted on every emit (`scripts/scad_lint.py`: a mid-line `//` silently drops the rest of the statement line).
 2. **Geometry rules — checker vs material**: no FREE-STANDING wedge (rail tips, lips, non-tangent coves, knife edges) **[checker]**; chamfers
    and **tangent fillets cut into ≥ gate walls are fine and recommended at stress risers** **[physics]**; **snap features are possible in PA12**
-   **[physics]** — under a no-yellow bar at JLC3DP the ≥ void-gate slit rarely fits, so screws + inserts or magnets (`§1.1` of the reference) are the
+   **[physics]** — under a vendor's no-yellow bar the ≥ void-gate slit rarely fits, so screws + inserts or magnets (`§1.1` of the reference) are the
    default; **engraved text is allowed when the stroke ≥ the void gate** (cap ≥ ~6 mm at 1.2), else a label carrier; closed rims (no slot / notch /
    gap on the single part unless it has an obvious job) **[owner bar]**; designed asymmetries rendered + in the order sheet + KNOWN_ISSUES or
    removed; inserts / bosses / magnets per material from the TDS (bore, depth, boss ≥ 2 × insert OD, temperature); post-processing removal and
@@ -351,8 +350,8 @@ list) tagged **[checker]** / **[vendor sheet]** / **[physics]** / **[owner bar]*
    `references/fdm-print-optimisation.md`; kickoff C9 / C10 / C11): printer-first FAIL rows from `print_targets.home_fdm` (walls, ribs, voids, 2 × line
    width, elephant foot, hole shrink, seam as per-preset `fits` knobs; raised legends; every external face on the bed / vertical / clean top asserted
    from the g-code), coupons and both board dummies (printable stand-ins for the board: a two-piece and a one-piece version) before the part, brand
-   marks as an ironed top-face feature or a flush colour body laid down by the printer's multi-filament unit (AMS) in the bed layers (never a
-   bed-face or vertical-wall deboss; mark coupon first; FAIL-gated mark rows), a roof-down hood turned by `rotate()` never `mirror()` (a mirror flips
+   marks as an ironed top-face feature or a flush colour body laid down by the printer's multi-filament unit in the bed layers (never a
+   bed-face or vertical-wall deboss; mark coupon first; FAIL-gated mark rows), a roof-down piece turned by `rotate()` never `mirror()` (a mirror flips
    handedness and prints every asymmetric mark backwards), slicer projects with
    project-named presets, a floating-region warning = FAIL, auto-orientation. **Every vendor DFM decision is mirrored into this preset the same day**
    under its own version key (hook tokens keep the vendor SCAD byte-identical; every hook variable asserted defined; duplicate yaml keys gated).
@@ -398,8 +397,8 @@ folder `70-release/<rev>/records/`** (the cut yaml's `records_dir`; RELEASE_NOTE
   page, `--check`), registered as a cut deliverable (`references/release-and-cut.md` §8).
 
 ### 10.1 Before the order ships: the arrival checklist and the spec errata
-- **The arrival / first-article checklist is GENERATED** (copy `templates/20-design/arrival_checklist.yaml` to `design/` AT THE ORDER, not on day 1 →
-  `scripts/arrival_checklist.py` → `60-orders/ARRIVAL_CHECKLIST_rev0.md`; uncomment the `--check` line in `gates.adopt` the same commit —
+- **The arrival / first-article checklist is GENERATED** (copy `templates/20-design/arrival_checklist.yaml` to `20-design/` AT THE ORDER, not on day 1 →
+  `scripts/arrival_checklist.py` → `60-orders/ARRIVAL_CHECKLIST_<rev>.md`; uncomment the `--check` line in `gates.adopt` the same commit —
   `project.py gates-required` demands it once the yaml exists; a cut deliverable). Written at the order, from the merged reviews' "what the parts must prove" rows and the OPEN decision rows, in the order of the day:
   **before shipment** (the fab's assembly photos — a paid "confirm placement" option is not guaranteed to raise a dialog, the photo confirmation is
   the one human polarity look) → **bench checks in gate order** [ee, both] (each row says what it `opens`; nothing powered or plugged before its row)
@@ -407,7 +406,7 @@ folder `70-release/<rev>/records/`** (the cut yaml's `records_dir`; RELEASE_NOTE
   (caliper table, fit, retention, coupons read by their printed text) → **owner decisions still OPEN** with the trigger that resolves each (the
   bracket-print fit knob = `kickoff.enclosure.fit_result`, the SPEC errata rows). Every row: `status` TODO / DONE date / N/A / APPLIED date (veto
   window) + `evidence`; closing a row = editing the yaml, regenerating, committing (`references/release-and-cut.md` §10).
-- **A frozen SPEC is never edited**: deviations of the design of record from the frozen text are **E-rows in `10-spec/spec_sections/SPEC_ERRATA.md`**
+- **A frozen SPEC is never edited**: deviations of the design of record from the frozen text are **E-rows in `10-spec/SPEC_ERRATA.md`**
   (`templates/10-spec/SPEC_ERRATA.md`), OPEN until the owner approves, folded into the next SPEC revision's change log; the arrival checklist §E carries them;
   a reviewer reads the errata before calling a deviation a finding (ALREADY DECIDED).
 

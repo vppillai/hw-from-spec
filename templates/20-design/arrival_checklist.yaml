@@ -45,4 +45,4 @@ sections:
     rows:
       - {id: E-1, item: "{{OPEN_ROW_ID}}: {{what the owner decides}}", trigger: "{{the measurement / print / first article that resolves it}}", status: TODO, evidence: "DECISIONS {{OPEN_ROW_ID}}"}
       - {id: E-FIT, item: "the fit knob the owner picks after the bracket print (kickoff C10 `kickoff.enclosure.fit_result`)", trigger: "the bracket plate printed; the variant that seats under thumb pressure and survives the hang test is reported by its printed value", status: TODO, evidence: ""} {{mech,both}}
-      - {id: E-SPEC, item: "SPEC errata E-rows (10-spec/spec_sections/SPEC_ERRATA.md): the frozen spec's known deviations", trigger: "owner approval -> the next SPEC revision's change log cites the row", status: TODO, evidence: "SPEC_ERRATA.md"}
+      - {id: E-SPEC, item: "SPEC errata E-rows (10-spec/SPEC_ERRATA.md): the frozen spec's known deviations", trigger: "owner approval -> the next SPEC revision's change log cites the row", status: TODO, evidence: "SPEC_ERRATA.md"}

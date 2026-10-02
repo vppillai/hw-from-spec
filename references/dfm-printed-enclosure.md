@@ -127,7 +127,7 @@ upload, with the verdict → validate → rule-fix → retro loop in `references
   — a FAIL cluster whose bbox lies inside an entry's bbox (1 mm tolerance) with the same class is machine-matched every run and listed as
   ACCEPTED (with the entry's evidence path: the vendor's written acceptance, a first-article measurement); an entry without date / reason /
   evidence does not count. Nothing else moves a FAIL.
-- **A PURE gate in the adopt list**: the census JSON beside each STL carries the STL md5 and the FAIL list; `thin_wall_census.py --gate-dir <dir>`
+- **A PURE gate in the adopt list**: the census JSON in `checks/census/` beside the set's `parts/` carries the STL md5 and the FAIL list; `thin_wall_census.py --gate-dir <dir>`
   proves md5 = the committed STL and 0 unaccepted FAIL without recomputing.
 - Give EVERY preset its FAIL rows on day 1 (the home preset got them after the order; the vendor preset after the crack).
 - Legend lands between debossed strokes are deboss-deep features judged at the red band (`red_line`) and "inside the hull of the lands it

@@ -13,5 +13,5 @@
 #   evidence  path of the saved raw response / screenshot / mail under 60-orders/quotes/<date>/ (the API JSON at parseStatus 2, never a DOM read)
 #   note      what the body is / why it was uploaded (free text)
 verdicts: []
-# - {stl: 40-case/v1/parts/tray.stl, md5: 0123abcd, process: jlc_mjf_pa12, vendor: JLC3DP, date: 2026-01-01, verdict: FLAG,
+# - {stl: 40-case/vendor_mjf/parts/tray.stl, md5: 0123abcd, process: jlc_mjf_pa12, vendor: JLC3DP, date: 2026-01-01, verdict: FLAG,
 #    evidence: 60-orders/quotes/2026-01-01/jlc_dfm_r1/tray_0123abcd_analysis.json, note: "tray r1, red along the inner rim"}

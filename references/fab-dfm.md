@@ -7,11 +7,11 @@ only, sharp corner) and counts by its own definitions. Two quote rounds were los
 first quote and make it part of the adopt rule.
 
 ## 2. The generic recipe
-1. **Thresholds file** `design/dfm_thresholds.json`: copy every check name and its danger/warning numbers from the fab's viewer (cite the viewer URL +
+1. **Thresholds file** `20-design/dfm_thresholds.json`: copy every check name and its danger/warning numbers from the fab's viewer (cite the viewer URL +
    date in `source`); checks the fab lists without numbers get `null` (every found item grades Warning, as the viewer does); `project_min` holds the
    project's own rule for checks the fab reported clean.
 2. **Measurer** (project-specific, CAD-bound): re-measure each check from the board file — tracks, vias, pads as effective polygons, STORED zone fills
-   (no refill), silk as glyph/stroke polygons, the true outline polygon — and emit `out/dfm_items.json` items `{check, value, refs, layer, xy}`.
+   (no refill), silk as glyph/stroke polygons, the true outline polygon — and emit `30-board/layout/dfm_items.json` items `{check, value, refs, layer, xy}`.
    Keep it in the project's `gen/`; the source project's measurer (26 checks, pure-python capsule/polygon distances on a 1 mm grid over
    KiCad SWIG shapes) is the worked example. The items contract:
 

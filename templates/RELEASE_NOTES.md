@@ -19,10 +19,10 @@
 | Gate | State | Evidence |
 |---|---|---|
 | DRC (classes enforced, canary ×1) | {{0 err / 0 unconnected / parity 0}} | `{{PACKAGE_DIR}}/drc_summary.md` | {{ee,both}}
-| Fab DFM mirror | {{0 open}} | `out/dfm.json` | {{ee,both}}
+| Fab DFM mirror | {{0 open}} | `30-board/layout/dfm.json` | {{ee,both}}
 | Route quality | {{0 HIGH}} | `{{path}}` | {{ee,both}}
-| Census `--gate-dir` per preset + vendor DFM | {{0 unaccepted FAIL; DFM_ROUND verdict}} | `40-case/<preset>/census/`, `60-orders/quotes/<date>/DFM_ROUND.md` | {{mech,both}}
-| `print_dfm.py --gate` per preset | {{PASS on n bodies, rule set VERSION}} | `40-case/<preset>/dfm/` | {{mech,both}}
+| Census `--gate-dir` per preset + vendor DFM | {{0 unaccepted FAIL; DFM_ROUND verdict}} | `40-case/<set>/checks/census/`, `60-orders/quotes/<date>/DFM_ROUND.md` | {{mech,both}}
+| `print_dfm.py --gate` per preset | {{PASS on n bodies, rule set VERSION}} | `40-case/<set>/checks/dfm/` | {{mech,both}}
 | Traceability | {{VERIFIED n / FAILED 0 / unmapped none}} | `90-log/TRACEABILITY.md` |
 | Blind reviews | {{rounds, last merged report}} | `80-reviews/{{merged}}` |
 | Adopt + clone gate | green at `{{sha}}` | `scripts/adopt_gates.sh` transcript in DECISIONS {{row}} |

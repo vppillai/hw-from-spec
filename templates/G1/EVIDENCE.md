@@ -2,8 +2,8 @@
 
 | Field | Value |
 |---|---|
-| Pack | `out/{{G1 or G2}}/` |
-| Generated from | design yaml commit `{{SHA}}`, `design/{{BOARD}}.yaml` md5 `{{MD5}}`, board `{{BOARD_PATH}}` md5 `{{MD5_OR_MISSING}}` |
+| Pack | `80-reviews/{{G1 or G2}}/` |
+| Generated from | design yaml commit `{{SHA}}`, `20-design/{{BOARD}}.yaml` md5 `{{MD5}}`, board `{{BOARD_PATH}}` md5 `{{MD5_OR_MISSING}}` |
 | Generator | `gen/{{export}}.py` at commit `{{SHA}}`; CAD CLI `{{VERSION}}` |
 | Gates at generation | ERC {{0 errors / n accepted (20-design/erc_accept.yaml)}}; DRC {{0 / 0 / 0}} canary ×1; parity {{0}}; route quality {{0 HIGH}}; fab DFM mirror {{0 open}} |
 
