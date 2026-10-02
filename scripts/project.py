@@ -188,7 +188,7 @@ def open_decisions(path):
 
 def required_gate_lines(P):
     """An artefact that exists must have its gate line in gates.adopt (commented lines are not lines): the schematic -> erc_gate.py, the board ->
-    a DRC gate, the STL set (paths.mech_record) -> thin_wall_census --gate-dir AND print_dfm --gate, 20-design/arrival_checklist.yaml -> arrival_checklist.py --check. -> problem list (blind review 0.8.0 F11)."""
+    a DRC gate, EVERY STL set of paths.mech_record -> thin_wall_census --gate-dir AND print_dfm --gate naming that set's folder, 20-design/arrival_checklist.yaml -> arrival_checklist.py --check. -> problem list (blind review 0.8.0 F11)."""
     lines = " ".join(str(x) for x in (P.get("gates.adopt") or []))
     bad = []
     sch = P.path("schematic")
@@ -198,10 +198,15 @@ def required_gate_lines(P):
     if board and os.path.exists(board) and not re.search(r"\bdrc", lines, re.I):   # ponytail: a token starting with drc (drc_gate.py, DRC); a named gates.drc key if a project games it
         bad.append(f"board {P.get('paths.board')} exists but gates.adopt has no DRC gate line")
     pat = P.get("paths.mech_record")
-    if pat and glob.glob(os.path.join(P.root, pat)):
-        for tok, what in (("--gate-dir", "thin_wall_census.py --gate-dir"), ("print_dfm.py --gate", "print_dfm.py --gate")):
-            if tok not in lines:
-                bad.append(f"STL set {pat} has files but gates.adopt has no `{what}` line")
+    # per set (40-case/<set>/parts/*.stl -> 40-case/<set>): a census --gate-dir AND a print_dfm --gate argument must sit under that set's folder
+    # (its checks dir); a token somewhere in gates.adopt gates only the set it names (review 0.11.0 B-4)
+    sets = sorted({os.path.relpath(os.path.dirname(os.path.dirname(f)), P.root) for f in glob.glob(os.path.join(P.root, pat))}) if pat else []
+    census = re.findall(r"--gate-dir\s+(\S+)", lines); dfm = re.findall(r"print_dfm\.py\s+--gate\s+(\S+)", lines)
+    for st in sets:
+        under = lambda args: any(a.startswith(st + "/") for a in args)
+        missing = [w for args, w in ((census, f"thin_wall_census.py --gate-dir {st}/checks/census"), (dfm, f"print_dfm.py --gate {st}/checks/dfm")) if not under(args)]
+        if missing:
+            bad.append(f"STL set {st} has files but gates.adopt has no " + " / ".join(f"`{w}`" for w in missing) + " line")
     ac = P.get("arrival_checklist.yaml", "20-design/arrival_checklist.yaml")
     if os.path.exists(os.path.join(P.root, ac)) and "arrival_checklist.py --check" not in lines:
         bad.append(f"{ac} exists but gates.adopt has no `scripts/arrival_checklist.py --check` line")
@@ -379,8 +384,14 @@ def selftest():
     open(f"{d}/D.md", "w").write("| ID | Date | Status | Topic | P | R |\n|---|---|---|---|---|---|\n| **D-07** | d | **OPEN** | widen root | p | r |\n| CC-010 | d | APPLIED | x | p | r |\n| CC-011 | d | OPEN (owner) | y | p | r |\n")
     assert open_decisions(f"{d}/D.md") == {"D-07": "widen root p r", "CC-011": "y p r"}, open_decisions(f"{d}/D.md")
     P.cfg["paths"] = {"mech_record": "40-case/*/parts/*.stl", "schematic": "k/k.kicad_sch"}; P.cfg["gates"] = {"adopt": ["$PY scripts/known_issues.py --check"]}
-    bad = required_gate_lines(P); assert len(bad) == 2 and "--gate-dir" in bad[0] and "print_dfm.py --gate" in bad[1], bad
+    bad = required_gate_lines(P); assert len(bad) == 1 and "40-case/mjf_case" in bad[0] and "--gate-dir" in bad[0] and "print_dfm.py --gate" in bad[0], bad
     P.cfg["gates"]["adopt"] += ["$PY scripts/thin_wall_census.py --gate-dir out/x/census", "$PY scripts/print_dfm.py --gate out/x/dfm"]
+    bad = required_gate_lines(P); assert len(bad) == 1 and "40-case/mjf_case" in bad[0], ("a gate line must name the set's checks dir", bad)
+    P.cfg["gates"]["adopt"] += ["$PY scripts/thin_wall_census.py --gate-dir 40-case/mjf_case/checks/census", "$PY scripts/print_dfm.py --gate 40-case/mjf_case/checks/dfm"]
+    assert required_gate_lines(P) == []
+    os.makedirs(f"{d}/40-case/other/parts"); open(f"{d}/40-case/other/parts/x.stl", "wb").write(b"X")   # a second set with STLs and no gate line
+    bad = required_gate_lines(P); assert len(bad) == 1 and "40-case/other" in bad[0] and "mjf_case" not in bad[0], bad
+    P.cfg["gates"]["adopt"] += ["$PY scripts/thin_wall_census.py --gate-dir 40-case/other/checks/census --x", "$PY scripts/print_dfm.py --gate 40-case/other/checks/dfm"]
     assert required_gate_lines(P) == []
     os.makedirs(f"{d}/k"); open(f"{d}/k/k.kicad_sch", "w").write("x"); assert "erc_gate.py" in required_gate_lines(P)[0]
     os.makedirs(f"{d}/20-design"); open(f"{d}/20-design/arrival_checklist.yaml", "w").write("sections: []\n"); assert any("arrival_checklist.py" in b for b in required_gate_lines(P))
