@@ -142,12 +142,13 @@ through `scripts/project.py`, and join `gates.adopt` with their `--selftest` and
 
 ## Fast, safe iterations
 
-Configure `gates.iteration` in `project.yaml`, then run
-`scripts/iteration_gate.sh --tier inner|standard|release`. **Inner** runs the changed generator's
-read-only check and its direct grader; **standard** runs the bounded change set before a delta
-audit; **release** runs the full adopt/clone chain before a gate, order, or cut. The runner refuses
-an empty tier and fails if a check writes to the tree, so the fast path cannot silently replace a
-release-grade check.
+Three tiers, one entry point: `scripts/iteration_gate.sh --tier inner|standard|release`. **Inner** runs
+the changed generator's read-only `--check` and its direct grader — the project's standing set from
+`gates.iteration.inner` plus this change's commands after `--`; **standard** is `scripts/adopt_gates.sh
+--no-clone` (`make gates`), the whole check set before a delta audit; **release** is `scripts/adopt_gates.sh`
+(`make check`), with the fresh-archive clone gate, before a gate, order, or cut. Every tier is read-only
+on the tree (a check that writes fails it), the inner tier refuses an empty command set, and heavy commands
+take the host pool — so the fast path cannot silently stand in for a release-grade check.
 
 ## The kickoff questionnaire
 

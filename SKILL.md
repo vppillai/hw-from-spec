@@ -176,11 +176,11 @@ order. A WARN that is "known" is not a bar; it is either fixed or a dated, evide
 - **Layout changes are generated too.** The docs/ layout the defaults name is in `references/project-yaml.md` §Layout; moving files later is a
   decision row + a `reorg:` block + `scripts/reorg_paths.py --plan → --apply → regenerate → --check → --proof` (zero-loss on two `git ls-files -s`
   dumps); frozen records keep the old paths and `--map` explains them (`references/release-and-cut.md` §9).
-- **Iteration tiers keep the fast loop honest.** Configure `gates.iteration.inner` with only the changed generator's `--check` and its
-  directly affected grader, then run `scripts/iteration_gate.sh --tier inner` after a one-value YAML or emitter change. Configure
-  `standard` for the bounded change set (normally its targeted checks plus `scripts/adopt_gates.sh --no-clone`) and use it before a
-  delta audit. Configure `release` with `scripts/adopt_gates.sh` and release-specific checks; use it before a gate, order, or cut.
-  Each tier is explicitly listed in `project.yaml`, refuses an empty list, and verifies that its commands did not write the tree.
+- **Iteration tiers keep the fast loop honest** (`scripts/iteration_gate.sh`). After a one-value yaml or emitter change run `--tier inner`:
+  the changed generator's `--check` and its direct grader — the project's standing set in `gates.iteration.inner` plus this change's commands
+  after `--` — under the same read-only guard as the adopt gates; an empty set is refused. `--tier standard` is `scripts/adopt_gates.sh
+  --no-clone` (before a delta audit) and `--tier release` is `scripts/adopt_gates.sh` with the clone gate (before a gate, order or cut): the
+  one `gates.adopt` list, never a second one. Heavy commands go through the host pool (`references/agent-ops.md` §8 items 1 and 9).
 
 ## 3. Decision log
 
