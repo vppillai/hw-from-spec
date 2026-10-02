@@ -26,9 +26,9 @@
 ## 0.10.4 — 2026-10-02 — first-article learnings of two mechanical-only projects (2026-10-01): raised features in the moving-part sweep, operating side vs viewing window, coupon labels in the body's own colour
 
 ### Changed
-- **`dfm-printed-enclosure.md` §8**: coupon labels are never second-colour bodies — raised or debossed in the body's own filament per the
-  legibility gate (the PR's "always deboss" was narrowed in review: a raised label in one colour costs nothing); if the plate is the mark coupon,
-  ONE short raised word proves the colour path (the raised-label coupon plate cost 3.9 g of the second colour and 8 changes for 0.4 g of letters); nothing that moves may sweep a
+- **`dfm-printed-enclosure.md` §8**: coupon labels are ALWAYS debossed (the self-documenting coupon rule now says debossed, not "debossed or
+  raised"), unless the coupon also tests colour — then ONE short raised word in the second colour proves the colour path and the values stay
+  debossed (the raised-label coupon plate cost 3.9 g of the second colour and 8 changes for 0.4 g of letters); nothing that moves may sweep a
   raised feature (a crank arm scraped its plate's legends and jammed with 0.5 mm of play to the flat face); the operating side of a display
   mechanism is the side away from the viewing window. **`case-pipeline.md` §Interference**: static raised features (legends, bosses, lugs) are
   bodies in the moving-part sweep, with the axial play added. **Kickoff C4**: a hand-held / stands-on-its-own-face alternative tied to C12, and
