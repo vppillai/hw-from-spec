@@ -90,6 +90,7 @@ grep -q 'references/pcb-layout-dfm.md' "$SKILL/SKILL.md" || { echo "FAIL: SKILL.
 LEAK='(^|[^a-z0-9])p2s([^a-z0-9]|$)|presets\.P2S|lap\.ring_down|aec[-_]tester|tenstorrent'   # generic: ok (the lint patterns themselves)
 grep -rqiE "$LEAK" "$SKILL/SKILL.md" "$SKILL/README.md" "$SKILL/templates" "$SKILL/workflows" "$SKILL/evals" && { echo "FAIL: a source-project identifier leaked into SKILL / README / templates (C-15 / B-34)"; exit 1; }
 grep -q '^## 13. Retro' "$SKILL/SKILL.md" || { echo "FAIL: SKILL.md lost the retro phase (§13)"; exit 1; }
+grep -rnE '30-board/kicad/(kicad:|drc|gen)' "$SKILL/templates" "$SKILL/references" "$SKILL/SKILL.md" && { echo "FAIL: the kicad/ -> 30-board/kicad/ reorg rewrote a non-path (the CI image kicad/kicad:<tag> or a kicad/drc, kicad/gen domain tag) — restore the literal (0.11.0 A-8)"; exit 1; }
 # 0.10.0: the arrival checklist, the spec errata, the review protocol with a record-reading verifier, the owner-read tag, the slicer optimisation home
 grep -q '^### 10.1 Before the order ships' "$SKILL/SKILL.md" && test -f "$SKILL/templates/20-design/arrival_checklist.yaml" && test -f "$SKILL/templates/10-spec/SPEC_ERRATA.md" || { echo "FAIL: SKILL.md / templates lost the arrival checklist or the SPEC errata (0.10.0)"; exit 1; }
 # 0.10.1: the engine rule (previews fast, geometry of record on the gate-passing engine), the per-preset engine key, the CLAUDE.md agent-ops block, the seeded sampler
