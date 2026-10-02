@@ -21,7 +21,7 @@ warning threshold as Warning) — limit + 0.01 mm for copper rules, one full ste
 |---|---|
 | **Inputs** | the G1 schematic of record (yaml + generated CAD), `design/<board>_board.yaml` (outline, stack-up, design rules, net classes, keep-outs, `dfm_accepted`), `design/placement.csv`, `design/dfm_thresholds.json`, the fab's rotation table (`design/<fab>_rotation.yaml`) |
 | **Generators (project `gen/`)** | `place_pcb` (placement CSV → footprints, rule areas, canary) → router (`route_*`, the router session file is the record) → post-pass (stub snap, staircase merge — scripted, never hand edits) → `silk_pass` → `export` (Gerbers/drill/pos, DRC json, parity, route quality, DFM items) → `panelize` → `fab_package` |
-| **Outputs** | `30-board/kicad/<board>/<board>.kicad_pcb` (board of record, md5 keys everything), the router session (`*.ses`/`*.dsn`), `out/G2/` review pack (§1.3), `out/dfm_items.json` + `out/dfm.json`, `30-board/fab/<date>_<md5-8>/` package |
+| **Outputs** | `30-board/kicad/<board>/<board>.kicad_pcb` (board of record, md5 keys everything), the router session (`*.ses`/`*.dsn`), `out/G2/` review pack (§1.3), `out/dfm_items.json` + `out/dfm.json`, `30-board/fab/<rev>/` package (board_id.txt carries the md5) |
 | **Gate** | SKILL §6 adopt rule: DRC 0 errors / 0 unconnected, **0 warnings unless a dated waiver row** (§9), schematic parity 0, canary fires exactly once, route quality 0 unjustified HIGH, fab DFM mirror 0 open, silk check 0, every `--selftest` / `--check` green, clone gate on `git archive HEAD`, visual inspection round merged |
 | **Decider** | the owner writes the G2 cell after one review round (`board` role set + `routing-inspection.js`) is merged; the agent asks (SKILL §1.1) |
 

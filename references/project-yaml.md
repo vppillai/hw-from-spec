@@ -45,13 +45,13 @@ paths:
   datasheet_notes: 10-spec/datasheet_notes
   reviews_dir: 80-reviews                # hand-offs, per-round reports, merged reports
   quotes_dir: 60-orders/quotes                  # <date>/ fab evidence (quotes, DFM exports, review mails, order screenshots) — never inside a package
-  production_dir: 70-release          # <md5-8>/ the production cut
+  production_dir: 70-release          # <rev>/ the production cut (the record md5 inside: MANIFEST, STATUS)
   board: 30-board/kicad/<board>/<board>.kicad_pcb  # ee / both: the board of record; its md5 keys packages, collateral, reports (`scripts/project.py record`)
   mech_record: "40-case/*/parts/*.stl"   # mech: the STL set of record; record md5 = md5 of the sorted "<relpath> <md5>" lines (moves when any STL moves)
   netlist: 30-board/layout/<board>.xml                # kicadxml netlist for netlist_net checks (optional)
-  fab_dir: 30-board/fab                        # packages <date>_<md5-8>/ each with board_id.txt (keys: board, md5, commit, built, + counts)
+  fab_dir: 30-board/fab                        # packages <rev>/ each with board_id.txt (keys: board, md5, commit, built, + counts) — the md5 inside selects, never the name
   release_dir: 70-release
-  collateral_dir: 70-release/collateral # <md5-8>/renders/ from scripts/collect_renders.py
+  collateral_dir: 70-release/collateral # <rev>/renders/ from scripts/collect_renders.py
   case_yaml: 20-design/case.yaml             # optional; `case.version` is read by handoff_header / collect_renders
   mesh_provenance: 40-case/board_mesh/board.stl.provenance.json   # optional; {board_md5, board_commit, mesh_md5, facets} (both) or, for an imported STEP / envelope (mech), {source, source_md5, tag: V|K}
 tools:
@@ -131,14 +131,14 @@ assembly_guide:                           # scripts/assembly_guide.py (release-a
   yaml: 20-design/assembly_guide.yaml        # authored short text: doc, parts, tools, defaults{defs}, pages (before/after), step_defaults, steps{n: camera/parts/tools/check}, where_the_words_are[]
   steps_md: 40-case/ASSEMBLY.md   # optional generated step source: '### Step N - title (T s)' + paragraph
   scad: 40-case/<preset>/case.scad   # geometry of record; the md5 of this ONE file keys every render (flatten includes, or accept that they do not move the key)
-  out_dir: 70-release/{MD5_8}        # {MD5_8} board md5-8, {CASE_VERSION}
+  out_dir: 70-release/{REV}          # {REV} project.revision; {MD5_8} board md5-8, {CASE_VERSION} also expand
   doc_name: VISUAL_ASSEMBLY_GUIDE.md
   size: '1920,1440'
   render_cmd: "openscad -o {OUT} --camera={CAMERA} --imgsize={SIZE} --colorscheme=Tomorrow {DEFS} 40-case/<preset>/case.scad"   # {DEFS} = -Dk=v …
-renders:                                  # scripts/collect_renders.py rules; {MD5_8} {CASE_VERSION} {BOARD} {KICAD_CLI} {OUT} expand
+renders:                                  # scripts/collect_renders.py rules -> collateral_dir/<rev>/renders/; {REV} {MD5_8} {CASE_VERSION} {BOARD} {KICAD_CLI} {OUT} expand
   - {name: pcb_top, kind: kicad_render, args: ["--side", "top", "--quality", "high", "--background", "opaque"]}
   - {name: pcb_iso, kind: kicad_render, args: ["--side", "top", "--perspective", "--rotate", "-45,0,135"]}
-  - {name: panel_top, kind: copy, src: "30-board/fab/*_{MD5_8}/panel/panel_top.png"}
+  - {name: panel_top, kind: copy, src: "30-board/fab/{REV}/panel/panel_top.png"}
   - {name: case_iso, kind: copy, src: "out/case/{CASE_VERSION}/renders/iso.png", sub: case, min_bytes: 2000}
 reports:                                  # scripts/release_report.py; one file per entry under paths.release_dir
   - name: PCB_DESIGN_REPORT
