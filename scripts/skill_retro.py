@@ -186,7 +186,7 @@ def dfm_table_diff(root, skill, table_rel="20-design/dfm_processes.yaml"):
     """project <paths.dfm_processes> vs the skill's templates/20-design/dfm_processes.yaml -> [{kind, row, key, project, template}]:
     NEW row (a vendor / process the template lacks), CHANGED number (a threshold the project moved — with its citation line), VALIDATED (a row
     whose validated_on the project filled while the template's is empty). Either file missing -> [] (nothing to carry)."""
-    pp, tp = os.path.join(root, table_rel), os.path.join(skill, "templates", "design", "dfm_processes.yaml")
+    pp, tp = os.path.join(root, table_rel), os.path.join(skill, "templates", "20-design", "dfm_processes.yaml")
     if not (os.path.exists(pp) and os.path.exists(tp)):
         return []
     try:
@@ -232,7 +232,7 @@ def apply_folds(project, root, skill, new, dfm, today, table_rel):
     if new and os.path.exists(pit) and marker not in open(pit, encoding="utf-8").read():
         block = [f"\n## Retro {project} {today} {marker}", ""] + [f"- {generalise(c['text'])} — {c['date']} [{c['domain'] or 'general'}]" for c in new]
         open(pit, "a", encoding="utf-8").write("\n".join(block) + "\n"); done.append(f"{len(new)} pitfalls line(s) -> references/pitfalls.md")
-    tp = os.path.join(skill, "templates", "design", "dfm_processes.yaml"); pp = os.path.join(root, table_rel)
+    tp = os.path.join(skill, "templates", "20-design", "dfm_processes.yaml"); pp = os.path.join(root, table_rel)
     for d in dfm:
         if d["kind"] == "NEW" and os.path.exists(tp) and not re.search(rf"^  {re.escape(d['row'])}:", open(tp, encoding="utf-8").read(), re.M):
             blk = row_block(pp, d["row"])
@@ -372,8 +372,8 @@ def selftest():
     open(os.path.join(skill, "SKILL.md"), "w").write("---\nname: x\nversion: 9.9.9\n---\n# x\n## Rules\nEvery checker is read-only on the tree.\n")
     open(os.path.join(skill, "references", "dfm.md"), "w").write("# dfm\n## Census gate\nThe ray-cast census clusters thin samples below the gate and classifies wall versus wedge by the opposite-face angle; walls FAIL, wedges are listed.\n")
     open(os.path.join(skill, "references", "kickoff-questionnaire.md"), "w").write("# q\n## C2 Retention\nscrews into inserts, magnets, none — recommended screws.\n")
-    os.makedirs(os.path.join(skill, "templates", "design"))
-    open(os.path.join(skill, "templates", "design", "dfm_processes.yaml"), "w").write("processes:\n  jlc_mjf_pa12:\n    wall_min: 1.0\n    hole_min: 1.5\n    validated_on: []\n")
+    os.makedirs(os.path.join(skill, "templates", "20-design"))
+    open(os.path.join(skill, "templates", "20-design", "dfm_processes.yaml"), "w").write("processes:\n  jlc_mjf_pa12:\n    wall_min: 1.0\n    hole_min: 1.5\n    validated_on: []\n")
     proj = os.path.join(d, "proj"); os.makedirs(os.path.join(proj, "90-log"))
     open(os.path.join(proj, "project.yaml"), "w").write("project: {name: proj}\nskill: {version: 1.0.0}\n")
     os.makedirs(os.path.join(proj, "20-design"))
@@ -429,13 +429,13 @@ def selftest():
     import contextlib, io
     with contextlib.redirect_stdout(io.StringIO()):
         assert run(proj, skill, out, "2026-09-02", 0.5, today="2026-09-28", apply=True) == 0
-    pit = open(os.path.join(skill, "references", "pitfalls.md")).read(); tpl = open(os.path.join(skill, "templates", "design", "dfm_processes.yaml")).read(); ch = open(os.path.join(skill, "CHANGELOG.md")).read()
+    pit = open(os.path.join(skill, "references", "pitfalls.md")).read(); tpl = open(os.path.join(skill, "templates", "20-design", "dfm_processes.yaml")).read(); ch = open(os.path.join(skill, "CHANGELOG.md")).read()
     assert "## Retro proj 2026-09-28" in pit and "PyYAML keeps the LAST" in pit and pit.count("- ") >= 3, pit
     assert "  acme_sls:" in tpl and "    wall_min: 0.8" in tpl and tpl.count("validated_on: []") == 2 and "validated_on: [{" not in tpl, tpl
     assert ch.startswith("# CHANGELOG\n\n## UNRELEASED — retro proj (2026-09-28)") and "## 1.0.0" in ch, ch
     with contextlib.redirect_stdout(io.StringIO()):
         assert run(proj, skill, out, "2026-09-02", 0.5, today="2026-09-28", apply=True) == 0
-    assert open(os.path.join(skill, "references", "pitfalls.md")).read() == pit and open(os.path.join(skill, "CHANGELOG.md")).read() == ch and open(os.path.join(skill, "templates", "design", "dfm_processes.yaml")).read() == tpl, "idempotent"
+    assert open(os.path.join(skill, "references", "pitfalls.md")).read() == pit and open(os.path.join(skill, "CHANGELOG.md")).read() == ch and open(os.path.join(skill, "templates", "20-design", "dfm_processes.yaml")).read() == tpl, "idempotent"
     # the default --skill resolves through a symlinked scripts/ (review 0.8.0 F4): run the real script via a project-style link
     import subprocess
     os.makedirs(os.path.join(proj, "vendor", "hw-from-spec")); os.symlink(os.path.dirname(os.path.realpath(__file__)), os.path.join(proj, "vendor", "hw-from-spec", "scripts")); os.symlink("vendor/hw-from-spec/scripts", os.path.join(proj, "scripts"))

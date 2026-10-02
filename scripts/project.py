@@ -204,7 +204,7 @@ def required_gate_lines(P):
 
 
 SLOT = re.compile(r"\{\{[^{}]*\}\}")
-SLOT_DEFAULT = ("CLAUDE.md", "10-spec/SPEC.md", "project.yaml", "docs", "design")
+SLOT_DEFAULT = ("CLAUDE.md", "project.yaml", "10-spec", "20-design", "60-orders", "90-log")
 
 
 def slots(paths, root="."):
