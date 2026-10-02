@@ -11,6 +11,7 @@ set -e
 HERE=$(cd "$(dirname "$0")" && pwd -P)
 
 if [[ "${1:-}" == "--selftest" ]]; then
+  [[ -z "${PYTHON:-}" && -x "$PWD/.venv/bin/python" ]] && "$PWD/.venv/bin/python" -c "import yaml" 2>/dev/null && export PYTHON="$PWD/.venv/bin/python"   # the selftest's temp project has no venv: take the caller's (as adopt_gates.sh)
   T=$(mktemp -d /tmp/hwfs_iteration_XXXX); trap 'rm -rf "$T"' EXIT
   mkdir -p "$T/r/scripts"; cd "$T/r"; git init -q
   ln -s "$HERE/iteration_gate.sh" scripts/iteration_gate.sh; ln -s "$HERE/project.py" scripts/project.py

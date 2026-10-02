@@ -2,7 +2,9 @@
 """scripts/now_pages.py — the five pages of `00-now/`, each the answer to its own file name, derived from the logs and the kits only:
   WHERE_THINGS_STAND.md   gates (approved / open), the last three landed log entries, the revision + record identity, open blockers
   BLOCKED_ON_OWNER.md     OPEN decision rows that name the owner, arrival-checklist rows the owner closes, kit fit results still pending
-  WHAT_TO_PRINT.md        one row per plate sidecar under <kits_dir>/<kit>/plates/ (time, grams, changes, what it proves), in print order
+  WHAT_TO_PRINT.md        one row per plate sidecar under <kits_dir>/<kit>/plates/ (time, grams, changes, what it proves, case version), in print
+                          order; a row is BROKEN when its .3mf or the kit's START_HERE.md is missing, a required key is absent, or an stl_md5s
+                          entry is not a part of the kit
   WHAT_TO_ORDER.md        procurement rows whose "Order qty" is filled but no order is recorded, fab orders in flight (the quotes index)
   WHAT_TO_CHECK_ON_ARRIVAL.md   arrival-checklist rows not DONE / N/A / APPLIED
   scripts/now_pages.py            write the five pages into paths.now_dir (00-now)
@@ -10,8 +12,8 @@
   scripts/now_pages.py --selftest
 Never hand-edited: the pages are rebuilt by the record round and a stale page fails the gates like a stale release report. Sources are the
 paths the layout names (scripts/project.py DEFAULTS); nothing here reads a README. Sidecar keys read (references/print-kit.md §4): print_time_s,
-filament_g, objects, optional filament_changes, proves, order."""
-import glob, json, os, re, sys, time
+filament_g, objects, optional filament_changes, proves, order, stl_md5s, case_version."""
+import glob, hashlib, json, os, re, sys, time
 
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 from project import Project  # noqa: E402
@@ -112,16 +114,36 @@ def to_print(P):
     plates = sorted(glob.glob(os.path.join(P.root, kd, "*", "plates", "*.3mf.json")))
     if not plates:
         return "\n".join(L + [f"- nothing: no plate sidecar under `{kd}/<kit>/plates/`"]) + "\n"
-    L += ["Print order: the coupon, then ONE part, then the plate (the kit's START_HERE says how). Rows come from the plate sidecars.", "",
-          "| kit | plate | time | filament | changes | proves | start here |", "|---|---|---|---|---|---|---|"]
-    items = []
+    L += ["Print order: the coupon, then ONE part, then the plate (the kit's START_HERE says how). Rows come from the plate sidecars; a BROKEN row "
+          "is a plate the kit cannot vouch for (no .3mf, no START_HERE, a key missing, an STL md5 that is not a part of the kit).", "",
+          "| kit | plate | time | filament | changes | proves | case | start here | status |", "|---|---|---|---|---|---|---|---|---|"]
+    items = []; broken = 0
     for p in plates:
         s = json.load(open(p, encoding="utf-8"))
         kit = os.path.basename(os.path.dirname(os.path.dirname(p))); plate = os.path.basename(p)[: -len(".3mf.json")]
-        items.append((int(s.get("order", 99)), kit, plate, s))
-    for _, kit, plate, s in sorted(items, key=lambda x: (x[0], x[1], x[2])):
-        L.append(f"| {kit} | {plate} | {int(s.get('print_time_s', 0)) // 60} min | {s.get('filament_g', 0)} g | {int(s.get('filament_changes', 0))} changes | {s.get('proves', '')} | `{kd}/{kit}/START_HERE.md` |")
+        items.append((int(s.get("order", 99)), kit, plate, s, plate_problems(os.path.join(P.root, kd, kit), p, s)))
+    for _, kit, plate, s, why in sorted(items, key=lambda x: (x[0], x[1], x[2])):
+        broken += bool(why)
+        L.append(f"| {kit} | {plate} | {int(s.get('print_time_s', 0)) // 60} min | {s.get('filament_g', 0)} g | {int(s.get('filament_changes', 0))} changes | {s.get('proves', '')} | "
+                 f"{s.get('case_version', '-')} | `{kd}/{kit}/START_HERE.md` | {'BROKEN: ' + '; '.join(why) if why else 'ok'} |")
+    if broken:
+        L += ["", f"- {broken} broken plate(s)"]
     return "\n".join(L) + "\n"
+
+
+def plate_problems(kit_dir, sidecar, s):
+    """Why a plate row is BROKEN (references/print-kit.md §4): the .3mf beside the sidecar, START_HERE.md at the kit root, the two required
+    keys, and every `stl_md5s` entry among the md5s of <kit>/parts/*.stl. [] = sound."""
+    why = []
+    if not os.path.exists(sidecar[: -len(".json")]):
+        why.append("no .3mf")
+    if not os.path.exists(os.path.join(kit_dir, "START_HERE.md")):
+        why.append("no START_HERE.md")
+    why += [f"missing {k}" for k in ("print_time_s", "filament_g") if k not in s]
+    if s.get("stl_md5s"):
+        have = {hashlib.md5(open(f, "rb").read()).hexdigest() for f in glob.glob(os.path.join(kit_dir, "parts", "*.stl"))}
+        why += [f"stl md5 {str(m)[:8]} not in parts/" for m in s["stl_md5s"] if m not in have]
+    return why
 
 
 def to_order(P):
@@ -184,8 +206,15 @@ def selftest():
     w("20-design/arrival_checklist.yaml", "sections:\n  - key: B\n    rows:\n      - {id: B-1, item: 'switch sense', how: 'continuity', status: TODO}\n      - {id: B-2, item: 'polarity', how: 'Vf', status: 'DONE 2026-01-05'}\n      - {id: E-1, item: 'the owner decides the fit knob', how: 'print', status: TODO, opens: owner}\n")
     w("60-orders/PROCUREMENT.md", "| Line | Class | MPN | Order qty | Ordered |\n|---|---|---|---|---|\n| 1 | screw | M3x8 | 100 | |\n| 2 | insert | HS-M3 | 50 | 2026-01-02 |\n")
     w("60-orders/ORDER_rev0.md", "# order\n")
-    w("50-kits/p2s_case/START_HERE.md", "# start\n"); w("50-kits/p2s_case/plates/body.3mf.json", json.dumps({"print_time_s": 3600, "filament_g": 12.5, "objects": ["a"], "filament_changes": 2, "proves": "fit", "order": 2}))
-    w("50-kits/p2s_case/plates/coupon.3mf.json", json.dumps({"print_time_s": 600, "filament_g": 1.5, "objects": ["c"], "proves": "legend", "order": 1}))
+    import hashlib
+    w("50-kits/home_fdm/START_HERE.md", "# start\n"); w("50-kits/home_fdm/parts/a.stl", "solid a\nendsolid a\n"); amd5 = hashlib.md5(b"solid a\nendsolid a\n").hexdigest()
+    w("50-kits/home_fdm/plates/body.3mf", ""); w("50-kits/home_fdm/plates/body.3mf.json", json.dumps({"print_time_s": 3600, "filament_g": 12.5, "objects": ["a"], "filament_changes": 2, "proves": "fit", "order": 2, "stl_md5s": [amd5], "case_version": "v3"}))
+    w("50-kits/home_fdm/plates/coupon.3mf", ""); w("50-kits/home_fdm/plates/coupon.3mf.json", json.dumps({"print_time_s": 600, "filament_g": 1.5, "objects": ["c"], "proves": "legend", "order": 1}))
+    # BROKEN plates: no .3mf beside the sidecar, a missing key, an md5 that is not a part of the kit, a kit without START_HERE
+    w("50-kits/home_fdm/plates/no3mf.3mf.json", json.dumps({"print_time_s": 1, "filament_g": 1, "objects": [], "order": 9}))
+    w("50-kits/home_fdm/plates/nokey.3mf", ""); w("50-kits/home_fdm/plates/nokey.3mf.json", json.dumps({"print_time_s": 1, "objects": [], "order": 9}))
+    w("50-kits/home_fdm/plates/badmd5.3mf", ""); w("50-kits/home_fdm/plates/badmd5.3mf.json", json.dumps({"print_time_s": 1, "filament_g": 1, "objects": [], "order": 9, "stl_md5s": [amd5, "0" * 32]}))
+    w("50-kits/nostart/plates/x.3mf", ""); w("50-kits/nostart/plates/x.3mf.json", json.dumps({"print_time_s": 1, "filament_g": 1, "objects": [], "order": 9}))
     P = Project.find(start=d); pages = render(P)
     assert set(pages) == set(PAGES)
     wt = pages["WHERE_THINGS_STAND.md"]
@@ -195,7 +224,11 @@ def selftest():
     bl = pages["BLOCKED_ON_OWNER.md"]
     assert "D-07: widen root" in bl and "CC-010" not in bl and "E-1: the owner decides" in bl and "B-1" not in bl and "pending: bracket print" in bl, bl
     tp = pages["WHAT_TO_PRINT.md"]
-    assert "| p2s_case | coupon | 10 min | 1.5 g | 0 changes | legend |" in tp and "| p2s_case | body | 60 min | 12.5 g | 2 changes | fit |" in tp and tp.index("coupon") < tp.index("| body |"), tp
+    assert "| home_fdm | coupon | 10 min | 1.5 g | 0 changes | legend | - | `50-kits/home_fdm/START_HERE.md` | ok |" in tp and tp.index("coupon") < tp.index("| body |"), tp
+    assert "| home_fdm | body | 60 min | 12.5 g | 2 changes | fit | v3 | `50-kits/home_fdm/START_HERE.md` | ok |" in tp, tp
+    for row, why in (("no3mf", "BROKEN: no .3mf |"), ("nokey", "BROKEN: missing filament_g |"), ("badmd5", "BROKEN: stl md5 00000000 not in parts/ |"), ("| nostart | x |", "BROKEN: no START_HERE.md |")):
+        line = next(l for l in tp.splitlines() if row in l); assert line.endswith(why), (row, line)
+    assert "- 4 broken plate(s)" in tp and "objects_in_3mf" not in open(__file__).read().split("def selftest")[0], tp
     to = pages["WHAT_TO_ORDER.md"]
     assert "1 screw: M3x8 × 100" in to and "HS-M3" not in to and "ORDER_rev0.md" in to, to
     tc = pages["WHAT_TO_CHECK_ON_ARRIVAL.md"]

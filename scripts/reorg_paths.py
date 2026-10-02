@@ -19,7 +19,7 @@ one yaml block + one run, and the same table answers "where did docs/X go?" for 
 
 Rewrite rule: the literal `<old>` (longest first; not preceded by a word char, `-` or `<word>/`, so `./docs/X`, `{ROOT}/docs/X`, `HEAD:docs/X`
 match and `other-repo/docs/X` does not; not followed by a word char, so a directory key rewrites every sub-path under it and leaves
-`docs/X_old/` alone) -> `<new>`; plus the join forms `"docs" / "X"` and `"docs", "X"` for a one-level old path. Frozen dirs (uploaded
+`docs/X_old/` alone; never the image form `<old>/<old>:<tag>` or a bracketed domain tag `[<old>/<word>]`) -> `<new>`; plus the join forms `"docs" / "X"` and `"docs", "X"` for a one-level old path. Frozen dirs (uploaded
 packages, archived records, quote evidence: `reorg.frozen`, spelled by old or new name, `*` for one path segment) are moved when they
 are a move key but never rewritten or checked; this script's own files are never touched; binaries never.
 Learned the hard way (references/pitfalls.md, process): exempt the rewriter's OWN files from the rewrite, not only from the check; generated text
@@ -70,9 +70,22 @@ class Reorg:
     def frozen_match(self, p):
         return bool(self.frozen_rx and self.frozen_rx.match(p))
 
+    NOT_A_PATH = re.compile(r"/[\w.-]+:|/[\w-]+\]")   # `<old>/<old>:<tag>` is a container image; `[<old>/<word>]` a bracketed domain tag (pitfalls headings)
+
+    def hits(self, text):
+        """The old-literal matches that ARE paths: an image `kicad/kicad:10.0.5-full` and a domain tag `[kicad/drc]` are left alone (0.11.0 A-8)."""
+        out = []
+        for m in (self.old_rx.finditer(text) if self.old_rx else ()):
+            tail = self.NOT_A_PATH.match(text, m.end())
+            if tail and (tail.group(0).endswith(":") and tail.group(0)[1:-1] == m.group(1) or tail.group(0).endswith("]") and text[m.start() - 1:m.start()] == "["):
+                continue
+            out.append(m)
+        return out
+
     def sub(self, text):
         if self.old_rx:
-            text = self.old_rx.sub(lambda m: self.moves[m.group(1)], text)
+            keep = {m.start() for m in self.old_rx.finditer(text)} - {m.start() for m in self.hits(text)}
+            text = self.old_rx.sub(lambda m: m.group(0) if m.start() in keep else self.moves[m.group(1)], text)
         if self.join_rx:
             def join(m):
                 old = f"{m.group(1)}/{m.group(3)}"
@@ -105,7 +118,7 @@ class Reorg:
             t = self.read(p)
             if t is None or not self.old_rx:
                 continue
-            n = len(self.old_rx.findall(t)) + (len(self.join_rx.findall(t)) if self.join_rx else 0)
+            n = len(self.hits(t)) + (len(self.join_rx.findall(t)) if self.join_rx else 0)
             if n:
                 out.append((p, n))
                 if write:
@@ -150,7 +163,7 @@ class Reorg:
             if t is None:
                 continue
             for n, line in enumerate(t.splitlines(), 1):
-                for m in (self.old_rx.finditer(line) if self.old_rx else ()):
+                for m in self.hits(line):
                     bad.append(f"{p}:{n}: old literal `{m.group(0)}` -> `{self.moves[m.group(1)]}`")
                 for m in (self.join_rx.finditer(line) if self.join_rx else ()):
                     if f"{m.group(1)}/{m.group(3)}" in self.moves:
@@ -270,6 +283,12 @@ def selftest():
     assert "not in the rewrite list" in buf.getvalue() or "not in AFTER" in buf.getvalue(), buf.getvalue()
     os.remove(f"{d}/design/live.yaml"); g("rm", "-q", "design/live.yaml")
     assert R.check(verbose=False) == 0, "clean fixture must pass"
+    # a one-segment key must not rewrite non-paths: a container image `kicad/kicad:<tag>` and a bracketed domain tag `[kicad/drc]` (0.11.0 A-8)
+    d2 = tempfile.mkdtemp(prefix="hwfs_reorg2_"); open(f"{d2}/project.yaml", "w").write("project: {name: t}\nreorg: {moves: {kicad: 30-board/kicad}}\n")
+    R2 = Reorg(Project(f"{d2}/project.yaml"))
+    src = "image: kicad/kicad:10.0.5-full; tag [kicad/drc] and [kicad/gen]; path kicad/b/b.kicad_pcb; link [kicad/b/b.kicad_pcb](kicad/b/b.kicad_pcb)\n"
+    assert R2.sub(src) == "image: kicad/kicad:10.0.5-full; tag [kicad/drc] and [kicad/gen]; path 30-board/kicad/b/b.kicad_pcb; link [30-board/kicad/b/b.kicad_pcb](30-board/kicad/b/b.kicad_pcb)\n", R2.sub(src)
+    assert len(R2.hits(src)) == 3, [m.group(0) for m in R2.hits(src)]                                 # the image and the two tags are not literals to count or to flag
     print("selftest OK (directory + file moves longest-key first, rewrite idempotent, frozen dir moved whole and byte-identical under old and new "
           "spelling + glob, join forms, URLs untouched, trim/untrack/gitignore, dangling vs record vs allow_missing vs dir segment, --map sub-path, zero-loss proof pass + fail)")
     return 0

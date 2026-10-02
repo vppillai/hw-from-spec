@@ -428,6 +428,10 @@
     {
      "name": "the layout reference puts 00-now first and the sidecar keys are written in the print-kit reference",
      "run": "grep -q '^00-now/' \"$SKILL\"/references/project-yaml.md && grep -q 'print_time_s' \"$SKILL\"/references/print-kit.md"
+    },
+    {
+     "name": "the print-kit reference names the sidecar key `objects`, never `objects_in_3mf`",
+     "run": "! grep -q 'objects_in_3mf' \"$SKILL\"/references/print-kit.md"
     }
    ]
   }

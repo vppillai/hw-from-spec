@@ -23,7 +23,8 @@
       (hand-edited = FAIL), carry this VERSION, name an STL whose md5 equals `stl_md5`, carry an empty `fails` list, and every `accepted_fails`
       entry must still carry reason / date / evidence AND still be present in `print_targets.<record.target>.accepted` of the current
       project.yaml (an acceptance deleted from the yaml un-passes the body — "re-asserted every run"). Every STL of the record set under DIR's
-      parent (sibling `stl/*.stl` and the `paths.mech_record` glob) needs a same-md5 census record (blind review 0.8.0 F5).
+      parent (`<set>/parts/*.stl` when DIR is `<set>/checks/census`, else the sibling `stl/`, and the `paths.mech_record` glob) needs a same-md5
+      census record (blind review 0.8.0 F5).
   scripts/thin_wall_census.py --selftest
       pure python core (classification, clustering, wedge band, accepted matching, gating, the pure gate on a temp dir); with numpy + trimesh +
       scipy + shapely installed also the RECALL primitives: a 1.0 plate (WALL FAIL), a 45 deg prism (wedges, band under 1.5, 0 FAIL), a 2.0 plate
@@ -237,7 +238,7 @@ def pure_gate(dirs):
                     stl if os.path.isabs(stl) and (root is None or os.path.abspath(stl).startswith(root + os.sep)) else ""]
             path = next((p for p in cand if p and os.path.exists(p)), None)
             if path is None:
-                bad.append(f"{jp}: STL {stl!r} not found"); continue
+                bad.append(f"{jp}: STL {stl!r} not found — expected at {os.path.join(parts_dir(d), os.path.basename(stl))} (the records sit in {d.rstrip('/')}/)"); continue
             have.add(r.get("stl_md5"))
             if md5_of(path) != r.get("stl_md5"):
                 bad.append(f"{jp}: census of {str(r.get('stl_md5', '?'))[:8]} but the STL of record is {md5_of(path)[:8]} — rerun the census")
@@ -447,7 +448,8 @@ def selftest():
             put(dict(good, stl=os.path.join(other, "stl", "p_body.stl"))); assert pure_gate([C]) == [], "the sibling stl/ of the record set wins over a stored absolute path"
             put(dict(good, stl=os.path.join(other, "stl", "p_body.stl"), stl_md5=md5_of(os.path.join(other, "stl", "p_body.stl"))))
             assert any("STL of record" in b for b in pure_gate([C])), "a record of another tree's body fails against this tree's STL"
-            put(dict(good, stl=os.path.join(other, "stl", "zz_body.stl"))); assert any("not found" in b for b in pure_gate([C])), "an absolute path outside the tree with no sibling is not found"
+            put(dict(good, stl=os.path.join(other, "stl", "zz_body.stl")))
+            nf = [b for b in pure_gate([C]) if "not found" in b]; assert nf and f"expected at {os.path.join(d, 'stl', 'zz_body.stl')} (the records sit in {C}/)" in nf[0], ("a missing STL names its expected path", nf)
         put(dict(good, stl="stl/p_body.stl")); assert pure_gate([C]) == [], "a project-relative path resolves from the record set's parent"
         put(good)
         assert any("no census JSON" in b for b in pure_gate([os.path.join(d, "none")]))

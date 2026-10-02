@@ -40,12 +40,13 @@ DEFAULTS = {
     # answer pages) 10-spec 20-design 30-board 40-case 50-kits 60-orders 70-release 80-reviews 90-log; folders are named for what they hold
     # (a revision is rev0, a kit is its print target), the hash lives inside. A re-layout is a `reorg:` block + scripts/reorg_paths.py.
     "paths": {"now_dir": "00-now", "spec_dir": "10-spec", "spec": "10-spec/SPEC.md", "kickoff_answers": "10-spec/KICKOFF_ANSWERS.md",
-              "datasheet_notes": "10-spec/datasheet_notes",
+              "datasheet_notes": "10-spec/datasheet_notes", "spec_errata": "10-spec/SPEC_ERRATA.md",
               "design_dir": "20-design", "test_plan": "20-design/TEST_PLAN.md", "erc_accept": "20-design/erc_accept.yaml",
-              "traceability_yaml": "20-design/traceability.yaml",
+              "traceability_yaml": "20-design/traceability.yaml", "dfm_thresholds": "20-design/dfm_thresholds.json",
               "board_dir": "30-board", "layout_dir": "30-board/layout", "fab_dir": "30-board/fab",
+              "dfm_items": "30-board/layout/dfm_items.json", "dfm_report": "30-board/layout/dfm.json",
               "case_dir": "40-case", "mech_record": "40-case/*/parts/*.stl",
-              "kits_dir": "50-kits",
+              "kits_dir": "50-kits", "kits_mirror": "~/Downloads/<project>_kits",   # outside the tree; the kit writer expands <project>
               "orders_dir": "60-orders", "parts_verification": "60-orders/PARTS_VERIFICATION.md", "procurement": "60-orders/PROCUREMENT.md",
               "quotes_dir": "60-orders/quotes",
               "release_dir": "70-release", "production_dir": "70-release", "reports_dir": "70-release/reports",
@@ -108,7 +109,10 @@ class Project:
     def rev(self):
         """The project revision that names folders (`project.revision`, default rev0): the fab package, the cut, collateral and marketing
         folders are `<dir>/<rev>/`; the record hash lives INSIDE each (board_id.txt, RENDERS.md, MANIFEST), never in a folder name."""
-        return str(self.get("project.revision", "rev0"))
+        v = str(self.get("project.revision") or "rev0")
+        if not re.fullmatch(r"[A-Za-z0-9._-]+", v):
+            sys.exit(f"project.revision must be a folder-safe name (rev0, rev1a), not {v!r} — it names 30-board/fab/<rev>, 70-release/<rev>, …")
+        return v
 
     def tool(self, key):
         v = self.get(f"tools.{key}")
@@ -184,7 +188,7 @@ def open_decisions(path):
 
 def required_gate_lines(P):
     """An artefact that exists must have its gate line in gates.adopt (commented lines are not lines): the schematic -> erc_gate.py, the board ->
-    a DRC gate, the STL set (paths.mech_record) -> thin_wall_census --gate-dir AND print_dfm --gate, 20-design/arrival_checklist.yaml -> arrival_checklist.py --check. -> problem list (blind review 0.8.0 F11)."""
+    a DRC gate, EVERY STL set of paths.mech_record -> thin_wall_census --gate-dir AND print_dfm --gate naming that set's folder, 20-design/arrival_checklist.yaml -> arrival_checklist.py --check. -> problem list (blind review 0.8.0 F11)."""
     lines = " ".join(str(x) for x in (P.get("gates.adopt") or []))
     bad = []
     sch = P.path("schematic")
@@ -194,10 +198,15 @@ def required_gate_lines(P):
     if board and os.path.exists(board) and not re.search(r"\bdrc", lines, re.I):   # ponytail: a token starting with drc (drc_gate.py, DRC); a named gates.drc key if a project games it
         bad.append(f"board {P.get('paths.board')} exists but gates.adopt has no DRC gate line")
     pat = P.get("paths.mech_record")
-    if pat and glob.glob(os.path.join(P.root, pat)):
-        for tok, what in (("--gate-dir", "thin_wall_census.py --gate-dir"), ("print_dfm.py --gate", "print_dfm.py --gate")):
-            if tok not in lines:
-                bad.append(f"STL set {pat} has files but gates.adopt has no `{what}` line")
+    # per set (40-case/<set>/parts/*.stl -> 40-case/<set>): a census --gate-dir AND a print_dfm --gate argument must sit under that set's folder
+    # (its checks dir); a token somewhere in gates.adopt gates only the set it names (review 0.11.0 B-4)
+    sets = sorted({os.path.relpath(os.path.dirname(os.path.dirname(f)), P.root) for f in glob.glob(os.path.join(P.root, pat))}) if pat else []
+    census = re.findall(r"--gate-dir\s+(\S+)", lines); dfm = re.findall(r"print_dfm\.py\s+--gate\s+(\S+)", lines)
+    for st in sets:
+        under = lambda args: any(a.startswith(st + "/") for a in args)
+        missing = [w for args, w in ((census, f"thin_wall_census.py --gate-dir {st}/checks/census"), (dfm, f"print_dfm.py --gate {st}/checks/dfm")) if not under(args)]
+        if missing:
+            bad.append(f"STL set {st} has files but gates.adopt has no " + " / ".join(f"`{w}`" for w in missing) + " line")
     ac = P.get("arrival_checklist.yaml", "20-design/arrival_checklist.yaml")
     if os.path.exists(os.path.join(P.root, ac)) and "arrival_checklist.py --check" not in lines:
         bad.append(f"{ac} exists but gates.adopt has no `scripts/arrival_checklist.py --check` line")
@@ -342,10 +351,20 @@ def selftest():
     # the layout of record: every default sits under one of the ten numbered folders; an explicit old-layout key wins unchanged; rev defaults to rev0
     top = {"00-now", "10-spec", "20-design", "30-board", "40-case", "50-kits", "60-orders", "70-release", "80-reviews", "90-log"}
     for k, v in DEFAULTS["paths"].items():
-        assert v.split("/")[0] in top, (k, v)
+        assert k == "kits_mirror" or v.split("/")[0] in top, (k, v)
     assert P.get("paths.mech_record") == "40-case/*/parts/*.stl" and P.path("kits_dir") == f"{d}/50-kits" and P.rev() == "rev0"
+    assert P.path("spec_errata") == f"{d}/10-spec/SPEC_ERRATA.md" and P.path("dfm_thresholds") == f"{d}/20-design/dfm_thresholds.json"
+    assert P.path("dfm_items") == f"{d}/30-board/layout/dfm_items.json" and P.path("dfm_report") == f"{d}/30-board/layout/dfm.json"
+    assert P.get("paths.kits_mirror") == "~/Downloads/<project>_kits", "the kit writer expands <project>"
     P.cfg.setdefault("paths", {})["gates"] = "legacy/GATES.md"; P.cfg.setdefault("project", {})["revision"] = "rev1"
     assert P.path("gates") == f"{d}/legacy/GATES.md" and P.rev() == "rev1", "an explicit path / revision wins over the layout default"
+    for v in (None, ""):
+        P.cfg["project"]["revision"] = v; assert P.rev() == "rev0", f"revision {v!r} -> rev0"
+    P.cfg["project"]["revision"] = "a b"
+    try:
+        P.rev(); assert False, "a space in revision must exit"
+    except SystemExit as e:
+        assert "folder-safe" in str(e)
     del P.cfg["paths"]["gates"]; P.cfg["project"].pop("revision")
     assert P.tool("python") == f"{d}/.venv/bin/python" and P.tool("kicad_cli") == "kicad-cli"
     assert P.id_re().findall("D-01 AG-002 B-03 CC-004") == ["D-01", "AG-002", "B-03"] and P.decision_re().findall("D-2a AG-002 B-03") == ["D-2a", "AG-002"]
@@ -365,8 +384,14 @@ def selftest():
     open(f"{d}/D.md", "w").write("| ID | Date | Status | Topic | P | R |\n|---|---|---|---|---|---|\n| **D-07** | d | **OPEN** | widen root | p | r |\n| CC-010 | d | APPLIED | x | p | r |\n| CC-011 | d | OPEN (owner) | y | p | r |\n")
     assert open_decisions(f"{d}/D.md") == {"D-07": "widen root p r", "CC-011": "y p r"}, open_decisions(f"{d}/D.md")
     P.cfg["paths"] = {"mech_record": "40-case/*/parts/*.stl", "schematic": "k/k.kicad_sch"}; P.cfg["gates"] = {"adopt": ["$PY scripts/known_issues.py --check"]}
-    bad = required_gate_lines(P); assert len(bad) == 2 and "--gate-dir" in bad[0] and "print_dfm.py --gate" in bad[1], bad
+    bad = required_gate_lines(P); assert len(bad) == 1 and "40-case/mjf_case" in bad[0] and "--gate-dir" in bad[0] and "print_dfm.py --gate" in bad[0], bad
     P.cfg["gates"]["adopt"] += ["$PY scripts/thin_wall_census.py --gate-dir out/x/census", "$PY scripts/print_dfm.py --gate out/x/dfm"]
+    bad = required_gate_lines(P); assert len(bad) == 1 and "40-case/mjf_case" in bad[0], ("a gate line must name the set's checks dir", bad)
+    P.cfg["gates"]["adopt"] += ["$PY scripts/thin_wall_census.py --gate-dir 40-case/mjf_case/checks/census", "$PY scripts/print_dfm.py --gate 40-case/mjf_case/checks/dfm"]
+    assert required_gate_lines(P) == []
+    os.makedirs(f"{d}/40-case/other/parts"); open(f"{d}/40-case/other/parts/x.stl", "wb").write(b"X")   # a second set with STLs and no gate line
+    bad = required_gate_lines(P); assert len(bad) == 1 and "40-case/other" in bad[0] and "mjf_case" not in bad[0], bad
+    P.cfg["gates"]["adopt"] += ["$PY scripts/thin_wall_census.py --gate-dir 40-case/other/checks/census --x", "$PY scripts/print_dfm.py --gate 40-case/other/checks/dfm"]
     assert required_gate_lines(P) == []
     os.makedirs(f"{d}/k"); open(f"{d}/k/k.kicad_sch", "w").write("x"); assert "erc_gate.py" in required_gate_lines(P)[0]
     os.makedirs(f"{d}/20-design"); open(f"{d}/20-design/arrival_checklist.yaml", "w").write("sections: []\n"); assert any("arrival_checklist.py" in b for b in required_gate_lines(P))
