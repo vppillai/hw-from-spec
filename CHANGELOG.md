@@ -1,6 +1,6 @@
 # CHANGELOG — hw-from-spec
 
-## Current state (0.10.6) — read this instead of replaying the entries below
+## Current state (0.10.7) — read this instead of replaying the entries below
 
 - **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
   twelve batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
@@ -20,10 +20,19 @@
 - **References**: project-yaml, kickoff-questionnaire, schematic-phase, pcb-layout-dfm, fab-dfm, case-pipeline, dfm-printed-enclosure,
   print-dfm, print-kit, fdm-print-optimisation, cnc-enclosure, fea-stage, part-verification, software-track, release-and-cut, vendor-review,
   agent-ops, pitfalls — one home per rule, the others link.
-- **Checks**: three read-only tiers behind `scripts/iteration_gate.sh` (inner = a change's `--check` + grader set, standard = the adopt gates,
-  release = adopt gates + clone gate); `smoke/run_smoke.sh` runs every script selftest, the rule greps, the enforcement negatives, both lints
+- **Checks**: three read-only tiers — inner `scripts/iteration_gate.sh [-- <cmd> ...]` (a change's `--check` + grader set), standard
+  `scripts/adopt_gates.sh --no-clone` (`make gates`), release `scripts/adopt_gates.sh` (`make check`); `smoke/run_smoke.sh` runs every script selftest, the rule greps, the enforcement negatives, both lints
   and the evals; 17 evals
   with mechanical checks, `docs/reviews/INDEX.md` and `docs/retro/INDEX.md` list every review and retro.
+
+## 0.10.7 — 2026-10-02 — the inner-tier runner only; standard / release are the existing adopt-gates commands
+
+### Changed
+- `scripts/iteration_gate.sh` drops `--tier`: it is the INNER tier (`scripts/iteration_gate.sh [-- <command> ...]`, the standing set in
+  `gates.iteration.inner` plus this change's commands, read-only guarded, empty refused). The `--tier standard` / `--tier release` aliases of
+  0.10.6 added no capability over `scripts/adopt_gates.sh --no-clone` (`make gates`) and `scripts/adopt_gates.sh` (`make check`) and are gone
+  (owner: "do we even need that alias?" — no). README, SKILL §2, `project-yaml.md`, the template, `agent-ops.md` §8 item 9 and the Makefile
+  target comments name the three tiers as three existing commands.
 
 ## 0.10.6 — 2026-10-02 — explicit fast validation tiers
 

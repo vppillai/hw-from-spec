@@ -187,7 +187,7 @@ the ENV.md row `scripts/project.py env` prints on day 1. The rules are in the or
    coordinator edits it and runs ONE preview through the wrapper inline; a new feature, a new gate, or anything touching the records = an agent
    with its own worktree.** Restructures and full rounds are delegated; colour, a position, a label text are not. A value no generator reads (a
    sidecar row, a text cell) is an inline edit with no chain re-run: run the generator whose `--check` says STALE, nothing more. The inner
-   tier runner (`scripts/iteration_gate.sh --tier inner -- "<generator> --check" "<grader>"`) is that loop under the read-only guard.
+   tier runner (`scripts/iteration_gate.sh -- "<generator> --check" "<grader>"`) is that loop under the read-only guard.
 10. **The project's CLAUDE.md carries the five operating lines** (`templates/CLAUDE.md` "Agent operations": wrapper only, ≤ pool writing agents,
     one record round per batch, the caching + engine policy, one-knob changes inline) with the host's pool number filled from `scripts/project.py env`.
 
