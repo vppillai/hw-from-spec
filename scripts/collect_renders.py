@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""scripts/collect_renders.py — renderings are release data: collect them under <collateral_dir>/<rev>/renders/ with an md5 + grade index.
+r"""scripts/collect_renders.py — renderings are release data: collect them under <collateral_dir>/<rev>/renders/ with an md5 + grade index.
 
   python scripts/collect_renders.py [--project project.yaml]
   python scripts/collect_renders.py --check          # (alias --dry) exit 1 when any rule would be redone or a source is missing; writes nothing

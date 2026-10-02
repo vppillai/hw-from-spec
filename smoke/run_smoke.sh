@@ -72,7 +72,9 @@ for s in "$SKILL"/scripts/*.py "$SKILL"/scripts/*.sh; do
   [[ -x "$s" ]] || { echo "FAIL: $s is not executable"; exit 1; }; head -1 "$s" | grep -q '^#!' || { echo "FAIL: $s has no shebang"; exit 1; }
   grep -q -- '--selftest' "$s" || { echo "FAIL: $s has no --selftest"; exit 1; }
 done
-(cd "$SKILL" && git ls-files -s scripts | awk '$4 !~ /\.yaml$/ && $1 != "100755" {bad=1; print "FAIL: git mode " $1 " on " $4} END {exit bad}') || exit 1   # the lint term file is data
+if git -C "$SKILL" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  (cd "$SKILL" && git ls-files -s scripts | awk '$4 !~ /\.yaml$/ && $1 != "100755" {bad=1; print "FAIL: git mode " $1 " on " $4} END {exit bad}') || exit 1   # the lint term file is data
+else echo "NOTE: not a git checkout — modes checked with test -x"; for s in "$SKILL"/scripts/*.py "$SKILL"/scripts/*.sh; do [[ -x "$s" ]] || { echo "FAIL: $s is not executable"; exit 1; }; done; fi   # a git archive / ZIP copy (review 0.11.0 row 4)
 grep -q 'abspath(__file__)' "$SKILL"/scripts/*.py && { echo "FAIL: a script resolves its own path with abspath (a symlinked scripts/ points at the project, not the skill — F4)"; exit 1; }
 python3 "$SKILL/scripts/project.py" scaffold --scope ee /dev/null >/dev/null || { echo "FAIL: project.py scaffold must run on a stock python3 without pyyaml (F2)"; exit 1; }
 grep -q 'kickoff --check' "$SKILL/SKILL.md" && grep -q '^kickoff:' "$SKILL/templates/project.yaml" && grep -q '^board:' "$SKILL/templates/project.yaml" || { echo "FAIL: the kickoff answers lost their machine-readable home (F10)"; exit 1; }
@@ -88,6 +90,7 @@ grep -q 'references/pcb-layout-dfm.md' "$SKILL/SKILL.md" || { echo "FAIL: SKILL.
 LEAK='(^|[^a-z0-9])p2s([^a-z0-9]|$)|presets\.P2S|lap\.ring_down|aec[-_]tester|tenstorrent'   # generic: ok (the lint patterns themselves)
 grep -rqiE "$LEAK" "$SKILL/SKILL.md" "$SKILL/README.md" "$SKILL/templates" "$SKILL/workflows" "$SKILL/evals" && { echo "FAIL: a source-project identifier leaked into SKILL / README / templates (C-15 / B-34)"; exit 1; }
 grep -q '^## 13. Retro' "$SKILL/SKILL.md" || { echo "FAIL: SKILL.md lost the retro phase (§13)"; exit 1; }
+grep -rnE '30-board/kicad/(kicad:|drc|gen)' "$SKILL/templates" "$SKILL/references" "$SKILL/SKILL.md" && { echo "FAIL: the kicad/ -> 30-board/kicad/ reorg rewrote a non-path (the CI image kicad/kicad:<tag> or a kicad/drc, kicad/gen domain tag) — restore the literal (0.11.0 A-8)"; exit 1; }
 # 0.10.0: the arrival checklist, the spec errata, the review protocol with a record-reading verifier, the owner-read tag, the slicer optimisation home
 grep -q '^### 10.1 Before the order ships' "$SKILL/SKILL.md" && test -f "$SKILL/templates/20-design/arrival_checklist.yaml" && test -f "$SKILL/templates/10-spec/SPEC_ERRATA.md" || { echo "FAIL: SKILL.md / templates lost the arrival checklist or the SPEC errata (0.10.0)"; exit 1; }
 # 0.10.1: the engine rule (previews fast, geometry of record on the gate-passing engine), the per-preset engine key, the CLAUDE.md agent-ops block, the seeded sampler
@@ -104,7 +107,8 @@ for s in "$SKILL"/scripts/*.py "$SKILL"/scripts/*.sh; do
     print_dfm.py|stability.py) [[ -n "$MESH" ]] || continue ;;
   esac
   case "$s" in
-    *.py) "$PY" "$s" --selftest ;;
+    *.py) "$PY" -W error::SyntaxWarning -m py_compile "$s" || { echo "FAIL: $s compiles with a SyntaxWarning (a stray backslash in a docstring — 0.11.0 row 17)"; exit 1; }
+          "$PY" "$s" --selftest ;;
     *.sh) "$s" --selftest ;;
   esac
 done
@@ -193,6 +197,13 @@ PYEOF
  "$PY" scripts/thin_wall_census.py --gate-dir 40-case/pre/checks/census >/dev/null && { echo "FAIL (F28): a census record edited after signing passed the gate"; exit 1; }
  git init -q && git add -A && git -c user.name=smoke -c user.email=s@s commit -qm nomesh
  out=$(scripts/adopt_gates.sh --no-clone 2>&1 || true); echo "$out" | grep -q "GATE FAILED: an artefact exists whose gate line is missing" || { echo "FAIL (F11): an STL set with no census / print-DFM gate line in gates.adopt was green"; echo "$out"; exit 1; }
+ # 0.11.0 B-4: the gate lines are per set — a second set with STLs and no line naming its checks dir fails, and the message names the set
+ printf 'gates: {adopt: ["$PY scripts/thin_wall_census.py --gate-dir 40-case/pre/checks/census", "$PY scripts/print_dfm.py --gate 40-case/pre/checks/dfm"], clone: []}\n' > gates.yaml
+ sed -i.bak '/^gates:/d' project.yaml; cat gates.yaml >> project.yaml; rm gates.yaml
+ "$PY" scripts/project.py gates-required >/dev/null || { echo "FAIL (B-4): the set pre has both gate lines naming its checks dir and gates-required failed"; exit 1; }
+ mkdir -p 40-case/other/parts; printf 'solid x\nendsolid x\n' > 40-case/other/parts/x.stl
+ out=$("$PY" scripts/project.py gates-required 2>&1 || true); echo "$out" | grep -q 'GATES REQUIRED: STL set 40-case/other' || { echo "FAIL (B-4): a second STL set (other) with no gate line of its own was green"; echo "$out"; exit 1; }
+ rm -r 40-case/other
  printf '# GATES\n| Gate | Meaning | Prerequisites | Owner approval |\n|---|---|---|---|\n| **G0** | spec | x | _not yet approved_ |\n| **Release** | reports | y | _not yet written_ |\n' > 90-log/GATES.md
  "$PY" scripts/gate_check.py G0 >/dev/null && { echo "FAIL (F12): an empty G0 cell read as approved"; exit 1; }
  printf '| **Release** | reports | y | clear to build — smoke, 2026-01-04, record 0000 |\n' >> 90-log/GATES.md
