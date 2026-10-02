@@ -91,6 +91,7 @@ tools:
   python: .venv/bin/python
   kicad_cli: {{CAD_CLI_PATH}}                 # the key names are historical: put YOUR CAD's CLI here ({KICAD_CLI} in commands), whatever the CAD (mech: openscad) {{ee,both}}
   kicad_cli: {{GEOMETRY_CLI_PATH}}            # mech scope: the geometry CLI ({KICAD_CLI} in render commands), e.g. openscad {{mech}}
+  geometry_cli: {{GEOMETRY_CLI_PATH}}         # the geometry kernel CLI (OpenSCAD or equivalent) {{mech,both}}
   slicer: {{SLICER_CLI_PATH}}                 # the slicer CLI of the home FDM preset (plates, g-code reads) {{mech,both}}
   kicad_python: {{CAD_PYTHON_PATH}}           # the CAD's own Python ({KPY}); python3 when the CAD has none {{ee,both}}
 fab_dfm:                                      # the board's fab-DFM mirror (references/fab-dfm.md; `dfm:` is read as an alias) {{ee,both}}
