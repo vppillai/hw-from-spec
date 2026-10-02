@@ -10,6 +10,7 @@ CLI (for shell scripts):
   scripts/project.py root
   scripts/project.py scope                    # ee | mech | both (project.scope, default both)
   scripts/project.py record                   # "<label> <md5>" of the record of record: the board (ee/both) or the STL set paths.mech_record (mech)
+  scripts/project.py rev                      # the revision that names folders (project.revision, default rev0): <fab_dir>/<rev>/, <production_dir>/<rev>/, collateral/<rev>/
   scripts/project.py scaffold --scope S FILE...   # resolve the {{ee,both}}-style scope tags of copied templates in place: a tagged line stays only
                                               # when S is in its list (tag removed); untagged lines stay; the {{SCOPE}} slot becomes S. Then `slots`.
   scripts/project.py gates-required           # exit 1 when an artefact exists (schematic, board, the STL set) and gates.adopt has no gate line for it
@@ -397,7 +398,7 @@ def main(argv):
         print(__doc__); return
     if len(argv) > 1 and argv[1] == "env":
         print(host_row()); return
-    if len(argv) < 2 or argv[1] not in ("get", "path", "root", "scope", "record", "scaffold", "gates-required", "slots", "kickoff"):
+    if len(argv) < 2 or argv[1] not in ("get", "path", "root", "scope", "rev", "record", "scaffold", "gates-required", "slots", "kickoff"):
         sys.exit(__doc__)
     if argv[1] == "scaffold":
         if len(argv) < 5 or argv[2] != "--scope":
@@ -425,6 +426,8 @@ def main(argv):
         print(P.root)
     elif argv[1] == "scope":
         print(P.scope())
+    elif argv[1] == "rev":
+        print(P.rev())   # the revision that names the fab package, the cut, collateral and marketing folders
     elif argv[1] == "record":
         lbl, m = P.record_md5(); print(f"{lbl} md5 {m or 'MISSING'}")
     elif len(argv) < 3:
