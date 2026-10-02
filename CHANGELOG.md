@@ -58,6 +58,22 @@ Spec: `docs/superpowers/specs/2026-10-02-navigable-layout-design.md`; plan: `doc
 - `scripts/reorg_paths.py`: whole-directory moves with frozen content, `--map` for sub-paths; the `reorg:` reference carries the migration from
   a `docs/`-style layout to this tree as its worked example.
 
+### Review round (double-blind, before the merge — `docs/reviews/blind_review_0.11.0_{A,B,C,verified}.md`)
+Three blind reviewers on two model families and three setups (an Agent-tool reviewer without the mesh libraries, one with them, and the GitHub
+Copilot CLI on gpt-5.4) got the committed tree and a checklist only; a verifier with the spec, the plan and the tree classified the 61 finding
+ids into 39 rows (20 CONFIRMED, 10 PARTLY, 4 ALREADY DECIDED, 5 REFUTED). All five reviewers' agreements were real: the smoke assumed a git
+checkout; `iteration_gate.sh --selftest` found no yaml-capable Python; the README copy-and-scaffold path was broken (lost scaffold line, dead
+`design/` glob, the arrival yaml copied on day 1); pre-layout `design/` / `out/` literals survived the sweep in templates and references (plus
+a container image and two domain tags rewritten as paths); and a fresh project was not green on day 1 — the template's two order cells shipped
+prose that both parsers read as an approval. Fixed: GATES cells `_not yet approved_`; README step 4 scoped by `A0` and ending with scaffold +
+slots; SKILL §0 step 6 runs `now_pages.py`; one records spelling `40-case/<set>/{parts,checks/census,checks/dfm}` everywhere and the gates
+locate `parts/` from `checks/`; set and kit folders are named by the `print_targets` key (non-target sets pass `--target`); `gates-required`
+demands a gate line per set; `SPEC_ERRATA` has one home; `ARRIVAL_CHECKLIST_<rev>`; cut deliverables per scope; `project.revision` validated;
+new `paths:` keys for the DFM mirror files and the kit mirror; `tools.geometry_cli`; plate sidecars carry `stl_md5s` + `case_version` and
+broken plates are listed as such; the smoke runs on a non-git copy, fails on a `SyntaxWarning`, and greps for the old roots; `stability.py`
+exits 2 without the mesh libraries. Acceptance: fresh `ee`, `mech` and `both` projects from the README block are green on day 1 (adopt + clone
+gates, five pages present, no gate approved).
+
 ### Not done
 - Existing projects are migrated by their own `reorg:` block (two phases: documents / kits / release / now-pages, then the `out/` split); this
   release changes no record's content, md5 or rule-set version.
