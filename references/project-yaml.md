@@ -201,7 +201,7 @@ Four rules make the tree the navigation, so no README is needed to use it:
   number (ee: no `40-case/`, `50-kits/`; mech: no `30-board/`).
 Every path is a `paths:` key (`scripts/project.py` DEFAULTS; the commented block in `templates/project.yaml` lists them) and the templates folder
 mirrors the tree (`templates/90-log/DECISIONS.md` is copied to `90-log/DECISIONS.md`). Every path SKILL.md / the references / the templates spell
-is this layout. Changing it later is a decision row + a `reorg:` block + `scripts/reorg_paths.py` (release-and-cut §9, the `reorg:` section below)
+is this layout. Changing it later is a decision row + a `reorg:` block + `scripts/reorg_paths.py` (release-and-cut §9, the `reorg:` section above)
 — never a hand sweep; frozen records keep the old paths and `--map` explains them.
 ## Conventions the scripts rely on
 
