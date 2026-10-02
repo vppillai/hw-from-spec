@@ -25,7 +25,7 @@ Generated records read each other, so the LAST round has an order, not a digest 
 *italics* — a project without one skips that step):
 `known_issues` → *order sheet / package notes* → `collect_renders` (the reports hash its index) → `release_report` → `traceability` → `release_report`
 (the matrix's report rows flip with the reports' freshness and the report quotes the matrix line: dependent writer, matrix, dependent writer again)
-→ *analysis_index* → *render_pdf* (its PDF source md5s) → *production_cut build* LAST (the manifest stamps what the PDF renderer and the collector
+→ `now_pages` (the five answers of `00-now/` read the gates, decisions, status, blockers, the arrival yaml and the kit sidecars) → *analysis_index* → *render_pdf* (its PDF source md5s) → *production_cut build* LAST (the manifest stamps what the PDF renderer and the collector
 wrote) → commit. Afterwards only the pure `--check`s; a `clone_gate.sh --regen` run AFTER the build makes the cut STALE although the reports are
 content-identical (`production_cut --check` compares md5s, `release_report --check` strips the volatile lines) — a confirming regen copy-back is
 discarded with `git checkout` once its diff is timestamp-only.
