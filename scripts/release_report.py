@@ -176,9 +176,10 @@ def section_traceability(ctx, P, rep):
 
 
 def section_dfm(ctx, P, rep):
-    d = ctx.json(P.get("fab_dfm.report") or P.get("dfm.report", "out/dfm.json"))
+    path = P.get("fab_dfm.report") or P.get("dfm.report") or P.get("paths.dfm_report")
+    d = ctx.json(path)
     if d is None:
-        return ["## Fab DFM mirror", "", f"MISSING: `{P.get('fab_dfm.report') or P.get('dfm.report', 'out/dfm.json')}`", ""]
+        return ["## Fab DFM mirror", "", f"MISSING: `{path}`", ""]
     return ["## Fab DFM mirror", "", f"Open (not accepted) items: **{d.get('open')}** of {len(d.get('items', []))} measured; thresholds `{d.get('thresholds')}`", ""]
 
 
@@ -250,7 +251,7 @@ def selftest():
     assert "`30-board/fab/rev0/` — md5" in t and "`30-board/fab/rev1/` — md5" not in t and "recorded in `30-board/fab/rev0/board_id.txt`" in t, "the package is chosen by the md5 inside board_id.txt, the folder name is only a name"
     assert f"| record | board md5 `{md5[:8]}` |" in t and "Source: `70-release/collateral/rev0/renders/RENDERS.md`" in t, "collateral is read at <collateral_dir>/<rev>/renders/"
     assert "case.version: v1" in t and "case.pieces: ['tray', 'hood']" in t and "skip me" not in t
-    assert "MISSING: `90-log/KNOWN_ISSUES.md`" in t and "MISSING: `90-log/TRACEABILITY.md`" in t and "MISSING: `out/dfm.json`" in t
+    assert "MISSING: `90-log/KNOWN_ISSUES.md`" in t and "MISSING: `90-log/TRACEABILITY.md`" in t and "MISSING: `30-board/layout/dfm.json`" in t
     assert run(P, True) == 0
     for f in glob.glob(f"{d}/**/*", recursive=True):
         os.utime(f, (0, 0))

@@ -40,12 +40,13 @@ DEFAULTS = {
     # answer pages) 10-spec 20-design 30-board 40-case 50-kits 60-orders 70-release 80-reviews 90-log; folders are named for what they hold
     # (a revision is rev0, a kit is its print target), the hash lives inside. A re-layout is a `reorg:` block + scripts/reorg_paths.py.
     "paths": {"now_dir": "00-now", "spec_dir": "10-spec", "spec": "10-spec/SPEC.md", "kickoff_answers": "10-spec/KICKOFF_ANSWERS.md",
-              "datasheet_notes": "10-spec/datasheet_notes",
+              "datasheet_notes": "10-spec/datasheet_notes", "spec_errata": "10-spec/SPEC_ERRATA.md",
               "design_dir": "20-design", "test_plan": "20-design/TEST_PLAN.md", "erc_accept": "20-design/erc_accept.yaml",
-              "traceability_yaml": "20-design/traceability.yaml",
+              "traceability_yaml": "20-design/traceability.yaml", "dfm_thresholds": "20-design/dfm_thresholds.json",
               "board_dir": "30-board", "layout_dir": "30-board/layout", "fab_dir": "30-board/fab",
+              "dfm_items": "30-board/layout/dfm_items.json", "dfm_report": "30-board/layout/dfm.json",
               "case_dir": "40-case", "mech_record": "40-case/*/parts/*.stl",
-              "kits_dir": "50-kits",
+              "kits_dir": "50-kits", "kits_mirror": "~/Downloads/<project>_kits",   # outside the tree; the kit writer expands <project>
               "orders_dir": "60-orders", "parts_verification": "60-orders/PARTS_VERIFICATION.md", "procurement": "60-orders/PROCUREMENT.md",
               "quotes_dir": "60-orders/quotes",
               "release_dir": "70-release", "production_dir": "70-release", "reports_dir": "70-release/reports",
@@ -345,8 +346,11 @@ def selftest():
     # the layout of record: every default sits under one of the ten numbered folders; an explicit old-layout key wins unchanged; rev defaults to rev0
     top = {"00-now", "10-spec", "20-design", "30-board", "40-case", "50-kits", "60-orders", "70-release", "80-reviews", "90-log"}
     for k, v in DEFAULTS["paths"].items():
-        assert v.split("/")[0] in top, (k, v)
+        assert k == "kits_mirror" or v.split("/")[0] in top, (k, v)
     assert P.get("paths.mech_record") == "40-case/*/parts/*.stl" and P.path("kits_dir") == f"{d}/50-kits" and P.rev() == "rev0"
+    assert P.path("spec_errata") == f"{d}/10-spec/SPEC_ERRATA.md" and P.path("dfm_thresholds") == f"{d}/20-design/dfm_thresholds.json"
+    assert P.path("dfm_items") == f"{d}/30-board/layout/dfm_items.json" and P.path("dfm_report") == f"{d}/30-board/layout/dfm.json"
+    assert P.get("paths.kits_mirror") == "~/Downloads/<project>_kits", "the kit writer expands <project>"
     P.cfg.setdefault("paths", {})["gates"] = "legacy/GATES.md"; P.cfg.setdefault("project", {})["revision"] = "rev1"
     assert P.path("gates") == f"{d}/legacy/GATES.md" and P.rev() == "rev1", "an explicit path / revision wins over the layout default"
     for v in (None, ""):

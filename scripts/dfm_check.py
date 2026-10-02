@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """scripts/dfm_check.py — the fab-DFM mirror: grading engine, threshold file, acceptance list, report (references/fab-dfm.md).
 
-  python scripts/dfm_check.py [--items out/dfm_items.json] [--thresholds design/dfm_thresholds.json] [--accept 20-design/board.yaml] [--json out/dfm.json]
+  python scripts/dfm_check.py [--items 30-board/layout/dfm_items.json] [--thresholds 20-design/dfm_thresholds.json] [--accept 20-design/board.yaml] [--json 30-board/layout/dfm.json]
   python scripts/dfm_check.py --check      # exit 1 when the on-disk report (dfm.report) differs from the regenerated one, or items are open
   python scripts/dfm_check.py --selftest
 
@@ -16,7 +16,7 @@ so the grading rule is written once and tested once. Items JSON (schema table: r
 "layer": "F.Cu", "xy": [12.3, 45.6]}]; one item = one violation; `check` must equal a thresholds key byte for byte (unknown names grade INFO
 and are listed as a warning); `value` null = a presence-only check (graded Warning when the fab lists it without a threshold).
 
-Thresholds JSON (design/dfm_thresholds.json — copy the fab's numbers, cite the source and date):
+Thresholds JSON (paths.dfm_thresholds, default 20-design/dfm_thresholds.json — copy the fab's numbers, cite the source and date):
   {"source": "...", "checks": {"Trace spacing": {"danger": 0.10, "warning": 0.15}, "Fiducial": {"danger": null, "warning": null}},
    "project_min": {"Trace width": 0.16}}
 Grading (the rule every fab's viewer was observed to use): value <= danger -> Danger; danger < value <= warning -> Warning (EQUAL to the warning
@@ -136,10 +136,10 @@ def main():
         return selftest()
     P = Project.find(arg=a.project)
     cfg = lambda k, d=None: P.get(f"fab_dfm.{k}", P.get(f"dfm.{k}", d))          # `fab_dfm:` is the block name; `dfm:` the old spelling
-    th_path = a.thresholds or os.path.join(P.root, cfg("thresholds", "design/dfm_thresholds.json"))
-    items_path = a.items or os.path.join(P.root, cfg("items", "out/dfm_items.json"))
+    th_path = a.thresholds or os.path.join(P.root, cfg("thresholds", P.get("paths.dfm_thresholds")))
+    items_path = a.items or os.path.join(P.root, cfg("items", P.get("paths.dfm_items")))
     acc_path = a.accept or (os.path.join(P.root, cfg("accept")) if cfg("accept") else None)
-    rep_path = a.json or (os.path.join(P.root, cfg("report")) if cfg("report") else None)
+    rep_path = a.json or os.path.join(P.root, cfg("report", P.get("paths.dfm_report")))
     if not os.path.exists(items_path):
         print(f"MISSING: {items_path} — run the project's measurer first (references/fab-dfm.md §3)"); return 2
     thresholds = json.load(open(th_path)) if os.path.exists(th_path) else {"checks": {}}
