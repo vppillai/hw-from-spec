@@ -1,6 +1,6 @@
 # CHANGELOG — hw-from-spec
 
-## Current state (0.10.5) — read this instead of replaying the entries below
+## Current state (0.10.6) — read this instead of replaying the entries below
 
 - **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
   twelve batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
@@ -20,8 +20,25 @@
 - **References**: project-yaml, kickoff-questionnaire, schematic-phase, pcb-layout-dfm, fab-dfm, case-pipeline, dfm-printed-enclosure,
   print-dfm, print-kit, fdm-print-optimisation, cnc-enclosure, fea-stage, part-verification, software-track, release-and-cut, vendor-review,
   agent-ops, pitfalls — one home per rule, the others link.
-- **Checks**: `smoke/run_smoke.sh` (every script selftest, the rule greps, the enforcement negatives, both lints, the evals), 17 evals
+- **Checks**: three read-only tiers behind `scripts/iteration_gate.sh` (inner = a change's `--check` + grader set, standard = the adopt gates,
+  release = adopt gates + clone gate); `smoke/run_smoke.sh` runs every script selftest, the rule greps, the enforcement negatives, both lints
+  and the evals; 17 evals
   with mechanical checks, `docs/reviews/INDEX.md` and `docs/retro/INDEX.md` list every review and retro.
+
+## 0.10.6 — 2026-10-02 — explicit fast validation tiers
+
+### Added
+- `scripts/iteration_gate.sh`: one entry point for the three validation tiers. **inner** runs the changed generator's `--check` and its
+  direct grader — the project's standing set in `gates.iteration.inner` plus this change's commands after `--` — under the adopt gates'
+  read-only guard (status + tracked-diff hash before and after), through the host pool when the project has one; an empty set is refused,
+  so an unconfigured fast path cannot report success. **standard** and **release** are aliases of `scripts/adopt_gates.sh --no-clone` and
+  `scripts/adopt_gates.sh` (= `make gates` / `make check`): the `gates.adopt` list is the one list of record, no second yaml list to drift
+  (the PR's `standard:` / `release:` yaml lists were folded into these aliases in review). Template and reference carry `gates.iteration.inner`;
+  SKILL §2, README "Fast, safe iterations", `agent-ops.md` §8 item 9 point at it.
+
+### Not done
+- Tier selection is explicit rather than inferred from a diff: the agent names the generator and grader a bounded change affects, on the
+  command line or in the project's standing inner set.
 
 ## 0.10.5 — 2026-10-02 — execute every tool selftest in smoke
 
