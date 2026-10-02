@@ -173,7 +173,6 @@ arrival_checklist:                            # written BEFORE the order ships (
 #   gitignore: ['40-case/*/build/']            # appended to .gitignore by --apply
 #   rewrites_record: 80-reviews/REORG_REWRITES.txt   # written by --apply, read by --proof
 #   no_existence: ['.py', '.js', 90-log/DECISIONS.md, 90-log/STATUS.md, 90-log/LEARNINGS_LOG.md, 80-reviews/]
-#   allow_missing: ['^70-release/rev[0-9]+/']
 # assembly_guide:                             # production cut: the illustrated guide beside the SOP (scripts/assembly_guide.py; references/release-and-cut.md §8)
 #   yaml: 20-design/assembly_guide.yaml
 #   steps_md: 40-case/ASSEMBLY.md
