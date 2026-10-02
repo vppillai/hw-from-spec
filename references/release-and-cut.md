@@ -41,7 +41,7 @@ discarded with `git checkout` once its diff is timestamp-only.
   every consumer of the version string is re-run in the bump.
 
 ## 4. Collateral (`scripts/collect_renders.py`)
-`collateral/<md5-8>/renders/`: CAD 3-D renders (opaque background, named by what the picture shows, each fixed view checked by eye once), panel
+`collateral/<rev>/renders/` (RENDERS.md's first row names the record md5): CAD 3-D renders (opaque background, named by what the picture shows, each fixed view checked by eye once), panel
 preview, silk PNGs, case renders, FEA composites, drawing PDFs, fab-viewer captures carrying the md5. Freshness key = source md5 + full argument
 string; case items keyed on the case version; index with md5 + grade; orphans listed, never deleted; PNGs ≤ 2400 px; size budget per set.
 Quotes and captures the fab produced live under `60-orders/quotes/<date>/`, never inside a regenerable package (a rebuild wipes the folder).
@@ -55,7 +55,8 @@ Annotated tag (`<board>-rev<n>-order`, later `…-production-cut`) with the boar
 orderable state and does not substitute for the owner's gate cells.
 
 ## 7. Production cut (`templates/production_cut.yaml` → one generator)
-- One command builds `70-release/<rev>/`: MANIFEST.json/.md (md5 + bytes + source + board/case/decisions md5 + tool commit + CAD CLI version),
+- One command builds `<production_dir>/<rev>/` (`70-release/rev0/`; `{rev}` = `project.revision`, `{md5}` = the record md5 — both expand in the
+  yaml, the folder carries the revision and the hash sits inside): MANIFEST.json/.md (md5 + bytes + source + board/case/decisions md5 + tool commit + CAD CLI version),
   STATUS.md (banner, package of record, per-artefact disposition OF-RECORD / STALE / MISSING / WAIVED, OPEN census, the owner line quoted),
   the documents listed in the yaml.
 - Deliverable row: `id, doc_id, title, kind (generated | hand-written | template | collected), path (glob ok), check (the owner generator's --check),
