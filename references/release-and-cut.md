@@ -55,7 +55,8 @@ Annotated tag (`<board>-rev<n>-order`, later `…-production-cut`) with the boar
 orderable state and does not substitute for the owner's gate cells.
 
 ## 7. Production cut (`templates/production_cut.yaml` → one generator)
-- One command builds `70-release/<rev>/`: MANIFEST.json/.md (md5 + bytes + source + board/case/decisions md5 + tool commit + CAD CLI version),
+- One command builds `<production_dir>/<rev>/` (`70-release/rev0/`; `{rev}` = `project.revision`, `{md5}` = the record md5 — both expand in the
+  yaml, the folder carries the revision and the hash sits inside): MANIFEST.json/.md (md5 + bytes + source + board/case/decisions md5 + tool commit + CAD CLI version),
   STATUS.md (banner, package of record, per-artefact disposition OF-RECORD / STALE / MISSING / WAIVED, OPEN census, the owner line quoted),
   the documents listed in the yaml.
 - Deliverable row: `id, doc_id, title, kind (generated | hand-written | template | collected), path (glob ok), check (the owner generator's --check),

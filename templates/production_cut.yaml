@@ -1,14 +1,15 @@
 # templates/production_cut.yaml — the production-cut deliverable set, read by the project's cut generator (references/release-and-cut.md §7).
-# Placeholders expanded by the generator: {md5} = 8-hex md5 of the record of record (`scripts/project.py record`: the board in ee / both scope, the
-# STL set paths.mech_record in mech scope), {pkg} = fab package dir of that board (ee / both),
-# {case_tag} = case version up to the minor number, {root} = the package folder.
+# Placeholders expanded by the generator: {rev} = the project revision (`project.revision`, `scripts/project.py rev`, default rev0) that names the
+# cut folder, {md5} = 8-hex md5 of the record of record (`scripts/project.py record`: the board in ee / both scope, the STL set paths.mech_record in
+# mech scope) — stamped INSIDE the folder (MANIFEST, STATUS), never in its name, {pkg} = fab package dir of that board (ee / both: the one whose
+# board_id.txt md5 == {md5}), {case_tag} = case version up to the minor number, {root} = the package folder = <package_root>/{rev}/.
 # kind: generated (a gen/ script owns it) | hand-written (prose of record) | template (records skeleton, filled by the owner) | collected (file of record copied by reference)
 # path: the file of record; a glob is allowed (≥ 1 match = EXISTS). check: command run from the repo root; exit ≠ 0 -> STALE (the owner generator's own --check).
 # inputs: files whose md5 is stamped in MANIFEST.json (globs allowed). required: true = must exist now | release = once the owner's release line exists.
 # owner_placeholders: allowed (templates; `[OWNER: …]` fields are counted, never filled by an agent) | forbidden (a RELEASED cut fails --check on one).
 # Scope tags {{ee,both}} / {{mech,both}}: `scripts/project.py scaffold --scope <A0> templates/production_cut.yaml` keeps your scope's rows.
 case_yaml: 20-design/case.yaml {{mech,both}}
-package_root: 70-release            # -> 70-release/{rev}/
+package_root: 70-release            # default paths.production_dir -> 70-release/{rev}/ (the hash lives inside: MANIFEST.json, STATUS.md)
 records_dir: records                     # 70-release/{rev}/records/ — THE records folder (photos, press logs, first-article caliper table, test results, calibration, order captures); RELEASE_NOTES points here
 doc_id_prefix: {{PROJECT}}               # <project>-<type>-<nnn>
 
