@@ -404,7 +404,7 @@
     },
     {
      "name": "scripts/stability.py uses the volume centroid and its selftest proves it on an asymmetric body",
-     "run": "grep -q 'center_mass' \"$SKILL\"/scripts/stability.py && ! grep -q 'm\\.centroid' \"$SKILL\"/scripts/stability.py && \"$PY\" \"$SKILL\"/scripts/stability.py --selftest >/dev/null"
+     "run": "needs-mesh: grep -q 'center_mass' \"$SKILL\"/scripts/stability.py && ! grep -q 'm\\.centroid' \"$SKILL\"/scripts/stability.py && \"$PY\" \"$SKILL\"/scripts/stability.py --selftest >/dev/null"
     }
    ]
   }
