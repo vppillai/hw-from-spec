@@ -157,10 +157,22 @@ arrival_checklist:                            # written BEFORE the order ships (
   yaml: 20-design/arrival_checklist.yaml
   out: 60-orders/ARRIVAL_CHECKLIST_rev0.md
 # reorg:                                      # only when the layout changes: decision row first, then scripts/reorg_paths.py --plan/--apply/--check/--proof
-#   moves: {docs/OLD.md: docs/<folder>/OLD.md}
-#   frozen: [30-board/fab/]                        # uploaded packages, archived records: never rewritten, `--map` explains their old paths
+#   moves:                                     # old -> new, a file or a whole directory per row; longest key first; worked example in references/project-yaml.md
+#     docs/governance/KICKOFF_ANSWERS.md: 10-spec/KICKOFF_ANSWERS.md
+#     docs/governance: 90-log
+#     docs/design: 20-design
+#     docs/parts: 60-orders
+#     docs/quotes: 60-orders/quotes
+#     docs/production/<md5-8>: 70-release/rev0 # the folder takes the revision name, the hash stays inside
+#     docs/release: 70-release/reports
+#     docs/reviews: 80-reviews
+#     out/<board>/fab/<date>_<md5-8>: 30-board/fab/rev0
+#     out/<board>/mechanical/<set>: 40-case/<set>
+#   frozen: [60-orders/quotes, '70-release/*/records']   # moved whole, content never rewritten or checked; old or new spelling, `*` = one segment; `--map` explains their paths
+#   allow_missing: ['^60-orders/quotes/', '^70-release/rev[0-9]+/']   # literals allowed to be dangling (dated rows quoting evidence, deliverables named before they exist)
+#   gitignore: ['40-case/*/build/']            # appended to .gitignore by --apply
+#   rewrites_record: 80-reviews/REORG_REWRITES.txt   # written by --apply, read by --proof
 #   no_existence: ['.py', '.js', 90-log/DECISIONS.md, 90-log/STATUS.md, 90-log/LEARNINGS_LOG.md, 80-reviews/]
-#   allow_missing: ['^70-release/[0-9a-f]{8}/']
 # assembly_guide:                             # production cut: the illustrated guide beside the SOP (scripts/assembly_guide.py; references/release-and-cut.md §8)
 #   yaml: 20-design/assembly_guide.yaml
 #   steps_md: 40-case/ASSEMBLY.md
