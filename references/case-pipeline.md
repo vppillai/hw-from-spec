@@ -4,12 +4,12 @@
 ## 0. Imported body — the owner already has the CAD (`scripts/step2stl.py`)
 
 The chain of record assumes every body is generated from `20-design/case.yaml`. A part that exists as a STEP (the owner's bracket, a vendor's
-housing) enters M1 as a **generated-only exception** (SKILL §2): `scripts/step2stl.py part.step --out 40-case/<target>/stl/<piece>.stl
+housing) enters M1 as a **generated-only exception** (SKILL §2): `scripts/step2stl.py part.step --out 40-case/<target>/parts/<piece>.stl
 --tag V|K` converts it (cadquery in the venv, else the FreeCAD CLI, else `--canonical` on an STL exported from the CAD — the routes are printed
 when none is available; OpenSCAD cannot read STEP), writes the **canonical STL** (sorted triangles, float32 normals: the md5 is the geometry) and
 `<piece>.stl.provenance.json` (source, source md5, tag, converter, tolerance, stl md5, geometry signature, date), and prints the decision row:
 OPEN, "imported body <piece>", the chain of record (source md5 → converter → STL md5 + signature; a changed source or signature = a new row).
-From there the body is gated like a generated one — `thin_wall_census.py --target <t> --json .../census/<piece>.json` and `print_dfm.py --process
+From there the body is gated like a generated one — `thin_wall_census.py --target <t> --json 40-case/<target>/checks/census/<piece>.json` and `print_dfm.py --process
 <row> --out .../dfm` records of the same md5, six face renders, clearance rows — and `gen/<geometry>.py --check` is replaced in the M1 row by
 `scripts/step2stl.py --canonical <export> --out <piece>.stl` reproducing the committed md5 (the provenance sidecar's `stl_md5`). A body whose
 source changes re-enters through a new conversion and a new row; editing the STL by hand is never a route.
@@ -25,7 +25,9 @@ source changes re-enters through a new conversion and a new row; editing the STL
                  ├─> drawings (silhouettes + sections, yaml numbers on the lines; STEP per piece + assembly)
                  └─> print-service / CNC DFM + quotes (references/fab-dfm.md §6) ──> ORDER_SHEET / PRINT_SHEET per piece
 ```
-A set is one folder per PRINT TARGET under `40-case/<set>/` (mjf_case, p2s_case, plug_caps, coupons, board_dummy…), never per case version —
+A set is one folder per PRINT TARGET under `40-case/<set>/`, named by the `print_targets` KEY (`vendor_mjf`, `home_fdm` — the gates read the
+target from the folder name); sets that are not targets (coupons, board_dummy, dfm_validation, fea, board_mesh) carry `--target` on their gate
+lines. Never one folder per case version —
 the version is a field of the records and the sheets. Inside: `parts/` (the STL set of record, tracked; the kits copy from here), `checks/`
 (census + DFM records, clearance and interference checks — the only place the gates look), `pictures/` (previews, faces, assembly renders) and
 `build/` (SCAD, logs, slicer scratch, caches — gitignored, recreated by every run; the determinism check compares a regenerated part with its
@@ -130,7 +132,7 @@ owner addition arrives. Budget the bump before promising "full release pipeline"
   face it can rest on). A piece that moves is judged at its WORST pose — a six-leg walker stands on one foot per side for a third of the cycle, and
   there the hull is the length of a shoe.
 - The CoG goes where the heavy parts are, not where the designer looks: a drive, gears, winders and bands hung behind the legs put a walker's CoG
-  21 mm behind its hip (margin −17 mm at a third of the poses). Fix by LAYOUT (drive over the feet, frame extended forward), never by ballast
+  behind its hip (a negative margin at a third of the poses). Fix by LAYOUT (drive over the feet, frame extended forward), never by ballast
   bolted on afterwards; then the row proves it. Kickoff **C12** asks whether the piece stands free; the row is mandatory when it does.
 - Lateral stability follows from symmetric feet; the longitudinal margin is the one that fails. State the mass model (solid density × infill
   factors) on the row so a heavier print (more walls) or a bought part (a band, a battery) is re-judged, not assumed.

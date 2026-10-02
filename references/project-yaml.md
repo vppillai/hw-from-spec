@@ -150,7 +150,7 @@ gates:
   iteration:                              # scripts/iteration_gate.sh [-- <cmd> ...]: the INNER tier (fast loop), read-only guarded (as adopt_gates.sh)
     inner:                                # the project's standing fast set; a change's own commands follow `--` on the command line; empty + none given = refused
       - "$PY gen/case.py --check"
-      - "$PY scripts/print_dfm.py --gate 40-case/<preset>/dfm"
+      - "$PY scripts/print_dfm.py --gate 40-case/<set>/checks/dfm"
                                           # the other tiers are existing commands: standard = scripts/adopt_gates.sh --no-clone (make gates), release = scripts/adopt_gates.sh (make check)
   adopt:                                  # scripts/adopt_gates.sh: run in order, exit 1 on the first failure; $PY is exported
     - "$PY scripts/known_issues.py --selftest"
@@ -175,17 +175,19 @@ gates:
 ```
 00-now/          WHERE_THINGS_STAND.md  BLOCKED_ON_OWNER.md  WHAT_TO_PRINT.md  WHAT_TO_ORDER.md  WHAT_TO_CHECK_ON_ARRIVAL.md
                  generated every record round from 90-log/ and the kits (scripts/now_pages.py); never edited; a stale page fails the gates
-10-spec/         SPEC.md  FINDINGS.md  KICKOFF_ANSWERS.md  SPEC_ERRATA.md  spec_sections/  datasheet_notes/
+10-spec/         SPEC.md  FINDINGS.md (the spec read, written at G0)  KICKOFF_ANSWERS.md  SPEC_ERRATA.md  spec_sections/  datasheet_notes/
 20-design/       the yaml sources of truth (case, board, parts, erc_accept, traceability, arrival_checklist, dfm_processes), briefs, design notes,
                  TEST_PLAN, VERIFY, SOFTWARE_ARCHITECTURE, the drawings index
 30-board/        kicad/ (the CAD project)   layout/ (gerbers, drc, dxf, renders, inspection, drawings)   fab/<rev>/ (the uploaded package;
                  board_id.txt = md5 + commit)                                                                                         [ee, both]
-40-case/         <set>/ per print target (mjf_case, p2s_case, plug_caps, coupons, board_dummy, dfm_validation, fea, board_mesh)         [mech, both]
+40-case/         <set>/ per print target — the folder IS the `print_targets` key (vendor_mjf, home_fdm …); coupons, board_dummy, dfm_validation,   [mech, both]
+                 fea, board_mesh are sets that are not targets (their gate lines pass `--target`)
                  each set: parts/ (STL of record, tracked)  checks/ (census + DFM records, clearance, interference = what the gates read)
                            pictures/ (previews, faces, assembly renders)  build/ (SCAD, logs, slicer scratch, caches — gitignored)
 50-kits/         <kit>/ per print target — START_HERE.md  plates/ (.3mf + .3mf.json sidecar)  parts/ (STL copies, md5-checked)  sheets/  [mech, both]
                  the one kit of record; mirrored byte-identical to ~/Downloads/<project>_kits/<kit>/
-60-orders/       PROCUREMENT.md  PARTS_VERIFICATION.md  parts_check.json  ORDER_<rev>.md  ARRIVAL_CHECKLIST_<rev>.md  quotes/<date>/ (frozen)
+60-orders/       PROCUREMENT.md  PARTS_VERIFICATION.md  parts_check.json  ORDER_<rev>.md (the order sheet, written at the order)  ARRIVAL_CHECKLIST_<rev>.md
+                 quotes/<date>/ (fab evidence, frozen)
 70-release/      <rev>/ (the cut: MANIFEST, STATUS, manuals, SOPs, pdf/, records/ = THE records folder)   reports/ (the design reports,
                  RELEASE_NOTES)   collateral/<rev>/   marketing/<rev>/
 80-reviews/      <round>/ — one folder per review round (the merged file at its root), REVIEW_HANDOFF, REORG_* inventories
@@ -194,7 +196,9 @@ gen/  scripts/  tools/  lib/  Makefile  CLAUDE.md        the machinery
 ```
 Four rules make the tree the navigation, so no README is needed to use it:
 - **Names are nouns a technician knows.** No hash and no date names a folder at the top of a tree; a revision is `rev0`, a kit is its print target;
-  the hash lives inside (`board_id.txt`, `RENDERS.md`, `MANIFEST`). `40-case/dfm_validation/` is the one hash-named place, inside its set.
+  the hash lives inside (`board_id.txt`, `RENDERS.md`, `MANIFEST`). Two exceptions, both inside their folder, never at the top: `40-case/dfm_validation/`
+  keeps the labelled STLs under their hashes (the vendor verdicts are keyed on them) and `60-orders/quotes/<date>/` keeps the fab's evidence under the
+  day it was captured (frozen, never rewritten).
 - **One current thing per path.** Superseded kits, cuts and case versions are not kept beside the current one; git history holds them.
 - **Records sit next to what they describe.** A part's census and DFM verdict are in `checks/` beside its STL, never in a parallel tree.
 - **Order follows the life of the project.** The numbers fix the reading order in every project; a scope that lacks a stage has no folder at that

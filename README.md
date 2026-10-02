@@ -59,7 +59,7 @@ Exit 0 = PASS, 1 = FLAG with one line per rule (measured | limit | where | fix):
 | `workflows/` | blind-review workflow templates + how to instantiate them |
 | `smoke/` | the automated dry run (`run_smoke.sh`, about two minutes) |
 | `evals/` | the skill evals + `run_evals.py` (every eval carries mechanical checks) |
-| `docs/retro/`, `80-reviews/` | retro reports and blind reviews of the skill, one index file each |
+| `docs/retro/`, `docs/reviews/` | retro reports and blind reviews of the skill, one index file each |
 | `CHANGELOG.md` | the current state, then what changed per version |
 
 ## Install
@@ -105,35 +105,41 @@ vendor/hw-from-spec/smoke/run_smoke.sh
 ```
 
 ## Use in a new project
+   A selftest that exits 2 says SKIP: the mesh libraries are absent in that venv (`print_dfm.py`, `stability.py`); every other
+   non-zero exit is a failure.
 
 4. Copy the templates and resolve the scope (`T` is the templates folder); `project.py slots` counts
 the unfilled `{{…}}` slots per file — CLAUDE.md / project.yaml / records now, SPEC + KICKOFF_ANSWERS
 after the kickoff and the spec; 0 before the G0 ask:
 
 ```sh
+A0=both                                  # your kickoff A0 answer: ee | mech | both
 T=vendor/hw-from-spec/templates
 mkdir -p 00-now 10-spec 20-design 60-orders/quotes 70-release 80-reviews 90-log
-mkdir -p 30-board                                             # ee, both
-mkdir -p 40-case 50-kits                                      # mech, both
+[ "$A0" != mech ] && mkdir -p 30-board
+[ "$A0" != ee ]   && mkdir -p 40-case 50-kits
 cp "$T/CLAUDE.md" "$T/.gitignore" "$T/project.yaml" .
 cp "$T"/10-spec/*.md 10-spec/ && cp -R "$T/10-spec/datasheet_notes" 10-spec/
 cp "$T"/90-log/*.md 90-log/
-cp "$T"/60-orders/*.md 60-orders/
-cp "$T/60-orders/quotes/dfm_verdicts.yaml" 60-orders/quotes/    # mech, both
+cp "$T/60-orders/PARTS_VERIFICATION.md" 60-orders/
 cp "$T"/20-design/{TEST_PLAN,VERIFY}.md 20-design/
-cp "$T"/20-design/{traceability,arrival_checklist}.yaml 20-design/
-cp "$T/20-design/dfm_processes.yaml" 20-design/               # mech, both
-cp "$T/20-design/erc_accept.yaml" 20-design/                 # ee, both
-cp "$T/20-design/SOFTWARE_ARCHITECTURE.md" 20-design/      # ee, both
-cp "$T/production_cut.yaml" 20-design/
-```                                                   #  project.yaml before any reader runs)
+cp "$T/20-design/traceability.yaml" "$T/production_cut.yaml" 20-design/
+[ "$A0" != ee ]   && cp "$T/60-orders/PROCUREMENT.md" 60-orders/ \
+                  && cp "$T/60-orders/quotes/dfm_verdicts.yaml" 60-orders/quotes/ \
+                  && cp "$T/20-design/dfm_processes.yaml" 20-design/
+[ "$A0" != mech ] && cp "$T/20-design/erc_accept.yaml" 20-design/ \
+                  && cp "$T/20-design/SOFTWARE_ARCHITECTURE.md" 20-design/
+.venv/bin/python scripts/project.py scaffold --scope "$A0" CLAUDE.md project.yaml \
+    10-spec/*.md 20-design/*.md 20-design/*.yaml 60-orders/*.md 90-log/*.md
+.venv/bin/python scripts/project.py slots     # unfilled {{…}} per file: fill them now
+```
 
 5. Follow `SKILL.md` §0: the kickoff questionnaire, ENV record (`scripts/project.py env` prints the
 host row), first records, adopt gates, then G0. Fill slots that sit inside a path unquoted
-(`30-board/kicad/sensor/sensor.kicad_pcb`). `templates/20-design/arrival_checklist.yaml` is copied at the order (SKILL §10.1). Scripts find `project.yaml` by walking up from the
+(`30-board/kicad/sensor/sensor.kicad_pcb`). `templates/20-design/arrival_checklist.yaml` is copied at the order, never on day 1 (SKILL §10.1; its `--check` line joins the gates the same commit). Scripts find `project.yaml` by walking up from the
 cwd (or `HWFS_PROJECT=…`); the shell gates print which interpreter they use. Never put the submodule
 AT `scripts/`. Project-specific generators (schematic builder, placement, routing, export, fab
-package, panel, silk, case, drawings, FEA measurer) stay in the project's `gen/`, read constants
+package, panel, silk, case, drawings, FEA measurer, the kit writers: kit_facts, slicer wrapper, START_HERE, the Downloads mirror) stay in the project's `gen/`, read constants
 through `scripts/project.py`, and join `gates.adopt` with their `--selftest` and `--check`.
 
 ## Fast, safe iterations

@@ -58,12 +58,12 @@ red), six faces + two isos — a per-sample field looks nothing like the vendor'
 | `scripts/scad_lint.py <generated.scad>...` | silent, or every line with a statement hidden behind `//` | exit 1: the generator emitted code after a comment; OpenSCAD dropped it (a plate lost its webs for two days while the yaml read right) — one statement per line, lint on every emit |
 
 Paths default to the project root (the nearest `project.yaml`): table `20-design/dfm_processes.yaml` (falls back to the skill's template when the
-project has none yet), verdicts `60-orders/quotes/dfm_verdicts.yaml`, records `out/dfm_validation/`, doc `80-reviews/PRINT_DFM_VALIDATION.md`;
+project has none yet), verdicts `60-orders/quotes/dfm_verdicts.yaml`, records `40-case/dfm_validation/`, doc `80-reviews/PRINT_DFM_VALIDATION.md`;
 `--processes / --verdicts / --val-dir / --val-doc` override. Run time: 5–20 s per body (60 k–300 k samples ∝ area), ~1.5 s per heat-map view.
 
 ## 3. The loop (SKILL.md §8.1 — the commands are the procedure)
 
-- **(a) Before every vendor upload**: `scripts/print_dfm.py --process <row> --out out/.../dfm <stl>` must PASS; `--gate out/.../dfm` sits in
+- **(a) Before every vendor upload**: `scripts/print_dfm.py --process <row> --out 40-case/<set>/checks/dfm <stl>` must PASS; `--gate 40-case/<set>/checks/dfm` sits in
   `gates.adopt` beside the census `--gate-dir`. The vendor's PASS is necessary, never sufficient.
 - **(b) After every vendor verdict**: append the row to `60-orders/quotes/dfm_verdicts.yaml` (stl, md5-8, process, vendor, date, verdict, evidence =
   the saved API JSON / screenshot / mail path), run `--validate`. Vendor FLAG + ours PASS = **RULE DEFECT**: find the physics the rule lacks (a

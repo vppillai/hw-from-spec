@@ -10,7 +10,7 @@ here knows a board name. Skill `SKILL.md` §0 step 7 is where this happens.
 S=vendor/hw-from-spec/templates/ci; mkdir -p .github/workflows ci
 cp "$S"/{setup_linux,nightly,release_archive}.sh ci/            # project-owned copies: edit them, they are yours
 for f in pr-check nightly release; do
-  sed -e 's|{{PROJECT_NAME}}|MY-BOARD|g' -e 's|{{PROJECT_CAD_IMAGE}}|30-board/kicad/kicad:10.0.5-full|g' -e 's|{{PROJECT_SETUP_CMD}}|ci/setup_linux.sh|g' \
+  sed -e 's|{{PROJECT_NAME}}|MY-BOARD|g' -e 's|{{PROJECT_CAD_IMAGE}}|kicad/kicad:10.0.5-full|g' -e 's|{{PROJECT_SETUP_CMD}}|ci/setup_linux.sh|g' \
       -e 's|{{PROJECT_CHECK_CMD}}|scripts/adopt_gates.sh --no-clone|g' -e 's|{{PROJECT_CLONE_GATE_CMD}}|scripts/clone_gate.sh|g' \
       -e 's|{{PROJECT_NIGHTLY_CMD}}|ci/nightly.sh|g' -e 's|{{PROJECT_RELEASE_CMD}}|ci/release_archive.sh out/release_artefacts|g' \
       -e 's|{{PROJECT_TAG_PATTERN}}|board-*|g' -e 's|{{PROJECT_VENDOR_EXCLUDE}}|lib/vendor/|g' \
@@ -30,7 +30,7 @@ grep -n '{{PROJECT_' .github/workflows/*.yml && echo "unfilled placeholders" || 
 | Placeholder | Meaning | Example |
 |---|---|---|
 | `{{PROJECT_NAME}}` | display name | `MY-BOARD` |
-| `{{PROJECT_CAD_IMAGE}}` | the CAD CLI container, pinned to the version in the project's ENV record | `30-board/kicad/kicad:10.0.5-full` |
+| `{{PROJECT_CAD_IMAGE}}` | the CAD CLI container, pinned to the version in the project's ENV record | `kicad/kicad:10.0.5-full` |
 | `{{PROJECT_CHECK_CMD}}` | the one PR entry point with stable exit codes | `scripts/adopt_gates.sh --no-clone` or `make check` |
 | `{{PROJECT_CLONE_GATE_CMD}}` | the fresh-checkout gate run on tags (release.yml) | `scripts/clone_gate.sh` |
 | `{{PROJECT_SETUP_CMD}}` | Linux bootstrap (path shims, fonts, venv from a pinned requirements file) | `ci/setup_linux.sh` |
