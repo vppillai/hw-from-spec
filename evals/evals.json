@@ -407,6 +407,29 @@
      "run": "needs-mesh: grep -q 'center_mass' \"$SKILL\"/scripts/stability.py && ! grep -q 'm\\.centroid' \"$SKILL\"/scripts/stability.py && \"$PY\" \"$SKILL\"/scripts/stability.py --selftest >/dev/null"
     }
    ]
+  },
+  {
+   "id": 18,
+   "name": "cold-reader-opens-00-now",
+   "prompt": "I have never seen this project. Where do things stand, what is blocked on me, what should I print next and what do I order? Do not read any README.",
+   "expected_output": "Opens 00-now/ and answers from its five pages (WHERE_THINGS_STAND, BLOCKED_ON_OWNER, WHAT_TO_PRINT, WHAT_TO_ORDER, WHAT_TO_CHECK_ON_ARRIVAL), quoting their rows; if a page is stale or missing it runs scripts/now_pages.py and says the record round must include it; never reconstructs the state from STATUS.md by hand.",
+   "files": [],
+   "assertions": [
+    "the agent reads the five pages, not the logs, and names the page each answer came from",
+    "a stale page is regenerated with scripts/now_pages.py, not edited",
+    "the print answer follows the sidecar order (coupon, one part, plate) and points at the kit's START_HERE",
+    "the agent does not ask for a README"
+   ],
+   "checks": [
+    {
+     "name": "the five pages exist as a generated, gated output",
+     "run": "test -x \"$SKILL\"/scripts/now_pages.py && \"$PY\" \"$SKILL\"/scripts/now_pages.py --selftest >/dev/null && grep -q 'now_pages.py --check' \"$SKILL\"/templates/project.yaml"
+    },
+    {
+     "name": "the layout reference puts 00-now first and the sidecar keys are written in the print-kit reference",
+     "run": "grep -q '^00-now/' \"$SKILL\"/references/project-yaml.md && grep -q 'print_time_s' \"$SKILL\"/references/print-kit.md"
+    }
+   ]
   }
  ]
 }

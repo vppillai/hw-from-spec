@@ -190,6 +190,7 @@ gates:
     - "$PY scripts/known_issues.py --check"
     - "$PY scripts/traceability.py --check"
     - "$PY scripts/release_report.py --check"
+    - "$PY scripts/now_pages.py --check"      # the five answer pages of 00-now/ are current (written by scripts/now_pages.py in the record round)
     # G1 (schematic exists): add the project's generators and the ERC gate (references/schematic-phase.md §2) {{ee,both}}
     # - "$PY gen/build_sch.py --selftest" {{ee,both}}
     # - "$PY gen/build_sch.py --check" {{ee,both}}
@@ -210,6 +211,7 @@ gates:
   clone:                                      # run inside `git archive HEAD`
     - "$PY scripts/known_issues.py --check"
     - "$PY scripts/release_report.py --check"
+    - "$PY scripts/now_pages.py --check"      # the five answer pages of 00-now/ are current (written by scripts/now_pages.py in the record round)
   regen:
     - "$PY scripts/release_report.py"
   regen_copy_back: [70-release/reports/PCB_DESIGN_REPORT.md] {{ee}}

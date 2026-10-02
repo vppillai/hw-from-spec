@@ -52,6 +52,10 @@ The gate reads the forbidden tokens from the preset (fastener, material, marks o
 START_HERE, every README and print sheet, and the generated ASSEMBLY.md; the run FAILS on a hit; the row is in the census record.
 
 ## 4. Coupon, ONE part, then the plate
+- Every plate carries a sidecar `<plate>.3mf.json` beside it with at least `print_time_s` (int), `filament_g` (float) and `objects` (the
+  slicer's object list), and when known `filament_changes` (int), `proves` (what printing it settles: fit, legend, colour path) and `order` (print
+  order within the kit, 1 = first). `scripts/now_pages.py` derives `00-now/WHAT_TO_PRINT.md` from these sidecars alone — a plate without a sidecar
+  does not exist to the reader.
 - Coupons and bracket variants carry their identifier and tested value as printed text on the part (dfm-printed-enclosure.md
   "Coupons are self-documenting"); START_HERE refers to them by that printed text, not by slicer object names.
 - A mark coupon proves GEOMETRY and first-layer behaviour, not the thermal state of a 99-minute print (warp, sag on a long span, colour

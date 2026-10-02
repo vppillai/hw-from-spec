@@ -277,9 +277,10 @@ grep -q '| E-2 | case first-article clearance |' 60-orders/ARRIVAL_CHECKLIST_rev
 cp 20-design/arrival_checklist.yaml /tmp/ac.$$ && sed -i.bak 's/evidence: "records\/first_article.md (caliper table)"/evidence: ""/' 20-design/arrival_checklist.yaml && rm -f 20-design/arrival_checklist.yaml.bak
 $PY scripts/arrival_checklist.py --check >/dev/null && { echo "FAIL: a DONE row without evidence must fail the checklist"; exit 1; }; mv /tmp/ac.$$ 20-design/arrival_checklist.yaml
 sed -i.bak 's/scripts\/arrival_checklist.py --check/true/' project.yaml && rm -f project.yaml.bak; $PY scripts/project.py gates-required >/dev/null && { echo "FAIL: gates-required must demand the arrival_checklist line while the yaml exists"; exit 1; }; git checkout -q -- project.yaml
+say "5e now pages (the five answers of 00-now/; a hand edit is STALE)"; $PY scripts/now_pages.py; $PY scripts/now_pages.py --check; grep -q '^# Blocked on the owner' 00-now/BLOCKED_ON_OWNER.md && grep -q '^# What to print' 00-now/WHAT_TO_PRINT.md || { echo "FAIL: now pages"; exit 1; }
 say "6 release_report (DRAFT expected)";          $PY scripts/release_report.py
 grep -q '^\*\*STATUS: DRAFT\*\*' 70-release/reports/PCB_DESIGN_REPORT.md || { echo "FAIL: report not DRAFT"; exit 1; }
-say "7 every --check must pass";                  $PY scripts/known_issues.py --check; $PY scripts/assembly_guide.py --check; $PY scripts/arrival_checklist.py --check; $PY scripts/traceability.py --check; $PY scripts/dfm_check.py --check; $PY scripts/collect_renders.py --check; $PY scripts/release_report.py --check
+say "7 every --check must pass";                  $PY scripts/known_issues.py --check; $PY scripts/assembly_guide.py --check; $PY scripts/arrival_checklist.py --check; $PY scripts/traceability.py --check; $PY scripts/dfm_check.py --check; $PY scripts/collect_renders.py --check; $PY scripts/release_report.py --check; $PY scripts/now_pages.py --check
 say "8 commit + handoff header";                  git add -A; git -c user.name=smoke -c user.email=s@s commit -qm "generated records"; $PY scripts/handoff_header.py
 $PY scripts/handoff_header.py | grep -q 'MATCH' || { echo "FAIL: handoff header has no MATCH"; exit 1; }
 say "9 adopt gates incl. the clone gate on git archive HEAD"; scripts/adopt_gates.sh
