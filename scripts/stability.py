@@ -78,9 +78,11 @@ def sweep(poses):
 
 
 def selftest():
-    import numpy as np, tempfile
-    from shapely.geometry import box
-    tm = _trimesh()
+    try:
+        import numpy as np, tempfile, trimesh as tm, scipy  # noqa: F401
+        from shapely.geometry import box
+    except ImportError:   # as print_dfm.py: exit 2 = skipped, not failed (the smoke's 0a loop skips it when the mesh stack is absent)
+        print("SKIP: mesh libraries absent (numpy trimesh scipy shapely)"); return 2
     with tempfile.TemporaryDirectory() as d:
         body = tm.creation.box((20.0, 20.0, 10.0)); body.apply_translation((0, 0, 5)); p1 = os.path.join(d, "body.stl"); body.export(p1)
         knob = tm.creation.box((10.0, 10.0, 10.0)); knob.apply_translation((0, 0, 5)); p2 = os.path.join(d, "knob.stl"); knob.export(p2)
