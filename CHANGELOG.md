@@ -23,6 +23,16 @@
 - **Checks**: `smoke/run_smoke.sh` (2 min 27 s with the mesh libraries: every selftest, the rule greps, the enforcement negatives, both lints, the evals), 17 evals
   with mechanical checks, `docs/reviews/INDEX.md` and `docs/retro/INDEX.md` list every review and retro.
 
+## UNRELEASED — first-article learnings of the two mechanical showcases (2026-10-01)
+
+### Changed
+- **`dfm-printed-enclosure.md` §8**: coupon labels are debossed unless the plate is the mark coupon, and then ONE short raised word proves the
+  colour path (the raised-label coupon plate cost 3.9 g of the second colour and 8 changes for 0.4 g of letters); nothing that moves may sweep a
+  raised feature (a crank arm scraped its plate's legends and jammed with 0.5 mm of play to the flat face); the operating side of a display
+  mechanism is the side away from the viewing window. **`case-pipeline.md` §Interference**: static raised features (legends, bosses, lugs) are
+  bodies in the moving-part sweep, with the axial play added. **Kickoff C4**: a hand-held / stands-on-its-own-face alternative tied to C12, and
+  the window-vs-operating-side rule. Three pitfall lines.
+
 ## 0.10.3 — 2026-10-01 — static stability as a gate (owner rule: anything that stands, rocks, walks or is set down free carries a CoG-vs-support row at its worst pose); print-DFM rule P ignores tessellation detours (rule set 0.10.3)
 
 ### Added
