@@ -117,9 +117,9 @@ def project_root(start=None):
 
 
 ROOT = project_root()
-DEFAULTS = dict(processes=os.path.join(ROOT, "design", "dfm_processes.yaml"), verdicts=os.path.join(ROOT, "docs", "quotes", "dfm_verdicts.yaml"),
-                val_dir=os.path.join(ROOT, "out", "dfm_validation"), val_doc=os.path.join(ROOT, "docs", "reviews", "PRINT_DFM_VALIDATION.md"))
-TEMPLATE_TABLE = os.path.join(os.path.dirname(HERE), "templates", "design", "dfm_processes.yaml")
+DEFAULTS = dict(processes=os.path.join(ROOT, "20-design", "dfm_processes.yaml"), verdicts=os.path.join(ROOT, "60-orders", "quotes", "dfm_verdicts.yaml"),
+                val_dir=os.path.join(ROOT, "40-case", "dfm_validation"), val_doc=os.path.join(ROOT, "80-reviews", "PRINT_DFM_VALIDATION.md"))
+TEMPLATE_TABLE = os.path.join(os.path.dirname(HERE), "templates", "20-design", "dfm_processes.yaml")
 PATHS = dict(DEFAULTS)
 
 
@@ -132,7 +132,7 @@ def processes(path=None):
     if not os.path.exists(p) and not path and os.path.exists(TEMPLATE_TABLE):
         p = TEMPLATE_TABLE
     if not os.path.exists(p):
-        print(f"print_dfm: no process table at {p} (copy templates/20-design/dfm_processes.yaml to design/ or pass --processes)", file=sys.stderr); sys.exit(2)
+        print(f"print_dfm: no process table at {p} (copy templates/20-design/dfm_processes.yaml to 20-design/ or pass --processes)", file=sys.stderr); sys.exit(2)
     return yaml.safe_load(open(p))["processes"], p
 
 

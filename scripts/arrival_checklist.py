@@ -75,7 +75,7 @@ def render(y, yaml_rel, tool_rel="scripts/arrival_checklist.py"):
 
 def build(P):
     import yaml
-    src = P.get("arrival_checklist.yaml", "20-design/arrival_checklist.yaml"); out = P.get("arrival_checklist.out", "60-orders/ARRIVAL_CHECKLIST_rev0.md")
+    src = P.get("arrival_checklist.yaml", "20-design/arrival_checklist.yaml"); out = P.get("arrival_checklist.out", f"60-orders/ARRIVAL_CHECKLIST_{P.rev()}.md")
     sp = os.path.join(P.root, src)
     if not os.path.exists(sp):
         print(f"arrival_checklist: MISSING {src}"); return None, None, None
