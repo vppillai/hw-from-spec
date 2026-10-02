@@ -108,7 +108,10 @@ class Project:
     def rev(self):
         """The project revision that names folders (`project.revision`, default rev0): the fab package, the cut, collateral and marketing
         folders are `<dir>/<rev>/`; the record hash lives INSIDE each (board_id.txt, RENDERS.md, MANIFEST), never in a folder name."""
-        return str(self.get("project.revision", "rev0"))
+        v = str(self.get("project.revision") or "rev0")
+        if not re.fullmatch(r"[A-Za-z0-9._-]+", v):
+            sys.exit(f"project.revision must be a folder-safe name (rev0, rev1a), not {v!r} — it names 30-board/fab/<rev>, 70-release/<rev>, …")
+        return v
 
     def tool(self, key):
         v = self.get(f"tools.{key}")
@@ -346,6 +349,13 @@ def selftest():
     assert P.get("paths.mech_record") == "40-case/*/parts/*.stl" and P.path("kits_dir") == f"{d}/50-kits" and P.rev() == "rev0"
     P.cfg.setdefault("paths", {})["gates"] = "legacy/GATES.md"; P.cfg.setdefault("project", {})["revision"] = "rev1"
     assert P.path("gates") == f"{d}/legacy/GATES.md" and P.rev() == "rev1", "an explicit path / revision wins over the layout default"
+    for v in (None, ""):
+        P.cfg["project"]["revision"] = v; assert P.rev() == "rev0", f"revision {v!r} -> rev0"
+    P.cfg["project"]["revision"] = "a b"
+    try:
+        P.rev(); assert False, "a space in revision must exit"
+    except SystemExit as e:
+        assert "folder-safe" in str(e)
     del P.cfg["paths"]["gates"]; P.cfg["project"].pop("revision")
     assert P.tool("python") == f"{d}/.venv/bin/python" and P.tool("kicad_cli") == "kicad-cli"
     assert P.id_re().findall("D-01 AG-002 B-03 CC-004") == ["D-01", "AG-002", "B-03"] and P.decision_re().findall("D-2a AG-002 B-03") == ["D-2a", "AG-002"]
