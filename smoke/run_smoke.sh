@@ -149,21 +149,21 @@ printf 'project: {name: enf, scope: mech}\npaths: {mech_record: "40-case/*/parts
 printf '| ID | Date | Status | Topic | P | R |\n|---|---|---|---|---|---|\n| **D-07** | d | **OPEN** | thicken plate08 | p | r |\n| **D-08** | d | **OPEN** | another body | p | r |\n| CC-010 | d | APPLIED | x | p | r |\n' > $E/90-log/DECISIONS.md
 "$PY" - "$E" <<'PYEOF'
 import sys, trimesh
-E = sys.argv[1]; trimesh.creation.box((30.0, 30.0, 2.0)).export(f"{E}/40-case/pre/stl/plate2.stl"); trimesh.creation.box((30.0, 30.0, 0.8)).export(f"{E}/40-case/pre/stl/plate08.stl")
+E = sys.argv[1]; trimesh.creation.box((30.0, 30.0, 2.0)).export(f"{E}/40-case/pre/parts/plate2.stl"); trimesh.creation.box((30.0, 30.0, 0.8)).export(f"{E}/40-case/pre/parts/plate08.stl")
 b = trimesh.creation.box((20.0, 20.0, 5.0)); b.faces = b.faces[2:]; b.export(f"{E}/open.stl")
 PYEOF
 (cd $E
- "$PY" scripts/print_dfm.py --process jlc_mjf_pa12 --samples 20000 --out 40-case/pre/dfm 40-case/pre/stl/plate2.stl >/dev/null || { echo "FAIL: the 2.0 plate must PASS"; exit 1; }
- "$PY" scripts/print_dfm.py --gate 40-case/pre/dfm >/dev/null && { echo "FAIL (F5): plate08 sits in the STL set without a record and the gate passed"; exit 1; }
- "$PY" scripts/print_dfm.py --process protolabs_mjf_pa12 --samples 20000 --out 40-case/pre/dfm 40-case/pre/stl/plate08.stl >/dev/null 2>&1 || true
- "$PY" scripts/print_dfm.py --gate 40-case/pre/dfm >/dev/null && { echo "FAIL (F6): a record against a laxer row than print_targets.pre.dfm_process passed"; exit 1; }
- "$PY" scripts/print_dfm.py --process jlc_mjf_pa12 --samples 20000 --out 40-case/pre/dfm 40-case/pre/stl/plate08.stl >/dev/null && { echo "FAIL: the 0.8 plate must FLAG"; exit 1; }
- "$PY" scripts/print_dfm.py --gate 40-case/pre/dfm --open pre/plate08=WHATEVER >/dev/null && { echo "FAIL (F7): --open with a free string passed"; exit 1; }
- "$PY" scripts/print_dfm.py --gate 40-case/pre/dfm --open pre/plate08=CC-010 >/dev/null && { echo "FAIL (F7): --open with an APPLIED row passed"; exit 1; }
- "$PY" scripts/print_dfm.py --gate 40-case/pre/dfm --open pre/plate08=D-08 >/dev/null && { echo "FAIL (N2 0.9.0): an OPEN row that does not name plate08 passed"; exit 1; }
- "$PY" scripts/print_dfm.py --gate 40-case/pre/dfm --open pre/plate08=D-07 >/dev/null || { echo "FAIL: --open with the OPEN row D-07 must pass"; exit 1; }
- sed -i.bak 's/"verdict": "FLAG"/"verdict": "PASS"/' 40-case/pre/dfm/plate08.json
- "$PY" scripts/print_dfm.py --gate 40-case/pre/dfm >/dev/null && { echo "FAIL (F28): a record edited FLAG->PASS by hand passed the gate"; exit 1; }
+ "$PY" scripts/print_dfm.py --process jlc_mjf_pa12 --samples 20000 --out 40-case/pre/checks/dfm 40-case/pre/parts/plate2.stl >/dev/null || { echo "FAIL: the 2.0 plate must PASS"; exit 1; }
+ "$PY" scripts/print_dfm.py --gate 40-case/pre/checks/dfm >/dev/null && { echo "FAIL (F5): plate08 sits in the STL set without a record and the gate passed"; exit 1; }
+ "$PY" scripts/print_dfm.py --process protolabs_mjf_pa12 --samples 20000 --out 40-case/pre/checks/dfm 40-case/pre/parts/plate08.stl >/dev/null 2>&1 || true
+ "$PY" scripts/print_dfm.py --gate 40-case/pre/checks/dfm >/dev/null && { echo "FAIL (F6): a record against a laxer row than print_targets.pre.dfm_process passed"; exit 1; }
+ "$PY" scripts/print_dfm.py --process jlc_mjf_pa12 --samples 20000 --out 40-case/pre/checks/dfm 40-case/pre/parts/plate08.stl >/dev/null && { echo "FAIL: the 0.8 plate must FLAG"; exit 1; }
+ "$PY" scripts/print_dfm.py --gate 40-case/pre/checks/dfm --open pre/plate08=WHATEVER >/dev/null && { echo "FAIL (F7): --open with a free string passed"; exit 1; }
+ "$PY" scripts/print_dfm.py --gate 40-case/pre/checks/dfm --open pre/plate08=CC-010 >/dev/null && { echo "FAIL (F7): --open with an APPLIED row passed"; exit 1; }
+ "$PY" scripts/print_dfm.py --gate 40-case/pre/checks/dfm --open pre/plate08=D-08 >/dev/null && { echo "FAIL (N2 0.9.0): an OPEN row that does not name plate08 passed"; exit 1; }
+ "$PY" scripts/print_dfm.py --gate 40-case/pre/checks/dfm --open pre/plate08=D-07 >/dev/null || { echo "FAIL: --open with the OPEN row D-07 must pass"; exit 1; }
+ sed -i.bak 's/"verdict": "FLAG"/"verdict": "PASS"/' 40-case/pre/checks/dfm/plate08.json
+ "$PY" scripts/print_dfm.py --gate 40-case/pre/checks/dfm >/dev/null && { echo "FAIL (F28): a record edited FLAG->PASS by hand passed the gate"; exit 1; }
  "$PY" scripts/print_dfm.py --process jlc_mjf_pa12 --samples 5000 open.stl > open.txt && { echo "FAIL (F8): an open mesh must FLAG"; exit 1; }
  grep -q '^  FLAG  M manifold' open.txt || { echo "FAIL (F8): rule M did not fire on the open mesh"; cat open.txt; exit 1; }
  rc=0; "$PY" scripts/print_dfm.py --process jlc_mjf_pa12 nonexist.stl >/dev/null 2>&1 || rc=$?; [[ $rc == 2 ]] || { echo "FAIL (F21): a missing file must exit 2 (got $rc)"; exit 1; }
@@ -177,20 +177,20 @@ printf 'project: {name: nomesh, scope: mech, owner: {name: smoke, email: s@s}}\n
 "$PY" - "$N" <<'PYEOF'
 import sys, json, hashlib, os; N = sys.argv[1]; sys.path.insert(0, f"{N}/scripts"); from project import record_sig; from thin_wall_census import VERSION as V
 for p in ("a", "b"):
-    stl = f"{N}/40-case/pre/stl/{p}.stl"
+    stl = f"{N}/40-case/pre/parts/{p}.stl"
     r = dict(version=V, stl=stl, stl_md5=hashlib.md5(open(stl, "rb").read()).hexdigest(), target="pre", fails=[], accepted_fails=[]); r["sig"] = record_sig(r, V)
-    json.dump(r, open(f"{N}/40-case/pre/census/{p}.json", "w"))
+    json.dump(r, open(f"{N}/40-case/pre/checks/census/{p}.json", "w"))
 PYEOF
 (cd $N
- "$PY" scripts/thin_wall_census.py --gate-dir 40-case/pre/census >/dev/null || { echo "FAIL: two signed clean census records must pass"; exit 1; }
- rm 40-case/pre/census/b.json
- "$PY" scripts/thin_wall_census.py --gate-dir 40-case/pre/census >/dev/null && { echo "FAIL (F5): b.stl has no census record and the gate passed"; exit 1; }
- sed -i.bak 's/"fails": \[\]/"fails": ["WALL 0.88 < 1.2"]/' 40-case/pre/census/a.json; sed -i.bak 's/"fails": \["WALL 0.88 < 1.2"\]/"fails": []/' 40-case/pre/census/a.json
+ "$PY" scripts/thin_wall_census.py --gate-dir 40-case/pre/checks/census >/dev/null || { echo "FAIL: two signed clean census records must pass"; exit 1; }
+ rm 40-case/pre/checks/census/b.json
+ "$PY" scripts/thin_wall_census.py --gate-dir 40-case/pre/checks/census >/dev/null && { echo "FAIL (F5): b.stl has no census record and the gate passed"; exit 1; }
+ sed -i.bak 's/"fails": \[\]/"fails": ["WALL 0.88 < 1.2"]/' 40-case/pre/checks/census/a.json; sed -i.bak 's/"fails": \["WALL 0.88 < 1.2"\]/"fails": []/' 40-case/pre/checks/census/a.json
  "$PY" - <<'PYEOF'
-import json; p = "40-case/pre/census/a.json"; r = json.load(open(p)); r["accepted_fails"] = [dict(fail="WALL 0.9", reason="r", date="2026-01-01", evidence="e")]; json.dump(r, open(p, "w"))   # body changed, sig kept
+import json; p = "40-case/pre/checks/census/a.json"; r = json.load(open(p)); r["accepted_fails"] = [dict(fail="WALL 0.9", reason="r", date="2026-01-01", evidence="e")]; json.dump(r, open(p, "w"))   # body changed, sig kept
 PYEOF
- rm 40-case/pre/stl/b.stl
- "$PY" scripts/thin_wall_census.py --gate-dir 40-case/pre/census >/dev/null && { echo "FAIL (F28): a census record edited after signing passed the gate"; exit 1; }
+ rm 40-case/pre/parts/b.stl
+ "$PY" scripts/thin_wall_census.py --gate-dir 40-case/pre/checks/census >/dev/null && { echo "FAIL (F28): a census record edited after signing passed the gate"; exit 1; }
  git init -q && git add -A && git -c user.name=smoke -c user.email=s@s commit -qm nomesh
  out=$(scripts/adopt_gates.sh --no-clone 2>&1 || true); echo "$out" | grep -q "GATE FAILED: an artefact exists whose gate line is missing" || { echo "FAIL (F11): an STL set with no census / print-DFM gate line in gates.adopt was green"; echo "$out"; exit 1; }
  printf '# GATES\n| Gate | Meaning | Prerequisites | Owner approval |\n|---|---|---|---|\n| **G0** | spec | x | _not yet approved_ |\n| **Release** | reports | y | _not yet written_ |\n' > 90-log/GATES.md

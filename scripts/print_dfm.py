@@ -555,6 +555,16 @@ def _project():
     return Project(os.path.join(ROOT, "project.yaml"))
 
 
+
+def parts_dir(records_dir):
+    """The STL set a records dir belongs to: `<set>/parts/` when the records sit in `<set>/checks/<kind>/` (the layout of record), else the
+    sibling `stl/` of the records dir's parent (an older project shape). One rule for every pure gate."""
+    parent = os.path.dirname(os.path.abspath(records_dir.rstrip("/")))
+    if os.path.basename(parent) == "checks":
+        return os.path.join(os.path.dirname(parent), "parts")
+    return os.path.join(parent, "stl")
+
+
 def gate(dfm_dirs, open_findings=(), target=None, expected=()):
     """PURE adopt gate (recomputes nothing) — see the docstring's --gate entry. Returns 1 on any problem."""
     bad = []; n = 0; P = _project(); table, _ = processes()
@@ -580,7 +590,7 @@ def gate(dfm_dirs, open_findings=(), target=None, expected=()):
     used = set()
     targets = (P.cfg.get("print_targets") or {}) if P else {}
     for d in dfm_dirs:
-        d = d.rstrip("/"); parent = os.path.dirname(os.path.abspath(d)); tag = target or os.path.basename(parent); census = os.path.join(parent, "census")
+        d = d.rstrip("/"); parent = os.path.dirname(os.path.abspath(d)); tag = target or os.path.basename(os.path.dirname(parts_dir(d))); census = os.path.join(parent, "census")
         want = None
         if targets:
             if tag not in targets:
@@ -627,9 +637,10 @@ def gate(dfm_dirs, open_findings=(), target=None, expected=()):
                 bad.append(f"{d}/{os.path.basename(cj)}: census record without a print_dfm record (run scripts/print_dfm.py on the body)")
         # the STL set of record: every body under this tag (sibling stl/ + the paths.mech_record glob under the parent) needs a same-md5 record
         have = {e.get("stl_md5") for e in recs.values()}
-        stls = set(glob.glob(os.path.join(parent, "stl", "*.stl")))
+        set_root = os.path.dirname(parts_dir(d))
+        stls = set(glob.glob(os.path.join(parts_dir(d), "*.stl")))
         if P and P.get("paths.mech_record"):
-            stls |= {f for f in glob.glob(os.path.join(ROOT, P.get("paths.mech_record"))) if os.path.abspath(f).startswith(parent + os.sep)}
+            stls |= {f for f in glob.glob(os.path.join(ROOT, P.get("paths.mech_record"))) if os.path.abspath(f).startswith(set_root + os.sep)}
         for f in sorted(stls):
             if md5(f) not in have:
                 bad.append(f"{os.path.relpath(f, ROOT)}: body of the record set without a print_dfm record of its md5 (run scripts/print_dfm.py --process {want or '<row>'} --out {d} on it)")
