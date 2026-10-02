@@ -6,6 +6,7 @@ project:
   name: {{PROJECT}}
   description: {{ONE_LINE_DESCRIPTION}}
   scope: {{SCOPE}}                            # kickoff A0: ee (PCB/PCBA only) | mech (enclosure / printed / CNC parts only) | both (a housed board) — SKILL.md §1
+  revision: rev0                              # names the fab package, cut, collateral and marketing folders (30-board/fab/rev0, 70-release/rev0, …); the record hash lives INSIDE each
   owner: {name: {{OWNER_NAME}}, email: {{OWNER_EMAIL}}}   # who writes the gate cells and the release line; scripts/gate_check.py --release checks the line's git author against this
 skill: {repo: {{SKILL_REPO_URL}}, commit: {{SKILL_COMMIT}}, version: {{SKILL_VERSION}}}   # the hw-from-spec commit + SKILL.md version this project follows; scripts/skill_retro.py reads `version`
 kickoff:                                      # the owner's kickoff answers, machine-readable (references/kickoff-questionnaire.md "What the answers write"; `scripts/project.py kickoff --check`
@@ -55,6 +56,17 @@ markers:
   unverified: [UNVERIFIED, TBD-DRAWING]
   nod_regex: '\(!\)|owner nod'
   placed_regex: '\bPLACED\b'                 # owner row with this word + the package name = placed order -> judged on frozen stock (references/fab-dfm.md §8)
+# The layout of record (references/project-yaml.md §Layout) — every line below is a DEFAULT read from scripts/project.py; set a key only to deviate.
+#   now_dir: 00-now                           the five answer pages (scripts/now_pages.py): where things stand, blocked on owner, what to print / order / check
+#   spec_dir: 10-spec                         spec: 10-spec/SPEC.md  kickoff_answers: 10-spec/KICKOFF_ANSWERS.md  datasheet_notes: 10-spec/datasheet_notes
+#   design_dir: 20-design                     the yaml sources of truth + briefs; test_plan, erc_accept, traceability_yaml live here
+#   board_dir: 30-board                       layout_dir: 30-board/layout  fab_dir: 30-board/fab (package folder = the revision)                     {{ee,both}}
+#   case_dir: 40-case                         one set per print target: parts/ checks/ pictures/ build/ ; mech_record: 40-case/*/parts/*.stl        {{mech,both}}
+#   kits_dir: 50-kits                         one kit per print target: START_HERE.md plates/ parts/ sheets/ (mirrored to ~/Downloads/<project>_kits/) {{mech,both}}
+#   orders_dir: 60-orders                     parts_verification, procurement, ORDER_<rev>, ARRIVAL_CHECKLIST_<rev>; quotes_dir: 60-orders/quotes (frozen evidence)
+#   release_dir: 70-release                   production_dir: 70-release (the cut at 70-release/<rev>/)  reports_dir  collateral_dir  marketing_dir (…/<rev>/)
+#   reviews_dir: 80-reviews                   one folder per review round; reorg_rewrites: 80-reviews/REORG_REWRITES.txt
+#   log_dir: 90-log                           decisions status gates blockers known_issues learnings env traceability_out — the append logs
 paths:
   decisions: docs/governance/DECISIONS.md
   blockers: docs/governance/BLOCKERS.md

@@ -18,7 +18,7 @@ CLI (for shell scripts):
                                               # `<!-- skeleton: begin -->` / `<!-- skeleton: end -->` are skipped; exit 1 while any slot remains
   scripts/project.py kickoff --check          # every answered KICKOFF_ANSWERS row (not n/a, not a slot) has its `Written to` project.yaml keys set
                                               # and a real D row id; exit 1 otherwise
-  scripts/project.py env                      # the host row for docs/governance/ENV.md: cores, RAM, the heavy-job pool size and memory floor
+  scripts/project.py env                      # the host row for 90-log/ENV.md: cores, RAM, the heavy-job pool size and memory floor
                                               # scripts/jobs.sh derives (project.yaml host: {jobs_max, min_free_gb} overrides them) — no machine constant lives in the skill
   scripts/project.py --selftest
 
@@ -35,16 +35,24 @@ DEFAULTS = {
     "ids": {"owner_prefix": "D", "agent_prefix": "CC", "blocker_prefix": "B"},
     "markers": {"release_regex": r"clear[ -]to[ -]build", "unverified": ["UNVERIFIED", "TBD-DRAWING"],
                 "nod_regex": r"\(!\)|owner nod", "placed_regex": r"\bPLACED\b", "hand_curated": ["<!-- hand-curated: begin -->", "<!-- hand-curated: end -->"]},
-    # the docs/ layout: governance/ (records the generators read and write), design/ (intent), parts/, reviews/, release/, quotes/<date>/,
-    # production/<md5-8>/, datasheet_notes/ — a re-layout is a `reorg:` block + scripts/reorg_paths.py, never a hand sweep
-    "paths": {"decisions": "docs/governance/DECISIONS.md", "blockers": "docs/governance/BLOCKERS.md", "gates": "docs/governance/GATES.md",
-              "known_issues": "docs/governance/KNOWN_ISSUES.md", "status": "docs/governance/STATUS.md", "learnings": "docs/governance/LEARNINGS_LOG.md",
-              "erc_accept": "design/erc_accept.yaml", "env": "docs/governance/ENV.md", "traceability_yaml": "design/traceability.yaml",
-              "traceability_out": "docs/governance/TRACEABILITY.md", "test_plan": "docs/design/TEST_PLAN.md",
-              "parts_verification": "docs/parts/PARTS_VERIFICATION.md", "datasheet_notes": "docs/datasheet_notes", "reviews_dir": "docs/reviews",
-              "quotes_dir": "docs/quotes", "production_dir": "docs/production", "fab_dir": "out/fab", "release_dir": "docs/release",
-              "collateral_dir": "docs/release/collateral", "mech_record": "out/mechanical/case/*/stl/*.stl", "kickoff_answers": "docs/governance/KICKOFF_ANSWERS.md",
-              "reorg_rewrites": "docs/reviews/REORG_REWRITES.txt"},
+    # the layout of record (references/project-yaml.md §Layout): ten numbered folders in the order of the project's life — 00-now (the five
+    # answer pages) 10-spec 20-design 30-board 40-case 50-kits 60-orders 70-release 80-reviews 90-log; folders are named for what they hold
+    # (a revision is rev0, a kit is its print target), the hash lives inside. A re-layout is a `reorg:` block + scripts/reorg_paths.py.
+    "paths": {"now_dir": "00-now", "spec_dir": "10-spec", "spec": "10-spec/SPEC.md", "kickoff_answers": "10-spec/KICKOFF_ANSWERS.md",
+              "datasheet_notes": "10-spec/datasheet_notes",
+              "design_dir": "20-design", "test_plan": "20-design/TEST_PLAN.md", "erc_accept": "20-design/erc_accept.yaml",
+              "traceability_yaml": "20-design/traceability.yaml",
+              "board_dir": "30-board", "layout_dir": "30-board/layout", "fab_dir": "30-board/fab",
+              "case_dir": "40-case", "mech_record": "40-case/*/parts/*.stl",
+              "kits_dir": "50-kits",
+              "orders_dir": "60-orders", "parts_verification": "60-orders/PARTS_VERIFICATION.md", "procurement": "60-orders/PROCUREMENT.md",
+              "quotes_dir": "60-orders/quotes",
+              "release_dir": "70-release", "production_dir": "70-release", "reports_dir": "70-release/reports",
+              "collateral_dir": "70-release/collateral", "marketing_dir": "70-release/marketing",
+              "reviews_dir": "80-reviews", "reorg_rewrites": "80-reviews/REORG_REWRITES.txt",
+              "log_dir": "90-log", "decisions": "90-log/DECISIONS.md", "status": "90-log/STATUS.md", "gates": "90-log/GATES.md",
+              "blockers": "90-log/BLOCKERS.md", "known_issues": "90-log/KNOWN_ISSUES.md", "learnings": "90-log/LEARNINGS_LOG.md",
+              "env": "90-log/ENV.md", "traceability_out": "90-log/TRACEABILITY.md"},
     "tools": {"python": ".venv/bin/python", "kicad_cli": "kicad-cli", "kicad_python": "python3"},
 }
 
@@ -95,6 +103,11 @@ class Project:
     def path(self, key, default=None):
         rel = self.get(f"paths.{key}", default)
         return os.path.join(self.root, rel) if rel else None
+
+    def rev(self):
+        """The project revision that names folders (`project.revision`, default rev0): the fab package, the cut, collateral and marketing
+        folders are `<dir>/<rev>/`; the record hash lives INSIDE each (board_id.txt, RENDERS.md, MANIFEST), never in a folder name."""
+        return str(self.get("project.revision", "rev0"))
 
     def tool(self, key):
         v = self.get(f"tools.{key}")
@@ -324,7 +337,15 @@ def selftest():
     P = Project.find(start=d)
     assert P.get("ids.agent_prefix") == "AG" and P.get("ids.owner_prefix") == "D", "explicit key wins, missing key falls back to DEFAULTS"
     assert P.get("markers.release_regex") and P.get("nope.x", 7) == 7
-    assert P.path("decisions") == f"{d}/d/D.md" and P.path("gates") == f"{d}/docs/governance/GATES.md" and P.path("zz") is None
+    assert P.path("decisions") == f"{d}/d/D.md" and P.path("gates") == f"{d}/90-log/GATES.md" and P.path("zz") is None
+    # the layout of record: every default sits under one of the ten numbered folders; an explicit old-layout key wins unchanged; rev defaults to rev0
+    top = {"00-now", "10-spec", "20-design", "30-board", "40-case", "50-kits", "60-orders", "70-release", "80-reviews", "90-log"}
+    for k, v in DEFAULTS["paths"].items():
+        assert v.split("/")[0] in top, (k, v)
+    assert P.get("paths.mech_record") == "40-case/*/parts/*.stl" and P.path("kits_dir") == f"{d}/50-kits" and P.rev() == "rev0"
+    P.cfg.setdefault("paths", {})["gates"] = "docs/governance/GATES.md"; P.cfg.setdefault("project", {})["revision"] = "rev1"
+    assert P.path("gates") == f"{d}/docs/governance/GATES.md" and P.rev() == "rev1", "an explicit path / revision wins over the layout default"
+    del P.cfg["paths"]["gates"]; P.cfg["project"].pop("revision")
     assert P.tool("python") == f"{d}/.venv/bin/python" and P.tool("kicad_cli") == "kicad-cli"
     assert P.id_re().findall("D-01 AG-002 B-03 CC-004") == ["D-01", "AG-002", "B-03"] and P.decision_re().findall("D-2a AG-002 B-03") == ["D-2a", "AG-002"]
     assert split_row("| a | b \\| c | d |") == ["a", "b \\| c", "d"], "an escaped pipe is content"
@@ -332,17 +353,17 @@ def selftest():
     assert decision_status(f"{d}/DS.md") == {"D-03": "APPROVED", "CC-010": "APPLIED (!)"} and decision_status(f"{d}/nope.md") == {}, decision_status(f"{d}/DS.md")
     # scope + record id: board md5 in ee / both, the STL set in mech, MISSING when absent
     assert P.scope() == "both" and P.record_md5()[1] is None, "no board: MISSING"
-    os.makedirs(f"{d}/out/mechanical/case/v1/stl"); open(f"{d}/out/mechanical/case/v1/stl/a.stl", "wb").write(b"A")
+    os.makedirs(f"{d}/40-case/mjf_case/parts"); open(f"{d}/40-case/mjf_case/parts/a.stl", "wb").write(b"A")
     P.cfg["project"] = {"scope": "mech"}
     lbl, m = P.record_md5(); assert m and "1 files" in lbl and P.scope() == "mech"
-    open(f"{d}/out/mechanical/case/v1/stl/b.stl", "wb").write(b"B"); assert P.record_md5()[1] != m, "a new STL moves the mech record md5"
+    open(f"{d}/40-case/mjf_case/parts/b.stl", "wb").write(b"B"); assert P.record_md5()[1] != m, "a new STL moves the mech record md5"
     open(f"{d}/t.md", "w").write("all {{SCOPE}}\n| G1 | {{ee,both}}\n| M1 | {{mech}}\n{{ee,both}}{{mech}} either\n")
     assert scaffold("mech", [f"{d}/t.md"]) == 1 and open(f"{d}/t.md").read() == "all mech\n| M1 |\n either\n", open(f"{d}/t.md").read()
     # record signing, OPEN rows, required gate lines
     r = dict(a=1, b=[1.5, "x"]); r["sig"] = record_sig(r, "1.0"); assert verify_sig(r, "1.0") and not verify_sig(dict(r, a=2), "1.0") and not verify_sig(r, "1.1")
     open(f"{d}/D.md", "w").write("| ID | Date | Status | Topic | P | R |\n|---|---|---|---|---|---|\n| **D-07** | d | **OPEN** | widen root | p | r |\n| CC-010 | d | APPLIED | x | p | r |\n| CC-011 | d | OPEN (owner) | y | p | r |\n")
     assert open_decisions(f"{d}/D.md") == {"D-07": "widen root p r", "CC-011": "y p r"}, open_decisions(f"{d}/D.md")
-    P.cfg["paths"] = {"mech_record": "out/mechanical/case/*/stl/*.stl", "schematic": "k/k.kicad_sch"}; P.cfg["gates"] = {"adopt": ["$PY scripts/known_issues.py --check"]}
+    P.cfg["paths"] = {"mech_record": "40-case/*/parts/*.stl", "schematic": "k/k.kicad_sch"}; P.cfg["gates"] = {"adopt": ["$PY scripts/known_issues.py --check"]}
     bad = required_gate_lines(P); assert len(bad) == 2 and "--gate-dir" in bad[0] and "print_dfm.py --gate" in bad[1], bad
     P.cfg["gates"]["adopt"] += ["$PY scripts/thin_wall_census.py --gate-dir out/x/census", "$PY scripts/print_dfm.py --gate out/x/dfm"]
     assert required_gate_lines(P) == []
