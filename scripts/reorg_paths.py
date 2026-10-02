@@ -6,7 +6,7 @@ one yaml block + one run, and the same table answers "where did docs/X go?" for 
 
   scripts/reorg_paths.py --plan       dry run: git mv rows, trims, untracks, rewrite counts per file (nothing written)
   scripts/reorg_paths.py --apply      git mv every move (longest key first, so a file listed out of a moved directory leaves before the
-                                      directory goes), rewrite the literals in every non-frozen tracked text file, git rm the trims,
+                                      directory goes; a directory whose destination exists is merged file by file, never nested), rewrite the literals in every non-frozen tracked text file, git rm the trims,
                                       git rm --cached the untrack globs (files stay on disk), append the gitignore lines; writes reorg.rewrites_record
   scripts/reorg_paths.py --check      exit 1 on (1) any OLD literal left in a non-frozen tracked text file, (2) any literal under a moved top
                                       directory that names a file that does not exist (structural files only; reorg.allow_missing regexes)
@@ -115,9 +115,17 @@ class Reorg:
     def apply(self):
         for old in self.olds:                       # longest key first: a file listed out of a moved directory leaves before the directory goes
             new = self.moves[old]
-            if self.git("ls-files", old).strip():
-                os.makedirs(os.path.dirname(os.path.join(self.root, new)) or self.root, exist_ok=True)
-                self.git("mv", old, new)
+            files = self.git("ls-files", old).splitlines()
+            if not files:
+                continue
+            if os.path.isdir(os.path.join(self.root, new)) and files != [old]:   # the destination exists (another row created it): merge file by file, never nest
+                for f in files:
+                    dst = new + f[len(old):]
+                    os.makedirs(os.path.dirname(os.path.join(self.root, dst)) or self.root, exist_ok=True)
+                    self.git("mv", f, dst)
+                continue
+            os.makedirs(os.path.dirname(os.path.join(self.root, new)) or self.root, exist_ok=True)
+            self.git("mv", old, new)
         rewrites = self.plan(write=True)            # after the move: the corpus is enumerated from the index, which now holds the new paths
         for p in self.trim:
             if self.git("ls-files", p).strip():
@@ -199,17 +207,18 @@ def selftest():
     import io, contextlib
     d = tempfile.mkdtemp(prefix="hwfs_reorg_")
     w = lambda p, s: (os.makedirs(os.path.dirname(f"{d}/{p}"), exist_ok=True), open(f"{d}/{p}", "w").write(s))
-    # a docs/-style layout -> the numbered tree: a directory move with one file pulled out of it (longest key first), a one-level file
-    # move (join forms), a frozen directory (spelled by its NEW name, as the template does) whose content must survive byte-identical
+    # a docs/-style layout -> the numbered tree: a directory move with one file pulled out of it (longest key first), a directory merged
+    # into a destination another row created first (docs/quotes goes before docs/parts), a one-level directory (join forms), a frozen
+    # directory (spelled by its NEW name, as the template does) whose content must survive byte-identical
     w("project.yaml", "project: {name: t}\nreorg:\n  moves: {docs/governance: 90-log, docs/governance/KICKOFF_ANSWERS.md: 10-spec/KICKOFF_ANSWERS.md, "
-      "docs/parts_check.json: 60-orders/parts_check.json, docs/quotes: 60-orders/quotes}\n  trim: [out/old]\n  untrack: ['out/logs/*.log']\n"
+      "docs/parts: 60-orders, docs/quotes: 60-orders/quotes}\n  trim: [out/old]\n  untrack: ['out/logs/*.log']\n"
       "  gitignore: ['out/logs/*.log']\n  frozen: [out/fab/, 60-orders/quotes, '70-release/*/records']\n  no_existence: ['.py', '.js', 90-log/DECISIONS.md]\n"
       "  allow_missing: ['^60-orders/quotes/']\n  rewrites_record: 80-reviews/REORG_REWRITES.txt\n")
     w("docs/governance/DECISIONS.md", "see docs/governance/STATUS.md and ./docs/governance/GATES.md and other-repo/docs/governance/STATUS.md and "
       "docs/governance_2026/x.md and docs/gone.md and docs/quotes/2026-01-01/mail.txt and docs/governance/KICKOFF_ANSWERS.md\n")
     w("docs/governance/STATUS.md", "x\n"); w("docs/governance/GATES.md", "y\n"); w("docs/governance/KICKOFF_ANSWERS.md", "k\n")
-    w("docs/parts_check.json", "{}\n"); w("docs/governance_2026/x.md", "z\n")
-    w("gen/a.py", 'A = (ROOT / "docs" / "parts_check.json")\nB = os.path.join(R, "docs", "quotes")\nC = "docs/parts_check.json"\nD = "60-orders/quotes/2026-02-02/gone.txt"\n')
+    w("docs/parts/parts_check.json", "{}\n"); w("docs/governance_2026/x.md", "z\n")
+    w("gen/a.py", 'A = (ROOT / "docs" / "parts" / "parts_check.json")\nB = os.path.join(R, "docs", "quotes")\nC = "docs/parts/parts_check.json"\nD = "60-orders/quotes/2026-02-02/gone.txt"\n')
     frozen_txt = "see docs/quotes/2026-01-01/mail.txt\n"
     w("docs/quotes/2026-01-01/mail.txt", frozen_txt)
     w("out/fab/old.md", "frozen docs/governance/DECISIONS.md\n"); w("out/old/x.txt", "g\n"); w("out/logs/run.log", "l\n")
@@ -234,6 +243,7 @@ def selftest():
     t = open(f"{d}/gen/a.py").read()
     assert '"60-orders" / "parts_check.json"' in t and '"60-orders", "quotes"' in t and 'C = "60-orders/parts_check.json"' in t, t
     assert os.path.exists(f"{d}/10-spec/KICKOFF_ANSWERS.md") and not os.path.exists(f"{d}/docs/governance"), "file pulled out before its directory moved"
+    assert os.path.exists(f"{d}/60-orders/parts_check.json") and not os.path.exists(f"{d}/60-orders/parts"), "a directory merges into an existing destination, never nests"
     assert open(f"{d}/60-orders/quotes/2026-01-01/mail.txt").read() == frozen_txt, "frozen directory moved as a whole, content byte-identical"
     assert "frozen docs/governance/DECISIONS.md" in open(f"{d}/out/fab/old.md").read(), "frozen file rewritten"
     assert R.plan() == [], "second pass must be a no-op (idempotent)"
