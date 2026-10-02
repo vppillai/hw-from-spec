@@ -3,7 +3,7 @@
 The order is placed (the owner's click). Hours later the print service / CNC / PCB vendor mails "please confirm the risks" with marked-up
 pictures and per-line file ids, and an order-page **Replace File** button that exists only after a reply. This is a review round like any
 other — evidence first, findings mapped to design features, decisions logged, changes through the generator — with one extra wall: the order is
-the owner's account. Record template: `templates/VENDOR_REVIEW_RECORD.md` (one file per mail under `docs/quotes/<date>/`).
+the owner's account. Record template: `templates/VENDOR_REVIEW_RECORD.md` (one file per mail under `60-orders/quotes/<date>/`).
 
 ## 1. Boundaries (hard)
 - **Agents never pay, never tick a terms / risk / "I agree" box, never cart, never change quantity, material, colour, finish, address or remarks,
@@ -21,11 +21,11 @@ the owner's account. Record template: `templates/VENDOR_REVIEW_RECORD.md` (one f
 
 ## 2. The round
 1. **File the evidence.** Save the mail as `.eml` and every linked image (the vendor's marked-up heat maps are `<img>` links to its message-file
-   ids, often fetchable without login; the mail itself carries no attachments) under `docs/quotes/<date>/`, named by order and line id. A
+   ids, often fetchable without login; the mail itself carries no attachments) under `60-orders/quotes/<date>/`, named by order and line id. A
    vendor picture may use a piece-local frame (e.g. a lid's Z = body Z − the split plane): write the conversion next to the picture.
 2. **Map every flag to a design feature** on the STLs of record (`scripts/thin_wall_check.py --census` per piece, `--pinch` on mark-shaped
    bodies): each red area is either designed geometry listed before ordering (knife edges, slits, legend webs — quote the order sheet line that
-   listed it) or a real defect. Write the mapping table into §2 of the record (`templates/VENDOR_REVIEW_RECORD.md`, under `docs/quotes/<date>/`); a flag you cannot map is a finding.
+   listed it) or a real defect. Write the mapping table into §2 of the record (`templates/VENDOR_REVIEW_RECORD.md`, under `60-orders/quotes/<date>/`); a flag you cannot map is a finding.
 3. **Decide per line** — a CC row with options and a recommendation, OPEN for the owner: accept the risk (bodies whose thin parts are designed),
    fix and replace (a real defect), redesign (rare). The owner's row (D-nn) decides; the reply wording per line goes into the CC row.
 4. **Fix through the yaml + generator** (never the STL): version bump, full generated chain, new census row for the defect class (§3 point

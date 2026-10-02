@@ -21,7 +21,7 @@ warning threshold as Warning) — limit + 0.01 mm for copper rules, one full ste
 |---|---|
 | **Inputs** | the G1 schematic of record (yaml + generated CAD), `design/<board>_board.yaml` (outline, stack-up, design rules, net classes, keep-outs, `dfm_accepted`), `design/placement.csv`, `design/dfm_thresholds.json`, the fab's rotation table (`design/<fab>_rotation.yaml`) |
 | **Generators (project `gen/`)** | `place_pcb` (placement CSV → footprints, rule areas, canary) → router (`route_*`, the router session file is the record) → post-pass (stub snap, staircase merge — scripted, never hand edits) → `silk_pass` → `export` (Gerbers/drill/pos, DRC json, parity, route quality, DFM items) → `panelize` → `fab_package` |
-| **Outputs** | `kicad/<board>/<board>.kicad_pcb` (board of record, md5 keys everything), the router session (`*.ses`/`*.dsn`), `out/G2/` review pack (§1.3), `out/dfm_items.json` + `out/dfm.json`, `out/fab/<date>_<md5-8>/` package |
+| **Outputs** | `30-board/kicad/<board>/<board>.kicad_pcb` (board of record, md5 keys everything), the router session (`*.ses`/`*.dsn`), `out/G2/` review pack (§1.3), `out/dfm_items.json` + `out/dfm.json`, `30-board/fab/<date>_<md5-8>/` package |
 | **Gate** | SKILL §6 adopt rule: DRC 0 errors / 0 unconnected, **0 warnings unless a dated waiver row** (§9), schematic parity 0, canary fires exactly once, route quality 0 unjustified HIGH, fab DFM mirror 0 open, silk check 0, every `--selftest` / `--check` green, clone gate on `git archive HEAD`, visual inspection round merged |
 | **Decider** | the owner writes the G2 cell after one review round (`board` role set + `routing-inspection.js`) is merged; the agent asks (SKILL §1.1) |
 
@@ -188,7 +188,7 @@ reviewer can read); an isolated section (USB isolator, mains) gets a keep-out zo
 - `<cad-cli> pcb drc --severity-all --format json` on the committed board, **classes enforced** (KiCad honours only explicit
   `netclass_assignments`, never patterns, and no DRC exclusions: emit per-net assignments and rules from the generator) — the census counts
   every severity per rule name (`gen/drc_count.py` style, cross-host: silk-text items dropped only when the font is absent, with a NOTE).
-- **Zero errors, zero unconnected, zero warnings.** A warning that stays is a **dated waiver row** in `docs/governance/DECISIONS.md` (rule,
+- **Zero errors, zero unconnected, zero warnings.** A warning that stays is a **dated waiver row** in `90-log/DECISIONS.md` (rule,
   item, reason, owner) mirrored by a generated accept rule (`enclosedByArea` marker rule area per accepted item, not `insideArea`), so DRC and
   the route-quality gate accept exactly the same copper; a prose waiver the matrix cannot read does not count. The G2 cell and the board order
   require this bar (`templates/GATES.md`).
@@ -213,7 +213,7 @@ restore it from HEAD or merge (`references/pitfalls.md` tooling/gates).
 - **Before the first quote and at every adopt**: the fab's checker mirrored in-repo (`references/fab-dfm.md`: thresholds JSON with source +
   date, project measurer → items, `scripts/dfm_check.py` grader, acceptances by refdes with **date + reason + evidence**, bare tracks / vias
   never accepted), **0 open** — every item of either fab grade fixed or accepted with vendor evidence. Then the fab's
-  own viewer on the board AND the panel upload, counts diffed against the mirror, PDF export filed under `docs/quotes/<date>/`.
+  own viewer on the board AND the panel upload, counts diffed against the mirror, PDF export filed under `60-orders/quotes/<date>/`.
 - **Stock**: every fitted code verified live with the run-relative minimum (`qty × boards × attrition`), owner floors on jellybeans; **once the
   order is PLACED the package is judged on the frozen `stock_snapshot.json`**, never on the live shelf (`references/fab-dfm.md` §8).
 
@@ -222,4 +222,4 @@ restore it from HEAD or merge (`references/pitfalls.md` tooling/gates).
 (Economic vs Standard: sides, min package 0402 / 0201, min pitch 0.4 / 0.35, reflow 255 / 240 °C, rails + fiducials), help articles
 `pick-place-file-for-pcb-assembly`, `pcb-assembly-faqs-part-2` (rotation = tape orientation, silkscreen governs polarity),
 `minimum-spacing-for-smd-components`, `Panelizing-your-PCB-for-Assembly`, `in-what-cases-will-there-be-charged-extra`, the stack-up template
-API (`getImpedanceTemplateSettings`). Fetch again, cite the date, and keep the raw responses under `docs/quotes/<date>/`.
+API (`getImpedanceTemplateSettings`). Fetch again, cite the date, and keep the raw responses under `60-orders/quotes/<date>/`.

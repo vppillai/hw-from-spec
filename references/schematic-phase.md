@@ -1,18 +1,18 @@
 # schematic-phase.md — G0 → G1: what the design yaml holds, the ERC gate, map checks, the G1 review pack
 
-The schematic generator is project code (`gen/build_sch.py`); this page fixes what it must consume and produce so the gates in `docs/governance/GATES.md`
+The schematic generator is project code (`gen/build_sch.py`); this page fixes what it must consume and produce so the gates in `90-log/GATES.md`
 mean the same thing in every project. The source project's generator (KiCad 10, sheet fragments instantiated per port) is the worked example; the
 shapes below are the generic contract.
 
-## 1. Design yaml — the minimum a schematic needs (`design/<board>.yaml`, `design/parts.yaml`, `design/sheets/*.yaml`)
+## 1. Design yaml — the minimum a schematic needs (`design/<board>.yaml`, `20-design/parts.yaml`, `design/sheets/*.yaml`)
 
 ```yaml
 # design/<board>.yaml — the root: identity, libraries, sheets, root-level nets
 board:
   name: <board>                     # file stem of the generated CAD project (<cad>/<board>/<board>.*)
   title: <one line>  rev: "0"  date: YYYY-MM-DD  paper: A3
-  parts: [design/parts.yaml]        # part rows looked up by refdes (MPN, fab code, package, tag, DNP) — never typed on the symbol
-  lib_map: design/lib_map.yaml      # MPN or refdes prefix -> symbol / footprint
+  parts: [20-design/parts.yaml]        # part rows looked up by refdes (MPN, fab code, package, tag, DNP) — never typed on the symbol
+  lib_map: 20-design/lib_map.yaml      # MPN or refdes prefix -> symbol / footprint
   libs: {sym: [lib/<fab>/<fab>.kicad_sym], fp: [lib/<fab>/<fab>.pretty]}
   power_rails: [GND, +3V3, VBUS]    # names that get power symbols / PWR_FLAG handling
   notes: |                          # the root NOTES block (intent, key values, rework links, test points, checklist) — a review reads it
@@ -48,13 +48,13 @@ another generator owns without re-reading and merging its part (`references/pitf
 Run after every generation, with every severity on, machine-readable, zero errors:
 
 ```sh
-<cad-cli> sch erc --severity-all --format json -o out/<board>/erc.json <cad>/<board>/<board>.kicad_sch     # KiCad 10 form; other CADs: the equivalent
+<cad-cli> sch erc --severity-all --format json -o 30-board/layout/erc.json <cad>/<board>/<board>.kicad_sch     # KiCad 10 form; other CADs: the equivalent
 ```
 
-Errors → fix the yaml or the generator. Warnings → fix, or one entry in `design/erc_accept.yaml` (`{type, ref, reason, decision, date}`; the decision
-row must exist and not be REJECTED) — `scripts/erc_gate.py out/<board>/erc.json` is the gate: 0 errors, 0 unaccepted warnings, no stale entry, no
+Errors → fix the yaml or the generator. Warnings → fix, or one entry in `20-design/erc_accept.yaml` (`{type, ref, reason, decision, date}`; the decision
+row must exist and not be REJECTED) — `scripts/erc_gate.py 30-board/layout/erc.json` is the gate: 0 errors, 0 unaccepted warnings, no stale entry, no
 GUI exclusion (a hidden waiver). There is no prose waiver table. Add `erc_gate.py` to `gates.adopt` at G1 (`templates/project.yaml` has the commented block) so it is repeated on every adopt run and in
-`git archive HEAD`. Export the netlist in the same step (`<cad-cli> sch export netlist --format kicadxml -o out/<board>.xml …`): `paths.netlist`
+`git archive HEAD`. Export the netlist in the same step (`<cad-cli> sch export netlist --format kicadxml -o 30-board/layout/<board>.xml …`): `paths.netlist`
 feeds the `netlist_net` checks of `scripts/traceability.py`.
 
 ## 3. Map checks
@@ -62,8 +62,8 @@ feeds the `netlist_net` checks of `scripts/traceability.py`.
 A "map" is any table in the spec or in `design/` that says which pin, address or connector position carries what: an MCU / bridge GPIO map, an
 I²C address map, a connector pinout, a switch/strap table, a test-point map. **Map checks** = a project script (`gen/check_maps.py --check`) that
 reads every map and the exported netlist and asserts both directions: every map row is present in the netlist as written (net name on that pin;
-address on that device), and every relevant netlist net appears in exactly one map. Output `out/<board>/check_maps.md` (one table per map: row,
-netlist evidence, OK/FAIL) — a G1 prerequisite in `docs/governance/GATES.md` and a `gates.adopt` line. A map row the spec names but the design does not
+address on that device), and every relevant netlist net appears in exactly one map. Output `30-board/layout/check_maps.md` (one table per map: row,
+netlist evidence, OK/FAIL) — a G1 prerequisite in `90-log/GATES.md` and a `gates.adopt` line. A map row the spec names but the design does not
 implement is a CC row (rule 2), not a silent omission.
 
 ## 4. The G1 review pack (`out/G1/`, generated, committed)
@@ -73,7 +73,7 @@ implement is a CC row (rule 2), not a silent omission.
 | `<board>.pdf` | `<cad-cli> sch export pdf` | the schematic as drawn, every sheet |
 | `<board>.xml` | `<cad-cli> sch export netlist --format kicadxml` | machine-checkable connectivity |
 | `bom.csv`, `procurement.csv` | the project's BOM exporter | every fitted part with MPN / fab code / tag; DNP excluded |
-| `erc.json` + `design/erc_accept.yaml` | §2 | `scripts/erc_gate.py` green: zero errors, every warning accepted by a decision row |
+| `erc.json` + `20-design/erc_accept.yaml` | §2 | `scripts/erc_gate.py` green: zero errors, every warning accepted by a decision row |
 | `check_maps.md` | §3 | maps vs netlist |
 | `EVIDENCE.md` | the generator | which yaml revision / commit produced the pack; md5 of every file above |
 | `REVIEW_NOTES.md` | hand-written, short | what changed since the last round, what the reviewers should weigh |
@@ -86,5 +86,5 @@ board as MISSING at G1 (no routed board yet) — that is expected and said in th
 
 1. G0 cell written by the owner → 2. `design/*.yaml` from SPEC (every spec value that must change → CC row OPEN first) → 3. `gen/build_sch.py`
 (`--check` green, ERC zero errors, netlist) → 4. map checks → 5. G1 pack → 6. `scripts/traceability.py` entries for every spec requirement now
-landing in the yaml (stage `schematic`) → 7. freeze, hand-off, blind round (SKILL §5), merged report `docs/reviews/G1_merged.md` → 8. REQUIRED
+landing in the yaml (stage `schematic`) → 7. freeze, hand-off, blind round (SKILL §5), merged report `80-reviews/G1_merged.md` → 8. REQUIRED
 items applied, regenerate, re-run 3-6 → 9. ask for the G1 cell (SKILL §1.1). Layout CAD starts only after the cell exists.

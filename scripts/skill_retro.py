@@ -11,7 +11,7 @@
       in project.yaml) with the skill's SKILL.md version. Writes DIR/<project>_<date>.md (default: <skill>/docs/retro/) with: counts, the NEW and
       PARTIAL tables (entry, best section, score), a CHANGELOG entry draft, one reference patch stub per target file (bullets to append), an eval
       stub per costly NEW entry, the owner decision topics the kickoff questionnaire does not ask yet, and the DFM process-table drift
-      (the project's design/dfm_processes.yaml vs templates/design/dfm_processes.yaml: NEW rows, changed numbers, validation evidence the
+      (the project's 20-design/dfm_processes.yaml vs templates/design/dfm_processes.yaml: NEW rows, changed numbers, validation evidence the
       template lacks — each a retro item for the template, SKILL.md §8.1 (c)). Read-only on the project; exit 0 (a report), 2 when an input is
       missing. `--apply` performs the folds that are mechanical and safe, in the SKILL repo only (idempotent, marked `<!-- retro: <project> <date> -->`):
       one pitfalls line per NEW learning (generalised, evidence pointer kept) under a dated heading in references/pitfalls.md; every NEW process row
@@ -182,7 +182,7 @@ DFM_NUMERIC = ("wall_min", "wall_reco", "feature_min", "detail_min", "void_min",
                "overhang_max_deg", "bridge_max", "supports", "part_min", "build_max", "legend_land_min", "legend_void_min")
 
 
-def dfm_table_diff(root, skill, table_rel="design/dfm_processes.yaml"):
+def dfm_table_diff(root, skill, table_rel="20-design/dfm_processes.yaml"):
     """project <paths.dfm_processes> vs the skill's templates/design/dfm_processes.yaml -> [{kind, row, key, project, template}]:
     NEW row (a vendor / process the template lacks), CHANGED number (a threshold the project moved — with its citation line), VALIDATED (a row
     whose validated_on the project filled while the template's is empty). Either file missing -> [] (nothing to carry)."""
@@ -251,7 +251,7 @@ def apply_folds(project, root, skill, new, dfm, today, table_rel):
     return done
 
 
-def build_report(project, root, skill, entries, decisions, sections, idf, threshold, today, unparsed=(), table_rel="design/dfm_processes.yaml"):
+def build_report(project, root, skill, entries, decisions, sections, idf, threshold, today, unparsed=(), table_rel="20-design/dfm_processes.yaml"):
     classified = []
     for e in entries:
         cls, cov, best = classify(e["text"], sections, idf, threshold)
@@ -312,7 +312,7 @@ def build_report(project, root, skill, entries, decisions, sections, idf, thresh
     if not os.path.exists(q_path):
         L.append("| — | — | (no references/kickoff-questionnaire.md in this skill) | — |")
     dfm = dfm_table_diff(root, skill, table_rel)
-    L += ["", "## 8. DFM process table drift — `design/dfm_processes.yaml` vs the skill's `templates/design/dfm_processes.yaml` (SKILL.md §8.1 (c))", "",
+    L += ["", "## 8. DFM process table drift — `20-design/dfm_processes.yaml` vs the skill's `templates/design/dfm_processes.yaml` (SKILL.md §8.1 (c))", "",
           "| Kind | Row | Key | Project value (citation) | Template value |", "|---|---|---|---|---|"]
     L += [f"| {d['kind']} | `{d['row']}` | {d['key']} | {d['project'].replace('|', chr(92) + '|')} | {d['template']} |" for d in dfm] or ["| — | — | — | (no drift, or no table on one side) | — |"]
     L += ["", "NEW rows and CHANGED numbers go into the template WITH their [V] / [K] citation; a VALIDATED row's evidence goes into `references/print-dfm.md` §4 (the template keeps `validated_on: []`). A CHANGED number without a citation on its line is not carried.", "",
@@ -329,8 +329,8 @@ def run(project_arg, skill, out_dir, since, threshold, today=None, apply=False):
     if root.endswith(".yaml"):
         root = os.path.dirname(os.path.abspath(root))
     root = os.path.abspath(root)
-    learn = os.path.join(root, "docs", "governance", "LEARNINGS_LOG.md"); dec = os.path.join(root, "docs", "governance", "DECISIONS.md")
-    owner_prefix, table_rel = "D", "design/dfm_processes.yaml"
+    learn = os.path.join(root, "90-log", "LEARNINGS_LOG.md"); dec = os.path.join(root, "90-log", "DECISIONS.md")
+    owner_prefix, table_rel = "D", "20-design/dfm_processes.yaml"
     if os.path.exists(os.path.join(root, "project.yaml")):
         try:
             sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
@@ -374,12 +374,12 @@ def selftest():
     open(os.path.join(skill, "references", "kickoff-questionnaire.md"), "w").write("# q\n## C2 Retention\nscrews into inserts, magnets, none — recommended screws.\n")
     os.makedirs(os.path.join(skill, "templates", "design"))
     open(os.path.join(skill, "templates", "design", "dfm_processes.yaml"), "w").write("processes:\n  jlc_mjf_pa12:\n    wall_min: 1.0\n    hole_min: 1.5\n    validated_on: []\n")
-    proj = os.path.join(d, "proj"); os.makedirs(os.path.join(proj, "docs", "governance"))
+    proj = os.path.join(d, "proj"); os.makedirs(os.path.join(proj, "90-log"))
     open(os.path.join(proj, "project.yaml"), "w").write("project: {name: proj}\nskill: {version: 1.0.0}\n")
-    os.makedirs(os.path.join(proj, "design"))
-    open(os.path.join(proj, "design", "dfm_processes.yaml"), "w").write("processes:\n  jlc_mjf_pa12:\n    wall_min: 1.0\n    hole_min: 2.0   # [V] vendor page 2026-01-01\n    validated_on: [{date: 2026-01-02, bodies: 3}]\n"
+    os.makedirs(os.path.join(proj, "20-design"))
+    open(os.path.join(proj, "20-design", "dfm_processes.yaml"), "w").write("processes:\n  jlc_mjf_pa12:\n    wall_min: 1.0\n    hole_min: 2.0   # [V] vendor page 2026-01-01\n    validated_on: [{date: 2026-01-02, bodies: 3}]\n"
                                                                         "  acme_sls:   # NEW vendor row (a trailing comment on the row line; review 0.9.0 F7)\n    vendor: Acme\n    process: SLS PA12\n    wall_min: 0.8\n    hole_min: 1.5\n    validated_on: []\n")
-    open(os.path.join(proj, "docs", "governance", "LEARNINGS_LOG.md"), "w").write(
+    open(os.path.join(proj, "90-log", "LEARNINGS_LOG.md"), "w").write(
         "# log\n\n## 2026-09-28\n"
         "- 2026-09-28 [dfm/census] A ray-cast census that clusters thin samples below the gate must classify each cluster wall versus wedge by the opposite-face angle; walls FAIL, wedges are listed — CC-205.\n"
         "- 2026-09-28 [tooling/yaml] PyYAML keeps the LAST of two duplicate keys in a mapping without a word; a duplicate-aware SafeLoader gates every design yaml — commit abc.\n"
@@ -388,14 +388,14 @@ def selftest():
         "- 2026-09-01 [old] an entry before --since that must be filtered out — x.\n"
         "* **2026-09-29** (process) a star bullet with a parenthesised domain and a bold date — CC-300.\n"
         "- see also the 2026-09-30 note that carries no leading date and must be LISTED as unparsed\n")
-    open(os.path.join(proj, "docs", "governance", "DECISIONS.md"), "w").write(
+    open(os.path.join(proj, "90-log", "DECISIONS.md"), "w").write(
         "| ID | Date | Status | Topic | Proposal | Reason |\n|---|---|---|---|---|---|\n"
         "| **D-85 (owner)** | 2026-09-28 | APPROVED | Lid retention by magnets, a standard disc size | Owner: magnets | words |\n"
         "| **D-86 (owner)** | 2026-09-28 | APPROVED | Anodised metal badge with laser artwork | Owner: badge | words |\n"
         "| CC-208 | 2026-09-28 | APPLIED | magnet pockets | two pairs | D-85 |\n")
     sections, idf = index_skill(skill)
     assert len(sections) == 4 and "census" in idf, sections   # frontmatter = a (top) section
-    unp = []; ents = read_entries(os.path.join(proj, "docs", "governance", "LEARNINGS_LOG.md"), since="2026-09-02", unparsed=unp)
+    unp = []; ents = read_entries(os.path.join(proj, "90-log", "LEARNINGS_LOG.md"), since="2026-09-02", unparsed=unp)
     assert len(ents) == 4 and ents[2]["text"].endswith("D-84.") and "board-frame" in ents[2]["text"], ents
     assert ents[3]["domain"] == "process" and ents[3]["text"].startswith("a star bullet"), ents[3]
     assert len(unp) == 1 and "LISTED as unparsed" in unp[0][1], unp
@@ -403,9 +403,9 @@ def selftest():
     c0 = classify(ents[0]["text"], sections, idf, 0.5); c1 = classify(ents[1]["text"], sections, idf, 0.5)
     assert c0[0] == "CARRIED" and c0[2]["heading"] == "Census gate", c0
     assert c1[0] == "NEW", c1
-    decs = read_decisions(os.path.join(proj, "docs", "governance", "DECISIONS.md"))
+    decs = read_decisions(os.path.join(proj, "90-log", "DECISIONS.md"))
     assert [x["id"] for x in decs] == ["D-85", "D-86", "CC-208"] and decs[0]["owner"] and not decs[2]["owner"], decs
-    assert not any(x["owner"] for x in read_decisions(os.path.join(proj, "docs", "governance", "DECISIONS.md"), "OWN")), "the owner prefix comes from the project"
+    assert not any(x["owner"] for x in read_decisions(os.path.join(proj, "90-log", "DECISIONS.md"), "OWN")), "the owner prefix comes from the project"
     assert generalise(ents[0]["text"]).endswith("*(evidence: CC-205.)*") and COSTLY.search(ents[2]["text"]) and not COSTLY.search(ents[0]["text"])
     out = os.path.join(d, "retro")
     assert run(proj, skill, out, "2026-09-02", 0.5, today="2026-09-28") == 0

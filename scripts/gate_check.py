@@ -108,11 +108,11 @@ def check_gate(P, gate):
 
 def selftest():
     import tempfile
-    d = tempfile.mkdtemp(prefix="hwfs_gc_"); os.makedirs(f"{d}/docs/governance")
+    d = tempfile.mkdtemp(prefix="hwfs_gc_"); os.makedirs(f"{d}/90-log")
     git = lambda *a, **k: subprocess.run(["git", *a], cwd=d, check=True, capture_output=True, **k)
     git("init", "-q")
     open(f"{d}/project.yaml", "w").write("project: {name: t, owner: {name: Owner Person, email: owner@example.com}}\n")
-    G = f"{d}/docs/governance/GATES.md"
+    G = f"{d}/90-log/GATES.md"
     rows = "| Gate | Meaning | Prerequisites | Owner approval |\n|---|---|---|---|\n| **G0** | spec | x | _not yet approved_ |\n| **G1** | sch | x | Owner Person, 2026-01-02, abc123 |\n| **Release** | reports | y | _not yet written_ |\n"
     open(G, "w").write("# GATES\nA sentence that must not count: clear to build is the phrase.\n\n" + rows)
     P = Project(f"{d}/project.yaml")

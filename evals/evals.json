@@ -4,11 +4,11 @@
   {
    "id": 1,
    "name": "start-new-board-project-from-spec",
-   "prompt": "I have a written spec (SPEC.md in this empty git repo) for a small USB-powered sensor board with a two-piece 3D-printed case, to be built at JLCPCB with KiCad. Set the project up so agents can work on it safely and get it to schematic-ready. Do not draw anything yet.",
-   "expected_output": "Copies the templates (CLAUDE.md with numbered rules, DECISIONS/STATUS/GATES/KNOWN_ISSUES/LEARNINGS_LOG/BLOCKERS/PARTS_VERIFICATION), writes project.yaml, records the environment in docs/governance/ENV.md, installs the scripts and runs every --selftest and the smoke run, then STOPS before CAD and asks the owner for the G0 line after a blind review round; refuses to invent any fab part number; every changed spec value is a CC row marked OPEN.",
+   "prompt": "I have a written spec (10-spec/SPEC.md in this empty git repo) for a small USB-powered sensor board with a two-piece 3D-printed case, to be built at JLCPCB with KiCad. Set the project up so agents can work on it safely and get it to schematic-ready. Do not draw anything yet.",
+   "expected_output": "Copies the templates (CLAUDE.md with numbered rules, DECISIONS/STATUS/GATES/KNOWN_ISSUES/LEARNINGS_LOG/BLOCKERS/PARTS_VERIFICATION), writes project.yaml, records the environment in 90-log/ENV.md, installs the scripts and runs every --selftest and the smoke run, then STOPS before CAD and asks the owner for the G0 line after a blind review round; refuses to invent any fab part number; every changed spec value is a CC row marked OPEN.",
    "files": [],
    "assertions": [
-    "docs/governance/GATES.md exists with empty owner approval cells and the agent did not write an approval line",
+    "90-log/GATES.md exists with empty owner approval cells and the agent did not write an approval line",
     "project.yaml exists and names paths.decisions, paths.gates, paths.board, markers.release_regex",
     "CLAUDE.md contains a numbered rule forbidding invented fab part numbers and a rule that agents never write gate lines",
     "scripts/*.py --selftest and smoke/run_smoke.sh were run and their result reported",
@@ -33,7 +33,7 @@
   {
    "id": 2,
    "name": "run-blind-review-round",
-   "prompt": "The layout of our board (kicad/b1/b1.kicad_pcb, package under out/fab/) is done. Run a blind review round before I approve G2. We have the Cursor agent CLI available for external models.",
+   "prompt": "The layout of our board (30-board/kicad/b1/b1.kicad_pcb, package under 30-board/fab/) is done. Run a blind review round before I approve G2. We have the Cursor agent CLI available for external models.",
    "expected_output": "Commits and checks the tree is clean, creates a detached frozen worktree, generates the hand-off header with scripts/handoff_header.py (HEAD md5 MATCH, clean tree), writes the hand-off with a waiver paragraph, instantiates workflows/blind-deep-review.js with placeholders filled (roles, models, fallback), runs in-session + external reviewers who never see each other's output, adversarial verifiers on BLOCKER/MAJOR, merges into REQUIRED / OWNER / DOCUMENT / ACCEPT with a verdict, commits the review files with explicit paths, and does NOT write the G2 line.",
    "files": [],
    "assertions": [
@@ -42,12 +42,12 @@
     "the review prompt forbids reading other reviewers' reports and earlier merged reviews",
     "BLOCKER/MAJOR findings go through an adversarial verifier defaulting to REFUTED",
     "the merged report classifies items as REQUIRED / OWNER / DOCUMENT / ACCEPT and states an explicit verdict",
-    "docs/governance/GATES.md G2 approval cell is still empty after the round"
+    "90-log/GATES.md G2 approval cell is still empty after the round"
    ],
    "checks": [
     {
      "name": "blind-deep-review template: blindness clause, verifier default REFUTED with record access, REQUIRED/OWNER/DOCUMENT/ACCEPT merge, handoff header selftest",
-     "run": "grep -q \"Do NOT read any file named docs/reviews/\\${TAG}_\\*\" \"$SKILL\"/workflows/blind-deep-review.js && grep -q \"Default to REFUTED\" \"$SKILL\"/workflows/blind-deep-review.js && grep -q \"'ALREADY DECIDED'\" \"$SKILL\"/workflows/blind-deep-review.js && grep -q \"REQUIRED generator/YAML change\" \"$SKILL\"/workflows/blind-deep-review.js && \"$PY\" \"$SKILL\"/scripts/handoff_header.py --selftest"
+     "run": "grep -q \"Do NOT read any file named 80-reviews/\\${TAG}_\\*\" \"$SKILL\"/workflows/blind-deep-review.js && grep -q \"Default to REFUTED\" \"$SKILL\"/workflows/blind-deep-review.js && grep -q \"'ALREADY DECIDED'\" \"$SKILL\"/workflows/blind-deep-review.js && grep -q \"REQUIRED generator/YAML change\" \"$SKILL\"/workflows/blind-deep-review.js && \"$PY\" \"$SKILL\"/scripts/handoff_header.py --selftest"
     }
    ]
   },
@@ -58,7 +58,7 @@
    "expected_output": "Runs the collateral chain in order (drawing/FEA -> collect_renders -> commit -> clone_gate.sh --regen -> commit), produces DRAFT reports (never RELEASED, since the owner has not written the release line), release notes with a source next to every number, an annotated tag that records the board md5 and package path, and lists the owner-only actions (gate lines, the release line, the order) instead of doing them; every --check passes on git archive HEAD.",
    "files": [],
    "assertions": [
-    "the release reports carry a DRAFT banner and the agent did not write the release line into docs/governance/GATES.md",
+    "the release reports carry a DRAFT banner and the agent did not write the release line into 90-log/GATES.md",
     "scripts/release_report.py --check and scripts/clone_gate.sh (or an equivalent fresh-checkout check) were run and pass",
     "collect_renders output is keyed on the board md5 and indexed with md5 + grade",
     "release notes name a source file next to every number",
@@ -76,10 +76,10 @@
    "id": 4,
    "name": "vendor-review-mail-after-the-order",
    "prompt": "Our case order is placed and paid. The print service just mailed 'wall thickness too thin in the red areas — are the risks acceptable? if not increase to 1.0 mm and we activate Replace File' with marked-up pictures for all five lines. Handle it.",
-   "expected_output": "Files the mail and the linked images under docs/quotes/<date>/, maps every flagged area to a design feature on the STLs of record (thin-wall census / point-contact check), writes a CC row with accept / fix options per line and marks it OPEN, drafts the reply wording for the owner, fixes any real defect through the case yaml + generator with a version bump and the full chain, re-runs the vendor DFM on the replacement files without saving or carting, and lists Replace File / chat / payment as owner actions — it does not click them without the owner's explicit word and never pays or ticks a risk box.",
+   "expected_output": "Files the mail and the linked images under 60-orders/quotes/<date>/, maps every flagged area to a design feature on the STLs of record (thin-wall census / point-contact check), writes a CC row with accept / fix options per line and marks it OPEN, drafts the reply wording for the owner, fixes any real defect through the case yaml + generator with a version bump and the full chain, re-runs the vendor DFM on the replacement files without saving or carting, and lists Replace File / chat / payment as owner actions — it does not click them without the owner's explicit word and never pays or ticks a risk box.",
    "files": [],
    "assertions": [
-    "the mail and its images are saved as evidence under docs/quotes/<date>/ and a mapping table names a design feature per flag",
+    "the mail and its images are saved as evidence under 60-orders/quotes/<date>/ and a mapping table names a design feature per flag",
     "a decision row with per-line options is written OPEN; the owner decides; the reply text is drafted, not sent",
     "any geometry fix goes through the yaml and the generator (new version, census row for the defect class), never by editing an STL",
     "the vendor's DFM is re-run on the replacement files before any upload, with nothing saved, carted or agreed",
@@ -96,7 +96,7 @@
   {
    "id": 5,
    "name": "reorganise-docs-without-losing-anything",
-   "prompt": "docs/ is a mess: 40 files at the top level. Move the records into docs/governance/, the design notes into docs/design/, the parts files into docs/parts/. Nothing may be lost and nothing may point at a path that no longer exists.",
+   "prompt": "docs/ is a mess: 40 files at the top level. Move the records into 90-log/, the design notes into 20-design/, the parts files into 60-orders/. Nothing may be lost and nothing may point at a path that no longer exists.",
    "expected_output": "Writes the decision row first, expresses the moves as a project.yaml reorg: block, runs scripts/reorg_paths.py --plan, dumps git ls-files -s, runs --apply (git mv + literal rewrite), regenerates every generated file that embeds paths instead of editing it, runs --check to 0 findings, dumps again and runs --proof to show every blob at its mapped path with the same sha, keeps frozen records (uploaded packages, archived reviews) untouched with --map as their key, runs the gates, commits with explicit paths.",
    "files": [],
    "assertions": [
@@ -117,8 +117,8 @@
   {
    "id": 6,
    "name": "first-dfm-round-of-a-printed-enclosure",
-   "prompt": "The two-piece case (design/case.yaml, OpenSCAD generator, MJF PA12 at JLC3DP, plus a home-printer preset) is ready for its first quote. Get it vendor-clean in one DFM round; the owner will log in for the quote page.",
-   "expected_output": "Writes the acceptance bar (0 FAIL / 0 WARN in tables and census, zero slicer warnings, no vendor flag, no yellow / red) into a decision row first; runs the ray-cast census as a FAIL gate on every body of every preset (walls AND voids at the vendor minimum, designed 0.1 over it, wedges listed and each backed by a wall), turns every 'kept below minimum (listed)' row into a measured PASS / FAIL or an INFO row, removes free-standing wedges / slit tabs / engraved text / open rims through the yaml + generator, renders every face incl. the sole, exports canonical STLs so the md5 is the geometry, then on the quote page uploads ONE STL per session (reloading between uploads), sets the process and material on the line first, reads the verdict from the analysis API response at parseStatus 2 (modelAnalysisVO.thinWall) rather than the page — the flag is computed at upload and does not depend on the material — opens the heat map via previewUrl on every face, saves screenshots named with the md5 and files templates/DFM_ROUND.md under docs/quotes/<date>/; for the home build ships coupons, board dummies and slicer projects with embedded presets where a floating-region warning is a FAIL. Every vendor decision is mirrored into the home preset the same day under its own version key, and the kit folder holds the pieces, coupons and BOTH board dummies with READMEs.",
+   "prompt": "The two-piece case (20-design/case.yaml, OpenSCAD generator, MJF PA12 at JLC3DP, plus a home-printer preset) is ready for its first quote. Get it vendor-clean in one DFM round; the owner will log in for the quote page.",
+   "expected_output": "Writes the acceptance bar (0 FAIL / 0 WARN in tables and census, zero slicer warnings, no vendor flag, no yellow / red) into a decision row first; runs the ray-cast census as a FAIL gate on every body of every preset (walls AND voids at the vendor minimum, designed 0.1 over it, wedges listed and each backed by a wall), turns every 'kept below minimum (listed)' row into a measured PASS / FAIL or an INFO row, removes free-standing wedges / slit tabs / engraved text / open rims through the yaml + generator, renders every face incl. the sole, exports canonical STLs so the md5 is the geometry, then on the quote page uploads ONE STL per session (reloading between uploads), sets the process and material on the line first, reads the verdict from the analysis API response at parseStatus 2 (modelAnalysisVO.thinWall) rather than the page — the flag is computed at upload and does not depend on the material — opens the heat map via previewUrl on every face, saves screenshots named with the md5 and files templates/DFM_ROUND.md under 60-orders/quotes/<date>/; for the home build ships coupons, board dummies and slicer projects with embedded presets where a floating-region warning is a FAIL. Every vendor decision is mirrored into the home preset the same day under its own version key, and the kit folder holds the pieces, coupons and BOTH board dummies with READMEs.",
    "files": [],
    "assertions": [
     "the acceptance bar is written as a decision row before geometry changes and names 0 FAIL / 0 WARN, no vendor flag, no yellow / red, no waivers; every gate number is read from project.yaml print_targets (vendor, process, material, wall / void / red, margin, tolerance + source), not typed into a script",
@@ -166,14 +166,14 @@
   {
    "id": 8,
    "name": "kickoff-questionnaire-before-any-cad",
-   "prompt": "New repo, SPEC.md is a two-page draft for a USB-powered sensor board with a two-piece printed case (MJF at a print service, plus my home printer). Set the project up. I want to make all the decisions now, not one by one over the next weeks.",
-   "expected_output": "Installs the skill in the vendor/hw-from-spec layout, then runs the kickoff questionnaire from references/kickoff-questionnaire.md with the AskUserQuestion tool in up to twelve batches of at most four (A0 scope alone, then product/process, PCB build x2, enclosure x2, process rows + marks + kit, the bar + review rounds, verification + parts, software + reports, CI + retro + envelope, debug access + delegation), each question with its RECOMMENDED answer listed first and 2-3 alternatives with consequences, each batch offering 'accept every recommended answer'; writes docs/governance/KICKOFF_ANSWERS.md, one owner D row per answer (words quoted), project.yaml kickoff / board / fab_dfm.bar / print_targets (vendor, process, material, gates, margin, tolerance + source), traceability entries; a deferred answer is an OPEN D row; only then reads the spec. No CAD file is created.",
+   "prompt": "New repo, 10-spec/SPEC.md is a two-page draft for a USB-powered sensor board with a two-piece printed case (MJF at a print service, plus my home printer). Set the project up. I want to make all the decisions now, not one by one over the next weeks.",
+   "expected_output": "Installs the skill in the vendor/hw-from-spec layout, then runs the kickoff questionnaire from references/kickoff-questionnaire.md with the AskUserQuestion tool in up to twelve batches of at most four (A0 scope alone, then product/process, PCB build x2, enclosure x2, process rows + marks + kit, the bar + review rounds, verification + parts, software + reports, CI + retro + envelope, debug access + delegation), each question with its RECOMMENDED answer listed first and 2-3 alternatives with consequences, each batch offering 'accept every recommended answer'; writes 10-spec/KICKOFF_ANSWERS.md, one owner D row per answer (words quoted), project.yaml kickoff / board / fab_dfm.bar / print_targets (vendor, process, material, gates, margin, tolerance + source), traceability entries; a deferred answer is an OPEN D row; only then reads the spec. No CAD file is created.",
    "files": [],
    "assertions": [
     "the questions are asked through AskUserQuestion in batches grouped by phase, not one at a time and not all in one call",
     "every question shows a marked RECOMMENDED answer plus alternatives with one-line consequences, and each batch offers 'accept every recommended answer'",
     "the manufacturability bar question is asked and its default is zero errors / zero warnings / no waivers, written to fab_dfm.bar and GATES.md",
-    "docs/governance/KICKOFF_ANSWERS.md exists and every answered question has an owner D row in DECISIONS.md with the owner's words",
+    "10-spec/KICKOFF_ANSWERS.md exists and every answered question has an owner D row in DECISIONS.md with the owner's words",
     "project.yaml carries print_targets for both targets (vendor, process, material, wall_gate, void_gate, red_line, design_margin, tolerance, checker_url + date) and the board block from the PCB answers",
     "no schematic, board or case file is created before the answers are recorded, and no answered question is asked again later"
    ],
@@ -191,7 +191,7 @@
   {
    "id": 9,
    "name": "retro-after-the-production-cut",
-   "prompt": "Our project shipped (production cut tagged yesterday). Its docs/governance/LEARNINGS_LOG.md has ~60 dated entries and DECISIONS.md ~90 rows. Make the skill better from it.",
+   "prompt": "Our project shipped (production cut tagged yesterday). Its 90-log/LEARNINGS_LOG.md has ~60 dated entries and DECISIONS.md ~90 rows. Make the skill better from it.",
    "expected_output": "Runs scripts/skill_retro.py --project <root> (read-only on the project), reads docs/retro/<project>_<date>.md, and in the SKILL repo: folds every NEW learning into the reference the report names (generalised one-liners, the project's number kept as a labelled worked example), extends the PARTIAL sections where the mechanism is missing, adds one eval per costly NEW entry, adds a kickoff question with a recommended answer for every owner decision topic the questionnaire lacks, runs the smoke, bumps SKILL.md version, writes the CHANGELOG entry (Changed / Added / Not done) from the draft, blind-reviews the skill with two lenses, opens a PR; the project pins the new skill version in project.yaml skill.version and its CC-001 row.",
    "files": [],
    "assertions": [
@@ -233,12 +233,12 @@
    "id": 11,
    "name": "mech-only-bracket-from-a-board-step",
    "prompt": "I have a STEP file of a customer's board (board.step, 80 x 50 mm, four M3 holes) and a one-page brief for a printed mounting bracket with a snap-on cable clip, MJF at a print service plus my home FDM printer. No electronics work at all — the board is theirs. Set the project up and take it to the first geometry gate.",
-   "expected_output": "Asks A0 first and records scope mech (project.scope, D row); asks only the mech-scope batches (product / process, enclosure architecture C1-C9, the bar incl. D3, verification incl. E3, bought hardware F1-F2, release H1-H4, identity I1 / I2 / I4) and never a PCB build question (B1-B8), software (G1-G2) or debug access (I3); scaffolds with scripts/project.py scaffold --scope mech so GATES.md carries G0 / M1 / M2 / Case order / Release and no G1 / G2 / board order, project.yaml has print_targets, case_yaml and paths.mech_record but no paths.board / fab_dfm; the STEP becomes the fit input of record with its md5 and a [V]/[K] tag in SPEC section 4 and paths.mesh_provenance; hardware (inserts, clip) is verified [V] on manufacturer pages; the G0 round (role set spec) runs on the mechanical spec; after G0 the geometry is generated from design/case.yaml, censused per preset, rendered on six faces, clearance rows against the STEP, vendor DFM read from the API, then the agent asks the owner for the M1 cell and does not write it; the record id printed by scripts/project.py record is the STL set's md5, not a board md5.",
+   "expected_output": "Asks A0 first and records scope mech (project.scope, D row); asks only the mech-scope batches (product / process, enclosure architecture C1-C9, the bar incl. D3, verification incl. E3, bought hardware F1-F2, release H1-H4, identity I1 / I2 / I4) and never a PCB build question (B1-B8), software (G1-G2) or debug access (I3); scaffolds with scripts/project.py scaffold --scope mech so GATES.md carries G0 / M1 / M2 / Case order / Release and no G1 / G2 / board order, project.yaml has print_targets, case_yaml and paths.mech_record but no paths.board / fab_dfm; the STEP becomes the fit input of record with its md5 and a [V]/[K] tag in SPEC section 4 and paths.mesh_provenance; hardware (inserts, clip) is verified [V] on manufacturer pages; the G0 round (role set spec) runs on the mechanical spec; after G0 the geometry is generated from 20-design/case.yaml, censused per preset, rendered on six faces, clearance rows against the STEP, vendor DFM read from the API, then the agent asks the owner for the M1 cell and does not write it; the record id printed by scripts/project.py record is the STL set's md5, not a board md5.",
    "files": [],
    "assertions": [
     "A0 scope is asked first and recorded as project.scope: mech plus an owner D row before any other question",
     "no PCB build (B1-B8), software (G1-G2) or debug-access (I3) question is asked; their KICKOFF_ANSWERS rows are absent after `scaffold --scope mech` (or read n/a (scope) when kept by hand)",
-    "docs/governance/GATES.md contains G0, M1, M2, Case order and Release rows and no G1, G2 or board-order row; project.yaml has no paths.board or fab_dfm block and has print_targets, case_yaml and paths.mech_record",
+    "90-log/GATES.md contains G0, M1, M2, Case order and Release rows and no G1, G2 or board-order row; project.yaml has no paths.board or fab_dfm block and has print_targets, case_yaml and paths.mech_record",
     "the board STEP is recorded as the fit input of record with md5 and a [V] or [K] tag (SPEC section 4 and paths.mesh_provenance), never treated as a board to route",
     "no KiCad, ERC, DRC, fab DFM mirror or electronics parts seed is created or mentioned as a prerequisite; hardware parts are still verified [V] with URL and date",
     "the M1 prerequisites (census per preset, six face renders, clearance rows, slicer log, vendor DFM by API, hardware [V], merged review) are named and the agent asks for the M1 cell instead of writing it",
@@ -248,15 +248,15 @@
    "checks": [
     {
      "name": "mech scaffold: G0 M1 M2 Case-order Release rows only",
-     "run": "mkdir -p docs/governance design && cp \"$SKILL\"/templates/{project.yaml,CLAUDE.md,GATES.md,SPEC.md,STATUS.md,KICKOFF_ANSWERS.md,ENV.md,production_cut.yaml} . && cp \"$SKILL\"/templates/design/traceability.yaml design/ && \"$PY\" \"$SKILL\"/scripts/project.py scaffold --scope mech project.yaml CLAUDE.md GATES.md SPEC.md STATUS.md KICKOFF_ANSWERS.md ENV.md production_cut.yaml design/traceability.yaml >/dev/null && G=$(grep -o \"^| \\*\\*[A-Za-z0-9 ()]*\\*\\*\" GATES.md | tr -d \"*|\" | tr -s \" \\n\" \" \") && [ \"$G\" = \" G0 M1 M2 Case order Release \" ]"
+     "run": "mkdir -p 90-log design && cp \"$SKILL\"/templates/{project.yaml,CLAUDE.md,GATES.md,10-spec/SPEC.md,STATUS.md,KICKOFF_ANSWERS.md,ENV.md,production_cut.yaml} . && cp \"$SKILL\"/templates/design/traceability.yaml design/ && \"$PY\" \"$SKILL\"/scripts/project.py scaffold --scope mech project.yaml CLAUDE.md GATES.md 10-spec/SPEC.md STATUS.md KICKOFF_ANSWERS.md ENV.md production_cut.yaml 20-design/traceability.yaml >/dev/null && G=$(grep -o \"^| \\*\\*[A-Za-z0-9 ()]*\\*\\*\" GATES.md | tr -d \"*|\" | tr -s \" \\n\" \" \") && [ \"$G\" = \" G0 M1 M2 Case order Release \" ]"
     },
     {
      "name": "mech scaffold: project.yaml has print_targets / case_yaml / mech_record and no board / fab_dfm / board: block",
-     "run": "mkdir -p docs/governance design && cp \"$SKILL\"/templates/{project.yaml,CLAUDE.md,GATES.md,SPEC.md,STATUS.md,KICKOFF_ANSWERS.md,ENV.md,production_cut.yaml} . && cp \"$SKILL\"/templates/design/traceability.yaml design/ && \"$PY\" \"$SKILL\"/scripts/project.py scaffold --scope mech project.yaml CLAUDE.md GATES.md SPEC.md STATUS.md KICKOFF_ANSWERS.md ENV.md production_cut.yaml design/traceability.yaml >/dev/null && grep -q \"^print_targets:\" project.yaml && grep -q \"case_yaml:\" project.yaml && grep -q \"mech_record\" project.yaml && ! grep -q \"^fab_dfm:\\|^  board:\\|^board:\" project.yaml"
+     "run": "mkdir -p 90-log design && cp \"$SKILL\"/templates/{project.yaml,CLAUDE.md,GATES.md,10-spec/SPEC.md,STATUS.md,KICKOFF_ANSWERS.md,ENV.md,production_cut.yaml} . && cp \"$SKILL\"/templates/design/traceability.yaml design/ && \"$PY\" \"$SKILL\"/scripts/project.py scaffold --scope mech project.yaml CLAUDE.md GATES.md 10-spec/SPEC.md STATUS.md KICKOFF_ANSWERS.md ENV.md production_cut.yaml 20-design/traceability.yaml >/dev/null && grep -q \"^print_targets:\" project.yaml && grep -q \"case_yaml:\" project.yaml && grep -q \"mech_record\" project.yaml && ! grep -q \"^fab_dfm:\\|^  board:\\|^board:\" project.yaml"
     },
     {
      "name": "mech scaffold: no PCB-build / software / debug-access kickoff row; no pcbnew / ERC / parts seed / fab package / software manual in CLAUDE, ENV, production_cut",
-     "run": "mkdir -p docs/governance design && cp \"$SKILL\"/templates/{project.yaml,CLAUDE.md,GATES.md,SPEC.md,STATUS.md,KICKOFF_ANSWERS.md,ENV.md,production_cut.yaml} . && cp \"$SKILL\"/templates/design/traceability.yaml design/ && \"$PY\" \"$SKILL\"/scripts/project.py scaffold --scope mech project.yaml CLAUDE.md GATES.md SPEC.md STATUS.md KICKOFF_ANSWERS.md ENV.md production_cut.yaml design/traceability.yaml >/dev/null && ! grep -q \"^| B[0-9]\\|^| G[0-9]\\|^| I3\" KICKOFF_ANSWERS.md && ! grep -q \"ERC\\|pcbnew\\|parts_seed\" CLAUDE.md ENV.md && ! grep -v \"^#\" production_cut.yaml | grep -q \"{pkg}\\|technician_manual\\|developer_manual\""
+     "run": "mkdir -p 90-log design && cp \"$SKILL\"/templates/{project.yaml,CLAUDE.md,GATES.md,10-spec/SPEC.md,STATUS.md,KICKOFF_ANSWERS.md,ENV.md,production_cut.yaml} . && cp \"$SKILL\"/templates/design/traceability.yaml design/ && \"$PY\" \"$SKILL\"/scripts/project.py scaffold --scope mech project.yaml CLAUDE.md GATES.md 10-spec/SPEC.md STATUS.md KICKOFF_ANSWERS.md ENV.md production_cut.yaml 20-design/traceability.yaml >/dev/null && ! grep -q \"^| B[0-9]\\|^| G[0-9]\\|^| I3\" KICKOFF_ANSWERS.md && ! grep -q \"ERC\\|pcbnew\\|parts_seed\" CLAUDE.md ENV.md && ! grep -v \"^#\" production_cut.yaml | grep -q \"{pkg}\\|technician_manual\\|developer_manual\""
     }
    ]
   },
@@ -269,7 +269,7 @@
    "assertions": [
     "A0 scope is asked first and recorded as project.scope: ee plus an owner D row",
     "no enclosure question (C1-C9), design-margin question (D3) or coupon question (E3) is asked; the PCB build questions B1-B8 are asked with recommended answers",
-    "docs/governance/GATES.md has G0, G1, G2, Order (board) and Release rows and no Case order, M1 or M2 row; project.yaml has no print_targets, case_yaml or paths.mech_record",
+    "90-log/GATES.md has G0, G1, G2, Order (board) and Release rows and no Case order, M1 or M2 row; project.yaml has no print_targets, case_yaml or paths.mech_record",
     "no case pipeline, thin-wall census, print-service DFM, coupon, board dummy or case FEA step appears in the plan or the gates",
     "the phase chain named is G0 -> G1 -> G2 -> fab DFM (board and panel) -> order -> release cut -> production cut, all keyed on the board md5",
     "the production cut deliverable list carries no case report, case drawing, STL set or case FEA row",
@@ -278,15 +278,15 @@
    "checks": [
     {
      "name": "ee scaffold: G0 G1 G2 Order(board) Release rows only",
-     "run": "mkdir -p docs/governance design && cp \"$SKILL\"/templates/{project.yaml,CLAUDE.md,GATES.md,SPEC.md,STATUS.md,KICKOFF_ANSWERS.md,ENV.md,production_cut.yaml} . && cp \"$SKILL\"/templates/design/traceability.yaml design/ && \"$PY\" \"$SKILL\"/scripts/project.py scaffold --scope ee project.yaml CLAUDE.md GATES.md SPEC.md STATUS.md KICKOFF_ANSWERS.md ENV.md production_cut.yaml design/traceability.yaml >/dev/null && G=$(grep -o \"^| \\*\\*[A-Za-z0-9 ()]*\\*\\*\" GATES.md | tr -d \"*|\" | tr -s \" \\n\" \" \") && [ \"$G\" = \" G0 G1 G2 Order (board) Release \" ]"
+     "run": "mkdir -p 90-log design && cp \"$SKILL\"/templates/{project.yaml,CLAUDE.md,GATES.md,10-spec/SPEC.md,STATUS.md,KICKOFF_ANSWERS.md,ENV.md,production_cut.yaml} . && cp \"$SKILL\"/templates/design/traceability.yaml design/ && \"$PY\" \"$SKILL\"/scripts/project.py scaffold --scope ee project.yaml CLAUDE.md GATES.md 10-spec/SPEC.md STATUS.md KICKOFF_ANSWERS.md ENV.md production_cut.yaml 20-design/traceability.yaml >/dev/null && G=$(grep -o \"^| \\*\\*[A-Za-z0-9 ()]*\\*\\*\" GATES.md | tr -d \"*|\" | tr -s \" \\n\" \" \") && [ \"$G\" = \" G0 G1 G2 Order (board) Release \" ]"
     },
     {
      "name": "ee scaffold: no print_targets / case_yaml / mech_record; board: block present",
-     "run": "mkdir -p docs/governance design && cp \"$SKILL\"/templates/{project.yaml,CLAUDE.md,GATES.md,SPEC.md,STATUS.md,KICKOFF_ANSWERS.md,ENV.md,production_cut.yaml} . && cp \"$SKILL\"/templates/design/traceability.yaml design/ && \"$PY\" \"$SKILL\"/scripts/project.py scaffold --scope ee project.yaml CLAUDE.md GATES.md SPEC.md STATUS.md KICKOFF_ANSWERS.md ENV.md production_cut.yaml design/traceability.yaml >/dev/null && ! grep -q \"^print_targets:\\|case_yaml:\\|mech_record\" project.yaml && grep -q \"^board:\" project.yaml"
+     "run": "mkdir -p 90-log design && cp \"$SKILL\"/templates/{project.yaml,CLAUDE.md,GATES.md,10-spec/SPEC.md,STATUS.md,KICKOFF_ANSWERS.md,ENV.md,production_cut.yaml} . && cp \"$SKILL\"/templates/design/traceability.yaml design/ && \"$PY\" \"$SKILL\"/scripts/project.py scaffold --scope ee project.yaml CLAUDE.md GATES.md 10-spec/SPEC.md STATUS.md KICKOFF_ANSWERS.md ENV.md production_cut.yaml 20-design/traceability.yaml >/dev/null && ! grep -q \"^print_targets:\\|case_yaml:\\|mech_record\" project.yaml && grep -q \"^board:\" project.yaml"
     },
     {
      "name": "ee scaffold: no enclosure / D3 / E3 kickoff row; no case deliverable in production_cut; CLAUDE.md names no census / M1",
-     "run": "mkdir -p docs/governance design && cp \"$SKILL\"/templates/{project.yaml,CLAUDE.md,GATES.md,SPEC.md,STATUS.md,KICKOFF_ANSWERS.md,ENV.md,production_cut.yaml} . && cp \"$SKILL\"/templates/design/traceability.yaml design/ && \"$PY\" \"$SKILL\"/scripts/project.py scaffold --scope ee project.yaml CLAUDE.md GATES.md SPEC.md STATUS.md KICKOFF_ANSWERS.md ENV.md production_cut.yaml design/traceability.yaml >/dev/null && ! grep -q \"^| C[0-9]\\|^| D3\\|^| E3\" KICKOFF_ANSWERS.md && ! grep -q \"assembly_sop\\|case_stl\\|fea_case\\|case incl\" production_cut.yaml && ! grep -q \"census\\|M1 geometry\" CLAUDE.md"
+     "run": "mkdir -p 90-log design && cp \"$SKILL\"/templates/{project.yaml,CLAUDE.md,GATES.md,10-spec/SPEC.md,STATUS.md,KICKOFF_ANSWERS.md,ENV.md,production_cut.yaml} . && cp \"$SKILL\"/templates/design/traceability.yaml design/ && \"$PY\" \"$SKILL\"/scripts/project.py scaffold --scope ee project.yaml CLAUDE.md GATES.md 10-spec/SPEC.md STATUS.md KICKOFF_ANSWERS.md ENV.md production_cut.yaml 20-design/traceability.yaml >/dev/null && ! grep -q \"^| C[0-9]\\|^| D3\\|^| E3\" KICKOFF_ANSWERS.md && ! grep -q \"assembly_sop\\|case_stl\\|fea_case\\|case incl\" production_cut.yaml && ! grep -q \"census\\|M1 geometry\" CLAUDE.md"
     }
    ]
   },
@@ -318,7 +318,7 @@
    "id": 14,
    "name": "print-dfm-root-under-rim-flags-and-wall-1-3-passes",
    "prompt": "An MJF bracket of record (90 mm long) carries a 2.0 mm rim ring set inboard of its 2.0 mm wall over a lap step so that the rim stands on a 0.5 mm root; the ray census reads >= 2.0 everywhere. The owner wants to upload it to JLC3DP as PA12 (process row jlc_mjf_pa12) and asks whether it is printable; then proposes widening the root to 1.3 mm. Run the print DFM on both and say what each result means.",
-   "expected_output": "scripts/print_dfm.py --process jlc_mjf_pa12 <stl> on the 0.5-root body: verdict FLAG with rows W wall (wall-class region, median ~0.5-0.7 < wall_min 1.0, extent ~90 mm >= 10 x t) AND R root under a rim / ledge (the same region reads >= 1.0 along the normal) — the ray census cannot see the overlap, the opposing-face tangent ball does; the body is not uploaded (the vendor's checker would pass a root this length up to ~60 mm and its PASS is not sufficient). The 1.3-root body: PASS on every rule (Y INFO lists the 1.0..1.2 band if any). Both records written to out/.../dfm/<piece>.json with the STL md5; the gate line `print_dfm.py --gate` in gates.adopt; the geometry change is a decision row and a generator change, never an edit of the yaml alone; after the vendor's verdict the row goes into docs/quotes/dfm_verdicts.yaml and --validate runs. The pair is scripts/print_dfm.py --selftest's third / fourth case (rim_profile(0.5) vs rim_profile(1.3), 90 mm extrusion) and the smoke's step 0d.",
+   "expected_output": "scripts/print_dfm.py --process jlc_mjf_pa12 <stl> on the 0.5-root body: verdict FLAG with rows W wall (wall-class region, median ~0.5-0.7 < wall_min 1.0, extent ~90 mm >= 10 x t) AND R root under a rim / ledge (the same region reads >= 1.0 along the normal) — the ray census cannot see the overlap, the opposing-face tangent ball does; the body is not uploaded (the vendor's checker would pass a root this length up to ~60 mm and its PASS is not sufficient). The 1.3-root body: PASS on every rule (Y INFO lists the 1.0..1.2 band if any). Both records written to out/.../dfm/<piece>.json with the STL md5; the gate line `print_dfm.py --gate` in gates.adopt; the geometry change is a decision row and a generator change, never an edit of the yaml alone; after the vendor's verdict the row goes into 60-orders/quotes/dfm_verdicts.yaml and --validate runs. The pair is scripts/print_dfm.py --selftest's third / fourth case (rim_profile(0.5) vs rim_profile(1.3), 90 mm extrusion) and the smoke's step 0d.",
    "files": [],
    "assertions": [
     "the 0.5 mm root body is FLAG with both W wall and R root fired and the region's extent ~90 mm, min ~0.5",
@@ -339,14 +339,14 @@
    "id": 15,
    "name": "arrival-checklist-before-the-boards-ship",
    "prompt": "The rev-0 boards are in production and two blind reviews just merged with 55 findings, 20 of them 'already decided'. The owner says: keep track of everything we must check once the boards are back. Do it.",
-   "expected_output": "Writes design/arrival_checklist.yaml (sections: before shipment approval from the fab's photos, bench checks in gate order with what each row opens, software gates before the first high-power step with their closing commits, case first article, owner decisions still OPEN with the trigger that resolves each) from the merged reviews' CONFIRMED bench items and the OPEN decision rows, generates docs/production/ARRIVAL_CHECKLIST.md with scripts/arrival_checklist.py, adds the --check line to gates.adopt (project.py gates-required demands it), registers it as a cut deliverable, and marks nothing DONE without evidence; a frozen SPEC's deviations go to docs/spec_sections/SPEC_ERRATA.md as OPEN E-rows, never into SPEC.md.",
+   "expected_output": "Writes 20-design/arrival_checklist.yaml (sections: before shipment approval from the fab's photos, bench checks in gate order with what each row opens, software gates before the first high-power step with their closing commits, case first article, owner decisions still OPEN with the trigger that resolves each) from the merged reviews' CONFIRMED bench items and the OPEN decision rows, generates 60-orders/ARRIVAL_CHECKLIST_rev0.md with scripts/arrival_checklist.py, adds the --check line to gates.adopt (project.py gates-required demands it), registers it as a cut deliverable, and marks nothing DONE without evidence; a frozen SPEC's deviations go to 10-spec/spec_sections/SPEC_ERRATA.md as OPEN E-rows, never into 10-spec/SPEC.md.",
    "files": [],
    "assertions": [
     "the checklist is generated from a yaml (never hand-written markdown) and the --check line is in gates.adopt",
     "every row has id / item / how or trigger / status / evidence; bench rows say what they open and nothing is powered before its row",
     "the ALREADY DECIDED findings are not re-listed as findings; the CONFIRMED bench items become rows",
     "the software gates section names the closing commit per gate",
-    "SPEC.md is not edited; deviations are E-rows in SPEC_ERRATA.md marked OPEN",
+    "10-spec/SPEC.md is not edited; deviations are E-rows in SPEC_ERRATA.md marked OPEN",
     "no row is DONE without an evidence cell"
    ],
    "checks": [
@@ -356,7 +356,7 @@
     },
     {
      "name": "the shipped template yaml obeys the script's rules in every scope and the mech scaffold drops the board sections",
-     "run": "mkdir -p design docs/production && printf 'project: {name: t, scope: mech}\\n' > project.yaml && cp \"$SKILL\"/templates/design/arrival_checklist.yaml design/ && \"$PY\" \"$SKILL\"/scripts/project.py scaffold --scope mech design/arrival_checklist.yaml >/dev/null && sed -i.bak -E 's/\\{\\{[^{}]*\\}\\}/X/g' design/arrival_checklist.yaml && \"$PY\" \"$SKILL\"/scripts/arrival_checklist.py >/dev/null && grep -q '^## D\\.' docs/production/ARRIVAL_CHECKLIST.md && ! grep -q '^## B\\.' docs/production/ARRIVAL_CHECKLIST.md && { \"$PY\" \"$SKILL\"/scripts/project.py gates-required || true; } | grep -q arrival_checklist"
+     "run": "mkdir -p design 70-release && printf 'project: {name: t, scope: mech}\\n' > project.yaml && cp \"$SKILL\"/templates/design/arrival_checklist.yaml design/ && \"$PY\" \"$SKILL\"/scripts/project.py scaffold --scope mech 20-design/arrival_checklist.yaml >/dev/null && sed -i.bak -E 's/\\{\\{[^{}]*\\}\\}/X/g' 20-design/arrival_checklist.yaml && \"$PY\" \"$SKILL\"/scripts/arrival_checklist.py >/dev/null && grep -q '^## D\\.' 60-orders/ARRIVAL_CHECKLIST_rev0.md && ! grep -q '^## B\\.' 60-orders/ARRIVAL_CHECKLIST_rev0.md && { \"$PY\" \"$SKILL\"/scripts/project.py gates-required || true; } | grep -q arrival_checklist"
     },
     {
      "name": "SPEC_ERRATA template ships OPEN rows and SKILL names the rule",

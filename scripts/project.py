@@ -13,7 +13,7 @@ CLI (for shell scripts):
   scripts/project.py scaffold --scope S FILE...   # resolve the {{ee,both}}-style scope tags of copied templates in place: a tagged line stays only
                                               # when S is in its list (tag removed); untagged lines stay; the {{SCOPE}} slot becomes S. Then `slots`.
   scripts/project.py gates-required           # exit 1 when an artefact exists (schematic, board, the STL set) and gates.adopt has no gate line for it
-  scripts/project.py slots [FILE|DIR ...]     # the unfilled {{...}} slots per file (default: CLAUDE.md SPEC.md project.yaml docs design — CI workflow
+  scripts/project.py slots [FILE|DIR ...]     # the unfilled {{...}} slots per file (default: CLAUDE.md 10-spec/SPEC.md project.yaml docs design — CI workflow
                                               # files are the ci/README's own `{{PROJECT_` grep); lines between
                                               # `<!-- skeleton: begin -->` / `<!-- skeleton: end -->` are skipped; exit 1 while any slot remains
   scripts/project.py kickoff --check          # every answered KICKOFF_ANSWERS row (not n/a, not a slot) has its `Written to` project.yaml keys set
@@ -183,7 +183,7 @@ def open_decisions(path):
 
 def required_gate_lines(P):
     """An artefact that exists must have its gate line in gates.adopt (commented lines are not lines): the schematic -> erc_gate.py, the board ->
-    a DRC gate, the STL set (paths.mech_record) -> thin_wall_census --gate-dir AND print_dfm --gate, design/arrival_checklist.yaml -> arrival_checklist.py --check. -> problem list (blind review 0.8.0 F11)."""
+    a DRC gate, the STL set (paths.mech_record) -> thin_wall_census --gate-dir AND print_dfm --gate, 20-design/arrival_checklist.yaml -> arrival_checklist.py --check. -> problem list (blind review 0.8.0 F11)."""
     lines = " ".join(str(x) for x in (P.get("gates.adopt") or []))
     bad = []
     sch = P.path("schematic")
@@ -197,14 +197,14 @@ def required_gate_lines(P):
         for tok, what in (("--gate-dir", "thin_wall_census.py --gate-dir"), ("print_dfm.py --gate", "print_dfm.py --gate")):
             if tok not in lines:
                 bad.append(f"STL set {pat} has files but gates.adopt has no `{what}` line")
-    ac = P.get("arrival_checklist.yaml", "design/arrival_checklist.yaml")
+    ac = P.get("arrival_checklist.yaml", "20-design/arrival_checklist.yaml")
     if os.path.exists(os.path.join(P.root, ac)) and "arrival_checklist.py --check" not in lines:
         bad.append(f"{ac} exists but gates.adopt has no `scripts/arrival_checklist.py --check` line")
     return bad
 
 
 SLOT = re.compile(r"\{\{[^{}]*\}\}")
-SLOT_DEFAULT = ("CLAUDE.md", "SPEC.md", "project.yaml", "docs", "design")
+SLOT_DEFAULT = ("CLAUDE.md", "10-spec/SPEC.md", "project.yaml", "docs", "design")
 
 
 def slots(paths, root="."):
@@ -343,8 +343,8 @@ def selftest():
     for k, v in DEFAULTS["paths"].items():
         assert v.split("/")[0] in top, (k, v)
     assert P.get("paths.mech_record") == "40-case/*/parts/*.stl" and P.path("kits_dir") == f"{d}/50-kits" and P.rev() == "rev0"
-    P.cfg.setdefault("paths", {})["gates"] = "docs/governance/GATES.md"; P.cfg.setdefault("project", {})["revision"] = "rev1"
-    assert P.path("gates") == f"{d}/docs/governance/GATES.md" and P.rev() == "rev1", "an explicit path / revision wins over the layout default"
+    P.cfg.setdefault("paths", {})["gates"] = "legacy/GATES.md"; P.cfg.setdefault("project", {})["revision"] = "rev1"
+    assert P.path("gates") == f"{d}/legacy/GATES.md" and P.rev() == "rev1", "an explicit path / revision wins over the layout default"
     del P.cfg["paths"]["gates"]; P.cfg["project"].pop("revision")
     assert P.tool("python") == f"{d}/.venv/bin/python" and P.tool("kicad_cli") == "kicad-cli"
     assert P.id_re().findall("D-01 AG-002 B-03 CC-004") == ["D-01", "AG-002", "B-03"] and P.decision_re().findall("D-2a AG-002 B-03") == ["D-2a", "AG-002"]
@@ -368,21 +368,21 @@ def selftest():
     P.cfg["gates"]["adopt"] += ["$PY scripts/thin_wall_census.py --gate-dir out/x/census", "$PY scripts/print_dfm.py --gate out/x/dfm"]
     assert required_gate_lines(P) == []
     os.makedirs(f"{d}/k"); open(f"{d}/k/k.kicad_sch", "w").write("x"); assert "erc_gate.py" in required_gate_lines(P)[0]
-    os.makedirs(f"{d}/design"); open(f"{d}/design/arrival_checklist.yaml", "w").write("sections: []\n"); assert any("arrival_checklist.py" in b for b in required_gate_lines(P))
+    os.makedirs(f"{d}/20-design"); open(f"{d}/20-design/arrival_checklist.yaml", "w").write("sections: []\n"); assert any("arrival_checklist.py" in b for b in required_gate_lines(P))
     P.cfg["gates"]["adopt"] += ["$PY scripts/arrival_checklist.py --check"]; assert not any("arrival_checklist" in b for b in required_gate_lines(P))
     # slots (skeleton skipped) and the kickoff check
     open(f"{d}/S.md", "w").write("a {{X}} b {{Y}}\n<!-- skeleton: begin -->\n{{SKEL}}\n<!-- skeleton: end -->\n{{X}}\n")
     assert slots(["S.md", "nope.md"], d) == {"S.md": ["{{X}}", "{{Y}}"]}, slots(["S.md"], d)
-    os.makedirs(f"{d}/docs/governance"); open(f"{d}/docs/governance/KICKOFF_ANSWERS.md", "w").write(
+    os.makedirs(f"{d}/90-log"); os.makedirs(f"{d}/10-spec"); open(f"{d}/10-spec/KICKOFF_ANSWERS.md", "w").write(
         "| Q | Question | Answer | Rec. | D row | Written to |\n|---|---|---|---|---|---|\n| A1 | product class | sample | yes | D-02 | `kickoff.product_class`; SPEC §1 |\n"
         "| B1 | layers | 4 | yes | D-03 | `board.layers`, `board.thickness_mm` |\n| C2 | retention | n/a (scope) | - | - | `kickoff.enclosure.retention` |\n"
         "| C8a | rows | jlc | yes | D-{{nn}} | `print_targets.<t>.dfm_process` |\n| D1 | bar | {{zero}} | yes | D-04 | `fab_dfm.bar` |\n"
         "| D2 | waived | nothing | yes | D-02 | `print_targets.*.accepted` (mech / both), `fab_dfm.bar` (ee / both) |\n")
-    P.cfg.update(kickoff={"answers": "docs/governance/KICKOFF_ANSWERS.md", "product_class": "sample"}, board={"layers": 4}, print_targets={"t": {"dfm_process": "x"}}, fab_dfm={"bar": {"open": 0}})
+    P.cfg.update(kickoff={"answers": "10-spec/KICKOFF_ANSWERS.md", "product_class": "sample"}, board={"layers": 4}, print_targets={"t": {"dfm_process": "x"}}, fab_dfm={"bar": {"open": 0}})
     P.cfg["paths"]["decisions"] = "D.md"; open(f"{d}/D.md", "a").write("| **D-02** | d | **APPROVED** | a | p | r |\n| **D-03** | d | **APPROVED** | b | p | r |\n")
     P.cfg["project"]["scope"] = "ee"
     bad = kickoff_check(P); assert len(bad) == 3 and "board.thickness_mm" in bad[0] and bad[1].startswith("C8a: no D row") and bad[2].startswith("D1: answer still a slot"), bad
-    P.cfg["board"]["thickness_mm"] = 1.6; open(f"{d}/docs/governance/KICKOFF_ANSWERS.md", "a").write("| E1 | rounds | one | yes | D-99 | `kickoff.verification.rounds` |\n")
+    P.cfg["board"]["thickness_mm"] = 1.6; open(f"{d}/10-spec/KICKOFF_ANSWERS.md", "a").write("| E1 | rounds | one | yes | D-99 | `kickoff.verification.rounds` |\n")
     bad = kickoff_check(P); assert any("D-99 is not in" in b for b in bad) and any("kickoff.verification.rounds" in b for b in bad), bad
     h = host_facts(); assert h["cores"] >= 1 and h["jobs_max"] >= 1 and h["min_free_gb"] >= 2 and "| Host |" in host_row(h), h
     assert host_row(dict(cores=14, ram_gb=24, jobs_max=3, min_free_gb=3.6)).startswith("| Host | 14 cores, 24 GB RAM")

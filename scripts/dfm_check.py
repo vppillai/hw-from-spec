@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """scripts/dfm_check.py — the fab-DFM mirror: grading engine, threshold file, acceptance list, report (references/fab-dfm.md).
 
-  python scripts/dfm_check.py [--items out/dfm_items.json] [--thresholds design/dfm_thresholds.json] [--accept design/board.yaml] [--json out/dfm.json]
+  python scripts/dfm_check.py [--items out/dfm_items.json] [--thresholds design/dfm_thresholds.json] [--accept 20-design/board.yaml] [--json out/dfm.json]
   python scripts/dfm_check.py --check      # exit 1 when the on-disk report (dfm.report) differs from the regenerated one, or items are open
   python scripts/dfm_check.py --selftest
 
@@ -181,7 +181,7 @@ def selftest():
     assert "WARNING" not in rep2 and "WARNING: 1 check name" in run([{"check": "trace spacing", "value": 0.1, "refs": ["R1"]}], th, [])[2], "unknown check names are warned about"
     # the manufacturability bar: an acceptance without date / evidence does not count when the bar requires them
     bar = {"open": 0, "warnings_fail": True, "accepted_requires": ["reason", "date", "evidence"]}
-    dated = [{"check": "Trace spacing", "refs": ["R1"], "reason": "vendor accepted", "date": "2026-09-28", "evidence": "docs/quotes/2026-09-28/dfm.pdf"}]
+    dated = [{"check": "Trace spacing", "refs": ["R1"], "reason": "vendor accepted", "date": "2026-09-28", "evidence": "60-orders/quotes/2026-09-28/dfm.pdf"}]
     g3, ob3, rep3 = run(mixed[:1], th, dated, bar=bar); assert g3[0]["accepted"] and not ob3 and "acceptances need ['reason', 'date', 'evidence']" in rep3, rep3
     g4, ob4, rep4 = run(mixed[:1], th, [dict(dated[0], evidence="")], bar=bar); assert not g4[0]["accepted"] and len(ob4) == 1 and "acceptance entry ignored" in rep4, rep4
     d = tempfile.mkdtemp()

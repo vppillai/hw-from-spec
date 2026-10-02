@@ -1,6 +1,6 @@
 # PROCUREMENT.md — owner-bought and non-fab lines a buyer can execute (references/part-verification.md "Bought hardware")
 
-Every line here is a [V] row in `docs/parts/PARTS_VERIFICATION.md` (manufacturer page + TDS) or a BLOCKERS row with the exact URL the owner opens
+Every line here is a [V] row in `60-orders/PARTS_VERIFICATION.md` (manufacturer page + TDS) or a BLOCKERS row with the exact URL the owner opens
 logged in. Quantities are per unit × units × (1 + spares); prices carry currency and date; a count that disagrees with another record (yaml,
 assembly guide, order sheet) is flagged in a decision row, never resolved here.
 

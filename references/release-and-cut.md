@@ -44,7 +44,7 @@ discarded with `git checkout` once its diff is timestamp-only.
 `collateral/<md5-8>/renders/`: CAD 3-D renders (opaque background, named by what the picture shows, each fixed view checked by eye once), panel
 preview, silk PNGs, case renders, FEA composites, drawing PDFs, fab-viewer captures carrying the md5. Freshness key = source md5 + full argument
 string; case items keyed on the case version; index with md5 + grade; orphans listed, never deleted; PNGs ≤ 2400 px; size budget per set.
-Quotes and captures the fab produced live under `docs/quotes/<date>/`, never inside a regenerable package (a rebuild wipes the folder).
+Quotes and captures the fab produced live under `60-orders/quotes/<date>/`, never inside a regenerable package (a rebuild wipes the folder).
 
 ## 5. Release notes (`templates/RELEASE_NOTES.md`)
 Hand-written prose is allowed only with a generated source next to every number and a same-day re-check of every citation; `[FINAL: …]` for values a
@@ -55,15 +55,15 @@ Annotated tag (`<board>-rev<n>-order`, later `…-production-cut`) with the boar
 orderable state and does not substitute for the owner's gate cells.
 
 ## 7. Production cut (`templates/production_cut.yaml` → one generator)
-- One command builds `docs/production/<md5-8>/`: MANIFEST.json/.md (md5 + bytes + source + board/case/decisions md5 + tool commit + CAD CLI version),
+- One command builds `70-release/<rev>/`: MANIFEST.json/.md (md5 + bytes + source + board/case/decisions md5 + tool commit + CAD CLI version),
   STATUS.md (banner, package of record, per-artefact disposition OF-RECORD / STALE / MISSING / WAIVED, OPEN census, the owner line quoted),
   the documents listed in the yaml.
 - Deliverable row: `id, doc_id, title, kind (generated | hand-written | template | collected), path (glob ok), check (the owner generator's --check),
   inputs (md5-stamped), required (true | release), owner_placeholders (allowed | forbidden)`.
 - Templates (records: photos, press logs, insert temperature/time, torque, the first-article caliper table, test results, calibration, order
   screenshots) are written ONCE with `[OWNER: …]` fields, never overwritten, never filled by an agent; the manifest counts the placeholders; a
-  RELEASED cut fails `--check` on a placeholder in a `forbidden` document. **The one records folder is `docs/production/<md5-8>/records/`**
-  (`records_dir` in the cut yaml; RELEASE_NOTES and the "capture now" list point there — never a second home under `docs/release/`).
+  RELEASED cut fails `--check` on a placeholder in a `forbidden` document. **The one records folder is `70-release/<rev>/records/`**
+  (`records_dir` in the cut yaml; RELEASE_NOTES and the "capture now" list point there — never a second home under `70-release/reports/`).
 - **Labelling and regulatory marks are a DFM item**: the manufacturing spec names where the serial / model label, any claimed CE / FCC / WEEE mark
   and warning icons sit on the enclosure (a recess label + 1 mm each side, a flat land, reading orientation), what carries them (label carrier,
   engraving ≥ the void gate, UV print) and what is NOT claimed (no DoC); the case yaml carries the recess.
@@ -109,7 +109,7 @@ generator-owned notes are re-derived, its fab files never rebuilt. URLs into the
 traceability `exists` check on a file that leaves the tree becomes `git show <tag>:<path> | grep -qF '<same string>'`, nothing weakened.
 
 ## 10. The arrival / first-article checklist (`scripts/arrival_checklist.py`) — written at the order, closed as the parts arrive
-`design/arrival_checklist.yaml` (`templates/design/arrival_checklist.yaml`) → `docs/production/ARRIVAL_CHECKLIST.md`; `--check` joins `gates.adopt`
+`20-design/arrival_checklist.yaml` (`templates/design/arrival_checklist.yaml`) → `60-orders/ARRIVAL_CHECKLIST_rev0.md`; `--check` joins `gates.adopt`
 the moment the yaml exists (`project.py gates-required`), the markdown is a cut deliverable (`production_cut.yaml` REC-002). Sections in the order of
 the day: **before shipment** (the fab's assembly photos: polarity vs silk, the critical connector's seating, holes that must stay open — a paid
 "confirm production file / placement" option is not guaranteed to raise a dialog, so the photo confirmation is the one human look), **bench checks in
@@ -123,7 +123,7 @@ window is open) and `evidence`; the script refuses a DONE without evidence, a du
 regenerate, commit.
 
 ## 11. A frozen SPEC gets an errata file, never an edit (`templates/SPEC_ERRATA.md`)
-`docs/spec_sections/SPEC_ERRATA.md`: one E-row per deviation of the design of record from the frozen text — the SPEC text, the design of record, the
+`10-spec/spec_sections/SPEC_ERRATA.md`: one E-row per deviation of the design of record from the frozen text — the SPEC text, the design of record, the
 decision that made the change, where the evidence lives, Status OPEN (owner) → APPROVED <date> → FOLDED <rev> when the next SPEC revision's change
 log cites it; a rejected row is struck through with the reason. It records changes already decided (rule 2); it changes nothing. Readers: the
 blind-review verifier (a deviation already here is ALREADY DECIDED), the arrival checklist §E (OPEN rows with their trigger), the next spec author.

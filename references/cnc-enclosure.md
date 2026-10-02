@@ -31,7 +31,7 @@ received part. The chain (yaml → generator → STEP → quote → drawing) is 
 - A finish change **drops the mandatory drawing upload** — re-upload the PDF before Save.
 - The drawing PDF carries: material + temper, finish + masked features, thread callouts, the two or three fitted dimensions with tolerances,
   the general tolerance class, edge-break note, quantity. Generated from the same yaml as the STEP (dimension lines = yaml numbers).
-- Nothing saved / carted / agreed / paid (`references/vendor-review.md` §1); the quote figure + screenshot go to `docs/quotes/<date>/`.
+- Nothing saved / carted / agreed / paid (`references/vendor-review.md` §1); the quote figure + screenshot go to `60-orders/quotes/<date>/`.
 
 ## 4. Gate before the order (the "Case order" row in `templates/GATES.md`)
 The vendor's DFM clean (no manual-quote fallback, no flagged feature), every inside radius ≥ the rule, every wall ≥ the rule as MEASURED on

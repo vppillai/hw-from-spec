@@ -204,7 +204,7 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - `kicad-cli pcb drc` honours ONLY explicit `netclass_assignments`, never `netclass_patterns`, and NO DRC exclusions: emit per-net assignments from the generator, assert a canary rule fires exactly once; accepted residue = a generated RULE (`enclosedByArea`, not `insideArea` which is an intersection test — prove with a negative construction in `--selftest`).
 - Enforcing net classes for the first time on a "DRC 0" board showed 202 errors; a class clearance larger than the fill's zone clearance is unenforceable by construction: write the as-built geometry into scoped rules general → specific (later rule wins), log the relaxation.
 - `pcbnew.LoadBoard` reports netclass Default for every net: resolve class patterns yourself and selftest with a Power net carrying one thin segment.
-- A standalone schematic regeneration rewrites the `.kicad_pro` to the skeleton (rules, classes gone): restore from HEAD or make the writer leave it alone; "netlist unchanged" = md5 of the `<nets>` block, not the file — kicad/gen.
+- A standalone schematic regeneration rewrites the `.kicad_pro` to the skeleton (rules, classes gone): restore from HEAD or make the writer leave it alone; "netlist unchanged" = md5 of the `<nets>` block, not the file — 30-board/kicad/gen.
 - `kicad-cli pcb render`: `--pivot` is in cm from the board centre; the `--floor` shadow survives in the alpha of a transparent render (dark variant = same render on a gradient); an unquoted zsh `$OPTS` passes every flag as ONE argument — marketing pack .
 - A `.kicad_dru` rule stricter than the net class is invisible to the autorouter and appears as errors afterwards; an unconditional custom clearance rule REPLACES every class clearance.
 - A malformed `.kicad_dru` (unknown property) is silently ignored: the canary rule.
@@ -261,7 +261,7 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - DFM viewer: rows read "Unanalyzed" until its own button is pressed; "Export analysis report" is an icon-only `li[title]` — jlc/dfm.
 - Print service (JLC3DP): DFM is a thin-wall heat map + one yes/no risk gate — compare process rule sets, not colours; FDM refuses parts < 30×30×10 mm; SLA refuses < 2 mm at the Edit dialog, not at upload; a mandatory customs cascader makes Save a silent no-op; pricing is linear in qty — jlc/3dp.
 - CNC (JLCCNC): a faceted STL-sewn STEP goes to manual quote; a true B-rep STEP quotes instantly; UV-print finish drops the mandatory drawing upload whenever the finish select changes — jlc/cnc.
-- Rebuilding a package folder wipes hand-saved evidence: quotes and captures live under `docs/quotes/<date>/`, never in the package — fab_package rebuild rule.
+- Rebuilding a package folder wipes hand-saved evidence: quotes and captures live under `60-orders/quotes/<date>/`, never in the package — fab_package rebuild rule.
 - Stock gate run-relative for EVERY code (stock 4 for a 5-board run passed "> 0").
 - BOM ⊂ CPL is the right assertion (fiducials and owner-supplied parts are CPL-only) — fab_package.
 - DNP no longer forces exclude-from-BOM; footprint attributes mirror the symbol 1:1 for schematic parity.

@@ -13,7 +13,7 @@ feeds bytes from an iterator hooked on the exact read shape.
 | S1 | {{over-temperature}} | warn {{°C}} / throttle {{°C}} / cap {{°C}} — both printed | `--no-s1` | {{CC-nnn}} | optional flag that warns when omitted (rule-2 posture) |
 
 ## 4. Criteria and codes (one source each)
-- Criteria: `design/test_criteria.yaml` (T-nn ↔ limits; the test plan and the technician manual quote it).
+- Criteria: `20-design/test_criteria.yaml` (T-nn ↔ limits; the test plan and the technician manual quote it).
 - Reason codes: `{{tools/codes.py}}`; the technician manual's table is generated from it and set-equality asserted.
 
 ## 5. Records

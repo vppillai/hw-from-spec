@@ -1,4 +1,4 @@
-# SPEC_ERRATA.md — known deviations of the frozen SPEC.md ({{SPEC_REV}}, frozen under {{FREEZE_ROW}}) from the design of record
+# SPEC_ERRATA.md — known deviations of the frozen 10-spec/SPEC.md ({{SPEC_REV}}, frozen under {{FREEZE_ROW}}) from the design of record
 
 > **Status: OPEN — owner approval pending.** A frozen spec is never edited (rule 2; its §0 change log is the only mechanism it has and that
 > belongs to the next revision). This file is the errata list the next SPEC revision folds in: every row names the SPEC text, the design of

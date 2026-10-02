@@ -26,15 +26,15 @@ reference when you reach that step, not before. Nothing here is specific to one 
    `scripts/project.py scaffold | slots`, `step2stl.py`, `scad_lint.py` and the two `thin_wall_*` selftests run bare; the `.sh` gates take the first
    interpreter that imports yaml (`$PYTHON`, the project `.venv`, `python3`) and print which.
    **Then the kickoff questionnaire (§0.1)** — A0 scope first, then every owner decision the scope needs, asked up front with recommended
-   defaults, written into `project.yaml` and `docs/governance/DECISIONS.md` before any CAD.
+   defaults, written into `project.yaml` and `90-log/DECISIONS.md` before any CAD.
 2. **Copy the templates and resolve the scope** — the one copy block, runnable from the project root, is README "Use in a new project" step 4
-   (`T=vendor/hw-from-spec/templates`; it copies CLAUDE.md, .gitignore, project.yaml, SPEC.md, the governance records, PARTS_VERIFICATION,
-   TEST_PLAN + `design/VERIFY.md`, datasheet_notes, traceability + production_cut yaml, `design/erc_accept.yaml` + SOFTWARE_ARCHITECTURE [ee, both],
-   dfm_processes + dfm_verdicts + PROCUREMENT [mech, both]), then **`scripts/project.py scaffold --scope <A0 answer> CLAUDE.md SPEC.md project.yaml
-   docs/governance/*.md design/*.yaml`** (later also the copied `REVIEW_HANDOFF.md` / `RELEASE_NOTES.md`) — template lines tagged `{{ee,both}}` /
+   (`T=vendor/hw-from-spec/templates`; it copies CLAUDE.md, .gitignore, project.yaml, 10-spec/SPEC.md, the governance records, PARTS_VERIFICATION,
+   TEST_PLAN + `design/VERIFY.md`, datasheet_notes, traceability + production_cut yaml, `20-design/erc_accept.yaml` + SOFTWARE_ARCHITECTURE [ee, both],
+   dfm_processes + dfm_verdicts + PROCUREMENT [mech, both]), then **`scripts/project.py scaffold --scope <A0 answer> CLAUDE.md 10-spec/SPEC.md project.yaml
+   90-log/*.md design/*.yaml`** (later also the copied `REVIEW_HANDOFF.md` / `RELEASE_NOTES.md`) — template lines tagged `{{ee,both}}` /
    `{{mech,both}}` / `{{mech}}` stay only in their scopes (one template set, no copies). **The slots are filled in two passes**: `scripts/project.py
    slots` lists every unfilled `{{…}}` per file (the STATUS pause-point skeleton between its `<!-- skeleton -->` markers is excluded) — CLAUDE.md,
-   project.yaml and the governance records are filled now from the kickoff answers (§0.1), SPEC.md / KICKOFF_ANSWERS / traceability after the spec
+   project.yaml and the governance records are filled now from the kickoff answers (§0.1), 10-spec/SPEC.md / KICKOFF_ANSWERS / traceability after the spec
    is read (step 6); the count must read **0** before the G0 ask, not before the kickoff. What each scope creates: **ee** — the board
    paths (`paths.board`, `netlist`, `fab_dir`), `fab_dfm`, the PCB report, G1 / G2 gate rows, ERC waivers, the electronics parts seed; no
    `print_targets`, no `case_yaml`. **mech** — `print_targets`, `case_yaml`, `paths.mech_record` (the STL set whose md5 is the record id),
@@ -45,10 +45,10 @@ reference when you reach that step, not before. Nothing here is specific to one 
    `{{DATE}}` = today; `{{SKILL_VERSION}}` = the `version:` line of `vendor/hw-from-spec/SKILL.md`; `project.owner` = the person who writes the gate
    cells (`scripts/gate_check.py --release` compares the release line's git author with it); the CC-001 row (the template's own first agent row:
    "process = this skill at commit X") ships in DECISIONS.md — its evidence cell is filled after step 6 (selftests / smoke / adopt gates green at a
-   named commit), not before. Slots inside a path (`kicad/{{BOARD}}/…`) are filled unquoted.
+   named commit), not before. Slots inside a path (`30-board/kicad/{{BOARD}}/…`) are filled unquoted.
 3. **project.yaml** (from `templates/project.yaml`: paths, id prefixes, markers, tools, the day-1 gate lists; the G1/G2 lines stay commented
    until those artefacts exist). Everything a script needs is there; no script carries a project constant (`references/project-yaml.md`).
-4. **docs/governance/ENV.md**: tool versions, the CAD CLI paths, which endpoints answer (verify each by running it); run the CAD CLI once on a trivial
+4. **90-log/ENV.md**: tool versions, the CAD CLI paths, which endpoints answer (verify each by running it); run the CAD CLI once on a trivial
    file and note the file-format version; the host row from `scripts/project.py env` (cores, RAM, the heavy-job pool and memory floor
    `scripts/jobs.sh` derives — `references/agent-ops.md` §8). Put every tool path behind the `tools:` block — twenty generators with hard-coded
    paths cost a CI day later (`references/pitfalls.md` ci/tooling).
@@ -59,9 +59,9 @@ reference when you reach that step, not before. Nothing here is specific to one 
 6. **First records** (the smoke's sequence, in a new project; `PY=.venv/bin/python`): fill the slots of CLAUDE.md / project.yaml / the records
    first (`$PY scripts/project.py slots` names them; an unfilled `project.yaml` is not valid YAML and every reader says so) → `$PY scripts/known_issues.py`
    → `$PY scripts/traceability.py` (**exit 1 = a decision row without a traceability entry or a FAILED check; every D-/CC- row — the kickoff rows
-   included — needs an entry in `design/traceability.yaml`, add it and rerun**) → `$PY scripts/release_report.py` (DRAFT, record MISSING — correct
+   included — needs an entry in `20-design/traceability.yaml`, add it and rerun**) → `$PY scripts/release_report.py` (DRAFT, record MISSING — correct
    before G1 / M1) → commit → `scripts/adopt_gates.sh` (day-1 list + clone gate) green → `$PY scripts/project.py kickoff --check` green (every answered kickoff row landed in project.yaml with a real D row) → fill the
-   CC-001 evidence cell and the first STATUS paragraph → commit. Only now read the spec; fill SPEC.md / VERIFY / traceability; `scripts/project.py
+   CC-001 evidence cell and the first STATUS paragraph → commit. Only now read the spec; fill 10-spec/SPEC.md / VERIFY / traceability; `scripts/project.py
    slots` reads 0 before the G0 ask (§1.1 says what happens at G0).
 7. **CI (optional, when the repo has a remote)**: `templates/ci/` holds pr-check / nightly / release workflows with `{{PROJECT_*}}` placeholders;
    fill them with the recipe in `templates/ci/README.md` (it copies `setup_linux.sh` / `nightly.sh` / `release_archive.sh` and writes
@@ -81,7 +81,7 @@ nothing); verification (coupons, dummies, review rounds per gate, visual inspect
 identity, envelope and delegation. **Every question carries its scopes; a question outside the scope is not asked (KICKOFF_ANSWERS row
 `n/a (scope)`) and a batch with nothing applicable is skipped.** **Every question lists its RECOMMENDED answer first (marked) and two or three
 alternatives with a one-line consequence**; each batch opens with "accept every recommended answer of this batch". Answers go into
-`docs/governance/KICKOFF_ANSWERS.md` (`templates/KICKOFF_ANSWERS.md`), one owner D row each (the agent transcribes the owner's words, quoted;
+`10-spec/KICKOFF_ANSWERS.md` (`templates/KICKOFF_ANSWERS.md`), one owner D row each (the agent transcribes the owner's words, quoted;
 `accepted recommended` when the default stood), the machine-readable values into `project.yaml` (`project.scope`, the `kickoff:` mapping, the
 `board:` block, `fab_dfm.bar`, `print_targets.<t>` incl. `dfm_process`) — every answer class has a landing key in `templates/project.yaml`, and
 **`scripts/project.py kickoff --check`** fails on an answered row whose key is unset or whose D row is missing — a traceability entry per row — then commit. A deferred question is an OPEN D row that blocks the phase needing it; an answered question is never
@@ -92,7 +92,7 @@ re-asked, and a later change is a superseding D row (rule 2).
 - **ee**: **G0** spec approved → **G1** schematic approved → **G2** layout approved → **fab DFM** (§7) → **submission** (fab package, order =
   owner's click) → **release cut** → **production cut**. No case gates, no print DFM.
 - **mech**: **G0** mechanical spec approved (envelope, interfaces, materials, print / CNC target, fit inputs — a board STEP / mesh or dimensions,
-  each tagged [V] or [K]) → **M1** geometry approved (every body generated from `design/case.yaml`, six face renders read, clearance rows ≥ 0
+  each tagged [V] or [K]) → **M1** geometry approved (every body generated from `20-design/case.yaml`, six face renders read, clearance rows ≥ 0
   against the fit input of record, census + pinch + slicer clean, vendor DFM clean by API read, hardware [V], `case_dfm` + mechanical-intent
   round merged) → **M2** first article / fit print approved (caliper table, coupons, mating part fitted; a deviation is a yaml knob → new case
   version → M1 re-run) → **case order** (owner's click) → **release cut** → **production cut**. The record id is the STL set's md5
@@ -100,15 +100,15 @@ re-asked, and a later change is a superseding D row (rule 2).
 - **both**: the ee chain with the case pipeline (§8) hanging off G2 and the **case order** gate beside the board order, as before.
 
 The release cut = reports RELEASED, collateral, tag; the production cut = document set, tag (§10). Each gate's prerequisites are the row in
-`docs/governance/GATES.md` (`templates/GATES.md` carries the rows of every scope; `scaffold --scope` keeps yours).
+`90-log/GATES.md` (`templates/GATES.md` carries the rows of every scope; `scaffold --scope` keeps yours).
 
-- The owner writes the gate line; agents never do. `docs/governance/GATES.md` approval cells and the release line (`markers.release_regex`, in the
+- The owner writes the gate line; agents never do. `90-log/GATES.md` approval cells and the release line (`markers.release_regex`, in the
   Release row's approval cell) are owner text. **`scripts/gate_check.py <gate>`** reads a cell (exit 1 while empty) and **`--release`** the release
   cell plus its git author, which must be `project.owner`; the report banner reads the same function and says **DRAFT** until the owner's committed
   cell exists — a cell an agent wrote or committed stays DRAFT (`scripts/release_report.py`; the clone gate blames the line in the real checkout).
 - Do not start the next phase's CAD before the gate line exists: every project generator of the next phase calls `scripts/gate_check.py <gate>` first
   and refuses while it is 1 (the placement script before G1, the case geometry before G0 / M1, the fab package before G2). If the owner delegates
-  ("proceed, I retro-approve"), quote the instruction in `docs/governance/GATES.md` under the table and keep the approval cells empty.
+  ("proceed, I retro-approve"), quote the instruction in `90-log/GATES.md` under the table and keep the approval cells empty.
 - **One review round precedes every gate** — defined once, used everywhere: for every role of the round's role set, one in-session reviewer +
   two external models of a second model family (or the in-session fallback, said so in the merge), one verifier with record access per role, one
   merged report (§5). "Two reviews" in an older record
@@ -120,21 +120,21 @@ The release cut = reports RELEASED, collateral, tag; the production cut = docume
 
 | Phase / item | Decider | Where it is recorded |
 |---|---|---|
-| kickoff answers (scope, product, process, materials, enclosure architecture, DFM bar, verification, sourcing, software, release) | owner | `docs/governance/KICKOFF_ANSWERS.md` → D rows, `project.yaml` |
-| G0 / G1 / G2 / M1 / M2 cells, the board order click, the case order click, the release line | owner | `docs/governance/GATES.md` |
+| kickoff answers (scope, product, process, materials, enclosure architecture, DFM bar, verification, sourcing, software, release) | owner | `10-spec/KICKOFF_ANSWERS.md` → D rows, `project.yaml` |
+| G0 / G1 / G2 / M1 / M2 cells, the board order click, the case order click, the release line | owner | `90-log/GATES.md` |
 | a spec value, part, topology, pin change | owner (agent proposes a CC row OPEN) | DECISIONS |
 | the manufacturability bar and any waiver of it | owner (default zero / zero / no waivers) | D row + `fab_dfm.bar`, `print_targets.<t>.accepted`, `dfm_accepted` |
 | print-target numbers (`print_targets`), design margin, first-article tolerance | owner (agent proposes from the vendor sheet) | `project.yaml`, D row |
 | an FEA WARN / a margin below the limit | owner (agent reports the number, never accepts) | D row cited in `FEA_REPORT.md` |
-| test criteria limits (T-nn) and the software's refuse-vs-warn posture | owner (agent drafts from the spec) | `design/test_criteria.yaml`, D row |
+| test criteria limits (T-nn) and the software's refuse-vs-warn posture | owner (agent drafts from the spec) | `20-design/test_criteria.yaml`, D row |
 | FEA case set, review roles, generator design, delegated copper rules | agent (CC DECIDED within the delegation) | CC rows |
 
 ### 1.1 At a gate (asking the owner)
 
-1. Prerequisites first: the row's prerequisite cell in `docs/governance/GATES.md` is satisfied and provable (merged review report committed, the scope's
+1. Prerequisites first: the row's prerequisite cell in `90-log/GATES.md` is satisfied and provable (merged review report committed, the scope's
    checker outputs — ERC / DRC files [ee, both], census JSON + `DFM_ROUND.md` [mech, both] —, `scripts/adopt_gates.sh` green at HEAD, KNOWN_ISSUES §2 lists only items the owner has seen). If one is missing, say so and stop.
 2. Write the STATUS pause-point paragraph: what was reviewed (commit, SPEC rev / board md5-8), the merged report path, the OPEN rows the owner
-   must decide, and the exact ask: *"Please write the Gn / Mn cell in docs/governance/GATES.md: `<your name>, <date>, <SPEC rev | schematic commit | board md5-8 | case version + record md5-8>`"*.
+   must decide, and the exact ask: *"Please write the Gn / Mn cell in 90-log/GATES.md: `<your name>, <date>, <SPEC rev | schematic commit | board md5-8 | case version + record md5-8>`"*.
 3. Ask in one message with that sentence; do not start the next phase's CAD while waiting (other work — docs, tests, tooling — may continue).
 4. A valid cell is owner text in the approval column of that row; `_not yet approved_` is empty. **Agents never write approval cells or the
    release line**, not even when told "go ahead" in chat: quote the chat instruction verbatim with date/time under the table, note "cell pending"
@@ -144,7 +144,7 @@ The release cut = reports RELEASED, collateral, tag; the production cut = docume
 
 ### 1.2 The manufacturability bar (the gate rule the owner confirms at kickoff)
 **Zero errors, zero warnings, no waivers** — recorded as an owner row on day 1 and enforced by the scripts, never by prose: **board** — ERC
-`scripts/erc_gate.py` 0 errors / 0 unaccepted warnings (an acceptance is a typed entry of `design/erc_accept.yaml` naming a live decision row; a
+`scripts/erc_gate.py` 0 errors / 0 unaccepted warnings (an acceptance is a typed entry of `20-design/erc_accept.yaml` naming a live decision row; a
 GUI exclusion or a stale entry fails), CAD DRC 0 errors / 0 unconnected / **0 warnings** unless a dated waiver row + generated accept rule
 (`references/pcb-layout-dfm.md` §14), fab DFM mirror **0 open (0 Danger, 0 Warning)** unless a `dfm_accepted` entry with refdes, reason, date and
 vendor evidence (`scripts/dfm_check.py` reads `fab_dfm.bar`); **printed enclosure** — census 0 unaccepted FAIL per body per preset (only a dated
@@ -184,7 +184,7 @@ order. A WARN that is "known" is not a bar; it is either fixed or a dated, evide
 
 ## 3. Decision log
 
-`docs/governance/DECISIONS.md` is one table, six cells: `ID | Date | Status | Topic | Proposal / decision | Reason`.
+`90-log/DECISIONS.md` is one table, six cells: `ID | Date | Status | Topic | Proposal / decision | Reason`.
 
 - **D-nn** rows are the owner's (text as issued); **CC-nnn** rows are the agent's. Status words: OPEN (needs the owner), APPROVED, DECIDED
   (within delegated authority), APPLIED (!) (applied ahead of the owner's look — the `(!)` is "the nod marker": the owner's nod is still wanted),
@@ -193,7 +193,7 @@ order. A WARN that is "known" is not a bar; it is either fixed or a dated, evide
 - Rule 2: a value, part, topology or pin assignment named in the spec is never changed silently. Write the CC row (reason, options, recommendation),
   mark it OPEN, ask. Apply only after approval, or ship it behind an optional flag that warns when omitted so the code path is tested now
   (`references/pitfalls.md` process).
-- `docs/governance/KNOWN_ISSUES.md` is generated from the log: OPEN rows, rows mentioning OPEN, provisional rows, the nod section (KNOWN_ISSUES §2.1), blockers, the
+- `90-log/KNOWN_ISSUES.md` is generated from the log: OPEN rows, rows mentioning OPEN, provisional rows, the nod section (KNOWN_ISSUES §2.1), blockers, the
   test plan's UNVERIFIED markers. Section 1 is hand-curated between markers (`scripts/known_issues.py`). Describe the nod marker indirectly in
   status cells or the generator re-triggers on the description.
 - A literal `|` inside a cell is `\|`; the generator refuses a row with the wrong cell count. An ID is reserved only when its row is in HEAD:
@@ -206,15 +206,15 @@ order. A WARN that is "known" is not a bar; it is either fixed or a dated, evide
 - Tags: **[V]** verified live this session (fetch of the distributor / fab page: MPN, package, stock, basic/extended), **[K]** known but
   unverified (never fitted; **[K owner-read]** when the OWNER read a distributor page our tools could not fetch — date, who, which page — listed in
   PROCUREMENT and the arrival checklist until a fetch of ours confirms it), **[S]** select-by-parameter (a row without an MPN yet). Never invent a fab part number; every check is a row in
-  `docs/parts/PARTS_VERIFICATION.md` with date, URL, stock (`references/part-verification.md`). Every scope: electronics on the fab's library
+  `60-orders/PARTS_VERIFICATION.md` with date, URL, stock (`references/part-verification.md`). Every scope: electronics on the fab's library
   (ee / both), hardware — inserts, magnets, feet, screws, adhesives — on the manufacturer's page + TDS (mech / both); a mech project's fit input
   (board STEP / envelope) carries the same [V] / [K] tag in SPEC §4 and `paths.mesh_provenance`.
 - Gate value ↔ MPN ↔ fab code on every fitted part (the BOM groups by code: a value edited on the symbol does not change the ordered part).
 - Stock gate is run-relative: qty per board × boards × attrition for every code, not "> 0" on a few.
 - **VERIFY item** = a value or claim in the spec (or in a review finding) that rests on a datasheet, drawing or standard nobody has read yet:
-  a current, a pin function, a footprint dimension, a reflow limit, a standard clause. The spec author tags them `VERIFY` in SPEC.md (or the
-  G0 review lists them in `docs/design/VERIFY.md`: item, part, what to read). Each is closed by a row in `docs/datasheet_notes/<part>.md` (page/section,
-  value read, matches yes/no — `templates/datasheet_notes/_TEMPLATE.md`) or moved to `docs/governance/BLOCKERS.md` when the source cannot be fetched.
+  a current, a pin function, a footprint dimension, a reflow limit, a standard clause. The spec author tags them `VERIFY` in 10-spec/SPEC.md (or the
+  G0 review lists them in `20-design/VERIFY.md`: item, part, what to read). Each is closed by a row in `10-spec/datasheet_notes/<part>.md` (page/section,
+  value read, matches yes/no — `templates/datasheet_notes/_TEMPLATE.md`) or moved to `90-log/BLOCKERS.md` when the source cannot be fetched.
   Rule 3: every VERIFY item touching a part is closed before that part is drawn; G0 requires all closed or BLOCKED; curve-only values are
   marked "not in datasheet text" with the reader named.
 
@@ -229,7 +229,7 @@ Protocol (`workflows/README.md`, `references/agent-ops.md` §4):
    (no reasoning) so verifiers do not re-find accepted items each round.
 3. Reviewers (the review round of §1): per specialty one in-session agent + two external models of a **second model family** (Cursor agent CLI
    `--mode ask`, read-only; the in-session fallback when no CLI — say so in the merge), identical inputs = the artefacts + the role's checklist,
-   never each other's output, never the author's dispositions, never the decision log. Reports to `docs/reviews/<ROUND>_<role>_<model>.md`.
+   never each other's output, never the author's dispositions, never the decision log. Reports to `80-reviews/<ROUND>_<role>_<model>.md`.
 4. **One verifier WITH record access** (DECISIONS, KNOWN_ISSUES, BLOCKERS, SPEC + its errata, the test plan, the netlist / mesh of record) on
    every finding: default REFUTED unless the worktree evidence supports it; classes **CONFIRMED / ALREADY DECIDED** (the row that decided it, and
    whether its number still holds) **/ REFUTED / PARTLY / UNVERIFIABLE**, corrected text and severity, and a **rev-impact column** (changes the
@@ -255,10 +255,10 @@ compares with the census JSON of record. Required before the case order (`templa
 **The G0 round (spec review)** uses `blind-deep-review.js` with `{{ROLE_SET}}` = `spec`: four roles — spec coherence (requirements, interfaces,
 numbers that must agree, the VERIFY list), parts and sourcing (every named part fetchable live, tags, alternates, stock for the run; in mech
 scope the hardware lines), mechanical intent (envelope, connectors, case concept, thermal; in mech scope also the fit input's provenance and
-tag), test plan (every requirement has a measurable check). The artefact is `SPEC.md` (+
-`docs/parts/PARTS_VERIFICATION.md`, `docs/design/TEST_PLAN.md`, the case concept); the hand-off (`templates/REVIEW_HANDOFF.md`) lists SPEC.md with its md5
+tag), test plan (every requirement has a measurable check). The artefact is `10-spec/SPEC.md` (+
+`60-orders/PARTS_VERIFICATION.md`, `20-design/TEST_PLAN.md`, the case concept); the hand-off (`templates/REVIEW_HANDOFF.md`) lists 10-spec/SPEC.md with its md5
 in §2, and the generated header's board / package / case rows read **MISSING by design** — say so in the hand-off. Verdict options: approve the
-spec as is / after the REQUIRED edits / not yet. Merged report `docs/reviews/G0_merged.md`; REQUIRED edits go into SPEC (owner text: OWNER rows,
+spec as is / after the REQUIRED edits / not yet. Merged report `80-reviews/G0_merged.md`; REQUIRED edits go into SPEC (owner text: OWNER rows,
 agent proposals: CC rows OPEN), the VERIFY list is closed or BLOCKED (§4), then the G0 ask (§1.1). G1 pack and roles: `references/schematic-phase.md` §4.
 
 ## 6. Layout phase and the adopt rule [ee, both] (G1→G2: `references/pcb-layout-dfm.md`; G0→G1: `references/schematic-phase.md`)
@@ -271,7 +271,7 @@ unless a dated waiver row** / schematic parity 0 with the net classes enforced (
 DRC rule that must fire exactly once — the CLI may ignore class patterns), route-quality 0 unjustified HIGH, the fab DFM mirror 0 open (§7, §1.2), silk check 0, every generator `--selftest`
 and `--check` green, and the fresh-checkout gate passes on `git archive HEAD`.
 `scripts/adopt_gates.sh` runs the `gates.adopt` list then `scripts/clone_gate.sh`; the routed board + its router session file are the artefacts of
-record (routing is never re-run to reproduce them) (`references/pitfalls.md` layout, kicad/drc).
+record (routing is never re-run to reproduce them) (`references/pitfalls.md` layout, 30-board/kicad/drc).
 
 ## 7. Fab DFM mirror [ee, both]
 
@@ -283,7 +283,7 @@ the PANEL upload before the order and diff its counts against the mirror (`refer
 
 ## 8. Case pipeline and FEA [mech, both]
 
-`design/case.yaml` → OpenSCAD source → STL per piece → census (wall thickness by entry surface, connected components, membranes) → interference
+`20-design/case.yaml` → OpenSCAD source → STL per piece → census (wall thickness by entry surface, connected components, membranes) → interference
 against the board mesh of record (provenance sidecar `paths.mesh_provenance`: board md5 + mesh md5 in `both`; in `mech` the imported STEP /
 mesh or the owner's envelope with its source md5 and [V] / [K] tag — a [K] envelope is a KNOWN_ISSUES §2 item until measured) → FEA → drawings
 → print-service / CNC DFM + quotes. Print-target
@@ -320,14 +320,14 @@ list) tagged **[checker]** / **[vendor sheet]** / **[physics]** / **[owner bar]*
      NOISE-FLOOR row, bodies = 1, geometry signature, retention present in the mesh, worst-case clearance per mating pair, six face renders; the
      only exception path is a dated `accepted` entry with vendor evidence, re-matched every run) — the rules: `references/dfm-printed-enclosure.md` §2.
    - `scripts/print_dfm.py --process <row> --out out/…/dfm <stl>` → `PASS` or `FLAG` + one line per rule (M C W R Z F K P V H O B S + INFO L Y from
-     physics + the cited minimums of `design/dfm_processes.yaml`); FLAG = a real sub-minimum region on the mesh: fix the generator, re-export, rerun —
+     physics + the cited minimums of `20-design/dfm_processes.yaml`); FLAG = a real sub-minimum region on the mesh: fix the generator, re-export, rerun —
      no waiver field. The rules, the sidecars (`--boxes`, `--supports`) and the loop: `references/print-dfm.md`.
    - In `gates.adopt`: `thin_wall_census.py --gate-dir` and `print_dfm.py --gate` (exit 1 on a body without a same-md5 record, md5 or signature
      drift, a rule-set / threshold mismatch, a FLAG without `--open <tag>/<piece>=<OPEN decision row naming the piece>` or
      `--expect <tag>/<piece>=<reason>` for a body that FLAGs BY DESIGN — both printed on every run, the record still says FLAG).
-   - After every vendor verdict: append the row to `docs/quotes/dfm_verdicts.yaml`, run `print_dfm.py --validate`; **vendor FLAG + ours PASS =
+   - After every vendor verdict: append the row to `60-orders/quotes/dfm_verdicts.yaml`, run `print_dfm.py --validate`; **vendor FLAG + ours PASS =
      RULE DEFECT (exit 1)** — fix the physics in the rule, bump its `VERSION`, re-validate, run `scripts/skill_retro.py`; vendor PASS + ours FLAG =
-     stricter, reason recorded, the rule stands. A new vendor or process = ONE cited row in `design/dfm_processes.yaml` (`[V]` URL + date or `[K]`
+     stricter, reason recorded, the rule stands. A new vendor or process = ONE cited row in `20-design/dfm_processes.yaml` (`[V]` URL + date or `[K]`
      with the source; a 404 = `null`, the row refuses to gate); kickoff C8a names the row per target (`print_targets.<t>.dfm_process`).
    - Generated code is linted on every emit (`scripts/scad_lint.py`: a mid-line `//` silently drops the rest of the statement line).
 2. **Geometry rules — checker vs material**: no FREE-STANDING wedge (rail tips, lips, non-tangent coves, knife edges) **[checker]**; chamfers
@@ -340,7 +340,7 @@ list) tagged **[checker]** / **[vendor sheet]** / **[physics]** / **[owner bar]*
    clean in its space budget goes; every wall change reruns the whole table.
 3. **Canonical STL + geometry signature** (own binary writer, sorted triangles, normals from the float32 vertices; volume / area / bbox / facets
    beside the md5) so the md5 IS the geometry; the census gate, vendor uploads and the cut key on it.
-4. **Vendor quote page** (`references/dfm-printed-enclosure.md` §7, record `templates/DFM_ROUND.md` under `docs/quotes/<date>/`): owner consent
+4. **Vendor quote page** (`references/dfm-printed-enclosure.md` §7, record `templates/DFM_ROUND.md` under `60-orders/quotes/<date>/`): owner consent
    to upload quoted in the decision row; ONE STL per page session; the verdict of record is the vendor's analysis API response, never a page
    reading (the flag is computed at upload, independent of the material on the line — set the material anyway for price and legend); the RAW
    JSON saved; vendor volume / area / bbox = ours; the heat map read on every face; the coordinator re-reads a worker's "no flag" itself; nothing
@@ -372,16 +372,16 @@ Bring-up tool first (a `--selftest` that needs no hardware, `--dry-run`), then t
 
 ## 10. Release cut and production cut
 
-**The record id** every md5-keyed consumer uses (collateral folder, report identity, tag message, `docs/production/<md5-8>/`) is
+**The record id** every md5-keyed consumer uses (collateral folder, report identity, tag message, `70-release/<rev>/`) is
 `scripts/project.py record`: the board file in ee / both, the STL set of record (`paths.mech_record`, md5 of the sorted `<path> <md5>` lines) in
 mech — a moved STL moves the id, exactly as a copper change does.
 Release cut: `scripts/release_report.py` (every number from a file, MISSING printed, DRAFT/RELEASED from the gate file), collateral incl. renders
 (`scripts/collect_renders.py`, keyed on the record md5 + camera args), release notes from `templates/RELEASE_NOTES.md` with a source next to every
 number, annotated tag. Production cut: `templates/production_cut.yaml` lists every deliverable (kind, path, check, inputs, required, owner
 placeholders) and **one project-side generator** (`gen/production_cut.py` — the contract is `references/release-and-cut.md` §7; the skill ships
-the yaml and the contract, not the generator) builds `docs/production/<md5-8>/` with MANIFEST + STATUS; `[OWNER: …]` fields are counted, never
+the yaml and the contract, not the generator) builds `70-release/<rev>/` with MANIFEST + STATUS; `[OWNER: …]` fields are counted, never
 filled by an agent; records (photos, press logs, the first-article caliper table, test results) are filed as they happen under **the one records
-folder `docs/production/<md5-8>/records/`** (the cut yaml's `records_dir`; RELEASE_NOTES points there) or the cut cannot be written
+folder `70-release/<rev>/records/`** (the cut yaml's `records_dir`; RELEASE_NOTES points there) or the cut cannot be written
 (`references/release-and-cut.md`).
 
 - **The last round is an order, then a fixed-point pass:** records → renders → reports → matrix → reports → analysis index → PDFs → cut build LAST → commit;
@@ -391,14 +391,14 @@ folder `docs/production/<md5-8>/records/`** (the cut yaml's `records_dir`; RELEA
   judges stock on the records frozen at the build (`stock_snapshot.json`, hashed in the manifest), never on the live shelf; its selftest runs on a
   stock fixture (`references/fab-dfm.md` §8). Fab files are never rebuilt; prose may be re-derived.
 - **Vendor review after the order** (`references/vendor-review.md`, record `templates/VENDOR_REVIEW_RECORD.md`): file the mail + images under
-  `docs/quotes/<date>/`, map every flag on the files of record (STLs [mech, both]; gerbers / BOM [ee, both]), decide per line in the log, fix through the generator, re-run the vendor's DFM on
+  `60-orders/quotes/<date>/`, map every flag on the files of record (STLs [mech, both]; gerbers / BOM [ee, both]), decide per line in the log, fix through the generator, re-run the vendor's DFM on
   the replacements before uploading, then Replace File / chat **only on the owner's explicit word** — agents never pay, agree, cart or change a line.
 - **Illustrated assembly guide** [mech, both] beside the text SOP: `scripts/assembly_guide.py` (authored short yaml + generated step text + one keyed render per
   page, `--check`), registered as a cut deliverable (`references/release-and-cut.md` §8).
 
 ### 10.1 Before the order ships: the arrival checklist and the spec errata
 - **The arrival / first-article checklist is GENERATED** (copy `templates/design/arrival_checklist.yaml` to `design/` AT THE ORDER, not on day 1 →
-  `scripts/arrival_checklist.py` → `docs/production/ARRIVAL_CHECKLIST.md`; uncomment the `--check` line in `gates.adopt` the same commit —
+  `scripts/arrival_checklist.py` → `60-orders/ARRIVAL_CHECKLIST_rev0.md`; uncomment the `--check` line in `gates.adopt` the same commit —
   `project.py gates-required` demands it once the yaml exists; a cut deliverable). Written at the order, from the merged reviews' "what the parts must prove" rows and the OPEN decision rows, in the order of the day:
   **before shipment** (the fab's assembly photos — a paid "confirm placement" option is not guaranteed to raise a dialog, the photo confirmation is
   the one human polarity look) → **bench checks in gate order** [ee, both] (each row says what it `opens`; nothing powered or plugged before its row)
@@ -406,7 +406,7 @@ folder `docs/production/<md5-8>/records/`** (the cut yaml's `records_dir`; RELEA
   (caliper table, fit, retention, coupons read by their printed text) → **owner decisions still OPEN** with the trigger that resolves each (the
   bracket-print fit knob = `kickoff.enclosure.fit_result`, the SPEC errata rows). Every row: `status` TODO / DONE date / N/A / APPLIED date (veto
   window) + `evidence`; closing a row = editing the yaml, regenerating, committing (`references/release-and-cut.md` §10).
-- **A frozen SPEC is never edited**: deviations of the design of record from the frozen text are **E-rows in `docs/spec_sections/SPEC_ERRATA.md`**
+- **A frozen SPEC is never edited**: deviations of the design of record from the frozen text are **E-rows in `10-spec/spec_sections/SPEC_ERRATA.md`**
   (`templates/SPEC_ERRATA.md`), OPEN until the owner approves, folded into the next SPEC revision's change log; the arrival checklist §E carries them;
   a reviewer reads the errata before calling a deviation a finding (ALREADY DECIDED).
 
@@ -416,7 +416,7 @@ Parallel agents own disjoint files; explicit-path commits do not isolate hunks i
 append; hand out record IDs with the task; **commit after every meaningful step** (a subagent that hits its turn limit loses everything not in
 HEAD — `WIP … not yet gated` checkpoint commits, then the gated one);
 block in-process on background jobs (`until ! kill -0 $pid; do sleep 20; done`; the per-call ceiling is stated once in `references/agent-ops.md` §5);
-heartbeat every ~25 min; time-box every long task; pause points with a resume list in `docs/governance/STATUS.md`; keep the machine awake; resume by message
+heartbeat every ~25 min; time-box every long task; pause points with a resume list in `90-log/STATUS.md`; keep the machine awake; resume by message
 with the measured state, never from memory; kill a long render early when an owner addition arrives (`references/agent-ops.md`).
 Memory holds resume pointers and owner feedback, never project facts; a numbered PAUSE POINT carries an owner list (owner-only items, struck
 through with date + record as they close) and a Resume line; an owner-only item is listed, never attempted, and a chat delegation is quoted in the
@@ -429,15 +429,15 @@ caches live behind `--check`, one locked record round per batch, and a one-value
 
 ### 11.1 Resume (after a crash, a sleep, a new session)
 
-1. `docs/governance/STATUS.md` STATE NOW + the newest paragraph (what was running, the pause list) → 2. `docs/governance/DECISIONS.md` OPEN rows (= owner items; also
-`docs/governance/KNOWN_ISSUES.md` §2) → 3. `git status --short` and `git log -3 --stat` (what was left uncommitted; never commit another agent's half-edit)
+1. `90-log/STATUS.md` STATE NOW + the newest paragraph (what was running, the pause list) → 2. `90-log/DECISIONS.md` OPEN rows (= owner items; also
+`90-log/KNOWN_ISSUES.md` §2) → 3. `git status --short` and `git log -3 --stat` (what was left uncommitted; never commit another agent's half-edit)
 → 4. `scripts/handoff_header.py` (board of record vs HEAD, clean/dirty) → 5. `scripts/adopt_gates.sh` (what is green at HEAD) → 6. compare
 with STATE NOW: every difference is written into a new STATUS paragraph BEFORE any work resumes (measured state, not remembered state) → 7. if a
 gate ask was pending, check the cell; if the owner answered in chat only, §1.1 step 4.
 
 ## 12. Before your final commit
 
-Append every non-obvious learning to `docs/governance/LEARNINGS_LOG.md` as `- YYYY-MM-DD [domain] learning — evidence`; one DECISIONS row for the task;
+Append every non-obvious learning to `90-log/LEARNINGS_LOG.md` as `- YYYY-MM-DD [domain] learning — evidence`; one DECISIONS row for the task;
 one dated STATUS paragraph; run the `--check` chain; `git status --short <paths>` after every explicit-path commit of a generated set.
 Then the retro (§13) folds the learnings back into this skill at the next production cut.
 
@@ -448,7 +448,7 @@ first day>` reads the project's `LEARNINGS_LOG.md` and `DECISIONS.md`, classifie
 PARTIAL / NEW, "costly" when the text names a failure that cost a round), compares the skill version the project recorded (`project.yaml skill:
 {version}`) with `SKILL.md`, and writes `docs/retro/<project>_<date>.md` in the skill repo: the NEW and PARTIAL tables, a CHANGELOG entry draft,
 one reference patch stub per target file, an eval stub per costly NEW entry, the owner decision topics the kickoff questionnaire does not
-ask yet, and the DFM process-table drift (`design/dfm_processes.yaml` vs the skill's template: NEW rows, CHANGED numbers with their citation,
+ask yet, and the DFM process-table drift (`20-design/dfm_processes.yaml` vs the skill's template: NEW rows, CHANGED numbers with their citation,
 VALIDATED rows — §8.1 item 1); every dated bullet it cannot parse is listed in §0, never dropped; the project's `ids.owner_prefix` and
 `paths.dfm_processes` are honoured. **`--apply`** then performs the mechanical folds in the skill repo, idempotently: one pitfalls line per NEW
 learning, every NEW process row with its citations into the template (`validated_on: []`), a CHANGELOG `UNRELEASED` stub. Then, by hand: fold
@@ -468,7 +468,7 @@ row. The classifier is a keyword matcher: the report is the input to the change;
 | the evals and what is checked mechanically | `evals/evals.json`, `evals/run_evals.py` |
 | day 0: the kickoff questionnaire (every owner decision, recommended defaults, batches) | `references/kickoff-questionnaire.md`, `templates/KICKOFF_ANSWERS.md` |
 | G0: SPEC / VERIFY skeletons, the spec review round | `templates/SPEC.md`, `templates/design/VERIFY.md`, §5 |
-| G0→G1: design yaml shape, ERC gate (`erc_gate.py` + `design/erc_accept.yaml`), map checks, G1 pack | `references/schematic-phase.md`, `templates/G1/` |
+| G0→G1: design yaml shape, ERC gate (`erc_gate.py` + `20-design/erc_accept.yaml`), map checks, G1 pack | `references/schematic-phase.md`, `templates/G1/` |
 | G1→G2: placement CSV, router session, G2 pack, PCB build rules (stack-up … panel), DRC census, route quality, parity, canary | `references/pcb-layout-dfm.md` |
 | part tags, verification table | `references/part-verification.md` |
 | fab rules, panel, quote form, DFM export | `references/fab-dfm.md` |

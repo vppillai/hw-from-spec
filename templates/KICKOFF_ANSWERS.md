@@ -30,7 +30,7 @@ answered question is a defect; changing an answer is a new D row that supersedes
 | C6 | fan / vents | {{passive vents}} | yes | D-{{nn}} | `kickoff.enclosure.fan` | {{mech,both}}
 | C7 | light pipes / windows | {{holes, pipe on the backlog}} | yes | D-{{nn}} | `kickoff.enclosure.light_pipe` | {{mech,both}}
 | C8 | two targets, per-preset fits | {{yes}} | yes | D-{{nn}} | `kickoff.enclosure.targets` | {{mech,both}}
-| C8a | print-DFM process row per target | {{<vendor row> + home_fdm_04}} | yes | D-{{nn}} | `print_targets.<t>.dfm_process`; `design/dfm_processes.yaml` | {{mech,both}}
+| C8a | print-DFM process row per target | {{<vendor row> + home_fdm_04}} | yes | D-{{nn}} | `print_targets.<t>.dfm_process`; `20-design/dfm_processes.yaml` | {{mech,both}}
 | C9 | brand marks on FDM parts | {{ironed top-face feature}} | yes | D-{{nn}} | `kickoff.enclosure.marks`; slicer plate profile (`ironing_type: top`) | {{mech,both}}
 | C10 | print kit hand-over: report-back recipient, fit decider | {{owner; owner}} | yes | D-{{nn}} | `kickoff.enclosure.kit_recipient`, `kickoff.enclosure.fit_decider`, `kickoff.enclosure.fit_result` ("pending: bracket print" until the owner picks; ARRIVAL_CHECKLIST E-FIT); START_HERE | {{mech,both}}
 | C11 | slicer optimisation target | {{minimal waste}} | yes | D-{{nn}} | `kickoff.enclosure.optimise`; the plate yaml `optimise:` block (`references/fdm-print-optimisation.md` §4) | {{mech,both}}

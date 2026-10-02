@@ -7,7 +7,7 @@ subagents in the order of the phases (Review → Verify → Merge) — the blind
 
 | Template | Use | Shape |
 |---|---|---|
-| `blind-deep-review.js` | **one review round** (SKILL §5: the unit every gate needs) before a gate / an order; `{{ROLE_SET}}` = `spec` for the G0 round (SPEC.md is the artefact), `board` later in ee / both (incl. the `case_dfm` role), `mech` for M1 / M2 / case order in mech scope | roles × (1 in-session + 2 external) → verifier per role → merge with REQUIRED / OWNER / DOCUMENT / ACCEPT + verdict |
+| `blind-deep-review.js` | **one review round** (SKILL §5: the unit every gate needs) before a gate / an order; `{{ROLE_SET}}` = `spec` for the G0 round (10-spec/SPEC.md is the artefact), `board` later in ee / both (incl. the `case_dfm` role), `mech` for M1 / M2 / case order in mech scope | roles × (1 in-session + 2 external) → verifier per role → merge with REQUIRED / OWNER / DOCUMENT / ACCEPT + verdict |
 | `delta-audit.js` | after a bounded change | same, filtered to the affected roles, briefed with the round's CLAIMS, merged against the previous audit item by item |
 | `routing-inspection.js` | routed copper | tile every layer ≥ 40 px/mm → two blind inspectors (the external one sees ONLY the tiles) → merge to a fix list |
 | `silk-audit-verify.js` | silk after a design change | audit → fix through yaml (copper signature unchanged) → blind visual verify A/B → merge + fix → re-verify |
@@ -48,7 +48,7 @@ weaker (same model family) — say so in the merged report's reviewer-quality se
   prompt ≤ ~30 kB naming the files, launch in the background with the PID recorded and poll with until-loops under the per-call ceiling
   (`references/agent-ops.md` §5), `test -s` the report — an EMPTY or error-only report is a failure: retry once with the fallback model and note the
   substitution, else write the failure into the report and return zero findings; the wrapper never judges the artefact itself.
-- **Blindness clause** (every reviewer prompt): the only briefing is the hand-off in the frozen worktree; never read `docs/reviews/<TAG>_*`, earlier
+- **Blindness clause** (every reviewer prompt): the only briefing is the hand-off in the frozen worktree; never read `80-reviews/<TAG>_*`, earlier
   merged reviews or the live repo except to write the own report; every finding cites file + line / coordinate / refdes / net and says how it was
   checked; severity BLOCKER / MAJOR / MINOR / NOTE as the hand-off defines them.
 
@@ -58,4 +58,4 @@ weaker (same model family) — say so in the merged report's reviewer-quality se
 - Adversarial verification (default REFUTED) removed ~30–50 % of BLOCKER/MAJOR claims per round in the source project; the merge lists refuted
   items with the reason so they are not re-raised.
 - Visual gates read images; geometric silk checks passed boards with blank bars and mutilated words.
-- Every round is a file set in `docs/reviews/` plus one merged report; the hand-off version bumps; the workflow file itself is committed.
+- Every round is a file set in `80-reviews/` plus one merged report; the hand-off version bumps; the workflow file itself is committed.

@@ -2,7 +2,7 @@
 """scripts/arrival_checklist.py — the arrival / first-article checklist, GENERATED from a yaml (SKILL.md §10.1; references/release-and-cut.md §10).
 
   scripts/arrival_checklist.py              # write <arrival_checklist.out> from <arrival_checklist.yaml> (project.yaml keys; defaults
-                                            #   design/arrival_checklist.yaml -> docs/production/ARRIVAL_CHECKLIST.md)
+                                            #   20-design/arrival_checklist.yaml -> 60-orders/ARRIVAL_CHECKLIST_rev0.md)
   scripts/arrival_checklist.py --check      # exit 1 when the markdown is stale or the yaml breaks a rule (nothing written)
   scripts/arrival_checklist.py --selftest   # temp dir only
 
@@ -75,7 +75,7 @@ def render(y, yaml_rel, tool_rel="scripts/arrival_checklist.py"):
 
 def build(P):
     import yaml
-    src = P.get("arrival_checklist.yaml", "design/arrival_checklist.yaml"); out = P.get("arrival_checklist.out", "docs/production/ARRIVAL_CHECKLIST.md")
+    src = P.get("arrival_checklist.yaml", "20-design/arrival_checklist.yaml"); out = P.get("arrival_checklist.out", "60-orders/ARRIVAL_CHECKLIST_rev0.md")
     sp = os.path.join(P.root, src)
     if not os.path.exists(sp):
         print(f"arrival_checklist: MISSING {src}"); return None, None, None
@@ -106,27 +106,27 @@ def main(argv):
 
 def selftest():
     import yaml
-    d = tempfile.mkdtemp(prefix="hwfs_arrival_"); os.makedirs(f"{d}/design")
+    d = tempfile.mkdtemp(prefix="hwfs_arrival_"); os.makedirs(f"{d}/20-design")
     open(f"{d}/project.yaml", "w").write("project: {name: t}\n")
     good = {"version": "1-2026-01-01", "title": "T", "sections": [
         {"key": "A", "title": "Before shipment", "columns": ["id", "item", "how", "fail", "opens", "status", "evidence"],
          "rows": [{"id": "A-1", "item": "polarity vs silk", "how": "zoom", "fail": "re-place", "opens": "B-1", "status": "TODO", "evidence": ""}]},
         {"key": "E", "title": "Owner decisions", "columns": ["id", "item", "trigger", "status", "evidence"],
          "rows": [{"id": "E-1", "item": "fit knob after the bracket print", "trigger": "first print", "status": "DONE 2026-01-02", "evidence": "D-09"}]}]}
-    yaml.safe_dump(good, open(f"{d}/design/arrival_checklist.yaml", "w"))
+    yaml.safe_dump(good, open(f"{d}/20-design/arrival_checklist.yaml", "w"))
     assert validate(good) == [], validate(good)
     import contextlib, io
     os.chdir(d); assert main(["x"]) == 0
-    md = open(f"{d}/docs/production/ARRIVAL_CHECKLIST.md").read()
+    md = open(f"{d}/60-orders/ARRIVAL_CHECKLIST_rev0.md").read()
     assert "| A-1 |" in md and "| E | 1 | 1 | 0 | 0 |" in md and "| **all** | 2 | 1 | 0 | 1 |" in md and "GENERATED" in md, md
     assert main(["x", "--check"]) == 0
-    open(f"{d}/docs/production/ARRIVAL_CHECKLIST.md", "a").write("hand edit\n"); assert main(["x", "--check"]) == 1, "a hand-edited markdown is stale"
+    open(f"{d}/60-orders/ARRIVAL_CHECKLIST_rev0.md", "a").write("hand edit\n"); assert main(["x", "--check"]) == 1, "a hand-edited markdown is stale"
     bad = dict(good); bad["sections"] = [dict(good["sections"][0], rows=[dict(good["sections"][0]["rows"][0], status="done"), dict(good["sections"][0]["rows"][0], status="DONE 2026-01-03", evidence="", extra=1)])]
     b = validate(bad); assert any("not TODO" in x for x in b) and any("without evidence" in x for x in b) and any("duplicate" in x for x in b) and any("keys not in" in x for x in b), b
-    yaml.safe_dump(bad, open(f"{d}/design/arrival_checklist.yaml", "w"))
+    yaml.safe_dump(bad, open(f"{d}/20-design/arrival_checklist.yaml", "w"))
     with contextlib.redirect_stdout(io.StringIO()):
         assert main(["x", "--check"]) == 1 and main(["x"]) == 1, "rule breaks fail both modes"
-        os.remove(f"{d}/design/arrival_checklist.yaml"); assert main(["x", "--check"]) == 2, "missing yaml = 2"
+        os.remove(f"{d}/20-design/arrival_checklist.yaml"); assert main(["x", "--check"]) == 2, "missing yaml = 2"
     print("selftest OK (render, counts, --check stale, status grammar, DONE needs evidence, duplicate ids, foreign keys, missing yaml = 2)")
     return 0
 

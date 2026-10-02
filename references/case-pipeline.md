@@ -3,8 +3,8 @@
 
 ## 0. Imported body — the owner already has the CAD (`scripts/step2stl.py`)
 
-The chain of record assumes every body is generated from `design/case.yaml`. A part that exists as a STEP (the owner's bracket, a vendor's
-housing) enters M1 as a **generated-only exception** (SKILL §2): `scripts/step2stl.py part.step --out out/mechanical/case/<target>/stl/<piece>.stl
+The chain of record assumes every body is generated from `20-design/case.yaml`. A part that exists as a STEP (the owner's bracket, a vendor's
+housing) enters M1 as a **generated-only exception** (SKILL §2): `scripts/step2stl.py part.step --out 40-case/<target>/stl/<piece>.stl
 --tag V|K` converts it (cadquery in the venv, else the FreeCAD CLI, else `--canonical` on an STL exported from the CAD — the routes are printed
 when none is available; OpenSCAD cannot read STEP), writes the **canonical STL** (sorted triangles, float32 normals: the md5 is the geometry) and
 `<piece>.stl.provenance.json` (source, source md5, tag, converter, tolerance, stl md5, geometry signature, date), and prints the decision row:
@@ -16,7 +16,7 @@ source changes re-enters through a new conversion and a new row; editing the STL
 
 ## Chain (one yaml, one generator, every step keyed on content)
 ```
-design/case.yaml ──> OpenSCAD source (generated) ──> renders (views) ──> STL per piece
+20-design/case.yaml ──> OpenSCAD source (generated) ──> renders (views) ──> STL per piece
                  │                                          │
                  ├─> census (walls, components, membranes, support area, mass)
                  ├─> interference vs the board mesh of record (provenance sidecar)
@@ -25,14 +25,14 @@ design/case.yaml ──> OpenSCAD source (generated) ──> renders (views) ─
                  ├─> drawings (silhouettes + sections, yaml numbers on the lines; STEP per piece + assembly)
                  └─> print-service / CNC DFM + quotes (references/fab-dfm.md §6) ──> ORDER_SHEET / PRINT_SHEET per piece
 ```
-Everything under `out/<board>/mechanical/case/<preset>/` is generated; `ASSEMBLY.md` and print sheets are generated with spliced blocks
+Everything under `30-board/layout/mechanical/case/<preset>/` is generated; `ASSEMBLY.md` and print sheets are generated with spliced blocks
 (`<!-- gen:BEGIN name -->…<!-- gen:END -->`) so prose survives regeneration.
 
 ## Board mesh of record (both) / fit input of record (mech)
 - **mech scope**: there is no CAD project to export from. The fit input is the imported board STEP (converted to a mesh once, e.g. `trimesh`
   / FreeCAD, canonical STL) or the owner's envelope (a box + hole pattern drawn from the dimensions); its sidecar `paths.mesh_provenance` is
   `{source, source_md5, tag: V|K}` — [V] when measured or from the vendor drawing, [K] when owner-stated; a [K] input is a KNOWN_ISSUES §2 item
-  until a first article measures it. The `out/<board>/` folder level in the paths below is absent in mech (`out/mechanical/case/<preset>/`).
+  until a first article measures it. The `30-board/layout/` folder level in the paths below is absent in mech (`40-case/<preset>/`).
 - Export the board mesh from HEAD (`--export-board --board-ref HEAD`), including tracks and zones, with the as-built 3D models; write a **provenance
   sidecar** `{board_md5, board_commit, exported, mesh_md5, facets, ignore: [...]}` next to it. The mesh itself is untracked (100+ MB); the sidecar is
   tracked and is what gates assert (`md5_in` on the board md5).
