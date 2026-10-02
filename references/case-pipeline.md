@@ -113,6 +113,8 @@ owner addition arrives. Budget the bump before promising "full release pipeline"
   chromatic number (a triangle in the conflict graph → three levels, however the bars are drawn); compute it before drawing a link.
 - Sweep 360 steps of every body PAIR per level with pins / pegs / caps as discs; min distance and overlap area per pair as a CHECKS row (`contacts = 0`).
   A bar-only sweep or any single-pose render misses touching bosses and a peg grazing a bar.
+- Static raised features are in the sweep too: a moving part's envelope against every raised legend, boss and lug on the faces it passes, with
+  the axial play added (the arm that scraped its legends had 0.5 mm of designed gap to the flat face and −0.1 to the 0.6 mm letters).
 
 ## Stability (anything that stands, rocks, walks or is set down free)
 - A free-standing piece has a support polygon (the convex hull of what touches the ground) and a centre of gravity; it stays up only while the

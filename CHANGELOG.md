@@ -1,6 +1,6 @@
 # CHANGELOG — hw-from-spec
 
-## Current state (0.10.3) — read this instead of replaying the entries below
+## Current state (0.10.4) — read this instead of replaying the entries below
 
 - **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
   twelve batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
@@ -22,6 +22,17 @@
   agent-ops, pitfalls — one home per rule, the others link.
 - **Checks**: `smoke/run_smoke.sh` (2 min 27 s with the mesh libraries: every selftest, the rule greps, the enforcement negatives, both lints, the evals), 17 evals
   with mechanical checks, `docs/reviews/INDEX.md` and `docs/retro/INDEX.md` list every review and retro.
+
+## 0.10.4 — 2026-10-02 — first-article learnings of two mechanical-only projects (2026-10-01): raised features in the moving-part sweep, operating side vs viewing window, coupon labels in the body's own colour
+
+### Changed
+- **`dfm-printed-enclosure.md` §8**: coupon labels are ALWAYS debossed (the self-documenting coupon rule now says debossed, not "debossed or
+  raised"), unless the coupon also tests colour — then ONE short raised word in the second colour proves the colour path and the values stay
+  debossed (the raised-label coupon plate cost 3.9 g of the second colour and 8 changes for 0.4 g of letters); nothing that moves may sweep a
+  raised feature (a crank arm scraped its plate's legends and jammed with 0.5 mm of play to the flat face); the operating side of a display
+  mechanism is the side away from the viewing window. **`case-pipeline.md` §Interference**: static raised features (legends, bosses, lugs) are
+  bodies in the moving-part sweep, with the axial play added. **Kickoff C4**: a hand-held / stands-on-its-own-face alternative tied to C12, and
+  the window-vs-operating-side rule. Three pitfall lines.
 
 ## 0.10.3 — 2026-10-01 — static stability as a gate (owner rule: anything that stands, rocks, walks or is set down free carries a CoG-vs-support row at its worst pose); print-DFM rule P ignores tessellation detours (rule set 0.10.3)
 
