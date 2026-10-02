@@ -1,0 +1,4 @@
+board: {name: smoke, width: 30.0, length: 50.0, layers: 2, corner_radius: 1.0}
+design_rules: {min_track: 0.16, min_clearance: 0.16, via_drill: 0.30, via_dia: 0.62, silk_min_line: 0.16}
+dfm_accepted:
+  - {check: Pad to board edge, refs: [J1], reason: mid-mount USB-C pads sit on the notch wall by the vendor pattern (owner D-02), date: 2026-01-01, evidence: 60-orders/quotes/2026-01-01/jlcdfm_fixture.md}

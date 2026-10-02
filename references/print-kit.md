@@ -4,11 +4,17 @@ A kit is reviewed as a technician receives it — no repo, no git — and the tw
 rules are FAIL-gated where a generator can check them; the numbers quoted are one kit's and stand for the mechanism.
 
 ## 1. One entry point: a generated `START_HERE.md` at the top of the kit
-Written by the slicer wrapper (it owns the minutes and grams) from a `kit_facts.json` the geometry generator writes — **numbers from the
+The kit is a folder of the repo, `50-kits/<kit>/`, one per print target, named by the `print_targets` key it prints for (`home_fdm`; a second kit
+for the same printer adds what it prints: `home_fdm_caps`), no version in the name: the version is a line in START_HERE and in every sheet). Inside: `START_HERE.md` at the root, `plates/` (every `.3mf` with its
+`.3mf.json` sidecar), `parts/` (the STL set of this kit, copied from `40-case/<set>/parts/` and md5-checked), `sheets/` (print sheets, coupon and
+dummy READMEs, the assembly sequence). The generators write here directly; `~/Downloads/<project>_kits/<kit>/` is a byte-identical mirror the
+collateral gate checks. One current kit per target: a superseded kit folder outside the repo receives a one-line `SUPERSEDED.md` pointing at the
+mirror and nothing else is kept beside the current kit. `00-now/WHAT_TO_PRINT.md` is derived from `50-kits/*/plates/*.3mf.json` alone.
+Written by the project's slicer wrapper (`gen/`, it owns the minutes and grams) from a `kit_facts.json` the project's geometry generator writes — **numbers from the
 sidecars, prose from the knobs, nothing typed**. Four blocks, in this order:
 1. **Header**: what every project file embeds (printer, nozzle, layer, material, plate), the one hand step (AMS: *the project defines filaments
    1 / 2; the send dialog maps them to slots* — never "load slot 2"), how to print a subset (delete objects / the `_1x` project), what the
-   `.3mf.json` sidecar is for (`print_time_s`, `filament_g`, `objects_in_3mf`; the rest is the engineer's check data).
+   `.3mf.json` sidecar is for (`print_time_s`, `filament_g`, `objects`, `stl_md5s`; the rest is the engineer's check data).
 2. **Print order table**: `step | project file (.3mf, in this folder) | objects | time + mass (sliced) | check before the next step`. Coupons →
    board dummy → tray → body → hood (option A plates / option B AMS: *choose ONE*, one line) → legend plate → fixture → caps (bracket → coupon →
    plate). Each check is a pass/fail sentence and says what to do on FAIL ("stop and report"); the coupon row states the gate explicitly
@@ -43,7 +49,7 @@ Rules the entry point makes checkable:
 | Token class | Example | Why FAIL |
 |---|---|---|
 | template residue | `None`, `nan`, a `{name}` brace | a bullet read the screw dict while the fastener was magnets: "pockets at Y None" |
-| repo paths | `out/…/stl/`, `design/*.yaml`, `gen/` | the technician has the folder, not the repo |
+| repo paths | `40-case/<set>/parts/`, `20-design/*.yaml`, `gen/` | the technician has the folder, not the repo |
 | dead file references | a backticked name the `--copy` does not deliver; `faces/` cited, folder absent | four dead pointers in one kit |
 | features the preset disables | `snap tab` / `screws for the hood` when `fastener: magnets`; `PETG` when `material: PLA`; `insert` counts ≠ the knob | "0 magnets, PETG, the two snap tabs click" three fastener changes later |
 | governance jargon | `D-xx`, `CC-xxx`, `VERIFY_`, owner quotes | not actionable without the repo |
@@ -52,6 +58,11 @@ The gate reads the forbidden tokens from the preset (fastener, material, marks o
 START_HERE, every README and print sheet, and the generated ASSEMBLY.md; the run FAILS on a hit; the row is in the census record.
 
 ## 4. Coupon, ONE part, then the plate
+- Every plate carries a sidecar `<plate>.3mf.json` beside it with at least `print_time_s` (int), `filament_g` (float), `objects` (the slicer's
+  object list), `stl_md5s` (the md5 of every STL the plate was sliced from — its identity against `parts/`) and `case_version`, and when known
+  `filament_changes` (int), `proves` (what printing it settles: fit, legend, colour path) and `order` (print order within the kit, 1 = first). A plate
+  whose `.3mf` is missing, whose sidecar lacks the required keys or whose `stl_md5s` are not in `parts/` is listed as BROKEN. `scripts/now_pages.py` derives `00-now/WHAT_TO_PRINT.md` from these sidecars alone — a plate without a sidecar
+  does not exist to the reader.
 - Coupons and bracket variants carry their identifier and tested value as printed text on the part (dfm-printed-enclosure.md
   "Coupons are self-documenting"); START_HERE refers to them by that printed text, not by slicer object names.
 - A mark coupon proves GEOMETRY and first-layer behaviour, not the thermal state of a 99-minute print (warp, sag on a long span, colour

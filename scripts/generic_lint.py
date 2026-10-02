@@ -10,7 +10,7 @@ Terms live in `scripts/generic_lint_terms.yaml` (regex per line, grouped: projec
 machine, preset names, this design's dimensions) so a retro can extend them. A group named `*_as_citations` applies to PROSE only (SKILL.md, README,
 references/*.md): a fixture row in a selftest, the smoke or a template seed row uses the D-nn / CC-nnn id scheme by design and is not a citation. Lines between `<!-- worked example: begin` and
 `<!-- worked example: end -->` are skipped — at most ONE such block per file (a second one is a hit); a line carrying `generic: ok` is skipped
-(a lint pattern that must spell a term, a fixture). CHANGELOG.md, docs/retro/, docs/reviews/
+(a lint pattern that must spell a term, a fixture). CHANGELOG.md, docs/retro/, 80-reviews/
 and this term file are never linted: history and reviews are allowed to name the project.
 """
 import argparse, glob, os, re, sys, tempfile

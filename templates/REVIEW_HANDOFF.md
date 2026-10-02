@@ -1,11 +1,11 @@
 # REVIEW_HANDOFF — {{PROJECT}} {{ROUND}} (hand-off v{{N}}, {{DATE}})
 
 This document is the reviewers' ONLY briefing. It is self-contained; every number below is generated or cites the file it was read from.
-Reviewers read the frozen worktree `{{FROZEN_WORKTREE}}` only; they never read `docs/reviews/{{REVIEW_TAG}}_*` or earlier merged reviews.
+Reviewers read the frozen worktree `{{FROZEN_WORKTREE}}` only; they never read `80-reviews/{{REVIEW_TAG}}_*` or earlier merged reviews.
 
 ## 0. Identity (generated — paste `scripts/handoff_header.py` output verbatim)
 {{HANDOFF_HEADER_TABLE}}
-_(G0 round: board, package and case rows read MISSING by design — the artefact is SPEC.md, listed with its md5 in §2.)_
+_(G0 round: board, package and case rows read MISSING by design — the artefact is 10-spec/SPEC.md, listed with its md5 in §2.)_
 
 ## 1. What the design is
 {{THREE_PARAGRAPHS: purpose, architecture, what changed since the previous hand-off}}
@@ -13,20 +13,20 @@ _(G0 round: board, package and case rows read MISSING by design — the artefact
 ## 2. Files of record (path → what it is → md5)
 | Path | What | md5 |
 |---|---|---|
-| `SPEC.md` | the specification (revision {{SPEC_REV}}) — the artefact at G0 | `{{md5}}` |
-| `design/<board>.yaml` | schematic source (G1+) | `{{md5}}` | {{ee,both}}
-| `kicad/<board>/<board>.kicad_pcb` | board of record | `{{md5}}` | {{ee,both}}
-| `out/fab/<date>_<md5-8>/` | fab package of record | `{{md5 of MANIFEST}}` | {{ee,both}}
-| `design/case.yaml` / `out/.../case/<preset>/stl/*.stl` | case of record (record md5 = `scripts/project.py record` in mech) | `{{version}}` | {{mech,both}}
+| `10-spec/SPEC.md` | the specification (revision {{SPEC_REV}}) — the artefact at G0 | `{{md5}}` |
+| `20-design/<board>.yaml` | schematic source (G1+) | `{{md5}}` | {{ee,both}}
+| `30-board/kicad/<board>/<board>.kicad_pcb` | board of record | `{{md5}}` | {{ee,both}}
+| `30-board/fab/<rev>/` | fab package of record (board_id.txt md5 = the HEAD board) | `{{md5 of MANIFEST}}` | {{ee,both}}
+| `20-design/case.yaml` / `out/.../case/<preset>/stl/*.stl` | case of record (record md5 = `scripts/project.py record` in mech) | `{{version}}` | {{mech,both}}
 | the fit input (`paths.mesh_provenance`: STEP / envelope) | what the case must fit, [V] / [K] | `{{source_md5}}` | {{mech}}
-| `docs/governance/DECISIONS.md` rows D-… / CC-… | decision trail for the round | |
+| `90-log/DECISIONS.md` rows D-… / CC-… | decision trail for the round | |
 
 ## 3. Known / open items with dispositions (from KNOWN_ISSUES.md — generated; do not add prose here)
 ### 3.1 Applied ahead of the owner's nod
 {{KNOWN_ISSUES §2.1 rows}}
 ### 3.2 OPEN owner rows
 {{KNOWN_ISSUES §2 rows}}
-### 3.3 Spec errata (decided deviations of the frozen SPEC — `docs/spec_sections/SPEC_ERRATA.md`; a deviation listed here is ALREADY DECIDED, not a finding)
+### 3.3 Spec errata (decided deviations of the frozen SPEC — `10-spec/SPEC_ERRATA.md`; a deviation listed here is ALREADY DECIDED, not a finding)
 {{SPEC_ERRATA rows or "none"}}
 
 ## 4. Claims of the round (delta audits) — each with commit + evidence path

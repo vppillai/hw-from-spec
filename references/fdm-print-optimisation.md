@@ -4,7 +4,7 @@ Slicer-side knobs buy waste, strength or surface — purging a colour change int
 one home for slicer-side optimisation; the geometry rules stay in
 `references/dfm-printed-enclosure.md` §8 and the kit mechanics in `references/print-kit.md` — both link here, neither repeats a row.
 
-**The rule.** Every knob used is set in the plate yaml (`design/bambu_plates.yaml` or the project's equivalent — per plate, or per object through
+**The rule.** Every knob used is set in the plate yaml (`20-design/bambu_plates.yaml` or the project's equivalent — per plate, or per object through
 the per-object overrides the CLI honours, `dfm-printed-enclosure.md` §8.3), is recorded in the `.3mf.json` sidecar and drift-checked against the
 3MF's embedded `project_settings.config` / `model_settings.config` (`print-kit.md` §5), and is **proven from the g-code / slice report, never from
 the yaml**: the "how proven" column names the derived row (`purge_g`, `tower_g`, `support_g`, `print_time_s`, `wall_loops` read back, a feature
