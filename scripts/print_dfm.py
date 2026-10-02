@@ -58,8 +58,8 @@ CLI (paths default to the project root = the nearest parent holding project.yaml
       one record per body (DIR/<piece>.json [+ DIR/<piece>.boxes.json] [+ DIR/<piece>_<view>.png]); prints one line per rule; exit 1 when any body FLAGs
   scripts/print_dfm.py --list                                 the process rows and their thresholds
   scripts/print_dfm.py --gate <dfm_dir>... [--target <print target>] [--open <tag>/<piece>=<decision id> ...] [--expect <tag>/<piece>=<reason> ...]
-      PURE adopt gate (recomputes nothing). FAILs on: an STL of the record set without a same-md5 record (the sibling `stl/` of each DIR and the
-      `paths.mech_record` glob under DIR's parent); a record whose `sig` does not verify (hand-edited, or written by another rule set); a record
+      PURE adopt gate (recomputes nothing). FAILs on: an STL of the record set without a same-md5 record (`<set>/parts/` when DIR is
+      `<set>/checks/dfm`, else the sibling `stl/` of DIR's parent, plus the `paths.mech_record` glob under the set); a record whose `sig` does not verify (hand-edited, or written by another rule set); a record
       `version` != this VERSION or `thresholds` != the current table row; a record `process` != `print_targets.<t>.dfm_process` (t = --target or
       DIR's parent name); a sibling census/<piece>.json with another md5; a census piece without a dfm record; a verdict FLAG — unless --open
       <tag>/<piece>=<id> names a row of paths.decisions whose status is OPEN (printed with its topic; any other id = FAIL) or --expect
@@ -594,7 +594,7 @@ def gate(dfm_dirs, open_findings=(), target=None, expected=()):
         want = None
         if targets:
             if tag not in targets:
-                bad.append(f"{d}: '{tag}' is not a print target (print_targets: {', '.join(targets)}) — lay the records out under <target>/dfm or pass --target"); continue
+                bad.append(f"{d}: '{tag}' is not a print target (print_targets: {', '.join(targets)}) — lay the records out under 40-case/<target>/checks/dfm or pass --target <row>"); continue
             want = targets[tag].get("dfm_process")
             if not want:
                 bad.append(f"{d}: print_targets.{tag}.dfm_process is not set (kickoff C8a) — the gate cannot tell which process row the bodies must pass")
@@ -621,8 +621,10 @@ def gate(dfm_dirs, open_findings=(), target=None, expected=()):
             if os.path.exists(cj) and json.load(open(cj)).get("stl_md5") != e.get("stl_md5"):
                 bad.append(f"{ej}: record of {str(e.get('stl_md5'))[:8]} but the census / STL of record is {str(json.load(open(cj)).get('stl_md5'))[:8]} — rerun"); continue
             stl = e["stl"] if os.path.isabs(e["stl"]) else os.path.join(ROOT, e["stl"])
-            if not os.path.exists(stl) or md5(stl) != e["stl_md5"]:
-                bad.append(f"{ej}: STL {e['stl']} missing or changed — rerun"); continue
+            if not os.path.exists(stl):
+                bad.append(f"{ej}: STL {e['stl']} not found — expected at {os.path.join(parts_dir(d), os.path.basename(stl))} (the records sit in {d}/)"); continue
+            if md5(stl) != e["stl_md5"]:
+                bad.append(f"{ej}: STL {e['stl']} changed since the record — rerun"); continue
             if e.get("verdict") != "PASS":
                 msg = f"{ej}: verdict {e.get('verdict')}: " + "; ".join(f"{r['rule']} -> {r['where'][:160]}" for r in e["rows"] if r["verdict"] == "FLAG")
                 key = f"{tag}/{piece}"
@@ -932,7 +934,14 @@ def selftest():
         os.remove(os.path.join(d, "stl", "plate08.stl"))
         analyse(p5, "protolabs_mjf_pa12", n_s=20000, out_dir=os.path.join(d, "dfm"), piece="root13"); assert quiet(G, [f"{tag}/root05=D-07"]) == 1, "a laxer process row than print_targets.<t>.dfm_process fails"
         analyse(p5, MJF, n_s=60000, out_dir=os.path.join(d, "dfm"), piece="root13"); assert quiet(G, [f"{tag}/root05=D-07"]) == 0
-        assert quiet(G, [f"{tag}/root05=D-07"], target="nope") == 1, "an unknown print target fails"
+        def cap(*a, **k):
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf):
+                rc = gate(*a, **k)
+            return rc, buf.getvalue()
+        rc, txt = cap(G, [f"{tag}/root05=D-07"], target="nope"); assert rc == 1 and "lay the records out under 40-case/<target>/checks/dfm or pass --target <row>" in txt, ("an unknown print target fails and the hint names the layout", txt)
+        os.rename(p5, p5 + ".away"); rc, txt = cap(G, [f"{tag}/root05=D-07"]); os.rename(p5 + ".away", p5)
+        assert rc == 1 and f"expected at {os.path.join(d, 'stl', 'root13.stl')} (the records sit in {os.path.join(d, 'dfm')}/)" in txt, ("a moved STL is reported with its expected path", txt)
         os.makedirs(os.path.join(d, "census")); json.dump(dict(stl=p5, stl_md5="0" * 32), open(os.path.join(d, "census", "root13.json"), "w"))
         assert quiet(G, [f"{tag}/root05=D-07"]) == 1
         json.dump(dict(stl=p5, stl_md5=md5(p5)), open(os.path.join(d, "census", "root13.json"), "w")); json.dump({}, open(os.path.join(d, "census", "orphan.json"), "w"))
