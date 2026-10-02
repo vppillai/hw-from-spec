@@ -255,11 +255,21 @@ numbers are **[owner bar]** for a 0.4 nozzle at 0.20 mm and live in `print_targe
   (raised face-up, debossed face-up, debossed face-down), wall thicknesses, mating clearances, **an insert + screw coupon (three bosses: install,
   torque to failure, record)**; the numbers they decide are a yaml parameter block. Ship the coupons in every kit.
 - **Coupons are self-documenting**: every test coupon and every variant on a bracket plate carries its own
-  identifier and the value it tests ON the part — debossed or raised text with the number (e.g. `W1.6 R0.20`, `WALL 1.6`, `CLR 0.30`), on an
-  ironed top face or a face-up plate, cap ≥ 4 mm, stroke ≥ 1.0 raised / ≥ 0.45 debossed, lands ≥ 0.45 between glyphs (measured, FAIL-gated),
+  identifier and the value it tests ON the part — DEBOSSED text with the number (e.g. `W1.6 R0.20`, `WALL 1.6`, `CLR 0.30`; raised text only
+  for the colour-path word of a coupon that also tests colour, next bullet), on an ironed top face or a face-up plate, cap ≥ 4 mm, stroke
+  ≥ 0.45 debossed / ≥ 1.0 raised, lands ≥ 0.45 between glyphs (measured, FAIL-gated),
   never on a bridge underside or a deep inner wall. A coupon the user has to look up in a README to identify is a coupon that gets mixed up on
   the bench; the slicer's object names are gone the moment the part comes off the plate. The marker is generated from the same yaml value it
   tests, so it cannot disagree with the geometry.
+- **Coupon labels are ALWAYS debossed — unless the coupon also tests colour (a mark / AMS coupon), and then ONE short raised word in the
+  second colour proves the colour path while the label values stay debossed.** A raised label in a second filament costs the purge, not its
+  own weight: on one coupon plate 0.4 g of letters cost 3.9 g of the second colour and 8 filament changes, where debossed values cost nothing.
+  The one colour-path word is 3 changes and ~1 g; the kit text says which plate carries it (owner rule, 2026-10-01).
+- **Nothing that moves may sweep a raised feature.** A crank arm set on the face that carried the raised legends scraped the letters and
+  jammed on the first print; every render had shown it clear because the gap to the FLAT face was fine. Raised text, bosses and lugs are
+  bodies in the clearance check like any other: sweep every moving part against them (`case-pipeline.md` §Interference), and put legends on a
+  face nothing crosses. On a display mechanism the operating side is the side AWAY from the viewing window: a hand turning a crank in front
+  of the window hides what the window is for — 2026-10-01.
 - **Board dummy, never the raw CAD mesh** (sheet metal, 0402s, 0.1 mm pins are unprintable): slab + holes + solid envelopes + fins at printable
   thickness, in the board frame, bbox stated against the mesh of record. **Two versions, both kept**: the two-piece glue version (a scribed locator
   ring 0.6 × 0.2 OUTSIDE the tall part's footprint locates it without a pocket — a compensating plinth lifts an overhang off the bed = a

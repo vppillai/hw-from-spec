@@ -104,7 +104,9 @@ serviceable, coupon-measurable torque, works in PA12 and PLA. *Alt:* magnets —
 allowed under the closed-rim bar; +2.4 mm width. *Alt:* external clip / bracket — a separate part, no change to the case walls.
 **C4 Feet and mounting** [mech, both]. **RECOMMENDED: 4 adhesive flat-top feet in shallow concentric pockets (no counterbore through the pocket floor), PSA
 with a primer on PA12 / porous MJF** — the bond area is the whole pocket. *Alt:* moulded-in feet — a wedge / thin skin risk at the checker. *Alt:*
-DIN-rail / wall-mount lugs — a strength case in FEA.
+DIN-rail / wall-mount lugs — a strength case in FEA. *Alt:* hand-held / stood on a face of its own — then C12 says which face it rests on
+(a crank or lever on that face takes the resting position away: say so, or add a stand). **For a mechanism with a viewing window: the
+operating side (crank, lever, knob) is the side away from the window** — the hand must not cover what the window shows.
 **C5 Labelling and identity marks** [mech, both]. **RECOMMENDED: a label carrier (UV-printed plate or adhesive label in a recess label + 1 mm, flat land)
 for text; raised legends on the home FDM plate; one engraved mark only where its stroke ≥ the void gate** — legible on every process. *Alt:*
 engraved text everywhere — cap ≥ ~6 mm at a 1.2 void gate, else yellow / red. *Alt:* inlay / badge plate — premium, a pinch check on the outline,
