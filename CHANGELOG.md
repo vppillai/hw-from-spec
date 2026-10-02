@@ -1,6 +1,6 @@
 # CHANGELOG — hw-from-spec
 
-## Current state (0.10.4) — read this instead of replaying the entries below
+## Current state (0.10.5) — read this instead of replaying the entries below
 
 - **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
   twelve batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
@@ -20,8 +20,19 @@
 - **References**: project-yaml, kickoff-questionnaire, schematic-phase, pcb-layout-dfm, fab-dfm, case-pipeline, dfm-printed-enclosure,
   print-dfm, print-kit, fdm-print-optimisation, cnc-enclosure, fea-stage, part-verification, software-track, release-and-cut, vendor-review,
   agent-ops, pitfalls — one home per rule, the others link.
-- **Checks**: `smoke/run_smoke.sh` (2 min 27 s with the mesh libraries: every selftest, the rule greps, the enforcement negatives, both lints, the evals), 17 evals
+- **Checks**: `smoke/run_smoke.sh` (every script selftest, the rule greps, the enforcement negatives, both lints, the evals), 17 evals
   with mechanical checks, `docs/reviews/INDEX.md` and `docs/retro/INDEX.md` list every review and retro.
+
+## 0.10.5 — 2026-10-02 — execute every tool selftest in smoke
+
+### Changed
+- `smoke/run_smoke.sh` executes each generic script's `--selftest`, rather than only
+  verifying that the command is declared. Mesh-dependent selftests remain conditional on
+  the documented mesh environment.
+
+### Not done
+- The smoke fixture still skips mesh-dependent execution when its optional mesh stack is
+  unavailable; the full documented environment runs those selftests.
 
 ## 0.10.4 — 2026-10-02 — first-article learnings of two mechanical-only projects (2026-10-01): raised features in the moving-part sweep, operating side vs viewing window, coupon labels in the body's own colour
 
