@@ -79,8 +79,8 @@ lib/           vendor STEPs, TDS PDFs, hardware drawings (vendor-licensed data n
 40-case/<preset>/  STL set of record (paths.mech_record — its md5 is the record id), census, renders, kits {{mech}}
 docs/          governance/ (ENV DECISIONS BLOCKERS GATES STATUS KNOWN_ISSUES TRACEABILITY LEARNINGS_LOG)  design/ (TEST_PLAN VERIFY briefs) {{ee,both}}
 docs/          governance/ (ENV DECISIONS BLOCKERS GATES STATUS KNOWN_ISSUES TRACEABILITY LEARNINGS_LOG)  design/ (TEST_PLAN VERIFY briefs, mechanical notes) {{mech}}
-               parts/ (PARTS_VERIFICATION PROCUREMENT parts_check.json)  reviews/ (hand-offs, merged reports)  release/ (reports, collateral/<md5-8>/)
-               quotes/<date>/ (fab evidence, never inside a package)  production/<md5-8>/ (the cut)  datasheet_notes/
+               parts/ (PARTS_VERIFICATION PROCUREMENT parts_check.json)  reviews/ (hand-offs, merged reports)  release/ (reports, collateral/<rev>/)
+               quotes/<date>/ (fab evidence, never inside a package)  production/<rev>/ (the cut)  datasheet_notes/
                — a re-layout is a decision row + project.yaml `reorg:` + `scripts/reorg_paths.py`; frozen records keep the old paths, `--map` reads them
 ```
 

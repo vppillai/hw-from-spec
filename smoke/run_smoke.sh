@@ -257,12 +257,12 @@ printf 'PNG-stub----------------------------------------------------------------
 (cd $M && git init -q && git add -A && git -c user.name=smoke -c user.email=s@s commit -qm mech >/dev/null
  REC=$("$PY" scripts/project.py record); echo "$REC"; [[ "$REC" == mechanical\ record*md5\ [0-9a-f]* ]] || { echo "FAIL: mech record id is not the STL set"; exit 1; }
  M8=$(echo "$REC" | sed 's/.*md5 //' | cut -c1-8)
- "$PY" scripts/collect_renders.py >/dev/null && test -f 70-release/collateral/$M8/renders/RENDERS.md || { echo "FAIL: mech collateral not keyed on the STL-set md5"; exit 1; }
+ "$PY" scripts/collect_renders.py >/dev/null && grep -q "| record | mechanical record .* md5 \`$M8\` |" 70-release/collateral/rev0/renders/RENDERS.md || { echo "FAIL: mech collateral not keyed on the STL-set md5"; exit 1; }
  "$PY" scripts/release_report.py >/dev/null; grep -q "Mechanical record .* md5 \*\*\`" 70-release/reports/CASE_DESIGN_REPORT.md || { echo "FAIL: mech report identity is not the mechanical record"; exit 1; }
  grep -q 'no package of record' 70-release/reports/CASE_DESIGN_REPORT.md && { echo "FAIL: mech report carries a fab-package line"; exit 1; }
  H=$("$PY" scripts/handoff_header.py); echo "$H" | grep -q 'Fit input of record.*in/board.step.*\[V\]' && echo "$H" | grep -q 'Mechanical record' || { echo "FAIL: mech hand-off header lacks the fit input / mechanical record rows"; exit 1; })
 say "1 fab package of record keyed on the board md5"
-MD5=$(md5of 30-board/kicad/smoke/smoke.kicad_pcb); PKG=30-board/fab/2026-01-03_${MD5:0:8}; mkdir -p $PKG
+MD5=$(md5of 30-board/kicad/smoke/smoke.kicad_pcb); PKG=30-board/fab/rev0; mkdir -p $PKG   # the folder is the revision; board_id.txt carries the md5
 printf 'board 30-board/kicad/smoke/smoke.kicad_pcb\nmd5 %s\ncommit %s\nbuilt 2026-01-03\nsegments 1\nvias 0\n' $MD5 $(git rev-parse --short HEAD) > $PKG/board_id.txt
 printf 'PNG-stub-panel-top-render-------------------------------------------------\n' > $PKG/panel_top.png
 mkdir -p out/case/v0.1-smoke; printf 'PNG-stub-case-iso-render----------------------------------------------------\n' > out/case/v0.1-smoke/iso.png

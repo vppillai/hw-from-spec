@@ -41,7 +41,7 @@ discarded with `git checkout` once its diff is timestamp-only.
   every consumer of the version string is re-run in the bump.
 
 ## 4. Collateral (`scripts/collect_renders.py`)
-`collateral/<md5-8>/renders/`: CAD 3-D renders (opaque background, named by what the picture shows, each fixed view checked by eye once), panel
+`collateral/<rev>/renders/` (RENDERS.md's first row names the record md5): CAD 3-D renders (opaque background, named by what the picture shows, each fixed view checked by eye once), panel
 preview, silk PNGs, case renders, FEA composites, drawing PDFs, fab-viewer captures carrying the md5. Freshness key = source md5 + full argument
 string; case items keyed on the case version; index with md5 + grade; orphans listed, never deleted; PNGs ≤ 2400 px; size budget per set.
 Quotes and captures the fab produced live under `60-orders/quotes/<date>/`, never inside a regenerable package (a rebuild wipes the folder).
