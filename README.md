@@ -4,7 +4,7 @@ A Claude Code skill that takes a board, an enclosure, or both from a written spe
 owner-gated phases, generated-only artefacts, a zero-warning manufacturability bar, blind reviews with
 a record-reading verifier, and a retro that folds every project's learnings back into the skill.
 
-`version 0.10.5` · MIT · `SKILL.md` is the procedure; everything else is reference, template or tool.
+`version 0.10.6` · MIT · `SKILL.md` is the procedure; everything else is reference, template or tool.
 What changed per version: `CHANGELOG.md` (its first section is the current state).
 
 ## Quick start
@@ -139,6 +139,16 @@ cwd (or `HWFS_PROJECT=…`); the shell gates print which interpreter they use. N
 AT `scripts/`. Project-specific generators (schematic builder, placement, routing, export, fab
 package, panel, silk, case, drawings, FEA measurer) stay in the project's `gen/`, read constants
 through `scripts/project.py`, and join `gates.adopt` with their `--selftest` and `--check`.
+
+## Fast, safe iterations
+
+Three tiers, one entry point: `scripts/iteration_gate.sh --tier inner|standard|release`. **Inner** runs
+the changed generator's read-only `--check` and its direct grader — the project's standing set from
+`gates.iteration.inner` plus this change's commands after `--`; **standard** is `scripts/adopt_gates.sh
+--no-clone` (`make gates`), the whole check set before a delta audit; **release** is `scripts/adopt_gates.sh`
+(`make check`), with the fresh-archive clone gate, before a gate, order, or cut. Every tier is read-only
+on the tree (a check that writes fails it), the inner tier refuses an empty command set, and heavy commands
+take the host pool — so the fast path cannot silently stand in for a release-grade check.
 
 ## The kickoff questionnaire
 

@@ -1,6 +1,6 @@
 ---
 name: hw-from-spec
-version: 0.10.5
+version: 0.10.6
 description: Run a hardware project (a PCB, a printed or CNC enclosure, or both — scope chosen at kickoff; contract fab such as JLCPCB) from a written specification to a production cut with an owner-gated, generated-only, blind-reviewed workflow — a kickoff questionnaire that asks every owner decision up front with recommended answers, a zero-warning manufacturability bar, and a retro that folds each project's learnings back into the skill. Use this whenever someone starts a board or enclosure project from a spec, asks to set up gates, a decision log, generators, part verification, a fab DFM mirror, a case pipeline, FEA, blind reviews, a release report or a production cut for one, or resumes such a project, or wants the skill improved from a finished project — even if they only say "new KiCad board", "order this at JLC", "review the layout", "cut the release" or "what did we learn".
 ---
 
@@ -176,6 +176,11 @@ order. A WARN that is "known" is not a bar; it is either fixed or a dated, evide
 - **Layout changes are generated too.** The docs/ layout the defaults name is in `references/project-yaml.md` §Layout; moving files later is a
   decision row + a `reorg:` block + `scripts/reorg_paths.py --plan → --apply → regenerate → --check → --proof` (zero-loss on two `git ls-files -s`
   dumps); frozen records keep the old paths and `--map` explains them (`references/release-and-cut.md` §9).
+- **Iteration tiers keep the fast loop honest** (`scripts/iteration_gate.sh`). After a one-value yaml or emitter change run `--tier inner`:
+  the changed generator's `--check` and its direct grader — the project's standing set in `gates.iteration.inner` plus this change's commands
+  after `--` — under the same read-only guard as the adopt gates; an empty set is refused. `--tier standard` is `scripts/adopt_gates.sh
+  --no-clone` (before a delta audit) and `--tier release` is `scripts/adopt_gates.sh` with the clone gate (before a gate, order or cut): the
+  one `gates.adopt` list, never a second one. Heavy commands go through the host pool (`references/agent-ops.md` §8 items 1 and 9).
 
 ## 3. Decision log
 
