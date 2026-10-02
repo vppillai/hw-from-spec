@@ -5,7 +5,7 @@ can select."* The decision classes below are mined from one complete project's o
 **RECOMMENDED** answer (marked) and two or three alternatives with their one-line consequence. The agent asks them in the batches of §0 with the
 `AskUserQuestion` tool (≤ 4 questions per call, ≤ 4 options per question; the recommended answer listed first and labelled; **"accept every
 recommended answer of this batch" is the FIRST option of the batch's FIRST question** — so that question carries at most two alternatives, the
-others at most three; a question with more alternatives folds the rare ones into one "other (named in the reason)" option), records every answer in `10-spec/KICKOFF_ANSWERS.md` (`templates/KICKOFF_ANSWERS.md`), writes
+others at most three; a question with more alternatives folds the rare ones into one "other (named in the reason)" option), records every answer in `10-spec/KICKOFF_ANSWERS.md` (`templates/10-spec/KICKOFF_ANSWERS.md`), writes
 one owner row per answer into `90-log/DECISIONS.md` (D rows, the owner's words quoted; a recommended default the owner accepted reads
 `accepted recommended`), copies the machine-readable values into `project.yaml` (`kickoff`, `board`, `fab_dfm.bar`, `print_targets`) and a
 traceability entry per row — **all before any CAD**. A question the owner defers is a D row `OPEN` and blocks the phase that needs it, never a
@@ -181,7 +181,7 @@ before the first case print; a first-article caliper table on every received par
 and measure — one vendor round per surprise. *Alt:* coupons at the vendor too — 1 week and a quote per coupon; the probe method is cheaper.
 **E4 Vendor DFM before the order and FEA.** **RECOMMENDED: the fab's own DFM viewer on board AND panel, the print service's checker read from its
 analysis API per body, both filed with raw evidence before any order; FEA on the case (torsion, drop, boss load, thermal) and the board (press-fit,
-side load) with the owner accepting any WARN by row** — the gates in `templates/GATES.md`. *Alt:* vendor DFM only after ordering — the vendor's
+side load) with the owner accepting any WARN by row** — the gates in `templates/90-log/GATES.md`. *Alt:* vendor DFM only after ordering — the vendor's
 review mail becomes the review. *Alt:* no FEA — for a lab jig only.
 
 ## F. Bought parts (`references/part-verification.md`)

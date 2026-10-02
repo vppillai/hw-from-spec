@@ -59,7 +59,7 @@ flagged in the decision row, not resolved silently.
 `MPN, Manufacturer, LCSC (or the fab's code field), Datasheet (the live URL of the fitted code), Confidence (V/K/S/N/A), Alt_MPN, Alt_LCSC`.
 The generator copies them to the footprint as hidden properties so schematic parity holds.
 
-## Hardware line schema (what a buyer needs to execute the line — `templates/parts/PROCUREMENT.md`)
+## Hardware line schema (what a buyer needs to execute the line — `templates/60-orders/PROCUREMENT.md`)
 `Line | Class | MPN | Manufacturer | Spec (thread × length, Ø × h, grade, size) | Drive / head / coating / colour | Material / finish | Qty per unit |
 Spares % | Order qty | MOQ | Unit price (currency, date) | Supplier URL (how verified) | Equivalent MPNs | RoHS / REACH source | Fit numbers | Tag`.
 The `PARTS_VERIFICATION.md` columns (fab code, package, class) do not fit a screw or a magnet: hardware rows put the spec in "Refdes / value" and

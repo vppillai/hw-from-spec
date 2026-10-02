@@ -81,7 +81,7 @@ nothing); verification (coupons, dummies, review rounds per gate, visual inspect
 identity, envelope and delegation. **Every question carries its scopes; a question outside the scope is not asked (KICKOFF_ANSWERS row
 `n/a (scope)`) and a batch with nothing applicable is skipped.** **Every question lists its RECOMMENDED answer first (marked) and two or three
 alternatives with a one-line consequence**; each batch opens with "accept every recommended answer of this batch". Answers go into
-`10-spec/KICKOFF_ANSWERS.md` (`templates/KICKOFF_ANSWERS.md`), one owner D row each (the agent transcribes the owner's words, quoted;
+`10-spec/KICKOFF_ANSWERS.md` (`templates/10-spec/KICKOFF_ANSWERS.md`), one owner D row each (the agent transcribes the owner's words, quoted;
 `accepted recommended` when the default stood), the machine-readable values into `project.yaml` (`project.scope`, the `kickoff:` mapping, the
 `board:` block, `fab_dfm.bar`, `print_targets.<t>` incl. `dfm_process`) — every answer class has a landing key in `templates/project.yaml`, and
 **`scripts/project.py kickoff --check`** fails on an answered row whose key is unset or whose D row is missing — a traceability entry per row — then commit. A deferred question is an OPEN D row that blocks the phase needing it; an answered question is never
@@ -100,7 +100,7 @@ re-asked, and a later change is a superseding D row (rule 2).
 - **both**: the ee chain with the case pipeline (§8) hanging off G2 and the **case order** gate beside the board order, as before.
 
 The release cut = reports RELEASED, collateral, tag; the production cut = document set, tag (§10). Each gate's prerequisites are the row in
-`90-log/GATES.md` (`templates/GATES.md` carries the rows of every scope; `scaffold --scope` keeps yours).
+`90-log/GATES.md` (`templates/90-log/GATES.md` carries the rows of every scope; `scaffold --scope` keeps yours).
 
 - The owner writes the gate line; agents never do. `90-log/GATES.md` approval cells and the release line (`markers.release_regex`, in the
   Release row's approval cell) are owner text. **`scripts/gate_check.py <gate>`** reads a cell (exit 1 while empty) and **`--release`** the release
@@ -152,7 +152,7 @@ vendor evidence (`scripts/dfm_check.py` reads `fab_dfm.bar`); **printed enclosur
 body of the STL set against the target's own process row, zero slicer warnings, vendor checker **no flag by API read**, no yellow / red on the heat
 map; **CNC** — the vendor's DFM clean. Both mesh gates glob the STL set of record (a body nobody checked fails), verify every record's signature
 (a hand-edited record fails) and the rule-set version. `scripts/adopt_gates.sh` fails when a schematic / board / STL set exists and its gate line
-is missing or still commented out in `gates.adopt`. `templates/GATES.md` carries the bar as a prerequisite on G2, the board order and the case
+is missing or still commented out in `gates.adopt`. `templates/90-log/GATES.md` carries the bar as a prerequisite on G2, the board order and the case
 order. A WARN that is "known" is not a bar; it is either fixed or a dated, evidence-bearing acceptance the checker re-asserts every run.
 
 ## 2. Generated only
@@ -214,7 +214,7 @@ order. A WARN that is "known" is not a bar; it is either fixed or a dated, evide
 - **VERIFY item** = a value or claim in the spec (or in a review finding) that rests on a datasheet, drawing or standard nobody has read yet:
   a current, a pin function, a footprint dimension, a reflow limit, a standard clause. The spec author tags them `VERIFY` in 10-spec/SPEC.md (or the
   G0 review lists them in `20-design/VERIFY.md`: item, part, what to read). Each is closed by a row in `10-spec/datasheet_notes/<part>.md` (page/section,
-  value read, matches yes/no — `templates/datasheet_notes/_TEMPLATE.md`) or moved to `90-log/BLOCKERS.md` when the source cannot be fetched.
+  value read, matches yes/no — `templates/10-spec/datasheet_notes/_TEMPLATE.md`) or moved to `90-log/BLOCKERS.md` when the source cannot be fetched.
   Rule 3: every VERIFY item touching a part is closed before that part is drawn; G0 requires all closed or BLOCKED; curve-only values are
   marked "not in datasheet text" with the reader named.
 
@@ -250,7 +250,7 @@ changed specialties only). `{{EXTERNAL_MODELS}}` needs at least two distinct mod
 **The `case_dfm` role** [mech, both] (in the `board` role set of `blind-deep-review.js`; in mech scope the M1 round's role set = `case_dfm` + mechanical intent): a printed-enclosure DFM specialist whose checklist is
 `templates/CENSUS_GATE_ROWS.md` + `references/dfm-printed-enclosure.md` §1 (walls, voids, wedges, opposing faces, inserts, tolerances, orientation,
 closed rims, retention present in the mesh); its verifier re-runs `scripts/thin_wall_census.py --target <t>` on the frozen worktree's STLs and
-compares with the census JSON of record. Required before the case order (`templates/GATES.md`).
+compares with the census JSON of record. Required before the case order (`templates/90-log/GATES.md`).
 
 **The G0 round (spec review)** uses `blind-deep-review.js` with `{{ROLE_SET}}` = `spec`: four roles — spec coherence (requirements, interfaces,
 numbers that must agree, the VERIFY list), parts and sourcing (every named part fetchable live, tags, alternates, stock for the run; in mech
@@ -356,7 +356,8 @@ list) tagged **[checker]** / **[vendor sheet]** / **[physics]** / **[owner bar]*
    handedness and prints every asymmetric mark backwards), slicer projects with
    project-named presets, a floating-region warning = FAIL, auto-orientation. **Every vendor DFM decision is mirrored into this preset the same day**
    under its own version key (hook tokens keep the vendor SCAD byte-identical; every hook variable asserted defined; duplicate yaml keys gated).
-   ONE kit folder = pieces + coupons + both dummies + READMEs **+ a generated START_HERE**, every kit text through the kit text gate (the FAIL check
+   ONE kit folder per print target, `50-kits/<kit>/` (START_HERE at its root, `plates/` + sidecars, `parts/`, `sheets/`; mirrored byte-identical to
+   `~/Downloads/<project>_kits/<kit>/`, superseded kit folders reduced to a one-line `SUPERSEDED.md`) = pieces + coupons + both dummies + READMEs **+ a generated START_HERE**, every kit text through the kit text gate (the FAIL check
    over every emitted kit text, `print-kit.md` §3); glued plates rest on the lands (the flat bed-face seats) with the bridged strips one layer below;
    snug fits ship as a bracket plate (one object per candidate value) the owner picks from — the picked value lands in
    `kickoff.enclosure.fit_result` and closes its arrival-checklist row; watertight row per STL; sidecars drift-checked against the 3MF config.
@@ -397,7 +398,7 @@ folder `70-release/<rev>/records/`** (the cut yaml's `records_dir`; RELEASE_NOTE
   page, `--check`), registered as a cut deliverable (`references/release-and-cut.md` §8).
 
 ### 10.1 Before the order ships: the arrival checklist and the spec errata
-- **The arrival / first-article checklist is GENERATED** (copy `templates/design/arrival_checklist.yaml` to `design/` AT THE ORDER, not on day 1 →
+- **The arrival / first-article checklist is GENERATED** (copy `templates/20-design/arrival_checklist.yaml` to `design/` AT THE ORDER, not on day 1 →
   `scripts/arrival_checklist.py` → `60-orders/ARRIVAL_CHECKLIST_rev0.md`; uncomment the `--check` line in `gates.adopt` the same commit —
   `project.py gates-required` demands it once the yaml exists; a cut deliverable). Written at the order, from the merged reviews' "what the parts must prove" rows and the OPEN decision rows, in the order of the day:
   **before shipment** (the fab's assembly photos — a paid "confirm placement" option is not guaranteed to raise a dialog, the photo confirmation is
@@ -407,7 +408,7 @@ folder `70-release/<rev>/records/`** (the cut yaml's `records_dir`; RELEASE_NOTE
   bracket-print fit knob = `kickoff.enclosure.fit_result`, the SPEC errata rows). Every row: `status` TODO / DONE date / N/A / APPLIED date (veto
   window) + `evidence`; closing a row = editing the yaml, regenerating, committing (`references/release-and-cut.md` §10).
 - **A frozen SPEC is never edited**: deviations of the design of record from the frozen text are **E-rows in `10-spec/spec_sections/SPEC_ERRATA.md`**
-  (`templates/SPEC_ERRATA.md`), OPEN until the owner approves, folded into the next SPEC revision's change log; the arrival checklist §E carries them;
+  (`templates/10-spec/SPEC_ERRATA.md`), OPEN until the owner approves, folded into the next SPEC revision's change log; the arrival checklist §E carries them;
   a reviewer reads the errata before calling a deviation a finding (ALREADY DECIDED).
 
 ## 11. Agent operations
@@ -463,11 +464,11 @@ row. The classifier is a keyword matcher: the report is the input to the change;
 |---|---|
 | project.yaml keys (`project.scope`, `paths.mech_record`, `print_targets`, `fab_dfm`, `kickoff`, `skill.version`) | `references/project-yaml.md` |
 | the scope (ee / mech / both): what is created, asked and gated per scope | §0 step 2, §0.1 A0, §1; `scripts/project.py scaffold` / `slots` / `kickoff --check` / `gates-required` |
-| gate cells and the release line read by script; ERC acceptances as yaml | `scripts/gate_check.py`, `scripts/erc_gate.py`, `templates/design/erc_accept.yaml` |
+| gate cells and the release line read by script; ERC acceptances as yaml | `scripts/gate_check.py`, `scripts/erc_gate.py`, `templates/20-design/erc_accept.yaml` |
 | an existing STEP as a body of record | `scripts/step2stl.py`, `references/case-pipeline.md` §0 |
 | the evals and what is checked mechanically | `evals/evals.json`, `evals/run_evals.py` |
-| day 0: the kickoff questionnaire (every owner decision, recommended defaults, batches) | `references/kickoff-questionnaire.md`, `templates/KICKOFF_ANSWERS.md` |
-| G0: SPEC / VERIFY skeletons, the spec review round | `templates/SPEC.md`, `templates/design/VERIFY.md`, §5 |
+| day 0: the kickoff questionnaire (every owner decision, recommended defaults, batches) | `references/kickoff-questionnaire.md`, `templates/10-spec/KICKOFF_ANSWERS.md` |
+| G0: SPEC / VERIFY skeletons, the spec review round | `templates/10-spec/SPEC.md`, `templates/20-design/VERIFY.md`, §5 |
 | G0→G1: design yaml shape, ERC gate (`erc_gate.py` + `20-design/erc_accept.yaml`), map checks, G1 pack | `references/schematic-phase.md`, `templates/G1/` |
 | G1→G2: placement CSV, router session, G2 pack, PCB build rules (stack-up … panel), DRC census, route quality, parity, canary | `references/pcb-layout-dfm.md` |
 | part tags, verification table | `references/part-verification.md` |
@@ -476,8 +477,8 @@ row. The classifier is a keyword matcher: the report is the input to the change;
 | printed-enclosure DFM: MJF / FDM / SLA rules tagged checker / vendor / physics / owner, inserts + magnets, post-processing, tolerance stack, census gate, heat-map procedure, probes, coupons, dummies, brand marks (ironed top face / AMS bed layers), dust caps, Bambu CLI facts, post-mortem | `references/dfm-printed-enclosure.md` |
 | the print kit as a deliverable: START_HERE, kit text gate, hardware from the knobs, magnet procedure, bracket plate, watertight / sidecar rows | `references/print-kit.md` |
 | slicer-level optimisation: waste (flush into infill / support, flush calibration, prime tower, grouped colour changes), strength (walls, infill, modifiers), quality (EF / XY compensation, seam, ironing, fuzzy skin, per-object overrides) — every knob with its proof row; kickoff C11 default sets | `references/fdm-print-optimisation.md` |
-| the arrival / first-article checklist (yaml → md, --check), the SPEC errata file | `scripts/arrival_checklist.py`, `templates/design/arrival_checklist.yaml`, `templates/SPEC_ERRATA.md`, `references/release-and-cut.md` §10 |
-| print DFM before every upload: rules W R F K P V H O B S (+ INFO L Y) from physics + cited process rows, the commands and what a FAIL means, the verdict → validate → rule-fix → retro loop, adding a vendor row, the generated-SCAD lint | `references/print-dfm.md`, `scripts/print_dfm.py`, `scripts/scad_lint.py`, `templates/design/dfm_processes.yaml` |
+| the arrival / first-article checklist (yaml → md, --check), the SPEC errata file | `scripts/arrival_checklist.py`, `templates/20-design/arrival_checklist.yaml`, `templates/10-spec/SPEC_ERRATA.md`, `references/release-and-cut.md` §10 |
+| print DFM before every upload: rules W R F K P V H O B S (+ INFO L Y) from physics + cited process rows, the commands and what a FAIL means, the verdict → validate → rule-fix → retro loop, adding a vendor row, the generated-SCAD lint | `references/print-dfm.md`, `scripts/print_dfm.py`, `scripts/scad_lint.py`, `templates/20-design/dfm_processes.yaml` |
 | machined enclosure: corner radii, walls, threads, anodising, quote page, case-order gate | `references/cnc-enclosure.md` |
 | bought hardware: line schema, hardware classes (inserts, magnets, feet, labels), adhesive on PA12 | `references/part-verification.md` |
 | meshing, solving, caches, reporting | `references/fea-stage.md` |

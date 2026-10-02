@@ -33,7 +33,7 @@ received part. The chain (yaml → generator → STEP → quote → drawing) is 
   the general tolerance class, edge-break note, quantity. Generated from the same yaml as the STEP (dimension lines = yaml numbers).
 - Nothing saved / carted / agreed / paid (`references/vendor-review.md` §1); the quote figure + screenshot go to `60-orders/quotes/<date>/`.
 
-## 4. Gate before the order (the "Case order" row in `templates/GATES.md`)
+## 4. Gate before the order (the "Case order" row in `templates/90-log/GATES.md`)
 The vendor's DFM clean (no manual-quote fallback, no flagged feature), every inside radius ≥ the rule, every wall ≥ the rule as MEASURED on
 the STEP/mesh (the census script works on an STL export of the B-rep), the interference check against the board mesh of record 0 mm³ with
 the worst-case clearance row (case ±0.1, board ±0.2, anodising build-up), the drawing's dimensions equal to the yaml, material rating on the

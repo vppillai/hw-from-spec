@@ -193,7 +193,7 @@ def md(s):
 def build(P, ctx, only=None):
     ty = P.path("traceability_yaml")
     if not os.path.exists(ty):
-        print(f"MISSING: {ty} — seed it from the skill's templates/design/traceability.yaml (one entry per decision row)"); sys.exit(2)
+        print(f"MISSING: {ty} — seed it from the skill's templates/20-design/traceability.yaml (one entry per decision row)"); sys.exit(2)
     spec = yaml.safe_load(open(ty))
     entries = spec.get("entries", [])
     if only:

@@ -133,9 +133,9 @@ gates:
     - "$PY scripts/release_report.py --check"
     - "$PY scripts/reorg_paths.py --check"   # when a reorg: block exists: no old literal, no dangling docs/ path in structural files
     - "$PY scripts/assembly_guide.py --check"   # production cut
-    - "$PY scripts/thin_wall_census.py --gate-dir 30-board/layout/mechanical/case/<preset>/census"   # every printed body: census record md5 = STL of record, 0 unaccepted FAIL, accepted entries dated with evidence
-    - "$PY scripts/print_dfm.py --gate 30-board/layout/mechanical/case/<preset>/dfm"   # every censused body: a print_dfm record of the same md5, verdict PASS (or --open <tag>/<piece>=<decision>)
-    - "$PY scripts/scad_lint.py 30-board/layout/mechanical/case/<preset>/*.scad"       # generated SCAD: no statement behind a `//`
+    - "$PY scripts/thin_wall_census.py --gate-dir 40-case/<set>/checks/census"   # every printed body: census record md5 = STL of record, 0 unaccepted FAIL, accepted entries dated with evidence
+    - "$PY scripts/print_dfm.py --gate 40-case/<set>/checks/dfm"   # every censused body: a print_dfm record of the same md5, verdict PASS (or --open <tag>/<piece>=<decision>)
+    - "$PY scripts/scad_lint.py 40-case/<set>/build/*.scad"       # generated SCAD: no statement behind a `//`
   clone:                                  # scripts/clone_gate.sh: run inside `git archive HEAD`
     - "$PY scripts/release_report.py --check"
   regen:                                  # clone_gate.sh --regen: run inside the archive, then copy regen_copy_back into the tree
@@ -145,18 +145,36 @@ gates:
 
 ## Layout the defaults name
 ```
-90-log/   DECISIONS STATUS GATES BLOCKERS KNOWN_ISSUES TRACEABILITY LEARNINGS_LOG ENV KICKOFF_ANSWERS   (records the generators read and write)
-20-design/       TEST_PLAN VERIFY SOFTWARE_ARCHITECTURE briefs, design notes, mechanical notes                      (intent)
-60-orders/        PARTS_VERIFICATION PROCUREMENT parts_check.json compliance json
-80-reviews/      REVIEW_HANDOFF, <ROUND>_<role>_<model>.md, *_merged.md, REORG_* inventories
-70-release/reports/      reports, RELEASE_NOTES, collateral/<md5-8>/, marketing/
-60-orders/quotes/<date>/  fab evidence: quote captures, DFM exports, vendor review mails + images, order screenshots (never inside a package)
-70-release/<rev>/  the production cut (MANIFEST, STATUS, documents, records/ = THE records folder, pdf/)
-10-spec/datasheet_notes/
+00-now/          WHERE_THINGS_STAND.md  BLOCKED_ON_OWNER.md  WHAT_TO_PRINT.md  WHAT_TO_ORDER.md  WHAT_TO_CHECK_ON_ARRIVAL.md
+                 generated every record round from 90-log/ and the kits (scripts/now_pages.py); never edited; a stale page fails the gates
+10-spec/         SPEC.md  FINDINGS.md  KICKOFF_ANSWERS.md  SPEC_ERRATA.md  spec_sections/  datasheet_notes/
+20-design/       the yaml sources of truth (case, board, parts, erc_accept, traceability, arrival_checklist, dfm_processes), briefs, design notes,
+                 TEST_PLAN, VERIFY, SOFTWARE_ARCHITECTURE, the drawings index
+30-board/        kicad/ (the CAD project)   layout/ (gerbers, drc, dxf, renders, inspection, drawings)   fab/<rev>/ (the uploaded package;
+                 board_id.txt = md5 + commit)                                                                                         [ee, both]
+40-case/         <set>/ per print target (mjf_case, p2s_case, plug_caps, coupons, board_dummy, dfm_validation, fea, board_mesh)         [mech, both]
+                 each set: parts/ (STL of record, tracked)  checks/ (census + DFM records, clearance, interference = what the gates read)
+                           pictures/ (previews, faces, assembly renders)  build/ (SCAD, logs, slicer scratch, caches — gitignored)
+50-kits/         <kit>/ per print target — START_HERE.md  plates/ (.3mf + .3mf.json sidecar)  parts/ (STL copies, md5-checked)  sheets/  [mech, both]
+                 the one kit of record; mirrored byte-identical to ~/Downloads/<project>_kits/<kit>/
+60-orders/       PROCUREMENT.md  PARTS_VERIFICATION.md  parts_check.json  ORDER_<rev>.md  ARRIVAL_CHECKLIST_<rev>.md  quotes/<date>/ (frozen)
+70-release/      <rev>/ (the cut: MANIFEST, STATUS, manuals, SOPs, pdf/, records/ = THE records folder)   reports/ (the design reports,
+                 RELEASE_NOTES)   collateral/<rev>/   marketing/<rev>/
+80-reviews/      <round>/ — one folder per review round (the merged file at its root), REVIEW_HANDOFF, REORG_* inventories
+90-log/          DECISIONS  STATUS (append log)  GATES  BLOCKERS  KNOWN_ISSUES  TRACEABILITY  LEARNINGS_LOG  ENV — the records the generators read and write
+gen/  scripts/  tools/  lib/  Makefile  CLAUDE.md        the machinery
 ```
-Every `docs/…` path in SKILL.md / references / templates spells this layout. Changing it later is a decision row + a `reorg:` block +
-`scripts/reorg_paths.py` (release-and-cut §9) — never a hand sweep; frozen records keep the old paths and `--map` explains them.
-
+Four rules make the tree the navigation, so no README is needed to use it:
+- **Names are nouns a technician knows.** No hash and no date names a folder at the top of a tree; a revision is `rev0`, a kit is its print target;
+  the hash lives inside (`board_id.txt`, `RENDERS.md`, `MANIFEST`). `40-case/dfm_validation/` is the one hash-named place, inside its set.
+- **One current thing per path.** Superseded kits, cuts and case versions are not kept beside the current one; git history holds them.
+- **Records sit next to what they describe.** A part's census and DFM verdict are in `checks/` beside its STL, never in a parallel tree.
+- **Order follows the life of the project.** The numbers fix the reading order in every project; a scope that lacks a stage has no folder at that
+  number (ee: no `40-case/`, `50-kits/`; mech: no `30-board/`).
+Every path is a `paths:` key (`scripts/project.py` DEFAULTS; the commented block in `templates/project.yaml` lists them) and the templates folder
+mirrors the tree (`templates/90-log/DECISIONS.md` is copied to `90-log/DECISIONS.md`). Every path SKILL.md / the references / the templates spell
+is this layout. Changing it later is a decision row + a `reorg:` block + `scripts/reorg_paths.py` (release-and-cut §9, the `reorg:` section below)
+— never a hand sweep; frozen records keep the old paths and `--map` explains them.
 ## Conventions the scripts rely on
 
 - `board_id.txt` in a fab package: one `key value` per line; `md5` = md5 of the board file; `commit` = the generator commit. Packages are

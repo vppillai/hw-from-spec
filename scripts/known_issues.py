@@ -97,7 +97,7 @@ def build(P, section1):
     L += ["", "## 4. UNVERIFIED markers in the test plan", "", "| Line | Marker | Context |", "|---|---|---|"]
     tp, marks = P.path("test_plan"), "|".join(map(re.escape, P.get("markers.unverified")))
     if not (tp and os.path.exists(tp)):
-        print(f"WARNING: test plan {P.get('paths.test_plan')} missing — §4 is empty, not verified (seed it from templates/TEST_PLAN.md)", file=sys.stderr)
+        print(f"WARNING: test plan {P.get('paths.test_plan')} missing — §4 is empty, not verified (seed it from templates/20-design/TEST_PLAN.md)", file=sys.stderr)
     if tp and os.path.exists(tp):
         for n, line in enumerate(open(tp, encoding="utf-8"), 1):
             m = re.search(marks, line)

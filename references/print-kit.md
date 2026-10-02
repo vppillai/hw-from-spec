@@ -4,6 +4,12 @@ A kit is reviewed as a technician receives it — no repo, no git — and the tw
 rules are FAIL-gated where a generator can check them; the numbers quoted are one kit's and stand for the mechanism.
 
 ## 1. One entry point: a generated `START_HERE.md` at the top of the kit
+The kit is a folder of the repo, `50-kits/<kit>/`, one per print target (`p2s_case`, `plug_caps` — the printer and what it prints, no version in
+the name: the version is a line in START_HERE and in every sheet). Inside: `START_HERE.md` at the root, `plates/` (every `.3mf` with its
+`.3mf.json` sidecar), `parts/` (the STL set of this kit, copied from `40-case/<set>/parts/` and md5-checked), `sheets/` (print sheets, coupon and
+dummy READMEs, the assembly sequence). The generators write here directly; `~/Downloads/<project>_kits/<kit>/` is a byte-identical mirror the
+collateral gate checks. One current kit per target: a superseded kit folder outside the repo receives a one-line `SUPERSEDED.md` pointing at the
+mirror and nothing else is kept beside the current kit. `00-now/WHAT_TO_PRINT.md` is derived from `50-kits/*/plates/*.3mf.json` alone.
 Written by the slicer wrapper (it owns the minutes and grams) from a `kit_facts.json` the geometry generator writes — **numbers from the
 sidecars, prose from the knobs, nothing typed**. Four blocks, in this order:
 1. **Header**: what every project file embeds (printer, nozzle, layer, material, plate), the one hand step (AMS: *the project defines filaments

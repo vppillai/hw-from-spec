@@ -52,7 +52,7 @@ Heat map (--render, needs matplotlib): faces coloured by the MIN thickness of th
 voids narrower than void_min (detail_min on FDM) dark red — six orthographic faces + two isos, the same convention the vendors' viewers use.
 
 CLI (paths default to the project root = the nearest parent holding project.yaml, else the cwd; the process table falls back to the skill's
-`templates/design/dfm_processes.yaml` when the project has none yet):
+`templates/20-design/dfm_processes.yaml` when the project has none yet):
   scripts/print_dfm.py --process <row> <mesh.stl>... [--out DIR] [--piece NAME] [--render] [--samples N] [--boxes boxes.json] [--land x0 y0 x1 y1 ...]
                        [--supports none|interior|any] [--bodies N]
       one record per body (DIR/<piece>.json [+ DIR/<piece>.boxes.json] [+ DIR/<piece>_<view>.png]); prints one line per rule; exit 1 when any body FLAGs
@@ -132,7 +132,7 @@ def processes(path=None):
     if not os.path.exists(p) and not path and os.path.exists(TEMPLATE_TABLE):
         p = TEMPLATE_TABLE
     if not os.path.exists(p):
-        print(f"print_dfm: no process table at {p} (copy templates/design/dfm_processes.yaml to design/ or pass --processes)", file=sys.stderr); sys.exit(2)
+        print(f"print_dfm: no process table at {p} (copy templates/20-design/dfm_processes.yaml to design/ or pass --processes)", file=sys.stderr); sys.exit(2)
     return yaml.safe_load(open(p))["processes"], p
 
 

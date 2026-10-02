@@ -25,7 +25,11 @@ source changes re-enters through a new conversion and a new row; editing the STL
                  ├─> drawings (silhouettes + sections, yaml numbers on the lines; STEP per piece + assembly)
                  └─> print-service / CNC DFM + quotes (references/fab-dfm.md §6) ──> ORDER_SHEET / PRINT_SHEET per piece
 ```
-Everything under `30-board/layout/mechanical/case/<preset>/` is generated; `ASSEMBLY.md` and print sheets are generated with spliced blocks
+A set is one folder per PRINT TARGET under `40-case/<set>/` (mjf_case, p2s_case, plug_caps, coupons, board_dummy…), never per case version —
+the version is a field of the records and the sheets. Inside: `parts/` (the STL set of record, tracked; the kits copy from here), `checks/`
+(census + DFM records, clearance and interference checks — the only place the gates look), `pictures/` (previews, faces, assembly renders) and
+`build/` (SCAD, logs, slicer scratch, caches — gitignored, recreated by every run; the determinism check compares a regenerated part with its
+recorded md5 in `checks/`). Everything under the set is generated; `ASSEMBLY.md` and print sheets are generated with spliced blocks
 (`<!-- gen:BEGIN name -->…<!-- gen:END -->`) so prose survives regeneration.
 
 ## Board mesh of record (both) / fit input of record (mech)

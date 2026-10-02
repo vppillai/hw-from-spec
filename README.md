@@ -112,29 +112,22 @@ after the kickoff and the spec; 0 before the G0 ask:
 
 ```sh
 T=vendor/hw-from-spec/templates
-mkdir -p 90-log 20-design 60-orders 80-reviews 70-release 60-orders/quotes
-mkdir -p 70-release design
-cp "$T/CLAUDE.md" "$T/.gitignore" "$T/project.yaml" "$T/SPEC.md" .
-cp "$T"/{DECISIONS,STATUS,GATES,KNOWN_ISSUES}.md 90-log/
-cp "$T"/{LEARNINGS_LOG,BLOCKERS,ENV,KICKOFF_ANSWERS}.md 90-log/
-cp "$T/PARTS_VERIFICATION.md" 60-orders/
-cp "$T/TEST_PLAN.md" "$T/20-design/VERIFY.md" 20-design/
-cp -R "$T/datasheet_notes" docs/
-cp "$T/20-design/traceability.yaml" "$T/production_cut.yaml" design/
-cp "$T/20-design/dfm_processes.yaml" design/                # mech, both
-cp "$T/60-orders/quotes/dfm_verdicts.yaml" 60-orders/quotes/       # mech, both
-cp "$T/20-design/erc_accept.yaml" design/                  # ee, both
-cp "$T/20-design/SOFTWARE_ARCHITECTURE.md" 20-design/     # ee, both
-cp "$T/parts/PROCUREMENT.md" 60-orders/                 # mech, both
-cp "$T/ci/Makefile" .                       # make check / case / slice / record-round
-scripts/project.py scaffold --scope "$A0" CLAUDE.md 10-spec/SPEC.md project.yaml \
-  90-log/*.md design/*.yaml                  # A0=ee | mech | both
-scripts/project.py slots                              # the count to drive to 0 (fill
+mkdir -p 00-now 10-spec 20-design 60-orders/quotes 70-release 80-reviews 90-log
+mkdir -p 30-board                                             # ee, both
+mkdir -p 40-case 50-kits                                      # mech, both
+cp "$T/CLAUDE.md" "$T/.gitignore" "$T/project.yaml" .
+cp "$T"/10-spec/*.md 10-spec/ && cp -R "$T/10-spec/datasheet_notes" 10-spec/
+cp "$T"/90-log/*.md 90-log/
+cp "$T"/60-orders/*.md 60-orders/ && cp "$T/60-orders/quotes/dfm_verdicts.yaml" 60-orders/quotes/   # quotes: mech, both
+cp "$T"/20-design/{TEST_PLAN.md,VERIFY.md,traceability.yaml,arrival_checklist.yaml} 20-design/
+cp "$T/20-design/dfm_processes.yaml" 20-design/               # mech, both
+cp "$T/20-design/erc_accept.yaml" "$T/20-design/SOFTWARE_ARCHITECTURE.md" 20-design/   # ee, both
+cp "$T/production_cut.yaml" 20-design/
 ```                                                   #  project.yaml before any reader runs)
 
 5. Follow `SKILL.md` §0: the kickoff questionnaire, ENV record (`scripts/project.py env` prints the
 host row), first records, adopt gates, then G0. Fill slots that sit inside a path unquoted
-(`30-board/kicad/sensor/sensor.kicad_pcb`). `templates/design/arrival_checklist.yaml` is copied at the order (SKILL §10.1). Scripts find `project.yaml` by walking up from the
+(`30-board/kicad/sensor/sensor.kicad_pcb`). `templates/20-design/arrival_checklist.yaml` is copied at the order (SKILL §10.1). Scripts find `project.yaml` by walking up from the
 cwd (or `HWFS_PROJECT=…`); the shell gates print which interpreter they use. Never put the submodule
 AT `scripts/`. Project-specific generators (schematic builder, placement, routing, export, fab
 package, panel, silk, case, drawings, FEA measurer) stay in the project's `gen/`, read constants

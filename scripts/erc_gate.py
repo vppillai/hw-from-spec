@@ -8,7 +8,7 @@
       a violation `excluded` in the CAD GUI (a hidden waiver — the yaml is the only path). An entry covers a violation when `type` equals the
       violation type and `ref` (a refdes, net or pin text) occurs in one of its item descriptions.
   scripts/erc_gate.py --selftest
-Accept file (templates/design/erc_accept.yaml; paths.erc_accept): `accepted: [{type, ref, reason, decision, date}]`.
+Accept file (templates/20-design/erc_accept.yaml; paths.erc_accept): `accepted: [{type, ref, reason, decision, date}]`.
 """
 import argparse, json, os, re, sys
 

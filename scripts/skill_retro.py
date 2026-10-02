@@ -11,11 +11,11 @@
       in project.yaml) with the skill's SKILL.md version. Writes DIR/<project>_<date>.md (default: <skill>/docs/retro/) with: counts, the NEW and
       PARTIAL tables (entry, best section, score), a CHANGELOG entry draft, one reference patch stub per target file (bullets to append), an eval
       stub per costly NEW entry, the owner decision topics the kickoff questionnaire does not ask yet, and the DFM process-table drift
-      (the project's 20-design/dfm_processes.yaml vs templates/design/dfm_processes.yaml: NEW rows, changed numbers, validation evidence the
+      (the project's 20-design/dfm_processes.yaml vs templates/20-design/dfm_processes.yaml: NEW rows, changed numbers, validation evidence the
       template lacks — each a retro item for the template, SKILL.md §8.1 (c)). Read-only on the project; exit 0 (a report), 2 when an input is
       missing. `--apply` performs the folds that are mechanical and safe, in the SKILL repo only (idempotent, marked `<!-- retro: <project> <date> -->`):
       one pitfalls line per NEW learning (generalised, evidence pointer kept) under a dated heading in references/pitfalls.md; every NEW process row
-      copied verbatim (its citation comments included, `validated_on: []`) into templates/design/dfm_processes.yaml; a CHANGELOG stub (`## UNRELEASED
+      copied verbatim (its citation comments included, `validated_on: []`) into templates/20-design/dfm_processes.yaml; a CHANGELOG stub (`## UNRELEASED
       — retro <project>`) from §4. Everything else (PARTIAL extensions, CHANGED numbers, evals, questionnaire questions) stays a listed candidate.
   scripts/skill_retro.py --selftest
       a fixture project + fixture skill in a temp dir: one carried, one new, one costly entry; version drift; the report file and its sections.
@@ -183,7 +183,7 @@ DFM_NUMERIC = ("wall_min", "wall_reco", "feature_min", "detail_min", "void_min",
 
 
 def dfm_table_diff(root, skill, table_rel="20-design/dfm_processes.yaml"):
-    """project <paths.dfm_processes> vs the skill's templates/design/dfm_processes.yaml -> [{kind, row, key, project, template}]:
+    """project <paths.dfm_processes> vs the skill's templates/20-design/dfm_processes.yaml -> [{kind, row, key, project, template}]:
     NEW row (a vendor / process the template lacks), CHANGED number (a threshold the project moved — with its citation line), VALIDATED (a row
     whose validated_on the project filled while the template's is empty). Either file missing -> [] (nothing to carry)."""
     pp, tp = os.path.join(root, table_rel), os.path.join(skill, "templates", "design", "dfm_processes.yaml")
@@ -237,7 +237,7 @@ def apply_folds(project, root, skill, new, dfm, today, table_rel):
         if d["kind"] == "NEW" and os.path.exists(tp) and not re.search(rf"^  {re.escape(d['row'])}:", open(tp, encoding="utf-8").read(), re.M):
             blk = row_block(pp, d["row"])
             if blk:
-                open(tp, "a", encoding="utf-8").write(f"  # retro {project} {today}: row carried from the project table with its citations\n" + blk); done.append(f"process row {d['row']} -> templates/design/dfm_processes.yaml")
+                open(tp, "a", encoding="utf-8").write(f"  # retro {project} {today}: row carried from the project table with its citations\n" + blk); done.append(f"process row {d['row']} -> templates/20-design/dfm_processes.yaml")
             else:
                 print(f"skill_retro --apply: WARNING process row {d['row']} not found as a 2-space key in {pp} — not folded")
     ch = os.path.join(skill, "CHANGELOG.md")
@@ -312,14 +312,14 @@ def build_report(project, root, skill, entries, decisions, sections, idf, thresh
     if not os.path.exists(q_path):
         L.append("| — | — | (no references/kickoff-questionnaire.md in this skill) | — |")
     dfm = dfm_table_diff(root, skill, table_rel)
-    L += ["", "## 8. DFM process table drift — `20-design/dfm_processes.yaml` vs the skill's `templates/design/dfm_processes.yaml` (SKILL.md §8.1 (c))", "",
+    L += ["", "## 8. DFM process table drift — `20-design/dfm_processes.yaml` vs the skill's `templates/20-design/dfm_processes.yaml` (SKILL.md §8.1 (c))", "",
           "| Kind | Row | Key | Project value (citation) | Template value |", "|---|---|---|---|---|"]
     L += [f"| {d['kind']} | `{d['row']}` | {d['key']} | {d['project'].replace('|', chr(92) + '|')} | {d['template']} |" for d in dfm] or ["| — | — | — | (no drift, or no table on one side) | — |"]
     L += ["", "NEW rows and CHANGED numbers go into the template WITH their [V] / [K] citation; a VALIDATED row's evidence goes into `references/print-dfm.md` §4 (the template keeps `validated_on: []`). A CHANGED number without a citation on its line is not carried.", "",
           "## 9. What to do with this report", "",
           "1. Fold every NEW row into the reference named in §5 (one generalised line; the source's number stays as the labelled worked example).",
           "2. Extend the PARTIAL sections where the mechanism is missing.", "3. Add one eval per §6 stub; run the smoke; bump SKILL.md `version`; write the CHANGELOG entry from §4.",
-          "4. Add a questionnaire question (with a recommended answer) per §7 topic that will recur.", "5. Carry every §8 row into templates/design/dfm_processes.yaml (cited) / references/print-dfm.md.", "6. Blind-review the skill again (two lenses), then tag."]
+          "4. Add a questionnaire question (with a recommended answer) per §7 topic that will recur.", "5. Carry every §8 row into templates/20-design/dfm_processes.yaml (cited) / references/print-dfm.md.", "6. Blind-review the skill again (two lenses), then tag."]
     return "\n".join(L) + "\n", dict(new=len(new), partial=len(partial), carried=len(carried), costly=len(costly_new), unasked=len(unasked), drift=bool(pv and pv != sv), dfm=len(dfm), new_rows=new, dfm_rows=dfm)
 
 
