@@ -200,6 +200,16 @@ def _project_targets(start):
         d = os.path.dirname(d)
 
 
+
+def parts_dir(records_dir):
+    """The STL set a records dir belongs to: `<set>/parts/` when the records sit in `<set>/checks/<kind>/` (the layout of record), else the
+    sibling `stl/` of the records dir's parent (an older project shape). One rule for every pure gate."""
+    parent = os.path.dirname(os.path.abspath(records_dir.rstrip("/")))
+    if os.path.basename(parent) == "checks":
+        return os.path.join(os.path.dirname(parent), "parts")
+    return os.path.join(parent, "stl")
+
+
 def pure_gate(dirs):
     """See the docstring's --gate-dir entry. -> problem list."""
     bad = []; n = 0
@@ -221,7 +231,7 @@ def pure_gate(dirs):
             # the STL of record is the sibling stl/<basename> of THIS tree, then a project-relative path; an absolute path stored by an older
             # census is honoured only inside this project's root (a gate run from another checkout must never read another tree's STLs)
             root = os.path.abspath(P.root) if P else None
-            cand = [os.path.join(parent, "stl", os.path.basename(stl)),
+            cand = [os.path.join(parts_dir(d), os.path.basename(stl)),
                     os.path.join(root, stl) if root and not os.path.isabs(stl) else "",
                     os.path.join(os.path.dirname(jp), stl) if not os.path.isabs(stl) else "",
                     stl if os.path.isabs(stl) and (root is None or os.path.abspath(stl).startswith(root + os.sep)) else ""]
@@ -239,9 +249,10 @@ def pure_gate(dirs):
                     bad.append(f"{jp}: accepted entry without reason / date / evidence: {a.get('fail', '?')[:80]}")
                 elif cur is not None and not any(all(str(x.get(k)) == str(a.get(k)) for k in ("reason", "date", "evidence")) for x in cur):
                     bad.append(f"{jp}: accepted entry no longer in print_targets.{r['target']}.accepted ({a.get('fail', '?')[:60]}) — the acceptance was withdrawn; the FAIL stands, rerun")
-        stls = set(glob.glob(os.path.join(parent, "stl", "*.stl")))
+        set_root = os.path.dirname(parts_dir(d))
+        stls = set(glob.glob(os.path.join(parts_dir(d), "*.stl")))
         if P and P.get("paths.mech_record"):
-            stls |= {f for f in glob.glob(os.path.join(P.root, P.get("paths.mech_record"))) if os.path.abspath(f).startswith(parent + os.sep)}
+            stls |= {f for f in glob.glob(os.path.join(P.root, P.get("paths.mech_record"))) if os.path.abspath(f).startswith(set_root + os.sep)}
         for f in sorted(stls):
             if md5_of(f) not in have:
                 bad.append(f"{f}: body of the record set without a census record of its md5 (run thin_wall_census.py --target <t> --json {d}/<piece>.json on it)")
