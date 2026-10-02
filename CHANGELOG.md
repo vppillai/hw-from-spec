@@ -1,6 +1,6 @@
 # CHANGELOG — hw-from-spec
 
-## Current state (0.10.5) — read this instead of replaying the entries below
+## Current state (0.10.6) — read this instead of replaying the entries below
 
 - **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
   twelve batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
@@ -20,8 +20,22 @@
 - **References**: project-yaml, kickoff-questionnaire, schematic-phase, pcb-layout-dfm, fab-dfm, case-pipeline, dfm-printed-enclosure,
   print-dfm, print-kit, fdm-print-optimisation, cnc-enclosure, fea-stage, part-verification, software-track, release-and-cut, vendor-review,
   agent-ops, pitfalls — one home per rule, the others link.
-- **Checks**: `smoke/run_smoke.sh` (every script selftest, the rule greps, the enforcement negatives, both lints, the evals), 17 evals
+- **Checks**: `scripts/iteration_gate.sh` runs explicit inner / standard / release validation tiers without permitting writes; `smoke/run_smoke.sh`
+  runs every script selftest, the rule greps, the enforcement negatives, both lints and the evals; 17 evals
   with mechanical checks, `docs/reviews/INDEX.md` and `docs/retro/INDEX.md` list every review and retro.
+
+## 0.10.6 — 2026-10-02 — explicit fast validation tiers
+
+### Added
+- `scripts/iteration_gate.sh --tier inner|standard|release`: project-configured, read-only
+  iteration checks. Empty tiers fail, preventing an unconfigured fast path from reporting success.
+- `gates.iteration` template and schema entries: inner runs only the changed generator and direct
+  grader; standard covers a bounded change before a delta audit; release includes the full
+  adopt/clone chain.
+
+### Not done
+- Tier selection is explicit rather than inferred from a diff. The project owner decides which
+  generator and grader a bounded change affects, and records that scope in `project.yaml`.
 
 ## 0.10.5 — 2026-10-02 — execute every tool selftest in smoke
 

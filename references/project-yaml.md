@@ -119,6 +119,14 @@ reports:                                  # scripts/release_report.py; one file 
     extra_sources: [design/board.yaml, design/parts.yaml]
 gates:
   quiet_regex: 'Fontconfig|wxApp|Debug:'  # stderr lines filtered per line by adopt_gates.sh (never a whole-stream 2>/dev/null)
+  iteration:                              # scripts/iteration_gate.sh --tier inner|standard|release (every listed command must be read-only)
+    inner:                                # REQUIRED before use: only the changed generator's --check and direct grader
+      - "$PY gen/case.py --check"
+      - "$PY scripts/print_dfm.py --gate out/mechanical/case/<preset>/dfm"
+    standard:                             # bounded change: targeted checks plus the project-wide check set, then a delta audit
+      - "scripts/adopt_gates.sh --no-clone"
+    release:                              # gate / order / cut: the fresh-archive clone gate included
+      - "scripts/adopt_gates.sh"
   adopt:                                  # scripts/adopt_gates.sh: run in order, exit 1 on the first failure; $PY is exported
     - "$PY scripts/known_issues.py --selftest"
     - "$PY scripts/known_issues.py --check"

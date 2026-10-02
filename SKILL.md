@@ -1,6 +1,6 @@
 ---
 name: hw-from-spec
-version: 0.10.5
+version: 0.10.6
 description: Run a hardware project (a PCB, a printed or CNC enclosure, or both — scope chosen at kickoff; contract fab such as JLCPCB) from a written specification to a production cut with an owner-gated, generated-only, blind-reviewed workflow — a kickoff questionnaire that asks every owner decision up front with recommended answers, a zero-warning manufacturability bar, and a retro that folds each project's learnings back into the skill. Use this whenever someone starts a board or enclosure project from a spec, asks to set up gates, a decision log, generators, part verification, a fab DFM mirror, a case pipeline, FEA, blind reviews, a release report or a production cut for one, or resumes such a project, or wants the skill improved from a finished project — even if they only say "new KiCad board", "order this at JLC", "review the layout", "cut the release" or "what did we learn".
 ---
 
@@ -176,6 +176,11 @@ order. A WARN that is "known" is not a bar; it is either fixed or a dated, evide
 - **Layout changes are generated too.** The docs/ layout the defaults name is in `references/project-yaml.md` §Layout; moving files later is a
   decision row + a `reorg:` block + `scripts/reorg_paths.py --plan → --apply → regenerate → --check → --proof` (zero-loss on two `git ls-files -s`
   dumps); frozen records keep the old paths and `--map` explains them (`references/release-and-cut.md` §9).
+- **Iteration tiers keep the fast loop honest.** Configure `gates.iteration.inner` with only the changed generator's `--check` and its
+  directly affected grader, then run `scripts/iteration_gate.sh --tier inner` after a one-value YAML or emitter change. Configure
+  `standard` for the bounded change set (normally its targeted checks plus `scripts/adopt_gates.sh --no-clone`) and use it before a
+  delta audit. Configure `release` with `scripts/adopt_gates.sh` and release-specific checks; use it before a gate, order, or cut.
+  Each tier is explicitly listed in `project.yaml`, refuses an empty list, and verifies that its commands did not write the tree.
 
 ## 3. Decision log
 
