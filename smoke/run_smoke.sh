@@ -98,8 +98,16 @@ OPT="$SKILL/references/fdm-print-optimisation.md"; test -f "$OPT" && grep -q 'fl
 grep -q 'fdm-print-optimisation.md' "$SKILL/SKILL.md" "$SKILL/references/print-kit.md" "$SKILL/references/dfm-printed-enclosure.md" || { echo "FAIL: the optimisation reference is not linked from SKILL / print-kit / dfm-printed-enclosure"; exit 1; }
 grep -q '^\*\*C11 Slicer optimisation' "$SKILL/references/kickoff-questionnaire.md" && grep -q '^| C11 |' "$SKILL/templates/KICKOFF_ANSWERS.md" && grep -q 'optimise:' "$SKILL/templates/project.yaml" && grep -q 'fit_result:' "$SKILL/templates/project.yaml" || { echo "FAIL: kickoff C11 / the fit_result landing key missing"; exit 1; }
 grep -q 'arrival_checklist' "$SKILL/templates/production_cut.yaml" && grep -c 'ARRIVAL_CHECKLIST' "$SKILL/templates/GATES.md" | grep -q '^2$' || { echo "FAIL: the arrival checklist is not a cut deliverable / an order prerequisite"; exit 1; }
-"$PY" scripts/thin_wall_census.py --selftest
-"$PY" scripts/skill_retro.py --selftest
+say "0a every script selftest runs (not only declared): the mesh-only ones (print_dfm, stability) when the mesh libraries are present"
+for s in "$SKILL"/scripts/*.py "$SKILL"/scripts/*.sh; do
+  case "$(basename "$s")" in
+    print_dfm.py|stability.py) [[ -n "$MESH" ]] || continue ;;
+  esac
+  case "$s" in
+    *.py) "$PY" "$s" --selftest ;;
+    *.sh) "$s" --selftest ;;
+  esac
+done
 say "0c the skill reads as the current, generic procedure: no changelog voice, no version numbers in prose, no source-project names / parts / ids / dimensions outside the fenced worked examples"
 "$PY" "$SKILL/scripts/doc_voice_lint.py" --selftest >/dev/null && "$PY" "$SKILL/scripts/doc_voice_lint.py" || { echo "FAIL: doc_voice_lint hits (the skill narrates its history inside a rule)"; exit 1; }
 "$PY" "$SKILL/scripts/generic_lint.py" --selftest >/dev/null && "$PY" "$SKILL/scripts/generic_lint.py" || { echo "FAIL: generic_lint hits (the skill names the project it was learned on)"; exit 1; }
