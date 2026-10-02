@@ -81,7 +81,7 @@
 - **`scripts/stability.py`**: centre of gravity of an assembly from the STL set of record (volume centroids through the assembly transforms, a
   density / infill factor per body) and the signed margin of its ground projection against the support polygon (convex hull of the footprints);
   `sweep()` over poses names the worst one; `--selftest`. SKILL §8 bullet, `case-pipeline.md` §Stability, kickoff **C12** "does the piece stand
-  free" (→ `kickoff.enclosure.stands_free`, a commented slot in `templates/project.yaml`, a row in `templates/KICKOFF_ANSWERS.md`), one pitfall.
+  free" (→ `kickoff.enclosure.stands_free`, a commented slot in `templates/project.yaml`, a row in `templates/10-spec/KICKOFF_ANSWERS.md`), one pitfall.
   Owner rule: anything that stands, rocks, walks or is set down free carries a CoG-vs-support row at its worst pose; a render cannot show it.
   Found on the beest: drive behind the legs, CoG 21 mm behind the hip, −17 mm margin at a third of the crank angles; fixed by moving the drive
   over the feet and the frame forward, then proven by the row.
@@ -178,11 +178,11 @@ project names stay in this file and in `docs/retro/` (`generic_lint_terms.yaml` 
 ## 0.10.0 — 2026-09-30 — the fifth retro folded, the skill audited and made generic
 
 ### Added (retro of the source project's landing round)
-- **Arrival / first-article checklist, generated** (`scripts/arrival_checklist.py`, `templates/design/arrival_checklist.yaml`; SKILL §10.1,
+- **Arrival / first-article checklist, generated** (`scripts/arrival_checklist.py`, `templates/20-design/arrival_checklist.yaml`; SKILL §10.1,
   `release-and-cut.md` §10; cut deliverable REC-002; `project.py gates-required` demands the `--check` line once the yaml exists): before shipment
   (the fab's photos), bench checks in gate order with what each row opens, software gates with their closing commit, case first article, owner
   decisions still OPEN with their trigger; status grammar + evidence enforced; smoke step 5d, eval 15.
-- **SPEC errata** (`templates/SPEC_ERRATA.md`, `release-and-cut.md` §11): a frozen spec's deviations as OPEN E-rows, never an edit; the
+- **SPEC errata** (`templates/10-spec/SPEC_ERRATA.md`, `release-and-cut.md` §11): a frozen spec's deviations as OPEN E-rows, never an edit; the
   hand-off's §3.3 and the arrival checklist §E carry them.
 - **`[K owner-read]`** tag (SKILL §4, `part-verification.md`, CLAUDE.md rule 1).
 - **Review protocol with a record-reading verifier** (SKILL §5, `agent-ops.md` §4, `blind-deep-review.js`): reviewers of a second model family get
@@ -256,7 +256,7 @@ decision row naming the piece, STL-set and `print_targets.<t>.dfm_process` check
 - `--list` shows `media` and `layer × skin_min_layers`; `[K]` "slenderness heuristic" replaces the Kirchhoff citation (the L/t ≥ 10 of plate theory is a validity condition, not a manufacturability number).
 
 ### Templates / references
-- `templates/design/dfm_processes.yaml`: `media` on every row, `layer` / `skin_min_layers` / `void_min: null` on the FDM rows with the rule stated, `home_fdm_04_colour_body` (skin_min_layers 1, supports none), header fields for media / layer / skin / boxes / supports-per-body, sliver aspect test and slenderness heuristic in the comments.
+- `templates/20-design/dfm_processes.yaml`: `media` on every row, `layer` / `skin_min_layers` / `void_min: null` on the FDM rows with the rule stated, `home_fdm_04_colour_body` (skin_min_layers 1, supports none), header fields for media / layer / skin / boxes / supports-per-body, sliver aspect test and slenderness heuristic in the comments.
 - `references/print-dfm.md`: rules table (M C W R Z F K P V H O B S + L Y), legend-box sidecar, `--expect`, the geometry grouping and coverage reading; `references/pitfalls.md` +3 (negative selftest case, sliver aspect test, validation deduped by geometry).
 
 ### Not done
@@ -311,7 +311,7 @@ of a YAML traceback, `scaffold` fills `{{SCOPE}}`, the smoke prefers the caller'
 token is word-start, `kickoff.answers` is read, `--open` rows must name the piece, no `__pycache__` in the submodule. Dispositions per finding in the review file.
 
 ### Added
-- `scripts/gate_check.py`, `scripts/erc_gate.py`, `scripts/step2stl.py`, `evals/run_evals.py`, `templates/design/erc_accept.yaml`,
+- `scripts/gate_check.py`, `scripts/erc_gate.py`, `scripts/step2stl.py`, `evals/run_evals.py`, `templates/20-design/erc_accept.yaml`,
   `templates/ci/{setup_linux,nightly,release_archive}.sh`; `scripts/project.py` `slots` / `kickoff --check` / `gates-required` + `record_sig` /
   `verify_sig` / `open_decisions`; `print_dfm.py` rule M + `--bodies` + `--target`; `skill_retro.py --apply`; `blind-deep-review.js` `mech` role
   set; `project.owner`, `paths.schematic`, `paths.erc_accept`, the `kickoff:` mapping and `board:` block in `templates/project.yaml`.
@@ -321,7 +321,7 @@ token is word-start, `kickoff.answers` is read, `--open` rows must name the piec
 
 ### Changed
 - `print_dfm.py` rule-set `VERSION` 0.9.0 (rule M, O / B split) — every record is re-made; `thin_wall_census.py` records carry `version` + `sig`.
-- The release line counts only in the Release row's approval cell (`release_report.py` banner); `templates/GATES.md` says so.
+- The release line counts only in the Release row's approval cell (`release_report.py` banner); `templates/90-log/GATES.md` says so.
 - `ERC_WAIVERS.md` is gone from templates, paths and docs; `paths.erc_waivers` → `paths.erc_accept`.
 
 ### Not done
@@ -344,7 +344,7 @@ vendor verdicts, 0 looser / 24 agree / 8 stricter).
   `--gate` PURE adopt gate (record md5 = STL = census, PASS or `--open <tag>/<piece>=<decision>`); `--validate` against every labelled vendor
   verdict → `PRINT_DFM_VALIDATION.md` (confusion matrix, rules fired, hand-written reading kept) with **a vendor FLAG we PASS printed as `RULE
   DEFECT`, exit 1**; `--list`; `--selftest` (eval 14's pair among its cases). Rule-set `VERSION` keys the validation cache.
-- **`templates/design/dfm_processes.yaml`**: seven rows (JLC3DP MJF / SLA / FDM, home FDM 0.4, Xometry MJF, Protolabs MJF, HP guide BLOCKED),
+- **`templates/20-design/dfm_processes.yaml`**: seven rows (JLC3DP MJF / SLA / FDM, home FDM 0.4, Xometry MJF, Protolabs MJF, HP guide BLOCKED),
   every number `[V]` with URL + date or `[K]` with the source named, `validated_on: []` each. **`templates/docs/quotes/dfm_verdicts.yaml`**: the
   verdict row schema (stl, md5, process, vendor, date, verdict, evidence, note).
 - **`scripts/scad_lint.py`**: a statement after a mid-line `//` in generated OpenSCAD is dropped silently (a plate lost its mark webs for two days
@@ -420,7 +420,7 @@ Owner's directive (2026-09-29): "the skill should be able to do ee only, mechani
   and housed). Every question carries its scopes (`[ee, both]` / `[mech, both]` / none); a question outside the scope is not asked and reads
   `n/a (scope)` in KICKOFF_ANSWERS; a batch with nothing applicable is skipped.
 - **Phase / gate model per scope** (SKILL.md §1): ee = G0 → G1 → G2 → fab DFM → order → cuts; mech = G0 mechanical spec → **M1** geometry
-  approved → **M2** first article / fit print approved → case order → cuts; both unchanged. `templates/GATES.md` carries the M1 / M2 rows.
+  approved → **M2** first article / fit print approved → case order → cuts; both unchanged. `templates/90-log/GATES.md` carries the M1 / M2 rows.
 - **Scope tags on template lines** (`{{ee,both}}`, `{{mech,both}}`, `{{mech}}`, `{{ee}}`, `{{both}}`) in `templates/project.yaml`, `CLAUDE.md`,
   `GATES.md`, `SPEC.md`, `production_cut.yaml`, `design/traceability.yaml` — one template set, resolved in place by
   **`scripts/project.py scaffold --scope <A0>`**; the existing `grep -rn '{{'` proves the tags are gone.
@@ -468,7 +468,7 @@ learnings into the hw-from-spec skill as well. ironed surface and bottom ams are
   worked example); filament per colour + purge per plate (purge derivable for a SOLID part only); N × the same STL = N objects;
   `different_settings_to_system` omits system-default values; ironing ~ +5 min on a small plate.
 - **Kickoff questionnaire C9 Brand marks on FDM parts** (RECOMMENDED: ironed top-face feature; alts: AMS colour body, both plates, glued plate;
-  never-list) in batch 6 with the bar; `templates/KICKOFF_ANSWERS.md` C9 row; `kickoff.enclosure.marks`.
+  never-list) in batch 6 with the bar; `templates/10-spec/KICKOFF_ANSWERS.md` C9 row; `kickoff.enclosure.marks`.
 - **`references/agent-ops.md` §2**: one git worktree per parallel agent, commit from a clean HEAD worktree, move `main` with a mixed reset /
   fast-forward; a `--copy` / kit mirror syncs EVERY plate of record, not only the default.
 - `references/pitfalls.md`: the 09-29 lines (branding, measurement, dust cap, Bambu CLI, worktrees, date-stamped selftest across midnight,
@@ -515,10 +515,10 @@ same day: every question up front with recommended answers, a skill that improve
 - `templates/CENSUS_GATE_ROWS.md` (`--gate-dir`, C-01; the new rows: wedge band, opposing faces, accepted, geometry signature, retention in the
   mesh, worst-case clearance; INFO rows state why), `templates/DFM_ROUND.md` (raw API JSON, site-changed branch, capability snapshot, bbox / area /
   scale sanity, price, browser / UA, consent line, legend as displayed, material rating, build orientation, bbox-hypothesis probe; B-17 … B-19,
-  B-29, B-36 … B-38), `templates/GATES.md` (round definition, bar, Case order, literal `spec`, footprint-verification record location; C-21 / C-28),
+  B-29, B-36 … B-38), `templates/90-log/GATES.md` (round definition, bar, Case order, literal `spec`, footprint-verification record location; C-21 / C-28),
   `templates/project.yaml` (`skill.version`, `kickoff`, `fab_dfm` + `bar`, `print_targets` incl. `home_fdm`, historical CAD key names explained,
-  `quiet_regex` aligned; C-16), `templates/DECISIONS.md` (anchored grep, CC-001 evidence cell; C-13 / C-19), `templates/RELEASE_NOTES.md` +
-  `production_cut.yaml` + `release-and-cut.md` (**one records home** `70-release/<md5-8>/records/`; C-05), `templates/STATUS.md` (PAUSE POINT
+  `quiet_regex` aligned; C-16), `templates/90-log/DECISIONS.md` (anchored grep, CC-001 evidence cell; C-13 / C-19), `templates/RELEASE_NOTES.md` +
+  `production_cut.yaml` + `release-and-cut.md` (**one records home** `70-release/<md5-8>/records/`; C-05), `templates/90-log/STATUS.md` (PAUSE POINT
   skeleton; C-30), `templates/VENDOR_REVIEW_RECORD.md` (reply template; B-22), `templates/CLAUDE.md` (bar in rule 9, kickoff answers as decisions).
 - `references/pitfalls.md`: the retracted material-before-flag line replaced by the corrected mechanism (C-03); a provenance note on the source
   pointers (C-27); snap / wedge / engraved-text lines relabelled; `home_fdm` naming; `references/agent-ops.md`: the per-call ceiling stated once
@@ -539,7 +539,7 @@ same day: every question up front with recommended answers, a skill that improve
   power links as owner choices), two-sided assembly, polarity / rotation / CPL and the fab's rotation table, fiducials and test points, silk,
   courtyards and tombstoning, creepage, panelization, the DRC census (0 / 0 / 0 warnings unless a dated waiver row), route-quality classes,
   parity, the canary rule, the fab DFM mirror before the order, the stock freeze (C-07 widened).
-- **`references/kickoff-questionnaire.md` + `templates/KICKOFF_ANSWERS.md` + SKILL §0.1**: 40 decision classes in ten `AskUserQuestion` batches
+- **`references/kickoff-questionnaire.md` + `templates/10-spec/KICKOFF_ANSWERS.md` + SKILL §0.1**: 40 decision classes in ten `AskUserQuestion` batches
   (product / process / material / quantity; PCB build ×8; enclosure architecture ×8 incl. retention screws+inserts / magnets / none, labelling
   deboss / plate / badge, fan, vents, light pipe; the bar and what may be waived — default nothing; verification; bought parts; software; release;
   identity / envelope / delegation), each with a RECOMMENDED answer and 2–3 alternatives with consequences; answers → D rows, `project.yaml`,
@@ -734,7 +734,7 @@ generator); COULD items applied where trivial.
    `smoke/run_smoke.sh` commit that exact layout (relative link into a gitignored `vendor/` dir) and assert the archive carries the link.
 2. **G0→G1 content** — new `references/schematic-phase.md` (design yaml shape, ERC command, map checks defined, G1 review pack, G0→G1 order);
    SKILL §5 G0 round paragraph; `workflows/blind-deep-review.js` `{{ROLE_SET}}` = `spec` with four spec roles and a G0 clause in the common
-   prompt; "VERIFY item" defined once in SKILL §4 and referenced from `templates/CLAUDE.md` rule 3 and `templates/GATES.md`; rule 4 now says
+   prompt; "VERIFY item" defined once in SKILL §4 and referenced from `templates/CLAUDE.md` rule 3 and `templates/90-log/GATES.md`; rule 4 now says
    "agents never write approval cells or the release line"; hand-off template notes the MISSING rows at G0; `handoff_header.py` prints
    "no board in HEAD" instead of a sliced message.
 3. **Model rotation** — `m2 = MODELS[(i + 1) % n]` in both review workflows; both throw unless ≥ 2 distinct models and `m1 !== m2`;

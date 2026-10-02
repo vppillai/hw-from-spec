@@ -72,7 +72,7 @@ project has none yet), verdicts `60-orders/quotes/dfm_verdicts.yaml`, records `o
   the rule stands (the vendor's checker is the weaker instrument). Never move a threshold to match a vendor.
 - **(c) A new vendor or process** = ONE new row in `20-design/dfm_processes.yaml`: its published minimums `[V]` with URL + date (a 404 = BLOCKED,
   value `null`, the row refuses to gate), the rest `[K]` with the source named, `validated_on: []`. The retro (`skill_retro.py` §8) diffs the
-  project's table against `templates/design/dfm_processes.yaml` and lists NEW rows, CHANGED numbers (with the citation on the line) and
+  project's table against `templates/20-design/dfm_processes.yaml` and lists NEW rows, CHANGED numbers (with the citation on the line) and
   VALIDATED rows as items to carry into the template.
 - **(d) Check rows read the MESH, never the yaml** — a row that quotes a design number proves nothing about the part; generated code is linted
   (`scad_lint.py` on every emitted SCAD) because the yaml and the mesh can disagree silently.

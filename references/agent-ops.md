@@ -112,7 +112,7 @@
 - **Auto-memory (`MEMORY.md` + topic files)** holds what must survive a session: the project's resume pointer (which files to read first), owner
   feedback that changes how to work ("verify live, never cached"; "use parallel agents while I sleep"; "read the rendered image, not the geometry"),
   never project facts that live in the repo (those go to STATUS / DECISIONS). One file per feedback item with the date and the owner's words.
-- **Pause point** (`90-log/STATUS.md`, numbered; skeleton at the end of `templates/STATUS.md`): what happened (rows, commits, tag), what is green, an **owner list** (numbered, each
+- **Pause point** (`90-log/STATUS.md`, numbered; skeleton at the end of `templates/90-log/STATUS.md`): what happened (rows, commits, tag), what is green, an **owner list** (numbered, each
   item owner-only: gate cells, payments, replies to the vendor, hardware records) that is struck through with date/time + record path as items
   close, and a **Resume** line (nothing running / what is running with its log path; read order). Written whenever the owner says they are going
   offline and at every tag.

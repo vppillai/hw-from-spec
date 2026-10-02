@@ -75,13 +75,19 @@ gen/           project generators (case geometry, drawings, fea, kits, productio
 vendor/hw-from-spec/  the skill (submodule);  scripts -> vendor/hw-from-spec/scripts  (relative symlink; or a copy of scripts/)
 lib/           fetched symbols/footprints/3D (vendor-licensed data never leaves the repo) {{ee,both}}
 lib/           vendor STEPs, TDS PDFs, hardware drawings (vendor-licensed data never leaves the repo) {{mech}}
-<cad>/<board>/ generated CAD project (e.g. 30-board/kicad/<board>/)      out/   generated packages, renders, checks, G1/ and G2/ review packs {{ee,both}}
-40-case/<preset>/  STL set of record (paths.mech_record — its md5 is the record id), census, renders, kits {{mech}}
-docs/          governance/ (ENV DECISIONS BLOCKERS GATES STATUS KNOWN_ISSUES TRACEABILITY LEARNINGS_LOG)  design/ (TEST_PLAN VERIFY briefs) {{ee,both}}
-docs/          governance/ (ENV DECISIONS BLOCKERS GATES STATUS KNOWN_ISSUES TRACEABILITY LEARNINGS_LOG)  design/ (TEST_PLAN VERIFY briefs, mechanical notes) {{mech}}
-               parts/ (PARTS_VERIFICATION PROCUREMENT parts_check.json)  reviews/ (hand-offs, merged reports)  release/ (reports, collateral/<md5-8>/)
-               quotes/<date>/ (fab evidence, never inside a package)  production/<md5-8>/ (the cut)  datasheet_notes/
-               — a re-layout is a decision row + project.yaml `reorg:` + `scripts/reorg_paths.py`; frozen records keep the old paths, `--map` reads them
+00-now/        the five answers (where things stand, blocked on owner, what to print / order / check on arrival) — generated, never edited
+10-spec/       SPEC, FINDINGS, KICKOFF_ANSWERS, SPEC_ERRATA, spec_sections/, datasheet_notes/
+20-design/     the yaml sources of truth + briefs, TEST_PLAN, VERIFY (generators read ONLY from here)
+30-board/      kicad/ (the CAD project)  layout/ (gerbers, drc, renders, drawings)  fab/<rev>/ (the uploaded package) {{ee,both}}
+40-case/       <set>/ per print target: parts/ (STL of record = the record id in mech)  checks/ (census, DFM = what the gates read)  pictures/  build/ (ignored) {{mech,both}}
+50-kits/       <kit>/ per print target: START_HERE.md  plates/  parts/  sheets/ — mirrored to ~/Downloads/<project>_kits/<kit>/ {{mech,both}}
+60-orders/     PROCUREMENT, PARTS_VERIFICATION, ORDER_<rev>, ARRIVAL_CHECKLIST_<rev>, quotes/<date>/ (fab evidence, frozen)
+70-release/    <rev>/ (the cut)  reports/  collateral/<rev>/  marketing/<rev>/
+80-reviews/    <round>/ (one folder per review round)  REVIEW_HANDOFF
+90-log/        DECISIONS STATUS GATES BLOCKERS KNOWN_ISSUES TRACEABILITY LEARNINGS_LOG ENV — the append logs the generators read and write
+               The tree is the navigation (skill `references/project-yaml.md` §Layout): names are nouns, one current thing per path, records beside
+               what they describe, numbers = the order of the project's life. A re-layout is a decision row + project.yaml `reorg:` +
+               `scripts/reorg_paths.py`; frozen records keep the old paths, `--map` reads them
 ```
 
 ## Conventions

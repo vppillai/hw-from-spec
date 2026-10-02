@@ -109,7 +109,7 @@ generator-owned notes are re-derived, its fab files never rebuilt. URLs into the
 traceability `exists` check on a file that leaves the tree becomes `git show <tag>:<path> | grep -qF '<same string>'`, nothing weakened.
 
 ## 10. The arrival / first-article checklist (`scripts/arrival_checklist.py`) — written at the order, closed as the parts arrive
-`20-design/arrival_checklist.yaml` (`templates/design/arrival_checklist.yaml`) → `60-orders/ARRIVAL_CHECKLIST_rev0.md`; `--check` joins `gates.adopt`
+`20-design/arrival_checklist.yaml` (`templates/20-design/arrival_checklist.yaml`) → `60-orders/ARRIVAL_CHECKLIST_rev0.md`; `--check` joins `gates.adopt`
 the moment the yaml exists (`project.py gates-required`), the markdown is a cut deliverable (`production_cut.yaml` REC-002). Sections in the order of
 the day: **before shipment** (the fab's assembly photos: polarity vs silk, the critical connector's seating, holes that must stay open — a paid
 "confirm production file / placement" option is not guaranteed to raise a dialog, so the photo confirmation is the one human look), **bench checks in
@@ -122,7 +122,7 @@ the parts arrive, never reconstructed afterwards. Every row carries `status` (TO
 window is open) and `evidence`; the script refuses a DONE without evidence, a duplicate id, a status outside the grammar. Closing a row = yaml edit,
 regenerate, commit.
 
-## 11. A frozen SPEC gets an errata file, never an edit (`templates/SPEC_ERRATA.md`)
+## 11. A frozen SPEC gets an errata file, never an edit (`templates/10-spec/SPEC_ERRATA.md`)
 `10-spec/spec_sections/SPEC_ERRATA.md`: one E-row per deviation of the design of record from the frozen text — the SPEC text, the design of record, the
 decision that made the change, where the evidence lives, Status OPEN (owner) → APPROVED <date> → FOLDED <rev> when the next SPEC revision's change
 log cites it; a rejected row is struck through with the reason. It records changes already decided (rule 2); it changes nothing. Readers: the

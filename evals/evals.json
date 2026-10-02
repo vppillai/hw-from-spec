@@ -18,7 +18,7 @@
    "checks": [
     {
      "name": "template GATES.md ships empty approval cells and no release phrase in a cell",
-     "run": "test \"$(grep -c \"_not yet approved_\" \"$SKILL\"/templates/GATES.md)\" -ge 3 && ! grep -q \"| clear to build\" \"$SKILL\"/templates/GATES.md"
+     "run": "test \"$(grep -c \"_not yet approved_\" \"$SKILL\"/templates/90-log/GATES.md)\" -ge 3 && ! grep -q \"| clear to build\" \"$SKILL\"/templates/90-log/GATES.md"
     },
     {
      "name": "CLAUDE.md template: never invent a part number, agents never write gate cells",
@@ -248,15 +248,15 @@
    "checks": [
     {
      "name": "mech scaffold: G0 M1 M2 Case-order Release rows only",
-     "run": "mkdir -p 90-log design && cp \"$SKILL\"/templates/{project.yaml,CLAUDE.md,GATES.md,10-spec/SPEC.md,STATUS.md,KICKOFF_ANSWERS.md,ENV.md,production_cut.yaml} . && cp \"$SKILL\"/templates/design/traceability.yaml design/ && \"$PY\" \"$SKILL\"/scripts/project.py scaffold --scope mech project.yaml CLAUDE.md GATES.md 10-spec/SPEC.md STATUS.md KICKOFF_ANSWERS.md ENV.md production_cut.yaml 20-design/traceability.yaml >/dev/null && G=$(grep -o \"^| \\*\\*[A-Za-z0-9 ()]*\\*\\*\" GATES.md | tr -d \"*|\" | tr -s \" \\n\" \" \") && [ \"$G\" = \" G0 M1 M2 Case order Release \" ]"
+     "run": "mkdir -p 90-log design && cp \"$SKILL\"/templates/{project.yaml,CLAUDE.md,GATES.md,10-spec/SPEC.md,STATUS.md,KICKOFF_ANSWERS.md,ENV.md,production_cut.yaml} . && cp \"$SKILL\"/templates/20-design/traceability.yaml design/ && \"$PY\" \"$SKILL\"/scripts/project.py scaffold --scope mech project.yaml CLAUDE.md GATES.md 10-spec/SPEC.md STATUS.md KICKOFF_ANSWERS.md ENV.md production_cut.yaml 20-design/traceability.yaml >/dev/null && G=$(grep -o \"^| \\*\\*[A-Za-z0-9 ()]*\\*\\*\" GATES.md | tr -d \"*|\" | tr -s \" \\n\" \" \") && [ \"$G\" = \" G0 M1 M2 Case order Release \" ]"
     },
     {
      "name": "mech scaffold: project.yaml has print_targets / case_yaml / mech_record and no board / fab_dfm / board: block",
-     "run": "mkdir -p 90-log design && cp \"$SKILL\"/templates/{project.yaml,CLAUDE.md,GATES.md,10-spec/SPEC.md,STATUS.md,KICKOFF_ANSWERS.md,ENV.md,production_cut.yaml} . && cp \"$SKILL\"/templates/design/traceability.yaml design/ && \"$PY\" \"$SKILL\"/scripts/project.py scaffold --scope mech project.yaml CLAUDE.md GATES.md 10-spec/SPEC.md STATUS.md KICKOFF_ANSWERS.md ENV.md production_cut.yaml 20-design/traceability.yaml >/dev/null && grep -q \"^print_targets:\" project.yaml && grep -q \"case_yaml:\" project.yaml && grep -q \"mech_record\" project.yaml && ! grep -q \"^fab_dfm:\\|^  board:\\|^board:\" project.yaml"
+     "run": "mkdir -p 90-log design && cp \"$SKILL\"/templates/{project.yaml,CLAUDE.md,GATES.md,10-spec/SPEC.md,STATUS.md,KICKOFF_ANSWERS.md,ENV.md,production_cut.yaml} . && cp \"$SKILL\"/templates/20-design/traceability.yaml design/ && \"$PY\" \"$SKILL\"/scripts/project.py scaffold --scope mech project.yaml CLAUDE.md GATES.md 10-spec/SPEC.md STATUS.md KICKOFF_ANSWERS.md ENV.md production_cut.yaml 20-design/traceability.yaml >/dev/null && grep -q \"^print_targets:\" project.yaml && grep -q \"case_yaml:\" project.yaml && grep -q \"mech_record\" project.yaml && ! grep -q \"^fab_dfm:\\|^  board:\\|^board:\" project.yaml"
     },
     {
      "name": "mech scaffold: no PCB-build / software / debug-access kickoff row; no pcbnew / ERC / parts seed / fab package / software manual in CLAUDE, ENV, production_cut",
-     "run": "mkdir -p 90-log design && cp \"$SKILL\"/templates/{project.yaml,CLAUDE.md,GATES.md,10-spec/SPEC.md,STATUS.md,KICKOFF_ANSWERS.md,ENV.md,production_cut.yaml} . && cp \"$SKILL\"/templates/design/traceability.yaml design/ && \"$PY\" \"$SKILL\"/scripts/project.py scaffold --scope mech project.yaml CLAUDE.md GATES.md 10-spec/SPEC.md STATUS.md KICKOFF_ANSWERS.md ENV.md production_cut.yaml 20-design/traceability.yaml >/dev/null && ! grep -q \"^| B[0-9]\\|^| G[0-9]\\|^| I3\" KICKOFF_ANSWERS.md && ! grep -q \"ERC\\|pcbnew\\|parts_seed\" CLAUDE.md ENV.md && ! grep -v \"^#\" production_cut.yaml | grep -q \"{pkg}\\|technician_manual\\|developer_manual\""
+     "run": "mkdir -p 90-log design && cp \"$SKILL\"/templates/{project.yaml,CLAUDE.md,GATES.md,10-spec/SPEC.md,STATUS.md,KICKOFF_ANSWERS.md,ENV.md,production_cut.yaml} . && cp \"$SKILL\"/templates/20-design/traceability.yaml design/ && \"$PY\" \"$SKILL\"/scripts/project.py scaffold --scope mech project.yaml CLAUDE.md GATES.md 10-spec/SPEC.md STATUS.md KICKOFF_ANSWERS.md ENV.md production_cut.yaml 20-design/traceability.yaml >/dev/null && ! grep -q \"^| B[0-9]\\|^| G[0-9]\\|^| I3\" KICKOFF_ANSWERS.md && ! grep -q \"ERC\\|pcbnew\\|parts_seed\" CLAUDE.md ENV.md && ! grep -v \"^#\" production_cut.yaml | grep -q \"{pkg}\\|technician_manual\\|developer_manual\""
     }
    ]
   },
@@ -278,15 +278,15 @@
    "checks": [
     {
      "name": "ee scaffold: G0 G1 G2 Order(board) Release rows only",
-     "run": "mkdir -p 90-log design && cp \"$SKILL\"/templates/{project.yaml,CLAUDE.md,GATES.md,10-spec/SPEC.md,STATUS.md,KICKOFF_ANSWERS.md,ENV.md,production_cut.yaml} . && cp \"$SKILL\"/templates/design/traceability.yaml design/ && \"$PY\" \"$SKILL\"/scripts/project.py scaffold --scope ee project.yaml CLAUDE.md GATES.md 10-spec/SPEC.md STATUS.md KICKOFF_ANSWERS.md ENV.md production_cut.yaml 20-design/traceability.yaml >/dev/null && G=$(grep -o \"^| \\*\\*[A-Za-z0-9 ()]*\\*\\*\" GATES.md | tr -d \"*|\" | tr -s \" \\n\" \" \") && [ \"$G\" = \" G0 G1 G2 Order (board) Release \" ]"
+     "run": "mkdir -p 90-log design && cp \"$SKILL\"/templates/{project.yaml,CLAUDE.md,GATES.md,10-spec/SPEC.md,STATUS.md,KICKOFF_ANSWERS.md,ENV.md,production_cut.yaml} . && cp \"$SKILL\"/templates/20-design/traceability.yaml design/ && \"$PY\" \"$SKILL\"/scripts/project.py scaffold --scope ee project.yaml CLAUDE.md GATES.md 10-spec/SPEC.md STATUS.md KICKOFF_ANSWERS.md ENV.md production_cut.yaml 20-design/traceability.yaml >/dev/null && G=$(grep -o \"^| \\*\\*[A-Za-z0-9 ()]*\\*\\*\" GATES.md | tr -d \"*|\" | tr -s \" \\n\" \" \") && [ \"$G\" = \" G0 G1 G2 Order (board) Release \" ]"
     },
     {
      "name": "ee scaffold: no print_targets / case_yaml / mech_record; board: block present",
-     "run": "mkdir -p 90-log design && cp \"$SKILL\"/templates/{project.yaml,CLAUDE.md,GATES.md,10-spec/SPEC.md,STATUS.md,KICKOFF_ANSWERS.md,ENV.md,production_cut.yaml} . && cp \"$SKILL\"/templates/design/traceability.yaml design/ && \"$PY\" \"$SKILL\"/scripts/project.py scaffold --scope ee project.yaml CLAUDE.md GATES.md 10-spec/SPEC.md STATUS.md KICKOFF_ANSWERS.md ENV.md production_cut.yaml 20-design/traceability.yaml >/dev/null && ! grep -q \"^print_targets:\\|case_yaml:\\|mech_record\" project.yaml && grep -q \"^board:\" project.yaml"
+     "run": "mkdir -p 90-log design && cp \"$SKILL\"/templates/{project.yaml,CLAUDE.md,GATES.md,10-spec/SPEC.md,STATUS.md,KICKOFF_ANSWERS.md,ENV.md,production_cut.yaml} . && cp \"$SKILL\"/templates/20-design/traceability.yaml design/ && \"$PY\" \"$SKILL\"/scripts/project.py scaffold --scope ee project.yaml CLAUDE.md GATES.md 10-spec/SPEC.md STATUS.md KICKOFF_ANSWERS.md ENV.md production_cut.yaml 20-design/traceability.yaml >/dev/null && ! grep -q \"^print_targets:\\|case_yaml:\\|mech_record\" project.yaml && grep -q \"^board:\" project.yaml"
     },
     {
      "name": "ee scaffold: no enclosure / D3 / E3 kickoff row; no case deliverable in production_cut; CLAUDE.md names no census / M1",
-     "run": "mkdir -p 90-log design && cp \"$SKILL\"/templates/{project.yaml,CLAUDE.md,GATES.md,10-spec/SPEC.md,STATUS.md,KICKOFF_ANSWERS.md,ENV.md,production_cut.yaml} . && cp \"$SKILL\"/templates/design/traceability.yaml design/ && \"$PY\" \"$SKILL\"/scripts/project.py scaffold --scope ee project.yaml CLAUDE.md GATES.md 10-spec/SPEC.md STATUS.md KICKOFF_ANSWERS.md ENV.md production_cut.yaml 20-design/traceability.yaml >/dev/null && ! grep -q \"^| C[0-9]\\|^| D3\\|^| E3\" KICKOFF_ANSWERS.md && ! grep -q \"assembly_sop\\|case_stl\\|fea_case\\|case incl\" production_cut.yaml && ! grep -q \"census\\|M1 geometry\" CLAUDE.md"
+     "run": "mkdir -p 90-log design && cp \"$SKILL\"/templates/{project.yaml,CLAUDE.md,GATES.md,10-spec/SPEC.md,STATUS.md,KICKOFF_ANSWERS.md,ENV.md,production_cut.yaml} . && cp \"$SKILL\"/templates/20-design/traceability.yaml design/ && \"$PY\" \"$SKILL\"/scripts/project.py scaffold --scope ee project.yaml CLAUDE.md GATES.md 10-spec/SPEC.md STATUS.md KICKOFF_ANSWERS.md ENV.md production_cut.yaml 20-design/traceability.yaml >/dev/null && ! grep -q \"^| C[0-9]\\|^| D3\\|^| E3\" KICKOFF_ANSWERS.md && ! grep -q \"assembly_sop\\|case_stl\\|fea_case\\|case incl\" production_cut.yaml && ! grep -q \"census\\|M1 geometry\" CLAUDE.md"
     }
    ]
   },
@@ -356,11 +356,11 @@
     },
     {
      "name": "the shipped template yaml obeys the script's rules in every scope and the mech scaffold drops the board sections",
-     "run": "mkdir -p design 70-release && printf 'project: {name: t, scope: mech}\\n' > project.yaml && cp \"$SKILL\"/templates/design/arrival_checklist.yaml design/ && \"$PY\" \"$SKILL\"/scripts/project.py scaffold --scope mech 20-design/arrival_checklist.yaml >/dev/null && sed -i.bak -E 's/\\{\\{[^{}]*\\}\\}/X/g' 20-design/arrival_checklist.yaml && \"$PY\" \"$SKILL\"/scripts/arrival_checklist.py >/dev/null && grep -q '^## D\\.' 60-orders/ARRIVAL_CHECKLIST_rev0.md && ! grep -q '^## B\\.' 60-orders/ARRIVAL_CHECKLIST_rev0.md && { \"$PY\" \"$SKILL\"/scripts/project.py gates-required || true; } | grep -q arrival_checklist"
+     "run": "mkdir -p design 70-release && printf 'project: {name: t, scope: mech}\\n' > project.yaml && cp \"$SKILL\"/templates/20-design/arrival_checklist.yaml design/ && \"$PY\" \"$SKILL\"/scripts/project.py scaffold --scope mech 20-design/arrival_checklist.yaml >/dev/null && sed -i.bak -E 's/\\{\\{[^{}]*\\}\\}/X/g' 20-design/arrival_checklist.yaml && \"$PY\" \"$SKILL\"/scripts/arrival_checklist.py >/dev/null && grep -q '^## D\\.' 60-orders/ARRIVAL_CHECKLIST_rev0.md && ! grep -q '^## B\\.' 60-orders/ARRIVAL_CHECKLIST_rev0.md && { \"$PY\" \"$SKILL\"/scripts/project.py gates-required || true; } | grep -q arrival_checklist"
     },
     {
      "name": "SPEC_ERRATA template ships OPEN rows and SKILL names the rule",
-     "run": "grep -q 'OPEN (owner)' \"$SKILL\"/templates/SPEC_ERRATA.md && grep -q 'A frozen SPEC is never edited' \"$SKILL\"/SKILL.md"
+     "run": "grep -q 'OPEN (owner)' \"$SKILL\"/templates/10-spec/SPEC_ERRATA.md && grep -q 'A frozen SPEC is never edited' \"$SKILL\"/SKILL.md"
     }
    ]
   },
@@ -380,7 +380,7 @@
    "checks": [
     {
      "name": "the optimisation reference carries the flush-into-infill rule with its proof row and the C11 default sets",
-     "run": "grep -q 'flush_into_infill' \"$SKILL\"/references/fdm-print-optimisation.md && grep -q 'HAVE sparse infill' \"$SKILL\"/references/fdm-print-optimisation.md && grep -q 'purge_g' \"$SKILL\"/references/fdm-print-optimisation.md && grep -q '^## 4. Default knob sets' \"$SKILL\"/references/fdm-print-optimisation.md && grep -q 'kickoff.enclosure.optimise' \"$SKILL\"/templates/KICKOFF_ANSWERS.md && grep -q 'optimise:' \"$SKILL\"/templates/project.yaml"
+     "run": "grep -q 'flush_into_infill' \"$SKILL\"/references/fdm-print-optimisation.md && grep -q 'HAVE sparse infill' \"$SKILL\"/references/fdm-print-optimisation.md && grep -q 'purge_g' \"$SKILL\"/references/fdm-print-optimisation.md && grep -q '^## 4. Default knob sets' \"$SKILL\"/references/fdm-print-optimisation.md && grep -q 'kickoff.enclosure.optimise' \"$SKILL\"/templates/10-spec/KICKOFF_ANSWERS.md && grep -q 'optimise:' \"$SKILL\"/templates/project.yaml"
     }
    ]
   },

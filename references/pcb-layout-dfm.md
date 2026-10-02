@@ -191,7 +191,7 @@ reviewer can read); an isolated section (USB isolator, mains) gets a keep-out zo
 - **Zero errors, zero unconnected, zero warnings.** A warning that stays is a **dated waiver row** in `90-log/DECISIONS.md` (rule,
   item, reason, owner) mirrored by a generated accept rule (`enclosedByArea` marker rule area per accepted item, not `insideArea`), so DRC and
   the route-quality gate accept exactly the same copper; a prose waiver the matrix cannot read does not count. The G2 cell and the board order
-  require this bar (`templates/GATES.md`).
+  require this bar (`templates/90-log/GATES.md`).
 - **The canary rule** **[convention]**: one deliberately violated generated rule (a `CANARY` text or a marker area) that must fire **exactly
   once** in every DRC run — proves the rule file was parsed and the classes are enforced (a malformed `.kicad_dru` is silently ignored; a
   stricter rule than the class is invisible to the router and appears afterwards).
