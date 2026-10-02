@@ -167,9 +167,9 @@ reports:
     extra_sources: [design/case.yaml] {{mech,both}}
 gates:
   quiet_regex: 'Fontconfig|wxApp|Debug:'
-  iteration:                                  # scripts/iteration_gate.sh --tier inner [-- <cmd> ...]: the fast loop under the read-only guard
+  iteration:                                  # scripts/iteration_gate.sh [-- <cmd> ...]: the INNER tier (fast loop) under the read-only guard
     inner: []                                  # the project's STANDING fast set (a generator's --check + its grader); a change's own set goes after `--`; empty + no `--` = refused.
-                                              #   standard = `scripts/adopt_gates.sh --no-clone` (make gates), release = `scripts/adopt_gates.sh` (make check): the gates.adopt list below, no second list
+                                              #   the other tiers are existing commands: standard = `scripts/adopt_gates.sh --no-clone` (make gates), release = `scripts/adopt_gates.sh` (make check)
   adopt:                                      # day 1 (G0): selftests + the records that exist; exit 1 on the first failure
     - "$PY scripts/project.py --selftest"
     - "$PY scripts/known_issues.py --selftest"

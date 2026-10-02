@@ -8,10 +8,10 @@ PRESETS ?= $(shell $(PY) scripts/project.py get print_targets 2>/dev/null | sed 
 
 .PHONY: check gates case slice renders pdf record-round status
 
-check:            ## the adopt gates + the clone gate (read-only; the PR check) = scripts/iteration_gate.sh --tier release
+check:            ## the adopt gates + the clone gate (read-only; the PR check) — the RELEASE tier
 	scripts/adopt_gates.sh
 
-gates:            ## the adopt gates without the clone gate = scripts/iteration_gate.sh --tier standard
+gates:            ## the adopt gates without the clone gate — the STANDARD tier (inner: scripts/iteration_gate.sh -- <cmd> ...)
 	scripts/adopt_gates.sh --no-clone
 
 # gen/*.py are the PROJECT's generators (contracts: SKILL.md §10, references/release-and-cut.md §7); a target whose generator is absent says so and skips.
