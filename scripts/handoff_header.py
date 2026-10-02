@@ -75,16 +75,16 @@ def selftest():
     open(f"{d}/30-board/kicad/b/b.kicad_pcb", "wb").write(b"(kicad_pcb (version 1))\r\n\xe9\n")   # CRLF + a non-UTF-8 byte: hashed as bytes
     open(f"{d}/20-design/case.yaml", "w").write("case: {version: v1.0-test}\n")
     md5 = hashlib.md5(open(f"{d}/30-board/kicad/b/b.kicad_pcb", "rb").read()).hexdigest()
-    pkg = f"{d}/30-board/fab/2026-01-01_{md5[:8]}"; os.makedirs(pkg)
+    pkg = f"{d}/30-board/fab/rev0"; os.makedirs(pkg)   # the folder is the revision; board_id.txt carries the md5
     open(f"{pkg}/board_id.txt", "w").write(f"board 30-board/kicad/b/b.kicad_pcb\nmd5 {md5}\ncommit abc1234\nbuilt 2026-01-01\nsegments 12\n")
     run = lambda *a: subprocess.run(["git", *a], cwd=d, capture_output=True, text=True, check=True)
     run("init", "-q"); run("add", "-A"); run("-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "init")
-    other = f"{d}/30-board/fab/2026-01-02_zzzzzzzz"; os.makedirs(other)   # a NEWER package for another board: must not be picked
+    other = f"{d}/30-board/fab/rev1"; os.makedirs(other)   # a NEWER package for another board: must not be picked
     open(f"{other}/board_id.txt", "w").write("board 30-board/kicad/b/b.kicad_pcb\nmd5 0000\ncommit ffff\nbuilt 2026-01-02\n")
     run("add", "-A"); run("-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "pkg2")
     P = Project(f"{d}/project.yaml")
     h = header(P)
-    assert "**MATCH**" in h and "segments 12" in h and "v1.0-test" in h and "**clean**" in h and f"2026-01-01_{md5[:8]}" in h and "zzzzzzzz" not in h, h
+    assert "**MATCH**" in h and "segments 12" in h and "v1.0-test" in h and "**clean**" in h and "`30-board/fab/rev0/`" in h and "rev1" not in h, h
     open(f"{d}/30-board/kicad/b/b.kicad_pcb", "a").write(";edit\n")
     h = header(P)
     assert "DIRTY" in h and "**MATCH**" in h, "a working-copy edit is DIRTY but HEAD still matches the package"
