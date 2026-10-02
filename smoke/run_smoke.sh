@@ -106,7 +106,8 @@ for s in "$SKILL"/scripts/*.py "$SKILL"/scripts/*.sh; do
     print_dfm.py|stability.py) [[ -n "$MESH" ]] || continue ;;
   esac
   case "$s" in
-    *.py) "$PY" "$s" --selftest ;;
+    *.py) "$PY" -W error::SyntaxWarning -m py_compile "$s" || { echo "FAIL: $s compiles with a SyntaxWarning (a stray backslash in a docstring — 0.11.0 row 17)"; exit 1; }
+          "$PY" "$s" --selftest ;;
     *.sh) "$s" --selftest ;;
   esac
 done
