@@ -26,9 +26,13 @@
 ## 0.10.5 — 2026-10-02 — execute every tool selftest in smoke
 
 ### Changed
-- `smoke/run_smoke.sh` executes each generic script's `--selftest`, rather than only
-  verifying that the command is declared. Mesh-dependent selftests remain conditional on
-  the documented mesh environment.
+- `smoke/run_smoke.sh` executes every script's `--selftest` (21 scripts, Python and shell), rather than only verifying that the flag is
+  declared and running eight of them; `print_dfm.py` / `stability.py` run when the mesh libraries are present (the census selftest carries its
+  own pure-core path without them). The two explicit selftest lines the loop made redundant are gone.
+
+### Fixed
+- Eval 17's second check ran `stability.py --selftest` unconditionally and failed the no-mesh smoke path (the check is `needs-mesh:` now, as the
+  runner's skip rule requires).
 
 ### Not done
 - The smoke fixture still skips mesh-dependent execution when its optional mesh stack is
