@@ -6,10 +6,10 @@ The software exists before the hardware does, so it is built to be testable with
 1. **Bring-up tool** (`tools/<board>_bringup.py`): every hardware access behind one adapter (bus, GPIO, identity reads); `--list`, `--dry-run <cmd>`
    (prints the transactions it would do), `--selftest` (fake device from an iterator hooked on the exact read shape the poll uses; time-driven
    paths testable by swapping `time.sleep` for a no-op in `try/finally`). Driver notes (which OS binds a serial driver, what `Access denied` means)
-   in `docs/governance/ENV.md` with the hardware step OPEN until a unit exists.
-2. **Architecture note** (`docs/design/SOFTWARE_ARCHITECTURE.md`): states, safety guards S1…Sn with their record trail, override flags, what each guard
+   in `90-log/ENV.md` with the hardware step OPEN until a unit exists.
+2. **Architecture note** (`20-design/SOFTWARE_ARCHITECTURE.md`): states, safety guards S1…Sn with their record trail, override flags, what each guard
    protects (a fixed cap vs warn/throttle levels — print both at release, or the operator never sees a WARN).
-3. **Criteria as YAML** (`design/test_criteria.yaml`): every test T-nn with limits, the tool reads them; the test plan and the technician manual
+3. **Criteria as YAML** (`20-design/test_criteria.yaml`): every test T-nn with limits, the tool reads them; the test plan and the technician manual
    quote them from the same file (one source). **Who decides**: the agent drafts every limit from the spec with its source in a CC row; the owner
    approves the set (a D row the yaml header cites) before the software refuses or throttles on it; the refuse-vs-warn posture per guard is an
    owner answer at kickoff (`references/kickoff-questionnaire.md` §software).

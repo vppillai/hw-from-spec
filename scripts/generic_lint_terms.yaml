@@ -1,4 +1,4 @@
-# scripts/generic_lint_terms.yaml — what the skill may NOT say outside CHANGELOG.md, docs/retro/ and docs/reviews/ (owner rule: the skill
+# scripts/generic_lint_terms.yaml — what the skill may NOT say outside CHANGELOG.md, docs/retro/ and 80-reviews/ (owner rule: the skill
 # describes the METHOD for any hardware project, never one project). Read by scripts/generic_lint.py; every entry is a Python regex matched
 # per line, case-sensitive unless it starts with (?i). Lines inside a fenced worked example are skipped:
 #   <!-- worked example: begin (source project, 2026) -->  …  <!-- worked example: end -->   (at most ONE block per file)

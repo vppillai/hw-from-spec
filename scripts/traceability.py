@@ -193,7 +193,7 @@ def md(s):
 def build(P, ctx, only=None):
     ty = P.path("traceability_yaml")
     if not os.path.exists(ty):
-        print(f"MISSING: {ty} — seed it from the skill's templates/design/traceability.yaml (one entry per decision row)"); sys.exit(2)
+        print(f"MISSING: {ty} — seed it from the skill's templates/20-design/traceability.yaml (one entry per decision row)"); sys.exit(2)
     spec = yaml.safe_load(open(ty))
     entries = spec.get("entries", [])
     if only:
@@ -277,22 +277,22 @@ def main():
 
 def selftest():
     d = tempfile.mkdtemp(prefix="hwfs_tr_")
-    os.makedirs(f"{d}/docs/governance"); os.makedirs(f"{d}/design"); os.makedirs(f"{d}/kicad/b"); os.makedirs(f"{d}/out")
-    open(f"{d}/project.yaml", "w").write("project: {name: t}\npaths: {board: kicad/b/b.kicad_pcb}\ntools: {python: %s}\n" % sys.executable)
-    open(f"{d}/kicad/b/b.kicad_pcb", "w").write("(kicad_pcb)\n")
-    h = hashlib.md5(open(f"{d}/kicad/b/b.kicad_pcb", "rb").read()).hexdigest()
+    os.makedirs(f"{d}/90-log"); os.makedirs(f"{d}/20-design"); os.makedirs(f"{d}/30-board/kicad/b"); os.makedirs(f"{d}/out")
+    open(f"{d}/project.yaml", "w").write("project: {name: t}\npaths: {board: 30-board/kicad/b/b.kicad_pcb}\ntools: {python: %s}\n" % sys.executable)
+    open(f"{d}/30-board/kicad/b/b.kicad_pcb", "w").write("(kicad_pcb)\n")
+    h = hashlib.md5(open(f"{d}/30-board/kicad/b/b.kicad_pcb", "rb").read()).hexdigest()
     open(f"{d}/out/EVIDENCE.md", "w").write(f"board md5 `{h}`\n")
-    open(f"{d}/design/board.yaml", "w").write("board: {width: 42.0}\nitems: [{ref: J1, x: 3}]\n")
-    open(f"{d}/docs/governance/DECISIONS.md", "w").write("| ID | Date | Status | Topic | P | R |\n|---|---|---|---|---|---|\n| **D-01 (owner)** | d | **APPROVED** | t | p | r |\n"
+    open(f"{d}/20-design/board.yaml", "w").write("board: {width: 42.0}\nitems: [{ref: J1, x: 3}]\n")
+    open(f"{d}/90-log/DECISIONS.md", "w").write("| ID | Date | Status | Topic | P | R |\n|---|---|---|---|---|---|\n| **D-01 (owner)** | d | **APPROVED** | t | p | r |\n"
                                              "| CC-001 | d | OPEN | t | p | r |\n| CC-002 | d | DECIDED (was: OPEN) | t | p | r |\n| CC-003 | d | OPEN | unmapped | p | r |\n")
-    open(f"{d}/design/traceability.yaml", "w").write(f"""
+    open(f"{d}/20-design/traceability.yaml", "w").write(f"""
 stages:
-  schematic: {{reached: [{{type: exists, path: design/board.yaml}}]}}
-  placement: {{requires: [schematic], reached: [{{type: md5_in, path: kicad/b/b.kicad_pcb, file: out/EVIDENCE.md, regex: 'board md5 `([0-9a-f]{{32}})`'}}]}}
+  schematic: {{reached: [{{type: exists, path: 20-design/board.yaml}}]}}
+  placement: {{requires: [schematic], reached: [{{type: md5_in, path: 30-board/kicad/b/b.kicad_pcb, file: out/EVIDENCE.md, regex: 'board md5 `([0-9a-f]{{32}})`'}}]}}
   routing: {{requires: [placement], reached: [{{type: exists, path: out/drc.json}}]}}
 entries:
-  - {{id: D-01.1, source: D-01, requirement: width 42, lands_in: board.yaml, stage: schematic, checks: [{{type: yaml_key, path: design/board.yaml, key: board.width, expected: 42}}, {{type: yaml_key, path: design/board.yaml, key: 'items[ref=J1].x', expected: 3}}]}}
-  - {{id: D-01.2, source: D-01, requirement: routed, lands_in: board, stage: routing, checks: [{{type: grep, path: kicad/b/b.kicad_pcb, regex: segment}}]}}
+  - {{id: D-01.1, source: D-01, requirement: width 42, lands_in: board.yaml, stage: schematic, checks: [{{type: yaml_key, path: 20-design/board.yaml, key: board.width, expected: 42}}, {{type: yaml_key, path: 20-design/board.yaml, key: 'items[ref=J1].x', expected: 3}}]}}
+  - {{id: D-01.2, source: D-01, requirement: routed, lands_in: board, stage: routing, checks: [{{type: grep, path: 30-board/kicad/b/b.kicad_pcb, regex: segment}}]}}
   - {{id: CC-001.1, source: CC-001, requirement: q, lands_in: —, stage: schematic, status: not_included, reason: OPEN owner question}}
   - {{id: CC-002.1, source: CC-002, requirement: q, lands_in: —, stage: schematic, status: not_included, reason: OPEN owner question}}
   - {{id: CC-002.2, source: CC-002, requirement: cmd, lands_in: —, stage: placement, checks: [{{type: command, label: echo, cmd: '{{PY}} -c "print(1+1)"', expect_stdout_regex: '^2$'}}]}}
@@ -308,7 +308,7 @@ entries:
     t2, failed2, *_ = build(P, Ctx(P, tempfile.mkdtemp(), False))
     assert "| CC-002.2 | CC-002 | cmd | — | placement | **PENDING(--no-commands)** | command SKIPPED (--no-commands) |" in t2, t2
     assert failed2 == 1, "--no-commands must not FAIL a command row (the one FAILED is the stale-reason row)"
-    P2 = Project(f"{d}/project.yaml"); P2.cfg["paths"]["traceability_yaml"] = "design/none.yaml"
+    P2 = Project(f"{d}/project.yaml"); P2.cfg["paths"]["traceability_yaml"] = "20-design/none.yaml"
     try:
         build(P2, Ctx(P2, tempfile.mkdtemp(), False)); raise AssertionError("missing yaml must exit with MISSING")
     except SystemExit as e:

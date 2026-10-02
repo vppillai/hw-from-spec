@@ -23,7 +23,8 @@
       (hand-edited = FAIL), carry this VERSION, name an STL whose md5 equals `stl_md5`, carry an empty `fails` list, and every `accepted_fails`
       entry must still carry reason / date / evidence AND still be present in `print_targets.<record.target>.accepted` of the current
       project.yaml (an acceptance deleted from the yaml un-passes the body — "re-asserted every run"). Every STL of the record set under DIR's
-      parent (sibling `stl/*.stl` and the `paths.mech_record` glob) needs a same-md5 census record (blind review 0.8.0 F5).
+      parent (`<set>/parts/*.stl` when DIR is `<set>/checks/census`, else the sibling `stl/`, and the `paths.mech_record` glob) needs a same-md5
+      census record (blind review 0.8.0 F5).
   scripts/thin_wall_census.py --selftest
       pure python core (classification, clustering, wedge band, accepted matching, gating, the pure gate on a temp dir); with numpy + trimesh +
       scipy + shapely installed also the RECALL primitives: a 1.0 plate (WALL FAIL), a 45 deg prism (wedges, band under 1.5, 0 FAIL), a 2.0 plate
@@ -200,6 +201,16 @@ def _project_targets(start):
         d = os.path.dirname(d)
 
 
+
+def parts_dir(records_dir):
+    """The STL set a records dir belongs to: `<set>/parts/` when the records sit in `<set>/checks/<kind>/` (the layout of record), else the
+    sibling `stl/` of the records dir's parent (an older project shape). One rule for every pure gate."""
+    parent = os.path.dirname(os.path.abspath(records_dir.rstrip("/")))
+    if os.path.basename(parent) == "checks":
+        return os.path.join(os.path.dirname(parent), "parts")
+    return os.path.join(parent, "stl")
+
+
 def pure_gate(dirs):
     """See the docstring's --gate-dir entry. -> problem list."""
     bad = []; n = 0
@@ -221,13 +232,13 @@ def pure_gate(dirs):
             # the STL of record is the sibling stl/<basename> of THIS tree, then a project-relative path; an absolute path stored by an older
             # census is honoured only inside this project's root (a gate run from another checkout must never read another tree's STLs)
             root = os.path.abspath(P.root) if P else None
-            cand = [os.path.join(parent, "stl", os.path.basename(stl)),
+            cand = [os.path.join(parts_dir(d), os.path.basename(stl)),
                     os.path.join(root, stl) if root and not os.path.isabs(stl) else "",
                     os.path.join(os.path.dirname(jp), stl) if not os.path.isabs(stl) else "",
                     stl if os.path.isabs(stl) and (root is None or os.path.abspath(stl).startswith(root + os.sep)) else ""]
             path = next((p for p in cand if p and os.path.exists(p)), None)
             if path is None:
-                bad.append(f"{jp}: STL {stl!r} not found"); continue
+                bad.append(f"{jp}: STL {stl!r} not found — expected at {os.path.join(parts_dir(d), os.path.basename(stl))} (the records sit in {d.rstrip('/')}/)"); continue
             have.add(r.get("stl_md5"))
             if md5_of(path) != r.get("stl_md5"):
                 bad.append(f"{jp}: census of {str(r.get('stl_md5', '?'))[:8]} but the STL of record is {md5_of(path)[:8]} — rerun the census")
@@ -239,9 +250,10 @@ def pure_gate(dirs):
                     bad.append(f"{jp}: accepted entry without reason / date / evidence: {a.get('fail', '?')[:80]}")
                 elif cur is not None and not any(all(str(x.get(k)) == str(a.get(k)) for k in ("reason", "date", "evidence")) for x in cur):
                     bad.append(f"{jp}: accepted entry no longer in print_targets.{r['target']}.accepted ({a.get('fail', '?')[:60]}) — the acceptance was withdrawn; the FAIL stands, rerun")
-        stls = set(glob.glob(os.path.join(parent, "stl", "*.stl")))
+        set_root = os.path.dirname(parts_dir(d))
+        stls = set(glob.glob(os.path.join(parts_dir(d), "*.stl")))
         if P and P.get("paths.mech_record"):
-            stls |= {f for f in glob.glob(os.path.join(P.root, P.get("paths.mech_record"))) if os.path.abspath(f).startswith(parent + os.sep)}
+            stls |= {f for f in glob.glob(os.path.join(P.root, P.get("paths.mech_record"))) if os.path.abspath(f).startswith(set_root + os.sep)}
         for f in sorted(stls):
             if md5_of(f) not in have:
                 bad.append(f"{f}: body of the record set without a census record of its md5 (run thin_wall_census.py --target <t> --json {d}/<piece>.json on it)")
@@ -398,7 +410,7 @@ def selftest():
     assert opps[0]["kind"] == "wall" and any(f.startswith("OPP 0.4") for f in gate_rows([], [], 1.2, 1.2, opps=opps)[0]), "a 0.4 root between opposing faces FAILs"
     assert gate_rows([], [], 1.2, 1.2, opps=opp_rows([(0, 0, 0)], [1.1], [1]))[0] and gate_rows([], [], 1.6, 1.0, opps=opp_rows([(0, 0, 0)], [1.1], [1]))[0] == [], "a void-kind opposing pair gates at the void gate"
     # accepted list: same class + covering bbox + reason / date / evidence moves the FAIL; a bare entry does not
-    acc = [dict(**{"class": "wall"}, bbox=[-1, -1, -1, 30, 30, 1], reason="vendor accepted in writing", date="2026-09-28", evidence="docs/quotes/2026-09-28/mail.eml")]
+    acc = [dict(**{"class": "wall"}, bbox=[-1, -1, -1, 30, 30, 1], reason="vendor accepted in writing", date="2026-09-28", evidence="60-orders/quotes/2026-09-28/mail.eml")]
     f, a = gate_rows(rows, [], 1.2, 1.2, accepted=acc)
     assert f == [] and len(a) == 1 and a[0]["evidence"].endswith(".eml"), (f, a)
     assert gate_rows(rows, [], 1.2, 1.2, accepted=[dict(acc[0], evidence="")])[0], "an entry without evidence does not count"
@@ -436,7 +448,8 @@ def selftest():
             put(dict(good, stl=os.path.join(other, "stl", "p_body.stl"))); assert pure_gate([C]) == [], "the sibling stl/ of the record set wins over a stored absolute path"
             put(dict(good, stl=os.path.join(other, "stl", "p_body.stl"), stl_md5=md5_of(os.path.join(other, "stl", "p_body.stl"))))
             assert any("STL of record" in b for b in pure_gate([C])), "a record of another tree's body fails against this tree's STL"
-            put(dict(good, stl=os.path.join(other, "stl", "zz_body.stl"))); assert any("not found" in b for b in pure_gate([C])), "an absolute path outside the tree with no sibling is not found"
+            put(dict(good, stl=os.path.join(other, "stl", "zz_body.stl")))
+            nf = [b for b in pure_gate([C]) if "not found" in b]; assert nf and f"expected at {os.path.join(d, 'stl', 'zz_body.stl')} (the records sit in {C}/)" in nf[0], ("a missing STL names its expected path", nf)
         put(dict(good, stl="stl/p_body.stl")); assert pure_gate([C]) == [], "a project-relative path resolves from the record set's parent"
         put(good)
         assert any("no census JSON" in b for b in pure_gate([os.path.join(d, "none")]))
@@ -486,7 +499,7 @@ def selftest():
         assert r["fails"] and all(f.startswith("OPP") for f in r["fails"]) and abs(float(r["fails"][0].split()[1]) - 0.4) < 0.15, ("the 0.4 root", r["fails"], r["clusters"][:3])
         assert r["frac_below"]["1.0"] < 0.01, "normal rays read the wall (2.0) and the ring (1.3) — the root is invisible to them"
         # the same root accepted with evidence passes and is carried in accepted_fails; the pure gate re-asserts the fields
-        acc = [dict(**{"class": "opp"}, bbox=[0, 8, -1, 3, 12, 41], reason="root widened next round; vendor accepted this batch", date="2026-09-28", evidence="docs/quotes/2026-09-28/DFM_ROUND.md")]
+        acc = [dict(**{"class": "opp"}, bbox=[0, 8, -1, 3, 12, 41], reason="root widened next round; vendor accepted this batch", date="2026-09-28", evidence="60-orders/quotes/2026-09-28/DFM_ROUND.md")]
         assert census(os.path.join(d, "root.stl"), None, 1.2, 1.2, 3.0, 0.02, 0.5, None, None, os.path.join(d, "root.stl.json"), wedge_band=1.5, density=10, accepted=acc) == 0
         r = json.load(open(os.path.join(d, "root.stl.json"))); assert r["fails"] == [] and len(r["accepted_fails"]) >= 1
         for n in ("plate10", "rib", "slit"):

@@ -4,7 +4,7 @@ Rules as MEASURED on printed enclosures (MJF PA12 at a print service + a home FD
 cracked trays, a failed home print and twelve full rebuilds. Everything below is what a project does BEFORE its first quote.
 The chain itself is `references/case-pipeline.md`; the post-order review round is `references/vendor-review.md`; the script is
 `scripts/thin_wall_census.py`; the records are `templates/CENSUS_GATE_ROWS.md` (check-table rows) and `templates/DFM_ROUND.md` (one file per
-quote-page session under `docs/quotes/<date>/`). SLA is §11, CNC is `references/cnc-enclosure.md`.
+quote-page session under `60-orders/quotes/<date>/`). SLA is §11, CNC is `references/cnc-enclosure.md`.
 
 **Every number here carries a tag** — the same four as `references/pcb-layout-dfm.md`: **[checker]** = what the vendor's thin-wall map colours
 (the worked example: JLC3DP, on ~150 mm parts); **[vendor sheet: URL, date]** = a published capability or tolerance; **[physics]** = the material;
@@ -127,7 +127,7 @@ upload, with the verdict → validate → rule-fix → retro loop in `references
   — a FAIL cluster whose bbox lies inside an entry's bbox (1 mm tolerance) with the same class is machine-matched every run and listed as
   ACCEPTED (with the entry's evidence path: the vendor's written acceptance, a first-article measurement); an entry without date / reason /
   evidence does not count. Nothing else moves a FAIL.
-- **A PURE gate in the adopt list**: the census JSON beside each STL carries the STL md5 and the FAIL list; `thin_wall_census.py --gate-dir <dir>`
+- **A PURE gate in the adopt list**: the census JSON in `checks/census/` beside the set's `parts/` carries the STL md5 and the FAIL list; `thin_wall_census.py --gate-dir <dir>`
   proves md5 = the committed STL and 0 unaccepted FAIL without recomputing.
 - Give EVERY preset its FAIL rows on day 1 (the home preset got them after the order; the vendor preset after the crack).
 - Legend lands between debossed strokes are deboss-deep features judged at the red band (`red_line`) and "inside the hull of the lands it
@@ -168,7 +168,7 @@ Every rim and wall reads CLOSED on the single part: no through-slot, notch, key 
    the browser's network log (or re-request the same URL) and accept it only when `parseStatus == 2`. Then `modelAnalysisVO.thinWall` (bool) IS
    the flag; `modelAnalysisVO.previewUrl` opens the heat-map viewer; `volume`, surface area and bbox must equal yours (**same geometry parsed, same
    scale — a 10 × unit error gives a clean map and a wrong quote**). **A DOM reading before parseStatus 2 is invalid**: two "no flag" rows were read
-   that way and the API later said `thinWall: true` on the same file. **Save the RAW JSON response** to `docs/quotes/<date>/<md5-8>_analyze.json`
+   that way and the API later said `thinWall: true` on the same file. **Save the RAW JSON response** to `60-orders/quotes/<date>/<md5-8>_analyze.json`
    with URL, timestamp and response headers — not three fields. **Site-changed branch**: endpoint or field missing → BLOCKERS row, the
    verdict class downgrades to "page popover + screenshot", the round is NOT YET until the API read is restored or the owner accepts the weaker
    evidence in a D row. **Capability-page snapshot** once per round: PDF / print of the vendor's published design rules with the date, so the
@@ -179,7 +179,7 @@ Every rim and wall reads CLOSED on the single part: no through-slot, notch, key 
 4. **Open the heat map on every face** even when `thinWall` is false: inside, sole, iso top, front; record **the legend thresholds as displayed
    that day** — the census turns a colour into a number.
 5. **Save screenshots named `<piece>_<round>_<md5-8>_<material>_heatmap_<face>.png`** plus `quote_page_<round>_flags.png`, keep the uploaded STL
-   beside them, and write `templates/DFM_ROUND.md` into `docs/quotes/<date>/` with the API fields, the browser / UA / signed-in state per body.
+   beside them, and write `templates/DFM_ROUND.md` into `60-orders/quotes/<date>/` with the API fields, the browser / UA / signed-in state per body.
 6. **When a verdict flips between two uploads, diff the meshes before touching the generator**: the r3 tray read RED where the r2 tray had passed —
    same 4088 triangles, every vertex within 7.7e-6 mm. The real difference was a premature DOM read (step 2).
 7. **A coordinator verifies a worker's "no flag" claim itself** (re-request the API for the md5 in the record) before a decision row says PASS.
@@ -198,7 +198,7 @@ at in `print_targets.<t>.max_bbox_for_rule`; test the hypothesis once with the s
   2. *Isolate*: plain-profile probes with OpenSCAD — one 2-D `polygon()` of the wall section extruded to **a short length AND to the full part
      length**, a closed box with ≥ gate end walls, no bosses, **one knob per probe** (`-D`): as-is, rim flush, wall +, undercut filled. Upload each alone.
   3. *Decide*: the first knob whose FULL-LENGTH probe reads false and whose geometry the mating part tolerates becomes the yaml change; the census
-     gets the rule as a named row; the probe folder (`docs/quotes/<date>/<round>/probe/` with `.scad`, `.stl`, PNGs and a probe table) is the
+     gets the rule as a named row; the probe folder (`60-orders/quotes/<date>/<round>/probe/` with `.scad`, `.stl`, PNGs and a probe table) is the
      evidence. A scaled-down copy of the body is not informative (every wall scales); a short probe that passes proves nothing about the full length.
   4. *Record*: the probe table names the method, every probe with its knob and verdict, the rule adopted, and the API re-verification of every body.
 

@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """scripts/erc_gate.py — the ERC gate with a MACHINE-CHECKED accept file instead of a prose waiver table (CLAUDE.md rule 7, SKILL.md §1.2).
 
-  scripts/erc_gate.py out/<board>/erc.json... [--accept design/erc_accept.yaml]
+  scripts/erc_gate.py 30-board/layout/erc.json... [--accept 20-design/erc_accept.yaml]
       Reads the CAD's ERC JSON (KiCad: `kicad-cli sch erc --severity-all --format json`; `sheets[].violations[]` with `severity`, `type`,
       `items[].description`). Exit 1 on: any error; any warning no accept entry covers; an accept entry missing a field (type, ref, reason,
       decision, date); a `decision` that is not a row of paths.decisions or is REJECTED / SUPERSEDED; an accept entry that covers nothing (stale);
       a violation `excluded` in the CAD GUI (a hidden waiver — the yaml is the only path). An entry covers a violation when `type` equals the
       violation type and `ref` (a refdes, net or pin text) occurs in one of its item descriptions.
   scripts/erc_gate.py --selftest
-Accept file (templates/design/erc_accept.yaml; paths.erc_accept): `accepted: [{type, ref, reason, decision, date}]`.
+Accept file (templates/20-design/erc_accept.yaml; paths.erc_accept): `accepted: [{type, ref, reason, decision, date}]`.
 """
 import argparse, json, os, re, sys
 

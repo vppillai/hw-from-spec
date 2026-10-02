@@ -1,7 +1,7 @@
 # agent-ops.md — running many agents on one hardware repo
 
 ## 1. Ownership
-- One coordinator; workers own disjoint FILES (board agent: `kicad/`, `design/<board>_*.yaml`; case agent: `design/case.yaml`, `out/**/case/`; docs
+- One coordinator; workers own disjoint FILES (board agent: `kicad/`, `design/<board>_*.yaml`; case agent: `20-design/case.yaml`, `out/**/case/`; docs
   agent: named docs). The shared record files (DECISIONS, STATUS, LEARNINGS_LOG, KNOWN_ISSUES) are append-only for everyone and committed right after
   each edit.
 - Hand a worker its record ID (`CC-nnn`) with the task; an ID is reserved only when its row is in HEAD; `grep -c '^| CC-nnn '` immediately before writing.
@@ -52,7 +52,7 @@
   scope per specialty, the known/open list with dispositions, the claims of the round (for a delta audit) — the ONLY briefing. Plus the one-paragraph
   waiver list without reasoning so verifiers spend their budget on new defects.
 - Reviewers never read other reviewers' output nor the author's reasoning (name the forbidden file patterns explicitly in the prompt).
-- External models via the Cursor agent CLI: `agent -p --mode ask --model <m> --output-format text "<prompt>"` from the frozen worktree (ask/plan
+- External models via the a second agent CLI agent CLI: `agent -p --mode ask --model <m> --output-format text "<prompt>"` from the frozen worktree (ask/plan
   modes are read-only; `-p` alone has shell access — never for reviews); prompt ≤ ~30 kB naming the files (the model reads them; observed CLI
   limit, unversioned); packet ceiling ≈ 440 kB (observed: the CLI returns 0 bytes above it); rotate two vendors per role; an EMPTY report is a
   failure → retry once with the fallback model, note the substitution, else write the failure into the report and return zero findings. macOS has
@@ -64,7 +64,7 @@
   hardware list into the wrong pocket) that every mesh check had passed; the DFM persona found the seat that rocked. Trust the reviewer's
   measurements, re-measure only where the geometry changed, and state every deviation from a disposition openly in the decision row.
 - **The standard protocol** (SKILL.md §5 is the home; the mechanics live here): reviewers = a second model family where one
-  is available (Opus beside Claude Code, a Cursor CLI model) + the in-session agent, briefed with the artefacts and the role's checklist ONLY — no
+  is available (Opus beside Claude Code, a a second agent CLI CLI model) + the in-session agent, briefed with the artefacts and the role's checklist ONLY — no
   decision log, no earlier reviews; **one verifier WITH record access** (DECISIONS, KNOWN_ISSUES, BLOCKERS, SPEC + `SPEC_ERRATA.md`, the test plan,
   netlist / mesh of record) classifies every finding **CONFIRMED / ALREADY DECIDED (row id; does its number still hold?) / REFUTED / PARTLY /
   UNVERIFIABLE** with a **rev-impact** column (ordered revision / arrival bench check / next revision / record only); the merge writes CC rows and
@@ -112,7 +112,7 @@
 - **Auto-memory (`MEMORY.md` + topic files)** holds what must survive a session: the project's resume pointer (which files to read first), owner
   feedback that changes how to work ("verify live, never cached"; "use parallel agents while I sleep"; "read the rendered image, not the geometry"),
   never project facts that live in the repo (those go to STATUS / DECISIONS). One file per feedback item with the date and the owner's words.
-- **Pause point** (`docs/governance/STATUS.md`, numbered; skeleton at the end of `templates/STATUS.md`): what happened (rows, commits, tag), what is green, an **owner list** (numbered, each
+- **Pause point** (`90-log/STATUS.md`, numbered; skeleton at the end of `templates/90-log/STATUS.md`): what happened (rows, commits, tag), what is green, an **owner list** (numbered, each
   item owner-only: gate cells, payments, replies to the vendor, hardware records) that is struck through with date/time + record path as items
   close, and a **Resume** line (nothing running / what is running with its log path; read order). Written whenever the owner says they are going
   offline and at every tag.

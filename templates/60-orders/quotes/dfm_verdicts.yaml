@@ -1,0 +1,17 @@
+# 60-orders/quotes/dfm_verdicts.yaml — every vendor DFM verdict on a printed body of this project: the VALIDATION set of scripts/print_dfm.py.
+# Append one row per upload the moment the verdict is read (SKILL.md §8.1 step (b)); then `scripts/print_dfm.py --validate`.
+# Nothing here tunes the rules: a vendor FLAG we PASS is a RULE DEFECT (fix the rule from physics, re-validate, run skill_retro.py);
+# a vendor PASS we FLAG is listed with its physical reason in the validation doc's hand-written section.
+#
+# Row schema (every field required except note):
+#   stl       path of the exact file uploaded (relative to the project root; it stays in the tree — the validation reruns it)
+#   md5       first 8 hex of the STL's md5 at upload time (--validate asserts the file still matches)
+#   process   row of 20-design/dfm_processes.yaml the body was quoted under
+#   vendor    who judged it (JLC3DP, Xometry, ... or "<vendor> engineer" when a human reviewed it)
+#   date      YYYY-MM-DD of the verdict
+#   verdict   FLAG | PASS | n/a   (n/a = no reliable verdict: a DOM read before the analysis finished, a file never uploaded)
+#   evidence  path of the saved raw response / screenshot / mail under 60-orders/quotes/<date>/ (the API JSON at parseStatus 2, never a DOM read)
+#   note      what the body is / why it was uploaded (free text)
+verdicts: []
+# - {stl: 40-case/vendor_mjf/parts/tray.stl, md5: 0123abcd, process: jlc_mjf_pa12, vendor: JLC3DP, date: 2026-01-01, verdict: FLAG,
+#    evidence: 60-orders/quotes/2026-01-01/jlc_dfm_r1/tray_0123abcd_analysis.json, note: "tray r1, red along the inner rim"}

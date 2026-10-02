@@ -11,29 +11,29 @@ markers:
   nod_regex: '\(!\)|owner nod'
   placed_regex: '\bPLACED\b'                # an owner row with this word + the package name = a placed order: judged on its frozen stock records
 paths:
-  decisions: docs/governance/DECISIONS.md
-  blockers: docs/governance/BLOCKERS.md
-  gates: docs/governance/GATES.md
-  status: docs/governance/STATUS.md
-  known_issues: docs/governance/KNOWN_ISSUES.md
-  test_plan: docs/design/TEST_PLAN.md
-  traceability_yaml: design/traceability.yaml
-  traceability_out: docs/governance/TRACEABILITY.md
-  board: kicad/smoke/smoke.kicad_pcb          # here a stub; a real project points at the generated board
-  netlist: out/smoke.xml
-  fab_dir: out/fab                            # <date>_<md5-8>/board_id.txt names the board of record
-  release_dir: docs/release
-  collateral_dir: docs/release/collateral
-  case_yaml: design/case.yaml
+  decisions: 90-log/DECISIONS.md
+  blockers: 90-log/BLOCKERS.md
+  gates: 90-log/GATES.md
+  status: 90-log/STATUS.md
+  known_issues: 90-log/KNOWN_ISSUES.md
+  test_plan: 20-design/TEST_PLAN.md
+  traceability_yaml: 20-design/traceability.yaml
+  traceability_out: 90-log/TRACEABILITY.md
+  board: 30-board/kicad/smoke/smoke.kicad_pcb          # here a stub; a real project points at the generated board
+  netlist: 30-board/layout/smoke.xml
+  fab_dir: 30-board/fab                            # <rev>/board_id.txt names the board of record (the folder is the revision, the md5 inside)
+  release_dir: 70-release
+  collateral_dir: 70-release/collateral
+  case_yaml: 20-design/case.yaml
 tools:
   python: .venv/bin/python                    # the scripts' interpreter (pyyaml); the smoke run symlinks the skill venv here
   kicad_cli: kicad-cli                        # not called by the smoke run
   kicad_python: python3
 fab_dfm:                                      # the board's fab-DFM mirror (references/fab-dfm.md); `dfm:` is the old spelling
-  thresholds: design/dfm_thresholds.json      # copied from the fab's viewer with source + date
-  items: out/dfm_items.json                   # written by the project's measurer (here: a hand-written fixture)
-  accept: design/board.yaml                   # key dfm_accepted: [{check, refs, reason, date, evidence}]
-  report: out/dfm.json                        # written on every plain run; `dfm_check.py --check` compares
+  thresholds: 20-design/dfm_thresholds.json      # copied from the fab's viewer with source + date
+  items: 30-board/layout/dfm_items.json                   # written by the project's measurer (here: a hand-written fixture)
+  accept: 20-design/board.yaml                   # key dfm_accepted: [{check, refs, reason, date, evidence}]
+  report: 30-board/layout/dfm.json                        # written on every plain run; `dfm_check.py --check` compares
   bar: {open: 0, warnings_fail: true, accepted_requires: [reason, date, evidence]}   # zero / zero / no waivers (owner D-01 in a real project)
 print_targets:                                # FIXTURE targets for the smoke run (references/dfm-printed-enclosure.md; the census reads these, never a script constant)
   vendor_mjf: {vendor: JLC3DP, process: MJF, material: PA12-HP, wall_gate: 1.2, void_gate: 1.2, red_line: 0.5, design_margin: 0.1, wedge_band: 1.5,
@@ -42,33 +42,33 @@ print_targets:                                # FIXTURE targets for the smoke ru
   home_fdm: {vendor: home, process: FDM, material: PLA, printer: "0.4 nozzle, 0.20 mm", wall_gate: 1.6, rib_gate: 1.2, void_gate: 1.0, red_line: 0.5,
              design_margin: 0.0, wedge_band: 1.5, tolerance: 0.2, samples_per_mm2: 10, post_process: none, rating: {ul94: unrated, tg_c: 55, source: TDS}, accepted: []}
 reorg:                                        # the layout of record; `scripts/reorg_paths.py --check` = no old literal, no dangling docs/ path
-  moves: {docs/DECISIONS.md: docs/governance/DECISIONS.md, docs/STATUS.md: docs/governance/STATUS.md, docs/GATES.md: docs/governance/GATES.md,
-          docs/BLOCKERS.md: docs/governance/BLOCKERS.md, docs/KNOWN_ISSUES.md: docs/governance/KNOWN_ISSUES.md, docs/TRACEABILITY.md: docs/governance/TRACEABILITY.md,
-          docs/TEST_PLAN.md: docs/design/TEST_PLAN.md}
-  frozen: [out/fab/]                          # an uploaded package is a record: never rewritten, never checked
-  no_existence: ['.py', '.js', docs/governance/DECISIONS.md, docs/governance/STATUS.md, docs/governance/BLOCKERS.md, docs/governance/KNOWN_ISSUES.md, docs/reviews/]   # records cite history (a blocker names the note it could not write); code carries fixture strings
-  allow_missing: ['^docs/production/[0-9a-f]{8}/']
-  rewrites_record: docs/reviews/REORG_REWRITES.txt
+  moves: {docs/DECISIONS.md: 90-log/DECISIONS.md, docs/STATUS.md: 90-log/STATUS.md, docs/GATES.md: 90-log/GATES.md,
+          docs/BLOCKERS.md: 90-log/BLOCKERS.md, docs/KNOWN_ISSUES.md: 90-log/KNOWN_ISSUES.md, docs/TRACEABILITY.md: 90-log/TRACEABILITY.md,
+          docs/TEST_PLAN.md: 20-design/TEST_PLAN.md}
+  frozen: [30-board/fab/]                          # an uploaded package is a record: never rewritten, never checked
+  no_existence: ['.py', '.js', 90-log/DECISIONS.md, 90-log/STATUS.md, 90-log/BLOCKERS.md, 90-log/KNOWN_ISSUES.md, 80-reviews/]   # records cite history (a blocker names the note it could not write); code carries fixture strings
+  allow_missing: ['^70-release/rev[0-9]+/']
+  rewrites_record: 80-reviews/REORG_REWRITES.txt
 assembly_guide:                               # scripts/assembly_guide.py; the smoke's renderer is a stub that writes the camera + defs into the file
-  yaml: design/assembly_guide.yaml
-  steps_md: out/ASSEMBLY.md
-  scad: out/case.scad
-  out_dir: docs/production/{MD5_8}
+  yaml: 20-design/assembly_guide.yaml
+  steps_md: 40-case/mjf_case/ASSEMBLY.md
+  scad: 40-case/mjf_case/build/case.scad
+  out_dir: 70-release/{REV}
   doc_name: VISUAL_ASSEMBLY_GUIDE.md
   size: '640,480'
   render_cmd: "printf 'PNG-stub %s %s' {CAMERA} {DEFS} > {OUT}"
 renders:
-  - {name: panel_top, kind: copy, src: "out/fab/*_{MD5_8}/panel_top.png"}
-  - {name: case_iso, kind: copy, src: "out/case/{CASE_VERSION}/iso.png", sub: case}
+  - {name: panel_top, kind: copy, src: "30-board/fab/{REV}/panel_top.png"}
+  - {name: case_iso, kind: copy, src: "40-case/mjf_case/pictures/iso.png", sub: case}
 reports:
   - name: PCB_DESIGN_REPORT
     title: smoke PCB design report
     sections: [banner, identity, decisions, known_issues, package, traceability, dfm, renders, inventory]
-    extra_sources: [design/board.yaml, design/parts.yaml]
+    extra_sources: [20-design/board.yaml, 20-design/parts.yaml]
   - name: CASE_DESIGN_REPORT
     title: smoke case design report
     sections: [banner, identity, decisions, renders, inventory]
-    extra_sources: [design/case.yaml]
+    extra_sources: [20-design/case.yaml]
 gates:
   quiet_regex: 'Fontconfig|wxApp'
   adopt:                                      # selftests first, then the pure --check gates; exit 1 on the first failure
@@ -98,4 +98,4 @@ gates:
     - "$PY scripts/release_report.py --check"
   regen:                                      # `clone_gate.sh --regen`: rewrite the reports from HEAD inputs only
     - "$PY scripts/release_report.py"
-  regen_copy_back: [docs/release/PCB_DESIGN_REPORT.md, docs/release/CASE_DESIGN_REPORT.md]
+  regen_copy_back: [70-release/reports/PCB_DESIGN_REPORT.md, 70-release/reports/CASE_DESIGN_REPORT.md]

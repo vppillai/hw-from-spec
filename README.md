@@ -4,7 +4,7 @@ A Claude Code skill that takes a board, an enclosure, or both from a written spe
 owner-gated phases, generated-only artefacts, a zero-warning manufacturability bar, blind reviews with
 a record-reading verifier, and a retro that folds every project's learnings back into the skill.
 
-`version 0.10.7` · MIT · `SKILL.md` is the procedure; everything else is reference, template or tool.
+`version 0.11.0` · MIT · `SKILL.md` is the procedure; everything else is reference, template or tool.
 What changed per version: `CHANGELOG.md` (its first section is the current state).
 
 ## Quick start
@@ -66,7 +66,7 @@ Exit 0 = PASS, 1 = FLAG with one line per rule (measured | limit | where | fix):
 
 Requirements: git, bash ≥ 3.2, Python ≥ 3.11, `uv` (or `python3 -m venv` + `pip`); `pyyaml` for every
 script, `numpy trimesh scipy shapely rtree networkx mapbox-earcut embreex` for the mesh scripts (`matplotlib`
-for heat-map PNGs). CAD, OpenSCAD, FEA and browser tooling belong to the project (`docs/governance/ENV.md`).
+for heat-map PNGs). CAD, OpenSCAD, FEA and browser tooling belong to the project (`90-log/ENV.md`).
 The skill lives in ONE place inside a project: a submodule at `vendor/hw-from-spec` with a relative
 symlink `scripts -> vendor/hw-from-spec/scripts`; a personal clone under `~/.claude/skills/` is for
 skill discovery only, never a project's scripts source.
@@ -105,39 +105,41 @@ vendor/hw-from-spec/smoke/run_smoke.sh
 ```
 
 ## Use in a new project
+   A selftest that exits 2 says SKIP: the mesh libraries are absent in that venv (`print_dfm.py`, `stability.py`); every other
+   non-zero exit is a failure.
 
 4. Copy the templates and resolve the scope (`T` is the templates folder); `project.py slots` counts
 the unfilled `{{…}}` slots per file — CLAUDE.md / project.yaml / records now, SPEC + KICKOFF_ANSWERS
 after the kickoff and the spec; 0 before the G0 ask:
 
 ```sh
+A0=both                                  # your kickoff A0 answer: ee | mech | both
 T=vendor/hw-from-spec/templates
-mkdir -p docs/governance docs/design docs/parts docs/reviews docs/release docs/quotes
-mkdir -p docs/production design
-cp "$T/CLAUDE.md" "$T/.gitignore" "$T/project.yaml" "$T/SPEC.md" .
-cp "$T"/{DECISIONS,STATUS,GATES,KNOWN_ISSUES}.md docs/governance/
-cp "$T"/{LEARNINGS_LOG,BLOCKERS,ENV,KICKOFF_ANSWERS}.md docs/governance/
-cp "$T/PARTS_VERIFICATION.md" docs/parts/
-cp "$T/TEST_PLAN.md" "$T/design/VERIFY.md" docs/design/
-cp -R "$T/datasheet_notes" docs/
-cp "$T/design/traceability.yaml" "$T/production_cut.yaml" design/
-cp "$T/design/dfm_processes.yaml" design/                # mech, both
-cp "$T/docs/quotes/dfm_verdicts.yaml" docs/quotes/       # mech, both
-cp "$T/design/erc_accept.yaml" design/                  # ee, both
-cp "$T/design/SOFTWARE_ARCHITECTURE.md" docs/design/     # ee, both
-cp "$T/parts/PROCUREMENT.md" docs/parts/                 # mech, both
-cp "$T/ci/Makefile" .                       # make check / case / slice / record-round
-scripts/project.py scaffold --scope "$A0" CLAUDE.md SPEC.md project.yaml \
-  docs/governance/*.md design/*.yaml                  # A0=ee | mech | both
-scripts/project.py slots                              # the count to drive to 0 (fill
-```                                                   #  project.yaml before any reader runs)
+mkdir -p 00-now 10-spec 20-design 60-orders/quotes 70-release 80-reviews 90-log
+[ "$A0" != mech ] && mkdir -p 30-board
+[ "$A0" != ee ]   && mkdir -p 40-case 50-kits
+cp "$T/CLAUDE.md" "$T/.gitignore" "$T/project.yaml" .
+cp "$T"/10-spec/*.md 10-spec/ && cp -R "$T/10-spec/datasheet_notes" 10-spec/
+cp "$T"/90-log/*.md 90-log/
+cp "$T/60-orders/PARTS_VERIFICATION.md" 60-orders/
+cp "$T"/20-design/{TEST_PLAN,VERIFY}.md 20-design/
+cp "$T/20-design/traceability.yaml" "$T/production_cut.yaml" 20-design/
+[ "$A0" != ee ]   && cp "$T/60-orders/PROCUREMENT.md" 60-orders/ \
+                  && cp "$T/60-orders/quotes/dfm_verdicts.yaml" 60-orders/quotes/ \
+                  && cp "$T/20-design/dfm_processes.yaml" 20-design/
+[ "$A0" != mech ] && cp "$T/20-design/erc_accept.yaml" 20-design/ \
+                  && cp "$T/20-design/SOFTWARE_ARCHITECTURE.md" 20-design/
+.venv/bin/python scripts/project.py scaffold --scope "$A0" CLAUDE.md project.yaml \
+    10-spec/*.md 20-design/*.md 20-design/*.yaml 60-orders/*.md 90-log/*.md
+.venv/bin/python scripts/project.py slots     # unfilled {{…}} per file: fill them now
+```
 
 5. Follow `SKILL.md` §0: the kickoff questionnaire, ENV record (`scripts/project.py env` prints the
 host row), first records, adopt gates, then G0. Fill slots that sit inside a path unquoted
-(`kicad/sensor/sensor.kicad_pcb`). `templates/design/arrival_checklist.yaml` is copied at the order (SKILL §10.1). Scripts find `project.yaml` by walking up from the
+(`30-board/kicad/sensor/sensor.kicad_pcb`). `templates/20-design/arrival_checklist.yaml` is copied at the order, never on day 1 (SKILL §10.1; its `--check` line joins the gates the same commit). Scripts find `project.yaml` by walking up from the
 cwd (or `HWFS_PROJECT=…`); the shell gates print which interpreter they use. Never put the submodule
 AT `scripts/`. Project-specific generators (schematic builder, placement, routing, export, fab
-package, panel, silk, case, drawings, FEA measurer) stay in the project's `gen/`, read constants
+package, panel, silk, case, drawings, FEA measurer, the kit writers: kit_facts, slicer wrapper, START_HERE, the Downloads mirror) stay in the project's `gen/`, read constants
 through `scripts/project.py`, and join `gates.adopt` with their `--selftest` and `--check`.
 
 ## Fast, safe iterations
@@ -157,7 +159,7 @@ product, PCB build, enclosure architecture, the manufacturability bar, verificat
 software, release, identity, slicer optimisation — in up to twelve `AskUserQuestion` batches of at
 most four, each question with a marked RECOMMENDED answer and the alternatives' consequences. Answers
 become owner rows in `DECISIONS.md`, values in `project.yaml` (`project.py kickoff --check` proves they
-landed) and `docs/governance/KICKOFF_ANSWERS.md`. Detail: `references/kickoff-questionnaire.md`, `SKILL.md` §0.1.
+landed) and `10-spec/KICKOFF_ANSWERS.md`. Detail: `references/kickoff-questionnaire.md`, `SKILL.md` §0.1.
 
 ## The retro loop
 

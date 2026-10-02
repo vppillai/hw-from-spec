@@ -97,7 +97,7 @@ def build(P, section1):
     L += ["", "## 4. UNVERIFIED markers in the test plan", "", "| Line | Marker | Context |", "|---|---|---|"]
     tp, marks = P.path("test_plan"), "|".join(map(re.escape, P.get("markers.unverified")))
     if not (tp and os.path.exists(tp)):
-        print(f"WARNING: test plan {P.get('paths.test_plan')} missing — §4 is empty, not verified (seed it from templates/TEST_PLAN.md)", file=sys.stderr)
+        print(f"WARNING: test plan {P.get('paths.test_plan')} missing — §4 is empty, not verified (seed it from templates/20-design/TEST_PLAN.md)", file=sys.stderr)
     if tp and os.path.exists(tp):
         for n, line in enumerate(open(tp, encoding="utf-8"), 1):
             m = re.search(marks, line)
@@ -128,24 +128,24 @@ def run(P, check):
 
 def selftest():
     d = tempfile.mkdtemp(prefix="hwfs_ki_")
-    os.makedirs(f"{d}/docs/governance"); os.makedirs(f"{d}/docs/design")
+    os.makedirs(f"{d}/90-log"); os.makedirs(f"{d}/20-design")
     open(f"{d}/project.yaml", "w").write("project: {name: t}\n")
-    open(f"{d}/docs/governance/DECISIONS.md", "w").write("| ID | Date | Status | Topic | Proposal | Reason |\n|---|---|---|---|---|---|\n"
+    open(f"{d}/90-log/DECISIONS.md", "w").write("| ID | Date | Status | Topic | Proposal | Reason |\n|---|---|---|---|---|---|\n"
         "| **D-01 (owner)** | 2026-01-01 | **APPROVED** | a | b | c |\n| CC-001 | 2026-01-01 | OPEN (owner question) | q | p | r |\n"
         "| CC-002 | 2026-01-01 | APPLIED (!) owner look wanted | nod | p | r |\n| CC-003 | 2026-01-01 | DECIDED (provisional) | prov | p \\| pipe | r |\n"
         "| CC-006 | 2026-01-01 | **APPROVED** — owner nod given 01-02 (was: APPLIED (!)) | done | p | r |\n")
-    open(f"{d}/docs/governance/BLOCKERS.md", "w").write("| ID | Date | Item | Tried | Result | Impact |\n|---|---|---|---|---|---|\n| B-01 | 2026-01-01 | ds | curl | 403 | guess not |\n")
-    open(f"{d}/docs/design/TEST_PLAN.md", "w").write("legend: **UNVERIFIED** = not measured\nT1 UNVERIFIED value\n")
-    open(f"{d}/docs/governance/KNOWN_ISSUES.md", "w").write("<!-- hand-curated: begin -->\n## 1. x\n| Symptom | Cause | ID |\n|---|---|---|\n| s | c | CC-001 |\n<!-- hand-curated: end -->\n")
+    open(f"{d}/90-log/BLOCKERS.md", "w").write("| ID | Date | Item | Tried | Result | Impact |\n|---|---|---|---|---|---|\n| B-01 | 2026-01-01 | ds | curl | 403 | guess not |\n")
+    open(f"{d}/20-design/TEST_PLAN.md", "w").write("legend: **UNVERIFIED** = not measured\nT1 UNVERIFIED value\n")
+    open(f"{d}/90-log/KNOWN_ISSUES.md", "w").write("<!-- hand-curated: begin -->\n## 1. x\n| Symptom | Cause | ID |\n|---|---|---|\n| s | c | CC-001 |\n<!-- hand-curated: end -->\n")
     P = Project(f"{d}/project.yaml")
     assert run(P, False) == 0 and run(P, True) == 0
-    t = open(f"{d}/docs/governance/KNOWN_ISSUES.md").read()
+    t = open(f"{d}/90-log/KNOWN_ISSUES.md").read()
     assert "| CC-001 | OPEN (owner question) |" in t and "| CC-002 | APPLIED (!)" in t and "**CC-003**" in t and "| B-01 |" in t and "| 2 | UNVERIFIED |" in t
     assert "| 1 | UNVERIFIED |" not in t, "legend line must be skipped"
     assert "| CC-006 |" not in t.split("### 2.1")[1].split("## 3.")[0], "an APPROVED row that mentions the nod is not a pending nod"
-    open(f"{d}/docs/governance/DECISIONS.md", "a").write("| CC-004 | 2026-01-01 | OPEN | new | p | r |\n")
+    open(f"{d}/90-log/DECISIONS.md", "a").write("| CC-004 | 2026-01-01 | OPEN | new | p | r |\n")
     assert run(P, True) == 1, "must be STALE after a new row"
-    open(f"{d}/docs/governance/DECISIONS.md", "a").write("| CC-005 | bad row |\n")
+    open(f"{d}/90-log/DECISIONS.md", "a").write("| CC-005 | bad row |\n")
     try:
         run(P, True); raise AssertionError("cell-count guard missing")
     except SystemExit as e:

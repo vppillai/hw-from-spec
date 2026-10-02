@@ -4,3 +4,4 @@ __pycache__/
 .DS_Store
 vendor/hw-from-spec/.venv/
 out/scratch/
+40-case/*/build/

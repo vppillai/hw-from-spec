@@ -1,6 +1,6 @@
 # CHANGELOG — hw-from-spec
 
-## Current state (0.10.7) — read this instead of replaying the entries below
+## Current state (0.11.0) — read this instead of replaying the entries below
 
 - **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
   twelve batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
@@ -14,6 +14,10 @@
   `thin_wall_check` (quick look + pinch), `stability` (CoG vs support hull at the worst pose), `scad_lint`, `step2stl`, `arrival_checklist`, `skill_retro` (+ `--apply`), `jobs.sh` (the heavy-job
   pool), `adopt_gates.sh`, `clone_gate.sh`, `doc_voice_lint`, `generic_lint`. Mesh stack: `numpy trimesh scipy shapely rtree networkx
   mapbox-earcut embreex` (the Embree ray engine keeps a census in seconds under 1 GB).
+- **Layout** (`references/project-yaml.md` §Layout): ten numbered folders in the order of the project's life — `00-now` (five generated answer
+  pages) `10-spec` `20-design` `30-board` `40-case` `50-kits` `60-orders` `70-release` `80-reviews` `90-log` — plus the machinery (`gen/ scripts/
+  tools/ lib/ Makefile CLAUDE.md`). Names are nouns (a revision is `rev0`, a kit is its print target, the hash lives inside the folder), one current
+  thing per path, records beside what they describe; every path is a `paths:` key with these defaults; the templates folder mirrors the tree.
 - **Templates**: CLAUDE.md, project.yaml (kickoff / board / print_targets / fab_dfm / arrival_checklist / host), SPEC + VERIFY + SPEC_ERRATA,
   the governance records, PARTS_VERIFICATION + PROCUREMENT, TEST_PLAN, REVIEW_HANDOFF, DFM_ROUND, VENDOR_REVIEW_RECORD, CENSUS_GATE_ROWS,
   design/{traceability, erc_accept, dfm_processes, arrival_checklist}.yaml, production_cut.yaml, datasheet note, G1 pack, CI workflows + Makefile.
@@ -23,7 +27,56 @@
 - **Checks**: three read-only tiers — inner `scripts/iteration_gate.sh [-- <cmd> ...]` (a change's `--check` + grader set), standard
   `scripts/adopt_gates.sh --no-clone` (`make gates`), release `scripts/adopt_gates.sh` (`make check`); `smoke/run_smoke.sh` runs every script selftest, the rule greps, the enforcement negatives, both lints
   and the evals; 17 evals
-  with mechanical checks, `docs/reviews/INDEX.md` and `docs/retro/INDEX.md` list every review and retro.
+  with mechanical checks, `80-reviews/INDEX.md` and `docs/retro/INDEX.md` list every review and retro.
+
+## 0.11.0 — 2026-10-02 — the navigable layout is the default: a numbered lifecycle tree, revision-named folders, the five answer pages of `00-now/`, the kit of record, the case set shape
+
+Spec: `docs/superpowers/specs/2026-10-02-navigable-layout-design.md`; plan: `docs/superpowers/plans/2026-10-02-navigable-layout-skill.md`
+(owner: "a better organization of the output from the skill that is intuitive to navigate … without a README").
+
+### Added
+- **`scripts/now_pages.py`**: `00-now/WHERE_THINGS_STAND.md`, `BLOCKED_ON_OWNER.md`, `WHAT_TO_PRINT.md`, `WHAT_TO_ORDER.md`,
+  `WHAT_TO_CHECK_ON_ARRIVAL.md` — each the answer to its own name, derived from the gates, decisions, status log, blockers, the arrival yaml, the
+  procurement table and the kit plate sidecars; `--check` fails the gates when a page is stale (template `gates.adopt`, smoke step 5e, the record
+  chain in `release-and-cut.md` §3.1, eval 18). Scope-aware: an ee project's print page says so; an empty project says "nothing" on every page.
+- **`project.revision`** (`Project.rev()`, default `rev0`) names the fab package (`30-board/fab/<rev>/`), the cut (`70-release/<rev>/`),
+  collateral and marketing folders; the record hash stays inside each (`board_id.txt`, `RENDERS.md`, `MANIFEST`); packages are still selected by
+  the md5 in `board_id.txt`, never by a folder name or an mtime.
+- **The kit of record** (`references/print-kit.md` §1): `50-kits/<kit>/` per print target with `START_HERE.md` at the root, `plates/` (+ `.3mf.json`
+  sidecars with `print_time_s`, `filament_g`, `objects`, optional `filament_changes`, `proves`, `order`), `parts/`, `sheets/`; mirrored
+  byte-identical to `~/Downloads/<project>_kits/<kit>/`; superseded kit folders reduced to a one-line `SUPERSEDED.md`.
+- **The case set shape** (`references/case-pipeline.md` Chain): `40-case/<set>/` per print target with `parts/` (STL of record), `checks/` (the only
+  place the census / print-DFM / interference gates look), `pictures/`, `build/` (gitignored, `templates/.gitignore`).
+- `templates/project.yaml`: the commented `paths:` block listing every default; `templates/CLAUDE.md`: the tree as the project's map.
+
+### Changed
+- `scripts/project.py` `DEFAULTS["paths"]`: every default under the numbered tree (`decisions: 90-log/DECISIONS.md`, `mech_record:
+  40-case/*/parts/*.stl`, `kits_dir: 50-kits`, `reports_dir: 70-release/reports`, …); an explicit key still wins unchanged.
+- Every path SKILL.md, README, the references, the templates, the scripts' fixtures, the smoke and the evals spell is the new tree (the sweep
+  table is in the plan, Task 3); the templates folder mirrors it (`templates/10-spec/`, `20-design/`, `60-orders/`, `90-log/`); the design
+  reports are written to `reports_dir`.
+- `scripts/reorg_paths.py`: whole-directory moves with frozen content, `--map` for sub-paths; the `reorg:` reference carries the migration from
+  a `docs/`-style layout to this tree as its worked example.
+
+### Review round (double-blind, before the merge — `docs/reviews/blind_review_0.11.0_{A,B,C,verified}.md`)
+Three blind reviewers on two model families and three setups (an Agent-tool reviewer without the mesh libraries, one with them, and the GitHub
+Copilot CLI on gpt-5.4) got the committed tree and a checklist only; a verifier with the spec, the plan and the tree classified the 61 finding
+ids into 39 rows (20 CONFIRMED, 10 PARTLY, 4 ALREADY DECIDED, 5 REFUTED). All five reviewers' agreements were real: the smoke assumed a git
+checkout; `iteration_gate.sh --selftest` found no yaml-capable Python; the README copy-and-scaffold path was broken (lost scaffold line, dead
+`design/` glob, the arrival yaml copied on day 1); pre-layout `design/` / `out/` literals survived the sweep in templates and references (plus
+a container image and two domain tags rewritten as paths); and a fresh project was not green on day 1 — the template's two order cells shipped
+prose that both parsers read as an approval. Fixed: GATES cells `_not yet approved_`; README step 4 scoped by `A0` and ending with scaffold +
+slots; SKILL §0 step 6 runs `now_pages.py`; one records spelling `40-case/<set>/{parts,checks/census,checks/dfm}` everywhere and the gates
+locate `parts/` from `checks/`; set and kit folders are named by the `print_targets` key (non-target sets pass `--target`); `gates-required`
+demands a gate line per set; `SPEC_ERRATA` has one home; `ARRIVAL_CHECKLIST_<rev>`; cut deliverables per scope; `project.revision` validated;
+new `paths:` keys for the DFM mirror files and the kit mirror; `tools.geometry_cli`; plate sidecars carry `stl_md5s` + `case_version` and
+broken plates are listed as such; the smoke runs on a non-git copy, fails on a `SyntaxWarning`, and greps for the old roots; `stability.py`
+exits 2 without the mesh libraries. Acceptance: fresh `ee`, `mech` and `both` projects from the README block are green on day 1 (adopt + clone
+gates, five pages present, no gate approved).
+
+### Not done
+- Existing projects are migrated by their own `reorg:` block (two phases: documents / kits / release / now-pages, then the `out/` split); this
+  release changes no record's content, md5 or rule-set version.
 
 ## 0.10.7 — 2026-10-02 — the inner-tier runner only; standard / release are the existing adopt-gates commands
 
@@ -81,7 +134,7 @@
 - **`scripts/stability.py`**: centre of gravity of an assembly from the STL set of record (volume centroids through the assembly transforms, a
   density / infill factor per body) and the signed margin of its ground projection against the support polygon (convex hull of the footprints);
   `sweep()` over poses names the worst one; `--selftest`. SKILL §8 bullet, `case-pipeline.md` §Stability, kickoff **C12** "does the piece stand
-  free" (→ `kickoff.enclosure.stands_free`, a commented slot in `templates/project.yaml`, a row in `templates/KICKOFF_ANSWERS.md`), one pitfall.
+  free" (→ `kickoff.enclosure.stands_free`, a commented slot in `templates/project.yaml`, a row in `templates/10-spec/KICKOFF_ANSWERS.md`), one pitfall.
   Owner rule: anything that stands, rocks, walks or is set down free carries a CoG-vs-support row at its worst pose; a render cannot show it.
   Found on the beest: drive behind the legs, CoG 21 mm behind the hip, −17 mm margin at a third of the crank angles; fixed by moving the drive
   over the feet and the frame forward, then proven by the row.
@@ -178,11 +231,11 @@ project names stay in this file and in `docs/retro/` (`generic_lint_terms.yaml` 
 ## 0.10.0 — 2026-09-30 — the fifth retro folded, the skill audited and made generic
 
 ### Added (retro of the source project's landing round)
-- **Arrival / first-article checklist, generated** (`scripts/arrival_checklist.py`, `templates/design/arrival_checklist.yaml`; SKILL §10.1,
+- **Arrival / first-article checklist, generated** (`scripts/arrival_checklist.py`, `templates/20-design/arrival_checklist.yaml`; SKILL §10.1,
   `release-and-cut.md` §10; cut deliverable REC-002; `project.py gates-required` demands the `--check` line once the yaml exists): before shipment
   (the fab's photos), bench checks in gate order with what each row opens, software gates with their closing commit, case first article, owner
   decisions still OPEN with their trigger; status grammar + evidence enforced; smoke step 5d, eval 15.
-- **SPEC errata** (`templates/SPEC_ERRATA.md`, `release-and-cut.md` §11): a frozen spec's deviations as OPEN E-rows, never an edit; the
+- **SPEC errata** (`templates/10-spec/SPEC_ERRATA.md`, `release-and-cut.md` §11): a frozen spec's deviations as OPEN E-rows, never an edit; the
   hand-off's §3.3 and the arrival checklist §E carry them.
 - **`[K owner-read]`** tag (SKILL §4, `part-verification.md`, CLAUDE.md rule 1).
 - **Review protocol with a record-reading verifier** (SKILL §5, `agent-ops.md` §4, `blind-deep-review.js`): reviewers of a second model family get
@@ -203,7 +256,7 @@ project names stay in this file and in `docs/retro/` (`generic_lint_terms.yaml` 
 - 18 pitfalls lines (generalised by hand); the two project-named process rows of the retro were not carried (the template's `home_fdm_04` rows
   are the generic equivalents).
 
-### Changed (audit — `docs/reviews/AUDIT_0.10.0.md`)
+### Changed (audit — `80-reviews/AUDIT_0.10.0.md`)
 - **One home per rule**: SKILL §8.1 items 1 / 4 / 5 trimmed to commands + pointers; `vendor-review.md` §3 / §4, `fab-dfm.md` §4 / §6 and
   `case-pipeline.md` §Census shortened to pointers at their homes.
 - **Present tense, no history in rules**: `scripts/doc_voice_lint.py` (changelog voice + version numbers in prose; 47 hits → 0) runs in the smoke;
@@ -256,7 +309,7 @@ decision row naming the piece, STL-set and `print_targets.<t>.dfm_process` check
 - `--list` shows `media` and `layer × skin_min_layers`; `[K]` "slenderness heuristic" replaces the Kirchhoff citation (the L/t ≥ 10 of plate theory is a validity condition, not a manufacturability number).
 
 ### Templates / references
-- `templates/design/dfm_processes.yaml`: `media` on every row, `layer` / `skin_min_layers` / `void_min: null` on the FDM rows with the rule stated, `home_fdm_04_colour_body` (skin_min_layers 1, supports none), header fields for media / layer / skin / boxes / supports-per-body, sliver aspect test and slenderness heuristic in the comments.
+- `templates/20-design/dfm_processes.yaml`: `media` on every row, `layer` / `skin_min_layers` / `void_min: null` on the FDM rows with the rule stated, `home_fdm_04_colour_body` (skin_min_layers 1, supports none), header fields for media / layer / skin / boxes / supports-per-body, sliver aspect test and slenderness heuristic in the comments.
 - `references/print-dfm.md`: rules table (M C W R Z F K P V H O B S + L Y), legend-box sidecar, `--expect`, the geometry grouping and coverage reading; `references/pitfalls.md` +3 (negative selftest case, sliver aspect test, validation deduped by geometry).
 
 ### Not done
@@ -265,7 +318,7 @@ decision row naming the piece, STL-set and `print_targets.<t>.dfm_process` check
 
 ## 0.9.0 — 2026-09-30 — gates enforced by scripts, every documented command runs as written (closes blind review S of 0.8.0)
 
-Blind review S (`docs/reviews/OPUS_blind_review_S_skill_0.8.0_2026-09-30.md`, Opus, cold personas: EE user, mech user with a bracket STEP, sceptical
+Blind review S (`80-reviews/OPUS_blind_review_S_skill_0.8.0_2026-09-30.md`, Opus, cold personas: EE user, mech user with a bracket STEP, sceptical
 manager, skill maintainer): 28 findings, every one reproduced with a command. Owner's bar for the release: gates enforced by scripts not prose, "no
 waivers" true in code, a cold user runs README + SKILL.md as written. Every finding re-run before and after the fix (`smoke/run_smoke.sh` section 0e
 and 0d carry the negative cases as permanent checks).
@@ -303,7 +356,7 @@ and 0d carry the negative cases as permanent checks).
 | F27 | NOTE | evals not executed | FIXED — `evals/run_evals.py` runs `checks:` (8 evals carry them), lists 6 as manual |
 | F28 | NOTE | pure gates trust the JSON | FIXED — every record carries `sig = sha256(canonical body \| VERSION)`; both gates refuse a record that fails it (tampered FLAG→PASS = FAIL) |
 
-### Blind review of 0.9.0 (`docs/reviews/blind_review_0.9.0.md`, one cold EE-user + enforcement-sceptic lens, 10 findings + 6 notes, all reproduced)
+### Blind review of 0.9.0 (`80-reviews/blind_review_0.9.0.md`, one cold EE-user + enforcement-sceptic lens, 10 findings + 6 notes, all reproduced)
 Both MAJORs fixed before the tag: SKILL §0 step 6 was written as bare `scripts/<tool>.py` while the shebang is the system python (now `.venv/bin/python …`
 everywhere a script reads project.yaml); the RELEASED banner flipped on a release cell an agent had committed (now the banner reads `gate_check.release_ok()`
 — cell + git author = owner; the clone gate exports `HWFS_GIT_ROOT` so the archive regen can blame). Also: an unfilled project.yaml says "run `slots`" instead
@@ -311,7 +364,7 @@ of a YAML traceback, `scaffold` fills `{{SCOPE}}`, the smoke prefers the caller'
 token is word-start, `kickoff.answers` is read, `--open` rows must name the piece, no `__pycache__` in the submodule. Dispositions per finding in the review file.
 
 ### Added
-- `scripts/gate_check.py`, `scripts/erc_gate.py`, `scripts/step2stl.py`, `evals/run_evals.py`, `templates/design/erc_accept.yaml`,
+- `scripts/gate_check.py`, `scripts/erc_gate.py`, `scripts/step2stl.py`, `evals/run_evals.py`, `templates/20-design/erc_accept.yaml`,
   `templates/ci/{setup_linux,nightly,release_archive}.sh`; `scripts/project.py` `slots` / `kickoff --check` / `gates-required` + `record_sig` /
   `verify_sig` / `open_decisions`; `print_dfm.py` rule M + `--bodies` + `--target`; `skill_retro.py --apply`; `blind-deep-review.js` `mech` role
   set; `project.owner`, `paths.schematic`, `paths.erc_accept`, the `kickoff:` mapping and `board:` block in `templates/project.yaml`.
@@ -321,7 +374,7 @@ token is word-start, `kickoff.answers` is read, `--open` rows must name the piec
 
 ### Changed
 - `print_dfm.py` rule-set `VERSION` 0.9.0 (rule M, O / B split) — every record is re-made; `thin_wall_census.py` records carry `version` + `sig`.
-- The release line counts only in the Release row's approval cell (`release_report.py` banner); `templates/GATES.md` says so.
+- The release line counts only in the Release row's approval cell (`release_report.py` banner); `templates/90-log/GATES.md` says so.
 - `ERC_WAIVERS.md` is gone from templates, paths and docs; `paths.erc_waivers` → `paths.erc_accept`.
 
 ### Not done
@@ -344,7 +397,7 @@ vendor verdicts, 0 looser / 24 agree / 8 stricter).
   `--gate` PURE adopt gate (record md5 = STL = census, PASS or `--open <tag>/<piece>=<decision>`); `--validate` against every labelled vendor
   verdict → `PRINT_DFM_VALIDATION.md` (confusion matrix, rules fired, hand-written reading kept) with **a vendor FLAG we PASS printed as `RULE
   DEFECT`, exit 1**; `--list`; `--selftest` (eval 14's pair among its cases). Rule-set `VERSION` keys the validation cache.
-- **`templates/design/dfm_processes.yaml`**: seven rows (JLC3DP MJF / SLA / FDM, home FDM 0.4, Xometry MJF, Protolabs MJF, HP guide BLOCKED),
+- **`templates/20-design/dfm_processes.yaml`**: seven rows (JLC3DP MJF / SLA / FDM, home FDM 0.4, Xometry MJF, Protolabs MJF, HP guide BLOCKED),
   every number `[V]` with URL + date or `[K]` with the source named, `validated_on: []` each. **`templates/docs/quotes/dfm_verdicts.yaml`**: the
   verdict row schema (stl, md5, process, vendor, date, verdict, evidence, note).
 - **`scripts/scad_lint.py`**: a statement after a mid-line `//` in generated OpenSCAD is dropped silently (a plate lost its mark webs for two days
@@ -362,7 +415,7 @@ vendor verdicts, 0 looser / 24 agree / 8 stricter).
 - README: version, the feature line, the dependency note (`rtree networkx mapbox-earcut` join the mesh set; `matplotlib` optional), the no-project
   quick path for a cold user with a bracket STL.
 
-- **Blind review** (`docs/reviews/blind_review_0.8.0_print_dfm.md`, one cold-user lens, 15 findings, 13 fixed, 1 partly, 1 fixed by rule):
+- **Blind review** (`80-reviews/blind_review_0.8.0_print_dfm.md`, one cold-user lens, 15 findings, 13 fixed, 1 partly, 1 fixed by rule):
   the BLOCKER was a dead measure — the census ray's origin was nudged OUTSIDE the surface, so every ray hit its own face, read inf, and rule R
   fired on every thin wall while the tangent ball kept the verdicts right. Fixed (nudge into the side the ray travels); the selftest now asserts the
   ray reads ~0.8 on a 0.8 plate and that a free 0.6 × 60 rib is W-only. Also from the review: numeric limits and a `fix:` hint on every rule row,
@@ -420,7 +473,7 @@ Owner's directive (2026-09-29): "the skill should be able to do ee only, mechani
   and housed). Every question carries its scopes (`[ee, both]` / `[mech, both]` / none); a question outside the scope is not asked and reads
   `n/a (scope)` in KICKOFF_ANSWERS; a batch with nothing applicable is skipped.
 - **Phase / gate model per scope** (SKILL.md §1): ee = G0 → G1 → G2 → fab DFM → order → cuts; mech = G0 mechanical spec → **M1** geometry
-  approved → **M2** first article / fit print approved → case order → cuts; both unchanged. `templates/GATES.md` carries the M1 / M2 rows.
+  approved → **M2** first article / fit print approved → case order → cuts; both unchanged. `templates/90-log/GATES.md` carries the M1 / M2 rows.
 - **Scope tags on template lines** (`{{ee,both}}`, `{{mech,both}}`, `{{mech}}`, `{{ee}}`, `{{both}}`) in `templates/project.yaml`, `CLAUDE.md`,
   `GATES.md`, `SPEC.md`, `production_cut.yaml`, `design/traceability.yaml` — one template set, resolved in place by
   **`scripts/project.py scaffold --scope <A0>`**; the existing `grep -rn '{{'` proves the tags are gone.
@@ -430,7 +483,7 @@ Owner's directive (2026-09-29): "the skill should be able to do ee only, mechani
 - SKILL.md §0 lists what each scope creates; board-only / case-only sections carry a heading tag (§6, §7, §9 `[ee, both]`; §8, §8.1, the
   `case_dfm` role `[mech, both]`); §8 names the mech fit input (imported STEP / envelope with source md5 + [V] / [K]).
 - `evals/evals.json` #11 (a mech-only bracket from a board STEP) and #12 (an ee-only sensor board with no case); smoke: scaffold + gate grep
-  for each of the three scopes; `docs/reviews/blind_review_0.7.0_scope.md`.
+  for each of the three scopes; `80-reviews/blind_review_0.7.0_scope.md`.
 
 ### Not done
 - No separate SKILL.md per scope, no scope-aware reader beyond `record_md5` — the templates and the questionnaire carry the branching.
@@ -468,7 +521,7 @@ learnings into the hw-from-spec skill as well. ironed surface and bottom ams are
   worked example); filament per colour + purge per plate (purge derivable for a SOLID part only); N × the same STL = N objects;
   `different_settings_to_system` omits system-default values; ironing ~ +5 min on a small plate.
 - **Kickoff questionnaire C9 Brand marks on FDM parts** (RECOMMENDED: ironed top-face feature; alts: AMS colour body, both plates, glued plate;
-  never-list) in batch 6 with the bar; `templates/KICKOFF_ANSWERS.md` C9 row; `kickoff.enclosure.marks`.
+  never-list) in batch 6 with the bar; `templates/10-spec/KICKOFF_ANSWERS.md` C9 row; `kickoff.enclosure.marks`.
 - **`references/agent-ops.md` §2**: one git worktree per parallel agent, commit from a clean HEAD worktree, move `main` with a mixed reset /
   fast-forward; a `--copy` / kit mirror syncs EVERY plate of record, not only the default.
 - `references/pitfalls.md`: the 09-29 lines (branding, measurement, dust cap, Bambu CLI, worktrees, date-stamped selftest across midnight,
@@ -489,7 +542,7 @@ learnings into the hw-from-spec skill as well. ironed surface and bottom ams are
 
 ## 0.5.0 — 2026-09-28 — two blind reviews of 0.4.1 fixed, the kickoff questionnaire, the zero-warning bar, PCB build rules, the retro loop
 
-Two blind reviews of 0.4.1 (`docs/reviews/blind_review_A_0.4.1_cold_user.md`, 30 findings; `…_B_0.4.1_dfm_expert.md`, 42 findings) found a
+Two blind reviews of 0.4.1 (`80-reviews/blind_review_A_0.4.1_cold_user.md`, 30 findings; `…_B_0.4.1_dfm_expert.md`, 42 findings) found a
 pasted gate line that did not parse, two install stories, rules calibrated on one vendor's checker stated as material physics, a "±0.1
 tolerance" waiver dressed as a PASS, an untested census with two blind spots, and no PCB build rules at all. The owner asked for three things the
 same day: every question up front with recommended answers, a skill that improves with each project, and "0 DFM errors and warnings" as the bar.
@@ -515,10 +568,10 @@ same day: every question up front with recommended answers, a skill that improve
 - `templates/CENSUS_GATE_ROWS.md` (`--gate-dir`, C-01; the new rows: wedge band, opposing faces, accepted, geometry signature, retention in the
   mesh, worst-case clearance; INFO rows state why), `templates/DFM_ROUND.md` (raw API JSON, site-changed branch, capability snapshot, bbox / area /
   scale sanity, price, browser / UA, consent line, legend as displayed, material rating, build orientation, bbox-hypothesis probe; B-17 … B-19,
-  B-29, B-36 … B-38), `templates/GATES.md` (round definition, bar, Case order, literal `spec`, footprint-verification record location; C-21 / C-28),
+  B-29, B-36 … B-38), `templates/90-log/GATES.md` (round definition, bar, Case order, literal `spec`, footprint-verification record location; C-21 / C-28),
   `templates/project.yaml` (`skill.version`, `kickoff`, `fab_dfm` + `bar`, `print_targets` incl. `home_fdm`, historical CAD key names explained,
-  `quiet_regex` aligned; C-16), `templates/DECISIONS.md` (anchored grep, CC-001 evidence cell; C-13 / C-19), `templates/RELEASE_NOTES.md` +
-  `production_cut.yaml` + `release-and-cut.md` (**one records home** `docs/production/<md5-8>/records/`; C-05), `templates/STATUS.md` (PAUSE POINT
+  `quiet_regex` aligned; C-16), `templates/90-log/DECISIONS.md` (anchored grep, CC-001 evidence cell; C-13 / C-19), `templates/RELEASE_NOTES.md` +
+  `production_cut.yaml` + `release-and-cut.md` (**one records home** `70-release/<md5-8>/records/`; C-05), `templates/90-log/STATUS.md` (PAUSE POINT
   skeleton; C-30), `templates/VENDOR_REVIEW_RECORD.md` (reply template; B-22), `templates/CLAUDE.md` (bar in rule 9, kickoff answers as decisions).
 - `references/pitfalls.md`: the retracted material-before-flag line replaced by the corrected mechanism (C-03); a provenance note on the source
   pointers (C-27); snap / wedge / engraved-text lines relabelled; `home_fdm` naming; `references/agent-ops.md`: the per-call ceiling stated once
@@ -539,7 +592,7 @@ same day: every question up front with recommended answers, a skill that improve
   power links as owner choices), two-sided assembly, polarity / rotation / CPL and the fab's rotation table, fiducials and test points, silk,
   courtyards and tombstoning, creepage, panelization, the DRC census (0 / 0 / 0 warnings unless a dated waiver row), route-quality classes,
   parity, the canary rule, the fab DFM mirror before the order, the stock freeze (C-07 widened).
-- **`references/kickoff-questionnaire.md` + `templates/KICKOFF_ANSWERS.md` + SKILL §0.1**: 40 decision classes in ten `AskUserQuestion` batches
+- **`references/kickoff-questionnaire.md` + `templates/10-spec/KICKOFF_ANSWERS.md` + SKILL §0.1**: 40 decision classes in ten `AskUserQuestion` batches
   (product / process / material / quantity; PCB build ×8; enclosure architecture ×8 incl. retention screws+inserts / magnets / none, labelling
   deboss / plate / badge, fan, vents, light pipe; the bar and what may be waived — default nothing; verification; bought parts; software; release;
   identity / envelope / delegation), each with a RECOMMENDED answer and 2–3 alternatives with consequences; answers → D rows, `project.yaml`,
@@ -649,7 +702,7 @@ vendor-clean before its first quote. Owner's words: "include all the learnings i
   its v3.16 tray (0 FAIL, SANITY 0.00 % / 0.00 %). `thin_wall_check.py --census` stays the quick look and points at the gate.
 - **`templates/CENSUS_GATE_ROWS.md`** — the check-table rows every printed body carries (census header, WALL / VOID / wedge clusters, SANITY,
   band-by-design, bodies = 1, concentricity from mesh sections, designed offsets, six face renders) + the adopt-list line.
-- **`templates/DFM_ROUND.md`** — one record per vendor quote-page session under `docs/quotes/<date>/`: body, canonical md5, material set before the
+- **`templates/DFM_ROUND.md`** — one record per vendor quote-page session under `60-orders/quotes/<date>/`: body, canonical md5, material set before the
   flag, flag, heat-map screenshots per face, colour → feature mapping, our numbers, verdict.
 - SKILL §8.1 "DFM for printed enclosures" + Where-to-look row; §11 commit after every meaningful step (uncommitted four-hour trees, subagent turn
   limits → checkpoint commits); `agent-ops.md` §2 the same + a worker fork hands the blind review back.
@@ -672,8 +725,8 @@ board-dummy and 3MF generators (project-side; their rules are in the reference �
 Both 0.2.1 "Next" candidates plus the learnings logged after the order went in. Everything generic; the source project is cited as the worked example.
 
 ### Added
-- **docs/ governance layout as the default paths** — `scripts/project.py` DEFAULTS: `docs/governance/` (DECISIONS STATUS GATES BLOCKERS KNOWN_ISSUES
-  TRACEABILITY LEARNINGS_LOG ERC_WAIVERS ENV), `docs/design/TEST_PLAN.md`, `docs/parts/PARTS_VERIFICATION.md`, `reviews_dir` / `quotes_dir` /
+- **docs/ governance layout as the default paths** — `scripts/project.py` DEFAULTS: `90-log/` (DECISIONS STATUS GATES BLOCKERS KNOWN_ISSUES
+  TRACEABILITY LEARNINGS_LOG ERC_WAIVERS ENV), `20-design/TEST_PLAN.md`, `60-orders/PARTS_VERIFICATION.md`, `reviews_dir` / `quotes_dir` /
   `production_dir` / `datasheet_notes` keys; every `docs/<FILE>.md` literal in SKILL / references / templates / workflows / evals / smoke migrated;
   install recipes copy per folder; `references/project-yaml.md` §Layout.
 - **`scripts/reorg_paths.py`** — project.yaml `reorg:` block (moves, trim, untrack, gitignore, frozen, skip, allow_old_files, no_existence, allow_missing):
@@ -699,7 +752,7 @@ Both 0.2.1 "Next" candidates plus the learnings logged after the order went in. 
 - Smoke: docs moved to the layout, `reorg:` + `assembly_guide:` blocks, new gates (three selftests, `reorg_paths --check`, `assembly_guide` build + `--check`).
   Evals: 4 (vendor review mail — boundaries), 5 (re-layout — zero loss).
 
-### Fixed (blind review 0.3.0, `docs/reviews/SKILL_REVIEW_0.3.0_merged.md`)
+### Fixed (blind review 0.3.0, `80-reviews/SKILL_REVIEW_0.3.0_merged.md`)
 - `known_issues.py` / `release_report.py` / `handoff_header.py` gained argparse: `--help` or an unknown flag never runs the default write (A-01).
 - `reorg_paths --check`: a directory segment (`docs/v1.2/x`) is not a dangling file; `allow_missing` and the `--proof` failure branch are selftested; URLs documented as not rewritten (B-01/02/21).
 - `adopt_gates.sh`: empty `gates.adopt` is a failure; the read-only guard also hashes `git diff HEAD` (a re-modified dirty file shows); ERR traps name the line (B-03/05, A-06).
@@ -734,7 +787,7 @@ generator); COULD items applied where trivial.
    `smoke/run_smoke.sh` commit that exact layout (relative link into a gitignored `vendor/` dir) and assert the archive carries the link.
 2. **G0→G1 content** — new `references/schematic-phase.md` (design yaml shape, ERC command, map checks defined, G1 review pack, G0→G1 order);
    SKILL §5 G0 round paragraph; `workflows/blind-deep-review.js` `{{ROLE_SET}}` = `spec` with four spec roles and a G0 clause in the common
-   prompt; "VERIFY item" defined once in SKILL §4 and referenced from `templates/CLAUDE.md` rule 3 and `templates/GATES.md`; rule 4 now says
+   prompt; "VERIFY item" defined once in SKILL §4 and referenced from `templates/CLAUDE.md` rule 3 and `templates/90-log/GATES.md`; rule 4 now says
    "agents never write approval cells or the release line"; hand-off template notes the MISSING rows at G0; `handoff_header.py` prints
    "no board in HEAD" instead of a sliced message.
 3. **Model rotation** — `m2 = MODELS[(i + 1) % n]` in both review workflows; both throw unless ≥ 2 distinct models and `m1 !== m2`;

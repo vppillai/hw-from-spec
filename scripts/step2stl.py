@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """scripts/step2stl.py — bring an EXISTING CAD body (a STEP the owner already has) into the mech chain of record as a canonical STL + provenance.
 
-  scripts/step2stl.py <part.step> --out out/mechanical/case/<target>/stl/<piece>.stl [--tag V|K] [--source-note TEXT] [--tolerance 0.01]
+  scripts/step2stl.py <part.step> --out 40-case/<target>/stl/<piece>.stl [--tag V|K] [--source-note TEXT] [--tolerance 0.01]
       Converts with the first available route: (1) `cadquery` in the venv (`pip install cadquery`), (2) FreeCAD's CLI (`FreeCADCmd` /
       `freecadcmd` / `freecad.cmd` on PATH), (3) an existing STL given instead of a STEP is only canonicalised. OpenSCAD cannot read STEP.
       Writes the CANONICAL binary STL (triangles sorted, normals from the float32 vertices — the md5 IS the geometry, SKILL.md §8.1 item 3) and
@@ -93,7 +93,7 @@ OpenSCAD cannot read STEP."""
 
 def decision_row(piece, prov, out_rel):
     return (f"| CC-nnn | {prov['date']} | OPEN | imported body `{piece}` (generated-only exception, SKILL §2 / §8) | "
-            f"Body of record `{out_rel}` is NOT generated from design/case.yaml: imported from `{prov['source']}` (md5 {prov['source_md5'][:8]}, tag [{prov['tag']}]) "
+            f"Body of record `{out_rel}` is NOT generated from 20-design/case.yaml: imported from `{prov['source']}` (md5 {prov['source_md5'][:8]}, tag [{prov['tag']}]) "
             f"via {prov['converter']}, tolerance {prov['tolerance']}; canonical STL md5 {prov['stl_md5'][:8]}, signature vol {prov['signature']['vol']} / area {prov['signature']['area']} / "
             f"facets {prov['signature']['facets']}; provenance `{out_rel}.provenance.json`. Chain of record: a changed source md5 or signature = a new row. | "
             f"the owner's CAD is the geometry of record; the census + print_dfm records gate it like a generated body |")

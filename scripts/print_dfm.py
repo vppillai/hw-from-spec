@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """scripts/print_dfm.py — vendor-independent manufacturability check for printed bodies (MJF / SLA / FDM), run on the MESH before every upload.
 
-Rules come from physics and the published process minimums, parameterised per process row in `design/dfm_processes.yaml` (every number cited
-[V] fetched / [K] known); a vendor's DFM verdicts (`docs/quotes/dfm_verdicts.yaml`) are a VALIDATION set, never a fitting target. Nothing in
+Rules come from physics and the published process minimums, parameterised per process row in `20-design/dfm_processes.yaml` (every number cited
+[V] fetched / [K] known); a vendor's DFM verdicts (`60-orders/quotes/dfm_verdicts.yaml`) are a VALIDATION set, never a fitting target. Nothing in
 here is tuned to one vendor. `references/print-dfm.md` carries the loop; this docstring carries the mechanism.
 
 Measures (per surface sample, area-weighted, fixed seed):
@@ -52,14 +52,14 @@ Heat map (--render, needs matplotlib): faces coloured by the MIN thickness of th
 voids narrower than void_min (detail_min on FDM) dark red — six orthographic faces + two isos, the same convention the vendors' viewers use.
 
 CLI (paths default to the project root = the nearest parent holding project.yaml, else the cwd; the process table falls back to the skill's
-`templates/design/dfm_processes.yaml` when the project has none yet):
+`templates/20-design/dfm_processes.yaml` when the project has none yet):
   scripts/print_dfm.py --process <row> <mesh.stl>... [--out DIR] [--piece NAME] [--render] [--samples N] [--boxes boxes.json] [--land x0 y0 x1 y1 ...]
                        [--supports none|interior|any] [--bodies N]
       one record per body (DIR/<piece>.json [+ DIR/<piece>.boxes.json] [+ DIR/<piece>_<view>.png]); prints one line per rule; exit 1 when any body FLAGs
   scripts/print_dfm.py --list                                 the process rows and their thresholds
   scripts/print_dfm.py --gate <dfm_dir>... [--target <print target>] [--open <tag>/<piece>=<decision id> ...] [--expect <tag>/<piece>=<reason> ...]
-      PURE adopt gate (recomputes nothing). FAILs on: an STL of the record set without a same-md5 record (the sibling `stl/` of each DIR and the
-      `paths.mech_record` glob under DIR's parent); a record whose `sig` does not verify (hand-edited, or written by another rule set); a record
+      PURE adopt gate (recomputes nothing). FAILs on: an STL of the record set without a same-md5 record (`<set>/parts/` when DIR is
+      `<set>/checks/dfm`, else the sibling `stl/` of DIR's parent, plus the `paths.mech_record` glob under the set); a record whose `sig` does not verify (hand-edited, or written by another rule set); a record
       `version` != this VERSION or `thresholds` != the current table row; a record `process` != `print_targets.<t>.dfm_process` (t = --target or
       DIR's parent name); a sibling census/<piece>.json with another md5; a census piece without a dfm record; a verdict FLAG — unless --open
       <tag>/<piece>=<id> names a row of paths.decisions whose status is OPEN (printed with its topic; any other id = FAIL) or --expect
@@ -117,9 +117,9 @@ def project_root(start=None):
 
 
 ROOT = project_root()
-DEFAULTS = dict(processes=os.path.join(ROOT, "design", "dfm_processes.yaml"), verdicts=os.path.join(ROOT, "docs", "quotes", "dfm_verdicts.yaml"),
-                val_dir=os.path.join(ROOT, "out", "dfm_validation"), val_doc=os.path.join(ROOT, "docs", "reviews", "PRINT_DFM_VALIDATION.md"))
-TEMPLATE_TABLE = os.path.join(os.path.dirname(HERE), "templates", "design", "dfm_processes.yaml")
+DEFAULTS = dict(processes=os.path.join(ROOT, "20-design", "dfm_processes.yaml"), verdicts=os.path.join(ROOT, "60-orders", "quotes", "dfm_verdicts.yaml"),
+                val_dir=os.path.join(ROOT, "40-case", "dfm_validation"), val_doc=os.path.join(ROOT, "80-reviews", "PRINT_DFM_VALIDATION.md"))
+TEMPLATE_TABLE = os.path.join(os.path.dirname(HERE), "templates", "20-design", "dfm_processes.yaml")
 PATHS = dict(DEFAULTS)
 
 
@@ -132,7 +132,7 @@ def processes(path=None):
     if not os.path.exists(p) and not path and os.path.exists(TEMPLATE_TABLE):
         p = TEMPLATE_TABLE
     if not os.path.exists(p):
-        print(f"print_dfm: no process table at {p} (copy templates/design/dfm_processes.yaml to design/ or pass --processes)", file=sys.stderr); sys.exit(2)
+        print(f"print_dfm: no process table at {p} (copy templates/20-design/dfm_processes.yaml to 20-design/ or pass --processes)", file=sys.stderr); sys.exit(2)
     return yaml.safe_load(open(p))["processes"], p
 
 
@@ -555,6 +555,16 @@ def _project():
     return Project(os.path.join(ROOT, "project.yaml"))
 
 
+
+def parts_dir(records_dir):
+    """The STL set a records dir belongs to: `<set>/parts/` when the records sit in `<set>/checks/<kind>/` (the layout of record), else the
+    sibling `stl/` of the records dir's parent (an older project shape). One rule for every pure gate."""
+    parent = os.path.dirname(os.path.abspath(records_dir.rstrip("/")))
+    if os.path.basename(parent) == "checks":
+        return os.path.join(os.path.dirname(parent), "parts")
+    return os.path.join(parent, "stl")
+
+
 def gate(dfm_dirs, open_findings=(), target=None, expected=()):
     """PURE adopt gate (recomputes nothing) — see the docstring's --gate entry. Returns 1 on any problem."""
     bad = []; n = 0; P = _project(); table, _ = processes()
@@ -580,11 +590,11 @@ def gate(dfm_dirs, open_findings=(), target=None, expected=()):
     used = set()
     targets = (P.cfg.get("print_targets") or {}) if P else {}
     for d in dfm_dirs:
-        d = d.rstrip("/"); parent = os.path.dirname(os.path.abspath(d)); tag = target or os.path.basename(parent); census = os.path.join(parent, "census")
+        d = d.rstrip("/"); parent = os.path.dirname(os.path.abspath(d)); tag = target or os.path.basename(os.path.dirname(parts_dir(d))); census = os.path.join(parent, "census")
         want = None
         if targets:
             if tag not in targets:
-                bad.append(f"{d}: '{tag}' is not a print target (print_targets: {', '.join(targets)}) — lay the records out under <target>/dfm or pass --target"); continue
+                bad.append(f"{d}: '{tag}' is not a print target (print_targets: {', '.join(targets)}) — lay the records out under 40-case/<target>/checks/dfm or pass --target <row>"); continue
             want = targets[tag].get("dfm_process")
             if not want:
                 bad.append(f"{d}: print_targets.{tag}.dfm_process is not set (kickoff C8a) — the gate cannot tell which process row the bodies must pass")
@@ -611,8 +621,10 @@ def gate(dfm_dirs, open_findings=(), target=None, expected=()):
             if os.path.exists(cj) and json.load(open(cj)).get("stl_md5") != e.get("stl_md5"):
                 bad.append(f"{ej}: record of {str(e.get('stl_md5'))[:8]} but the census / STL of record is {str(json.load(open(cj)).get('stl_md5'))[:8]} — rerun"); continue
             stl = e["stl"] if os.path.isabs(e["stl"]) else os.path.join(ROOT, e["stl"])
-            if not os.path.exists(stl) or md5(stl) != e["stl_md5"]:
-                bad.append(f"{ej}: STL {e['stl']} missing or changed — rerun"); continue
+            if not os.path.exists(stl):
+                bad.append(f"{ej}: STL {e['stl']} not found — expected at {os.path.join(parts_dir(d), os.path.basename(stl))} (the records sit in {d}/)"); continue
+            if md5(stl) != e["stl_md5"]:
+                bad.append(f"{ej}: STL {e['stl']} changed since the record — rerun"); continue
             if e.get("verdict") != "PASS":
                 msg = f"{ej}: verdict {e.get('verdict')}: " + "; ".join(f"{r['rule']} -> {r['where'][:160]}" for r in e["rows"] if r["verdict"] == "FLAG")
                 key = f"{tag}/{piece}"
@@ -627,9 +639,10 @@ def gate(dfm_dirs, open_findings=(), target=None, expected=()):
                 bad.append(f"{d}/{os.path.basename(cj)}: census record without a print_dfm record (run scripts/print_dfm.py on the body)")
         # the STL set of record: every body under this tag (sibling stl/ + the paths.mech_record glob under the parent) needs a same-md5 record
         have = {e.get("stl_md5") for e in recs.values()}
-        stls = set(glob.glob(os.path.join(parent, "stl", "*.stl")))
+        set_root = os.path.dirname(parts_dir(d))
+        stls = set(glob.glob(os.path.join(parts_dir(d), "*.stl")))
         if P and P.get("paths.mech_record"):
-            stls |= {f for f in glob.glob(os.path.join(ROOT, P.get("paths.mech_record"))) if os.path.abspath(f).startswith(parent + os.sep)}
+            stls |= {f for f in glob.glob(os.path.join(ROOT, P.get("paths.mech_record"))) if os.path.abspath(f).startswith(set_root + os.sep)}
         for f in sorted(stls):
             if md5(f) not in have:
                 bad.append(f"{os.path.relpath(f, ROOT)}: body of the record set without a print_dfm record of its md5 (run scripts/print_dfm.py --process {want or '<row>'} --out {d} on it)")
@@ -669,7 +682,7 @@ def validate(write_doc=True, renders=()):
     bbox within 0.01 — a hash splits twins at a rounding boundary), write the validation doc: vendor verdict vs ours per geometry, confusion matrix,
     rules fired, coverage per mechanism, thresholds with their tags. Returns the summary; `looser` lists the RULE DEFECTS (vendor FLAG, ours PASS)."""
     if not os.path.exists(PATHS["verdicts"]):
-        print(f"print_dfm: no verdict record at {PATHS['verdicts']} (copy templates/docs/quotes/dfm_verdicts.yaml, append every vendor verdict)", file=sys.stderr); sys.exit(2)
+        print(f"print_dfm: no verdict record at {PATHS['verdicts']} (copy templates/60-orders/quotes/dfm_verdicts.yaml, append every vendor verdict)", file=sys.stderr); sys.exit(2)
     labels = yaml.safe_load(open(PATHS["verdicts"]))["verdicts"] or []
     table, table_path = processes(); VAL_DIR = PATHS["val_dir"]
     os.makedirs(VAL_DIR, exist_ok=True); recs = []; sig = []
@@ -909,7 +922,7 @@ def selftest():
         assert quiet(G) == 1, "FLAG must fail"
         assert quiet(G, [f"{tag}/root05=D-00"]) == 1, "--open without a project / decision log must fail"
         assert quiet(G, expected=[f"{tag}/root05="]) == 1 and quiet(G, expected=[f"{tag}/root05=tests the 0.5 root limit"]) == 0, "--expect needs a reason; with one the by-design FLAG is printed, not failed"
-        os.makedirs(os.path.join(d, "docs", "governance")); open(os.path.join(d, "docs", "governance", "DECISIONS.md"), "w").write("| ID | Date | Status | Topic | P | R |\n|---|---|---|---|---|---|\n| **D-07** | d | **OPEN** | widen the root of root05 | p | r |\n| CC-010 | d | APPLIED | x | p | r |\n")
+        os.makedirs(os.path.join(d, "90-log")); open(os.path.join(d, "90-log", "DECISIONS.md"), "w").write("| ID | Date | Status | Topic | P | R |\n|---|---|---|---|---|---|\n| **D-07** | d | **OPEN** | widen the root of root05 | p | r |\n| CC-010 | d | APPLIED | x | p | r |\n")
         open(os.path.join(d, "project.yaml"), "w").write(f"project: {{name: t, scope: mech}}\npaths: {{mech_record: 'stl/*.stl'}}\nprint_targets: {{{tag}: {{dfm_process: jlc_mjf_pa12}}}}\n")
         assert quiet(G, [f"{tag}/root05=WHATEVER"]) == 1 and quiet(G, [f"{tag}/root05=CC-010"]) == 1, "a free string or an APPLIED row is not an OPEN decision"
         assert quiet(G, [f"{tag}/root13=D-07"]) == 1, "an OPEN row that does not name the piece is not its licence (blind review 0.9.0 N2)"
@@ -921,7 +934,14 @@ def selftest():
         os.remove(os.path.join(d, "stl", "plate08.stl"))
         analyse(p5, "protolabs_mjf_pa12", n_s=20000, out_dir=os.path.join(d, "dfm"), piece="root13"); assert quiet(G, [f"{tag}/root05=D-07"]) == 1, "a laxer process row than print_targets.<t>.dfm_process fails"
         analyse(p5, MJF, n_s=60000, out_dir=os.path.join(d, "dfm"), piece="root13"); assert quiet(G, [f"{tag}/root05=D-07"]) == 0
-        assert quiet(G, [f"{tag}/root05=D-07"], target="nope") == 1, "an unknown print target fails"
+        def cap(*a, **k):
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf):
+                rc = gate(*a, **k)
+            return rc, buf.getvalue()
+        rc, txt = cap(G, [f"{tag}/root05=D-07"], target="nope"); assert rc == 1 and "lay the records out under 40-case/<target>/checks/dfm or pass --target <row>" in txt, ("an unknown print target fails and the hint names the layout", txt)
+        os.rename(p5, p5 + ".away"); rc, txt = cap(G, [f"{tag}/root05=D-07"]); os.rename(p5 + ".away", p5)
+        assert rc == 1 and f"expected at {os.path.join(d, 'stl', 'root13.stl')} (the records sit in {os.path.join(d, 'dfm')}/)" in txt, ("a moved STL is reported with its expected path", txt)
         os.makedirs(os.path.join(d, "census")); json.dump(dict(stl=p5, stl_md5="0" * 32), open(os.path.join(d, "census", "root13.json"), "w"))
         assert quiet(G, [f"{tag}/root05=D-07"]) == 1
         json.dump(dict(stl=p5, stl_md5=md5(p5)), open(os.path.join(d, "census", "root13.json"), "w")); json.dump({}, open(os.path.join(d, "census", "orphan.json"), "w"))
