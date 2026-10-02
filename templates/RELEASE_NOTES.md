@@ -34,4 +34,4 @@ Generated index: `90-log/KNOWN_ISSUES.md` §1 (operator-facing), §2 (OPEN owner
 {{bullet list, each with its decision row}}
 
 ## Owner actions
-- Write the gate lines in `90-log/GATES.md`; place the order; file records under `70-release/{{MD5_8}}/records/` (the cut's `records_dir`) as they happen — the only records folder.
+- Write the gate lines in `90-log/GATES.md`; place the order; file records under `70-release/{{REV}}/records/` (the cut's `records_dir`) as they happen — the only records folder.

@@ -21,7 +21,7 @@ paths:
   traceability_out: 90-log/TRACEABILITY.md
   board: 30-board/kicad/smoke/smoke.kicad_pcb          # here a stub; a real project points at the generated board
   netlist: out/smoke.xml
-  fab_dir: 30-board/fab                            # <date>_<md5-8>/board_id.txt names the board of record
+  fab_dir: 30-board/fab                            # <rev>/board_id.txt names the board of record (by its md5 line)
   release_dir: 70-release
   collateral_dir: 70-release/collateral
   case_yaml: 20-design/case.yaml
@@ -47,18 +47,18 @@ reorg:                                        # the layout of record; `scripts/r
           docs/TEST_PLAN.md: 20-design/TEST_PLAN.md}
   frozen: [30-board/fab/]                          # an uploaded package is a record: never rewritten, never checked
   no_existence: ['.py', '.js', 90-log/DECISIONS.md, 90-log/STATUS.md, 90-log/BLOCKERS.md, 90-log/KNOWN_ISSUES.md, 80-reviews/]   # records cite history (a blocker names the note it could not write); code carries fixture strings
-  allow_missing: ['^70-release/[0-9a-f]{8}/']
+  allow_missing: ['^70-release/rev[0-9]+/']
   rewrites_record: 80-reviews/REORG_REWRITES.txt
 assembly_guide:                               # scripts/assembly_guide.py; the smoke's renderer is a stub that writes the camera + defs into the file
   yaml: 20-design/assembly_guide.yaml
   steps_md: out/ASSEMBLY.md
   scad: out/case.scad
-  out_dir: 70-release/{MD5_8}
+  out_dir: 70-release/{REV}
   doc_name: VISUAL_ASSEMBLY_GUIDE.md
   size: '640,480'
   render_cmd: "printf 'PNG-stub %s %s' {CAMERA} {DEFS} > {OUT}"
 renders:
-  - {name: panel_top, kind: copy, src: "30-board/fab/*_{MD5_8}/panel_top.png"}
+  - {name: panel_top, kind: copy, src: "30-board/fab/{REV}/panel_top.png"}
   - {name: case_iso, kind: copy, src: "out/case/{CASE_VERSION}/iso.png", sub: case}
 reports:
   - name: PCB_DESIGN_REPORT

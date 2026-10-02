@@ -16,7 +16,7 @@ _(G0 round: board, package and case rows read MISSING by design — the artefact
 | `10-spec/SPEC.md` | the specification (revision {{SPEC_REV}}) — the artefact at G0 | `{{md5}}` |
 | `design/<board>.yaml` | schematic source (G1+) | `{{md5}}` | {{ee,both}}
 | `30-board/kicad/<board>/<board>.kicad_pcb` | board of record | `{{md5}}` | {{ee,both}}
-| `30-board/fab/<date>_<md5-8>/` | fab package of record | `{{md5 of MANIFEST}}` | {{ee,both}}
+| `30-board/fab/<rev>/` | fab package of record (board_id.txt md5 = the HEAD board) | `{{md5 of MANIFEST}}` | {{ee,both}}
 | `20-design/case.yaml` / `out/.../case/<preset>/stl/*.stl` | case of record (record md5 = `scripts/project.py record` in mech) | `{{version}}` | {{mech,both}}
 | the fit input (`paths.mesh_provenance`: STEP / envelope) | what the case must fit, [V] / [K] | `{{source_md5}}` | {{mech}}
 | `90-log/DECISIONS.md` rows D-… / CC-… | decision trail for the round | |
