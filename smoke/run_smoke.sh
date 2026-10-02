@@ -72,7 +72,9 @@ for s in "$SKILL"/scripts/*.py "$SKILL"/scripts/*.sh; do
   [[ -x "$s" ]] || { echo "FAIL: $s is not executable"; exit 1; }; head -1 "$s" | grep -q '^#!' || { echo "FAIL: $s has no shebang"; exit 1; }
   grep -q -- '--selftest' "$s" || { echo "FAIL: $s has no --selftest"; exit 1; }
 done
-(cd "$SKILL" && git ls-files -s scripts | awk '$4 !~ /\.yaml$/ && $1 != "100755" {bad=1; print "FAIL: git mode " $1 " on " $4} END {exit bad}') || exit 1   # the lint term file is data
+if git -C "$SKILL" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  (cd "$SKILL" && git ls-files -s scripts | awk '$4 !~ /\.yaml$/ && $1 != "100755" {bad=1; print "FAIL: git mode " $1 " on " $4} END {exit bad}') || exit 1   # the lint term file is data
+else echo "NOTE: not a git checkout — modes checked with test -x"; for s in "$SKILL"/scripts/*.py "$SKILL"/scripts/*.sh; do [[ -x "$s" ]] || { echo "FAIL: $s is not executable"; exit 1; }; done; fi   # a git archive / ZIP copy (review 0.11.0 row 4)
 grep -q 'abspath(__file__)' "$SKILL"/scripts/*.py && { echo "FAIL: a script resolves its own path with abspath (a symlinked scripts/ points at the project, not the skill — F4)"; exit 1; }
 python3 "$SKILL/scripts/project.py" scaffold --scope ee /dev/null >/dev/null || { echo "FAIL: project.py scaffold must run on a stock python3 without pyyaml (F2)"; exit 1; }
 grep -q 'kickoff --check' "$SKILL/SKILL.md" && grep -q '^kickoff:' "$SKILL/templates/project.yaml" && grep -q '^board:' "$SKILL/templates/project.yaml" || { echo "FAIL: the kickoff answers lost their machine-readable home (F10)"; exit 1; }
