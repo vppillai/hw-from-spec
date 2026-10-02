@@ -88,17 +88,45 @@ print_targets:                            # one entry per print target; scripts/
   home_fdm: {vendor: home, process: FDM, material: PLA, printer: "0.4 nozzle, 0.20 mm", wall_gate: 1.6, rib_gate: 1.2, void_gate: 1.0, red_line: 0.5,
              design_margin: 0.0, wedge_band: 1.5, tolerance: 0.2, samples_per_mm2: 10, post_process: none, rating: {ul94: unrated, tg_c: 55, source: "<TDS>"}, accepted: []}
 reorg:                                    # scripts/reorg_paths.py — only when the layout changes (decision row first)
-  moves: {docs/OLD.md: docs/<folder>/OLD.md}   # old -> new, git mv + literal rewrite (word-boundary guarded, longest first, idempotent)
+  # Worked example: a project laid out as `docs/<topic>/` + `out/<board>/` moving to the numbered tree. Each row is a file or a WHOLE
+  # directory; `--apply` runs them longest key first, so a file listed out of a directory leaves before the directory goes, and a
+  # directory whose destination already exists is merged file by file. Literals under a moved directory are rewritten with the prefix
+  # (`docs/quotes/<date>/mail.txt` -> `60-orders/quotes/<date>/mail.txt`) in every non-frozen tracked text file.
+  moves:
+    docs/governance/KICKOFF_ANSWERS.md: 10-spec/KICKOFF_ANSWERS.md   # the one governance file that belongs to the spec stage
+    docs/governance: 90-log                                           # the append logs: DECISIONS STATUS GATES BLOCKERS KNOWN_ISSUES LEARNINGS_LOG TRACEABILITY ENV
+    SPEC.md: 10-spec/SPEC.md
+    FINDINGS.md: 10-spec/FINDINGS.md
+    docs/spec_sections: 10-spec/spec_sections
+    docs/datasheet_notes: 10-spec/datasheet_notes
+    docs/design: 20-design                                            # briefs, notes, test plan beside the yaml sources of truth
+    design: 20-design                                                 # the yaml sources (merged into the directory the row above created)
+    docs/parts: 60-orders                                             # PARTS_VERIFICATION PROCUREMENT parts_check.json
+    docs/production/ORDER.md: 60-orders/ORDER_rev0.md
+    docs/production/ARRIVAL_CHECKLIST.md: 60-orders/ARRIVAL_CHECKLIST_rev0.md
+    docs/quotes: 60-orders/quotes                                     # fab evidence by date: frozen (below)
+    docs/production/<md5-8>: 70-release/rev0                          # the cut: the folder takes the revision name, the hash stays inside (MANIFEST, records/)
+    docs/release/collateral/<md5-8>: 70-release/collateral/rev0
+    docs/release/marketing/<md5-8>_<ver>: 70-release/marketing/rev0
+    docs/release: 70-release/reports                                  # design reports, release notes (collateral and marketing left first)
+    docs/reviews: 80-reviews                                          # then one folder per round by hand, the merged file at its root
+    kicad: 30-board/kicad
+    out/<board>/layout: 30-board/layout
+    out/<board>/fab/<date>_<md5-8>: 30-board/fab/rev0                 # board_id.txt inside keeps the md5 + commit
+    out/<board>/mechanical/<set>: 40-case/<set>                       # one row per print target; parts/ checks/ pictures/ build/ are split afterwards
+  frozen: [60-orders/quotes, '70-release/*/records']   # moved as whole folders when they are a move key; content never rewritten, never checked;
+                                          # spelled by old or new name (both match), `*` = one path segment
+  gitignore: ['40-case/*/build/']         # lines appended to .gitignore by --apply (skipped when present): SCAD, logs, slicer scratch, caches
+  allow_missing: ['^60-orders/quotes/', '^70-release/rev[0-9]+/']   # regexes of literals allowed to be dangling (dated rows quoting evidence, deliverables named before they exist)
+  rewrites_record: 80-reviews/REORG_REWRITES.txt   # written by --apply; read by --proof
   trim: [out/old_dir]                     # git rm -r (name the tag that keeps them in the decision row)
-  untrack: ['out/**/logs/*.log']          # git rm --cached, files stay on disk
-  gitignore: ['out/**/logs/*.log']        # lines appended to .gitignore by --apply (skipped when present; usually = untrack)
-  frozen: [30-board/fab/]                      # never rewritten, never checked (uploaded packages, archived records)
+  untrack: ['40-case/**/build/*.log']     # git rm --cached, files stay on disk (usually = gitignore)
   skip: [lib/]                            # never touched
   allow_old_files: [80-reviews/REORG_PLAN.md]   # files that legitimately spell the old names (this script and project.yaml are exempt already)
   no_existence: ['.py', '.js', 90-log/DECISIONS.md, 90-log/STATUS.md, 90-log/LEARNINGS_LOG.md, 80-reviews/]
                                           # suffixes / prefixes whose literals are old-literal-checked but need not exist (fixture strings, dated records)
-  allow_missing: ['^70-release/[0-9a-f]{8}/']   # regexes of literals allowed to be dangling (deliverables named before they exist, negative checks)
-  rewrites_record: 80-reviews/REORG_REWRITES.txt   # written by --apply; read by --proof
+  # `--map docs/quotes/<date>/mail.txt` answers `60-orders/quotes/<date>/mail.txt` (longest matching key) for every dated row that still
+  # spells a pre-move path; `--proof BEFORE AFTER REWRITES` on two `git ls-files -s` dumps shows every blob at its mapped path or in the rewrite list.
 assembly_guide:                           # scripts/assembly_guide.py (release-and-cut §8)
   yaml: 20-design/assembly_guide.yaml        # authored short text: doc, parts, tools, defaults{defs}, pages (before/after), step_defaults, steps{n: camera/parts/tools/check}, where_the_words_are[]
   steps_md: 40-case/ASSEMBLY.md   # optional generated step source: '### Step N - title (T s)' + paragraph
