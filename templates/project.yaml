@@ -167,6 +167,12 @@ reports:
     extra_sources: [design/case.yaml] {{mech,both}}
 gates:
   quiet_regex: 'Fontconfig|wxApp|Debug:'
+  iteration:                                  # scripts/iteration_gate.sh --tier inner|standard|release; every command is read-only and runs from the repo root
+    inner: []                                  # REQUIRED before use: the changed generator's --check + its direct grader (for example gen/case.py --check + print_dfm.py --gate ...)
+    standard:                                 # bounded change: targeted checks plus the project-wide checks, then a delta audit
+      - "scripts/adopt_gates.sh --no-clone"
+    release:                                  # before a gate, order, or cut: all checks in a fresh archive too
+      - "scripts/adopt_gates.sh"
   adopt:                                      # day 1 (G0): selftests + the records that exist; exit 1 on the first failure
     - "$PY scripts/project.py --selftest"
     - "$PY scripts/known_issues.py --selftest"
