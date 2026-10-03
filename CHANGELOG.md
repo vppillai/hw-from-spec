@@ -26,14 +26,18 @@
   agent-ops, pitfalls — one home per rule, the others link.
 - **Checks**: three read-only tiers — inner `scripts/iteration_gate.sh [-- <cmd> ...]` (a change's `--check` + grader set), standard
   `scripts/adopt_gates.sh --no-clone` (`make gates`), release `scripts/adopt_gates.sh` (`make check`); `smoke/run_smoke.sh` runs every script selftest, the rule greps, the enforcement negatives, both lints
-  and the evals; 17 evals
+  and the evals; 18 evals
   with mechanical checks, `80-reviews/INDEX.md` and `docs/retro/INDEX.md` list every review and retro.
 
 ## 0.11.1 — 2026-10-02 — beest first-article plates 1 / 1b folded: raised legends gate air gaps at 0.9 (the 0.9.2 "lands ≥ 0.45" withdrawn), the gap metric is an opening of the complement, coupons bracket the KNOB, filament slots keyed by role, a measured hole-shrink row
 
 Source: the beest project's `LEARNINGS_LOG.md` entries of 2026-10-02 and decision rows D-15 / CC-018 / CC-019 (a desk Strandbeest on a Bambu P2S,
-0.4 nozzle, 0.20 mm, PLA Basic, 4 walls; two coupon plates printed and read by the owner). Reference and template edits only — no script changed,
-the legend gates live in the project generator; the metric ships as the required shapely test with its three fixtures. Independent of PR #3.
+0.4 nozzle, 0.20 mm, PLA Basic, 4 walls; two coupon plates printed and read by the owner). The gap metric ships as the required shapely test with
+its three fixtures (the skill has no legend script; the legend gates live in the project generator). One script change so that ONE part can carry
+both kinds of legend under the new numbers — a legend box may carry its OWN limits: `print_dfm.py` `(x0, y0, z0, x1, y1, z1, land_min, void_min)`,
+`thin_wall_census.py` `[x0, y0, x1, y1, gate]`; boxes without them take the row's `legend_land_min` / `legend_void_min` (now the raised 0.9 / 0.9)
+or `--box-min`, so a coupon's always-debossed labels (0.45 / 0.45) sit beside a raised colour word on one STL. Records of plain boxes are
+byte-identical to 0.11.0 (selftests in both scripts).
 
 ### Changed
 - **`dfm-printed-enclosure.md` §8 "Legends RAISED"**: cap ≥ 5.1 / stroke ≥ 0.9 / **air gap between strokes ≥ 0.9** (two 0.42 perimeters + margin;
@@ -41,13 +45,13 @@ the legend gates live in the project generator; the metric ships as the required
   S / 8) the 0.9.2 rule allowed. Font by measurement at the cap (Avenir Next Demi Bold the only pass of 24 system fonts at cap 5.2 / pad 0.08; DIN
   Alternate Bold / Helvetica / Arial / Verdana bold fail on gaps); pad ≤ 0.1 — it trades stroke for gap one-to-one. The same numbers in the
   "small cap" bullet, the coupon self-documenting bullet (raised: cap ≥ 5.1 / stroke ≥ 0.9 / gap ≥ 0.9; debossed unchanged), `case-pipeline.md`,
-  SKILL §8 item 5, and `templates/20-design/dfm_processes.yaml` `legend_land_min` 0.45 → 0.9 on both home rows / `templates/project.yaml`
-  colour-body `void_gate` 0.45 → 0.9.
+  SKILL §8 item 5, and `templates/20-design/dfm_processes.yaml` `legend_land_min` 0.45 → 0.9 and `legend_void_min` 0.4 → 0.9 on both home rows
+  (the raised numbers; a debossed label's box carries 0.45 / 0.45 itself) / `templates/project.yaml` colour-body `void_gate` 0.45 → 0.9.
 - **The gap METRIC** (new bullet): a closing of the glyph (`buffer(h).buffer(-h) − glyph`) saturates at ~0.45 because every concave corner reads as
   a gap above that — it could never enforce a stricter gate and silently passed the labels that printed closed. Required test: the complement's
   thin regions under an opening by g/2 (`C − C.buffer(−g/2).buffer(g/2 + 0.02)`), parts with area > 0.5 g² (corner slivers are ~0.2 g²); the
   pad around the complement scales with g. Fixtures stated: an E at cap 4 bold FAILs at 0.9, a 1.2 mm slot passes, a bare concave corner counts
-  0 (run here with shapely 2.1: 2 / 0 / 0; the old metric reads 1 on the bare corner).
+  0 (run at the merge with shapely 2.1.2 on synthetic polygons: 2 / 0 (1 at g = 1.3) / 0).
 - **Second-order legend rows**: the legend body inside the LENGTH of its surface (a rail word at 3/4 of the rail would have run off the end as the
   cap grew); label pitch derived from the measured label width (pitch 19 nearly touched at cap 5.2 — 20 mm labels need ≥ 23).
 - **Coupons bracket the KNOB, not the mating feature** (§8 new bullet, §8.5, `print-kit.md` §4, SKILL §8 item 5): three variants OF THE PART THAT
