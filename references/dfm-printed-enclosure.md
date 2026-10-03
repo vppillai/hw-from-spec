@@ -234,15 +234,35 @@ numbers are **[owner bar]** for a 0.4 nozzle at 0.20 mm and live in `print_targe
 - **Elephant foot**: the first 2–3 layers flare 0.1–0.15 mm on a textured plate at 55 °C — a 0.30 lap clearance loses that at the seam;
   chamfer the bottom edge 0.3–0.5 × 45° on mating skirts or use the slicer's elephant-foot compensation (0.1), recorded on the print sheet.
 - **Hole shrink**: vertical holes print 0.1–0.3 mm under nominal **[physics]** — compensate in the preset's `fits` block (per-preset, coupon-decided)
-  or ream; state which on the print sheet.
+  or ream; state which on the print sheet. **Measured 2026-10-02 (the worked-example desktop printer: 0.4 nozzle, 0.20 mm, PLA, 4 walls — the only recorded verdict so far;
+  holes read ~0.15–0.2 under nominal):** Ø5 round hole +0.3 = free pivot without wobble; D6 (flat 1.0) socket +0.2 = snug light press, +0.3 falls
+  out; a 3 mm plate in a slot: +0.1 snug lap, +0.0 push-fit that stays on when shaken, +0.3 falls off; Ø5 press cap: hole +0.0 goes on by thumb
+  and holds, −0.15 would not go on any peg. So on this printer press fits sit at ZERO nominal clearance and running fits at +0.2…+0.3; another
+  printer / filament re-measures with the coupon, never inherits these.
 - **Seam placement**: the seam is set to the rear / a hidden edge in the slicer project (recorded key), never on a legend face.
 - **Layer anisotropy**: a tab or boss loaded across layers is 30–50 % weaker; boss walls shear along layers — orient bosses so the load is in-plane
   where possible, and read the FEA with the anisotropy factor.
-- **Legends RAISED**: cap 4 / stroke ≥ 1.0 / height 0.6 on a face-up top (a 0.4-deep, 0.45-wide debossed void at cap 2.2 is illegible on a 0.4
-  nozzle); raised text cannot print face-down — a face-down face gets a flush colour body (§8.1 option b), never a deboss (its recess ceiling is a bridge underside). A fit filter keeps a legend only where it
+- **Legends RAISED**: **cap ≥ 5.1 / stroke ≥ 0.9 / AIR GAP between strokes ≥ 0.9** / height 0.6 on a face-up top (a 0.4-deep, 0.45-wide debossed void at cap 2.2 is illegible on a 0.4
+  nozzle). The earlier rule (cap 4, stroke 1.0, lands 0.45) is withdrawn for raised text: on the worked-example printer (0.4 nozzle / 0.20 / PLA) the printer CLOSED every
+  0.5–0.6 mm air gap between raised 0.6 mm strokes (the counters of E / B / S / 8 at cap 4 bold, 2026-10-02). An air gap is two 0.42 perimeters
+  plus margin = 0.9, the same as a stroke; a Latin capital is three strokes and two gaps, so cap ≥ 5.1 (a closed "4" counter needs cap ≥ 5.6).
+  Font by measurement at the cap: at cap 5.2 / pad 0.08 Avenir Next Demi Bold was the only one of 24 macOS system fonts with every gap ≥ 0.9 AND
+  every stroke ≥ 0.9 inside 5.7 mm of height; DIN Alternate Bold / Helvetica / Arial / Verdana bold fail on gaps. Pad (outline offset) trades
+  stroke for gap one-to-one — keep it ≤ 0.1 and pick the weight in the font instead; raised text cannot print face-down — a face-down face gets a flush colour body (§8.1 option b), never a deboss (its recess ceiling is a bridge underside). A fit filter keeps a legend only where it
   fits its land and LISTS what it dropped.
 - **Legend geometry, not font choice, meets the void gate**: every font's crotches (A K N W) and counters (e 4 R) fall below 1.0 at a cap that fits a 10–12 mm band — CLOSE the glyph polygons at the void gate (buffer +g/2 / −g/2, mitre) after placement, gate the inter-letter gap as a row, and on a curved band set letters one by one along the band's offset curve anchored by POLAR ANGLE (nearest-point anchoring lands on a lobe when the waist is concave). The census's opposing-face rows honour legend lands like its wall and void rows (`--boxes` → `--box-min`): a raised stroke inside its land is two faces a stroke apart, not a thin wall. Example: a bold sans at cap 7, pad 0.5, spacing 1.6, closing 1.0 — 0 census FAIL.
-- **Legend at a small cap (a word on a 6 mm rail at cap 4.0)**: `text(size=)` is NOT the cap height — render one H per font, measure it, derive the size (a condensed DIN: cap = 0.72 × size; every font differs); pick the font by MEASUREMENT at that cap (erode for strokes ≥ 1.0, inscribe for counters ≥ 0.45 after padding — Arial / Helvetica / Futura counters close, a condensed DIN survives); glyph polygons from the SVG path with holes classified by ring COVERAGE (a point test put a D's outer ring inside its own counter and dropped the letter); morphology OPEN (tips) → CLOSE (gaps) → neck thickening, never the other order (an opening after the closing reopens every filled slit); fill gaps ~0.05 over the gate because the mesh tools read under the polygon (0.7 for a 0.45 gate on a 0.6 body). Rows: thin regions < 1.0 longer than 1.2 mm = 0 (an erosion AREA ratio penalises corners, not strokes), gaps < 0.45 = 0, one body per character, every label inside its face.
+- **Legend at a small cap (a word on a 6 mm rail)**: `text(size=)` is NOT the cap height — render one H per font, measure it, derive the size (a condensed DIN: cap = 0.72 × size; every font differs); pick the font by MEASUREMENT at that cap (erode for strokes ≥ 0.9, open the COMPLEMENT for gaps ≥ 0.9 after padding — the 2026-10-01 "counters ≥ 0.45" bar printed closed; Arial / Helvetica / Futura / DIN all fail on gaps at cap 5.2, Avenir Next Demi Bold passes); glyph polygons from the SVG path with holes classified by ring COVERAGE (a point test put a D's outer ring inside its own counter and dropped the letter); morphology OPEN (tips) → CLOSE (gaps) → neck thickening, never the other order (an opening after the closing reopens every filled slit); fill gaps ~0.05 over the gate because the mesh tools read under the polygon (0.95 for a 0.9 gate). Rows: thin regions < 0.9 longer than 1.2 mm = 0 (an erosion AREA ratio penalises corners, not strokes), gaps < 0.9 = 0 by the complement-opening metric (next bullet), one body per character, every label inside its face **and the legend body inside the LENGTH of the surface it sits on** (a rail word at 3/4 of the rail ran off the end once the cap grew), **label pitch grows with the cap** (labels at pitch 19 nearly touched at cap 5.2 — 20 mm wide labels need pitch ≥ 23; derive the pitch from the measured label width, never a constant).
+- **The gap metric is an OPENING of the complement, never a closing of the glyph.** The closing test (`geom.buffer(h).buffer(-h).difference(geom)`) saturates at ~0.45: above that every concave corner reads as a gap, so it can never enforce a stricter gate — it passed the cap-4 labels the printer closed. Required test (shapely), gate `g`:
+  ```python
+  from shapely.geometry import box
+
+  def narrow_gaps(geom, g):                      # air gaps between raised strokes narrower than g
+      x0, y0, x1, y1 = geom.bounds
+      C = box(x0 - 2 * g, y0 - 2 * g, x1 + 2 * g, y1 + 2 * g).difference(geom)   # the complement (pad > g or the border strip reads thin)
+      thin = C.difference(C.buffer(-g / 2).buffer(g / 2 + 0.02))         # what an opening by g/2 removes
+      return sum(1 for p in getattr(thin, "geoms", [thin]) if p.area > 0.5 * g * g)   # corner slivers ~0.05 g² at a right angle (≤ 0.2 on real glyphs), real gaps are elongated
+  ```
+  Selftest it against three fixtures before trusting a FAIL row: an `E` at cap 4 bold must FAIL at g = 0.9, a 1.2 mm slot between two bars must pass, a bare concave (L-shaped) corner must count 0.
 - **Colour bodies are their own print target** (`print_targets.home_fdm_colour` in the project.yaml template → process row `home_fdm_04_colour_body`, own STL set, own census): the wall gate is the body's THICKNESS (0.6 = 3 layers), strokes are gated on the polygon and by print_dfm W; censused against the host's 1.6 gate a colour body FAILs on itself.
 - No rigid bump on a slit tab (it blocks, F ∝ t³); screws + heat-set inserts in ≥ 1.6 boss walls, or magnets (§1.1), instead of snap tabs where the
   arm cannot be long enough.
@@ -256,11 +276,20 @@ numbers are **[owner bar]** for a 0.4 nozzle at 0.20 mm and live in `print_targe
   torque to failure, record)**; the numbers they decide are a yaml parameter block. Ship the coupons in every kit.
 - **Coupons are self-documenting**: every test coupon and every variant on a bracket plate carries its own
   identifier and the value it tests ON the part — DEBOSSED text with the number (e.g. `W1.6 R0.20`, `WALL 1.6`, `CLR 0.30`; raised text only
-  for the colour-path word of a coupon that also tests colour, next bullet), on an ironed top face or a face-up plate, cap ≥ 4 mm, stroke
-  ≥ 0.45 debossed / ≥ 1.0 raised, lands ≥ 0.45 between glyphs (measured, FAIL-gated),
+  for the colour-path word of a coupon that also tests colour, next bullet), on an ironed top face or a face-up plate, debossed: cap ≥ 4 mm, stroke
+  ≥ 0.45, lands ≥ 0.45 between glyphs; raised: cap ≥ 5.1, stroke ≥ 0.9, AIR GAP ≥ 0.9 (all measured, FAIL-gated; the raised numbers are the
+  2026-10-02 rule above — the coupon of record passes the same bar as the part; each legend BOX carries its own gate — `references/print-dfm.md`,
+  legend boxes — so a debossed label and a raised colour word on one coupon are gated apart),
   never on a bridge underside or a deep inner wall. A coupon the user has to look up in a README to identify is a coupon that gets mixed up on
   the bench; the slicer's object names are gone the moment the part comes off the plate. The marker is generated from the same yaml value it
-  tests, so it cannot disagree with the geometry.
+  tests, so it cannot disagree with the geometry. **A variant too small to carry text is marked by SIZE** (caps at outer Ø 9 / 10 / 11, shoes at
+  ski length 28 / 31 / 34 — they sort on the bench by eye): a 2 mm cap ring has no room for a deboss and the census would fail one.
+- **Bracket the KNOB, not the mating feature.** A coupon that prints one production hole and three pegs (4.9 / 5.0 / 5.1) only answers when the
+  production hole is inside the bracket; on the worked example's first coupon plate the cap hole (−0.15) and the shoe slot (+0.3) were both outside it and the plate
+  could only say "none" — a second plate was needed (2026-10-02). For every fit knob the coupon prints **three variants OF THE PART THAT CARRIES
+  THE KNOB** (three caps with three holes, three shoes with three slots) tried on ONE production-size mating feature; **centre the bracket on
+  zero nominal clearance for press / push fits** while the printer's hole shrink is unknown (here it was ~0.15–0.2; a −0.15 hole became ~0.3 real
+  interference). The winner is written into `fits.*` and the production part follows it.
 - **Coupon labels are ALWAYS debossed — unless the coupon also tests colour (a mark / AMS coupon), and then ONE short raised word in the
   second colour proves the colour path while the label values stay debossed.** A raised label in a second filament costs the purge, not its
   own weight: on one coupon plate 0.4 g of letters cost 3.9 g of the second colour and 8 filament changes, where debossed values cost nothing.
@@ -360,6 +389,12 @@ ironing, fuzzy skin, per-object overrides) and how each is PROVEN from the g-cod
   unless every filament profile carries `filament_colour`: write **one filament JSON per slot with its colour** (or `--filament-colour
   '#RRGGBB;#RRGGBB'`, undocumented in `--help`). One filament, or two without the tower, slice fine. Bisect a crash or a rejected 3MF on the
   temp inputs (5 s per run), one variable / key group per run, before touching the generator.
+- **Key the filament slots by ROLE, not by colour name**: `filaments: {structure: {name: white, hex: "#FFFFFF"}, kinematics: {…}, accent: {…},
+  legend: {…}}` in the yaml, the slicer filament map, the profile file names, the expected-hex rows and the kit prose all read the name and hex
+  through the role; a palette change is then a yaml-only edit. In the worked example the owner had no black, then the grey spool was too small, and each
+  change touched 11 files because colour names were the keys everywhere (2026-10-02). Match roles to SPOOL SIZE: the structure role takes ~60 %
+  of the grams and needs a full spool, an accent (~5 %) fits a small one — the kickoff colour question asks which spools are full and which are
+  small (questionnaire C5).
 - **Multi-material = ONE multi-part object with a per-part `extruder`.** The CLI has no flag for it but loads a Bambu-style 3MF (the source
   project's `write_ams_3mf`; copy the package layout from a file Studio exported, ids are global):
   ```
@@ -408,7 +443,7 @@ ironing, fuzzy skin, per-object overrides) and how each is PROVEN from the g-cod
 
 ### 8.5 Snug-fit features (crush ribs, press lips) and the 45° limit
 - **Ship a bracket plate, let the owner pick after one print**: the fit knob at three values (rib proud 0.20 / 0.25 / 0.30), one object each,
-  named by its value in the 3MF; START_HERE: bracket → coupon → plate (`references/print-kit.md` §4). An **interference-window row per variant**:
+  **each a copy of the part that carries the knob** (§8 "Bracket the KNOB"), named by its value in the 3MF (or by its size when too small for text); START_HERE: bracket → coupon → plate (`references/print-kit.md` §4). An **interference-window row per variant**:
   rib-to-rib vs the mating part's tolerance (its drawing, e.g. ± 0.1) AND the print tolerance (± 0.15) → per-side interference nominal ± 0.125; a
   window that reaches 0 or a knife edge at either end is a FAIL, not a note.
 - **A face at exactly 45.0° is AT the overhang limit, not under it**, and the same face changes class with the orientation: a lip cone faces UP

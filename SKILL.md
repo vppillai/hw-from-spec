@@ -1,6 +1,6 @@
 ---
 name: hw-from-spec
-version: 0.11.0
+version: 0.11.1
 description: Run a hardware project (a PCB, a printed or CNC enclosure, or both — scope chosen at kickoff; contract fab such as JLCPCB) from a written specification to a production cut with an owner-gated, generated-only, blind-reviewed workflow — a kickoff questionnaire that asks every owner decision up front with recommended answers, a zero-warning manufacturability bar, and a retro that folds each project's learnings back into the skill. Use this whenever someone starts a board or enclosure project from a spec, asks to set up gates, a decision log, generators, part verification, a fab DFM mirror, a case pipeline, FEA, blind reviews, a release report or a production cut for one, or resumes such a project, or wants the skill improved from a finished project — even if they only say "new KiCad board", "order this at JLC", "review the layout", "cut the release" or "what did we learn".
 ---
 
@@ -348,7 +348,7 @@ list) tagged **[checker]** / **[vendor sheet]** / **[physics]** / **[owner bar]*
    probes, upload each alone, adopt the first full-length pass.
 5. **Home FDM preset (`home_fdm`)** (`references/dfm-printed-enclosure.md` §8–§9, the kit `references/print-kit.md`, slicer knobs
    `references/fdm-print-optimisation.md`; kickoff C9 / C10 / C11): printer-first FAIL rows from `print_targets.home_fdm` (walls, ribs, voids, 2 × line
-   width, elephant foot, hole shrink, seam as per-preset `fits` knobs; raised legends; every external face on the bed / vertical / clean top asserted
+   width, elephant foot, hole shrink, seam as per-preset `fits` knobs; raised legends (cap ≥ 5.1, strokes AND air gaps ≥ 0.9, the gap read as an opening of the complement); every external face on the bed / vertical / clean top asserted
    from the g-code), coupons and both board dummies (printable stand-ins for the board: a two-piece and a one-piece version) before the part, brand
    marks as an ironed top-face feature or a flush colour body laid down by the printer's multi-filament unit in the bed layers (never a
    bed-face or vertical-wall deboss; mark coupon first; FAIL-gated mark rows), a roof-down piece turned by `rotate()` never `mirror()` (a mirror flips
@@ -358,7 +358,7 @@ list) tagged **[checker]** / **[vendor sheet]** / **[physics]** / **[owner bar]*
    ONE kit folder per print target, `50-kits/<kit>/` (START_HERE at its root, `plates/` + sidecars, `parts/`, `sheets/`; mirrored byte-identical to
    `~/Downloads/<project>_kits/<kit>/`, superseded kit folders reduced to a one-line `SUPERSEDED.md`) = pieces + coupons + both dummies + READMEs **+ a generated START_HERE**, every kit text through the kit text gate (the FAIL check
    over every emitted kit text, `print-kit.md` §3); glued plates rest on the lands (the flat bed-face seats) with the bridged strips one layer below;
-   snug fits ship as a bracket plate (one object per candidate value) the owner picks from — the picked value lands in
+   snug fits ship as a bracket plate (one object per candidate value, each a copy of the part that CARRIES the knob, tried on one production mating feature) the owner picks from — the picked value lands in
    `kickoff.enclosure.fit_result` and closes its arrival-checklist row; watertight row per STL; sidecars drift-checked against the 3MF config.
 6. **When a vendor reports a cracked part**: measure the RECEIVED part (caliper table → the target's tolerance), photo protocol, fractography
    basics, then the ORDERED STL (sections + census with span and class), separate design intent from defect with the vendor-fault table, draft the

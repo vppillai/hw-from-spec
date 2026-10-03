@@ -98,8 +98,8 @@ processes:
     neck_max: 0.05
     slender: 10
     sliver_area: 5.0
-    legend_land_min: 0.45   # [K] coupon rule: a debossed legend's lands may be one line wide, raised strokes 1.0 (references/dfm-printed-enclosure.md §8) — applies INSIDE the 3-D legend boxes only (the generator passes the legend's Z band)
-    legend_void_min: 0.4    # [K] letter counters one nozzle width
+    legend_land_min: 0.9    # [K→measured 2026-10-02, worked-example desktop printer, PLA, 0.20] RAISED legend strokes ≥ 0.9 (two perimeters) — applies INSIDE the 3-D legend boxes only (the generator passes the legend's Z band); a DEBOSSED label's box carries its own 0.45 / 0.45 as the box's trailing pair (references/print-dfm.md, legend boxes)
+    legend_void_min: 0.9    # [K→measured 2026-10-02] the AIR GAPS between raised strokes (the printer closed every 0.5–0.6 gap at cap 4 bold); a debossed box's own value gates its 0.45 strokes
     overhang_max_deg: 45    # [V] Prusa 45..60 (design the lead-ins at 45 deg; +1 deg tolerance in the tool, §8.5)
     bridge_max: 10          # [K] visible bridge <= 10, interior <= 20 (the interior gets slicer supports)
     supports: interior      # [K] the PROCESS default: interior supports allowed, none on a visible face -> O / B rows are INFO; the generator passes the BODY's own setting (`--supports none` for a body sliced without supports -> O / B are gates)
@@ -119,8 +119,8 @@ processes:
     neck_max: 0.05      # [K] as MJF
     slender: 10         # [K] slenderness heuristic (header)
     sliver_area: 5.0    # [K] see the header
-    legend_land_min: 0.45   # [K] inside the host's mark boxes the arms' point contacts fuse over one line width by design
-    legend_void_min: 0.4    # [K]
+    legend_land_min: 0.9    # [K→measured 2026-10-02] a colour body IS raised strokes: strokes ≥ 0.9 (the 0.45 one-line value printed closed)
+    legend_void_min: 0.9    # [K→measured 2026-10-02] the air gaps between the strokes, two perimeters
     overhang_max_deg: 45    # [V] Prusa
     bridge_max: 10          # [K] as home_fdm_04
     supports: none          # [K] the colour body lies on the bed

@@ -44,7 +44,8 @@ Rules (each a row: process parameter + physical reason + fix; verdict FLAG / PAS
   S  size: bbox against part_min / build_max
   L  INFO: regions inside legend boxes (the coupon rule owns them) and slivers
   Y  INFO: wall-class surface between wall_min and wall_reco (the vendor's grey line = the design margin; the census gate owns it)
-Legend boxes: (x0, y0, z0, x1, y1, z1) in the print frame (a 4-tuple x0 y0 x1 y1 spans every Z), written by the generators beside the record
+Legend boxes: (x0, y0, z0, x1, y1, z1[, land_min, void_min]) in the print frame (a 4-tuple x0 y0 x1 y1 spans every Z; the two trailing values are
+that box's own limits — a debossed label's 0.45 / 0.45 beside raised 0.9 / 0.9 strokes — else the row's legend_* apply), written by the generators beside the record
 (`<piece>.boxes.json`) and loaded by the CLI with --boxes, so a CLI run reproduces the gated record byte for byte (no run time inside the record);
 inside a box the wall limit is legend_land_min, the void limit legend_void_min, and every rule's findings are listed (row L) instead of flagged —
 a region is 'inside' when >= 50 % of its samples are.
@@ -142,14 +143,15 @@ def geom_sig(m):
 
 
 def norm_boxes(boxes):
-    """Legend boxes -> list of (x0, y0, z0, x1, y1, z1); a legacy 4-tuple (x0, y0, x1, y1) spans every Z."""
+    """Legend boxes -> list of (x0, y0, z0, x1, y1, z1[, land_min, void_min]); a legacy 4-tuple (x0, y0, x1, y1) spans every Z; the optional
+    trailing pair is the box's own wall / void limit (a debossed label beside raised strokes) — without it the process row's legend_* apply."""
     out = []
     for b in boxes or []:
         b = [float(v) for v in b]
         if len(b) == 4:
             b = [b[0], b[1], -1e9, b[2], b[3], 1e9]
-        assert len(b) == 6, b
-        out.append((min(b[0], b[3]), min(b[1], b[4]), min(b[2], b[5]), max(b[0], b[3]), max(b[1], b[4]), max(b[2], b[5])))
+        assert len(b) in (6, 8), b
+        out.append((min(b[0], b[3]), min(b[1], b[4]), min(b[2], b[5]), max(b[0], b[3]), max(b[1], b[4]), max(b[2], b[5])) + tuple(b[6:]))
     return out
 
 
@@ -332,8 +334,17 @@ def _in_boxes(pts, boxes):
     pts = np.asarray(pts, float).reshape(-1, 3)
     if not boxes or not len(pts):
         return np.zeros(len(pts), bool)
-    B = np.array(boxes, float).reshape(-1, 6)
+    B = np.array([b[:6] for b in boxes], float).reshape(-1, 6)
     return ((pts[:, None, :] >= B[None, :, :3]) & (pts[:, None, :] <= B[None, :, 3:])).all(2).any(1)
+
+
+def _box_limit(pts, boxes, k, default):
+    """per-sample legend limit: a box carrying its own (land_min, void_min) after its corners (k = 6 / 7) wins over the row's `default`"""
+    pts = np.asarray(pts, float).reshape(-1, 3); out = np.full(len(pts), float(default))
+    for b in boxes:
+        if len(b) > k:
+            out[((pts >= b[:3]) & (pts <= b[3:6])).all(1)] = b[k]
+    return out
 
 
 def _where(rs, k="vmin", n=5):
@@ -363,8 +374,8 @@ def analyse(path, process, n_s=None, seed=0, boxes=None, out_dir=None, piece=Non
     pts, nrm, t, ang, g = F["pts"], F["nrm"], F["t"], F["ang"], F["g"]
     a_per = area / n_s; spacing = a_per ** 0.5; link = max(3.0 * spacing, 2.5)      # a 0.4 mm band holds ~3 samples / mm along its length: a density-scaled 1 mm link broke a long root band into pieces; 2.5 keeps it whole
     land = _in_boxes(pts, boxes) if (boxes and pr.get("legend_land_min") is not None) else np.zeros(n_s, bool)
-    thr_w = np.where(land, pr.get("legend_land_min", wall_min), wall_min)
-    thr_d = np.where(land, pr.get("legend_void_min", dmin), dmin)
+    thr_w = np.where(land, _box_limit(pts, boxes, 6, pr.get("legend_land_min", wall_min)), wall_min)
+    thr_d = np.where(land, _box_limit(pts, boxes, 7, pr.get("legend_void_min", dmin)), dmin)
     wall = ang < WALL_DEG
     def cls_of(s):
         wf = float(wall[s].mean()); nz = float(np.median(np.abs(nrm[s, 2])))
@@ -816,6 +827,9 @@ def selftest():
         # 3-D legend boxes: a box limited to the rib's foot band does not exempt the rib; a full-height box does (the generator must not draw one); records reproduce byte for byte, the sidecar is written and removed
         r = analyse(p3, FDM, n_s=30000, boxes=[(-0.9, 2.4, -0.6, 0.9, 3.6, 15.6)]); assert "W wall" in r["flagged"], r["flagged"]
         r2 = analyse(p3, FDM, n_s=30000, boxes=[(-0.9, 2.4, -0.6, 0.9, 11.6, 15.6)]); assert "W wall" not in r2["flagged"], r2["flagged"]
+        # a box's own limits (8-tuple) win over the row's legend_*: at land_min 5.0 the 0.6 rib is listed as sub-land (row L), at 0.45 it is not; the pair is kept in the record
+        r3 = analyse(p3, FDM, n_s=30000, boxes=[(-0.9, 2.4, -0.6, 0.9, 11.6, 15.6, 5.0, 0.9)]); assert "W wall" not in r3["flagged"] and r3["thin"] and r3["thin"][0]["in_land"] >= 0.5 and r3["boxes"][0][6:] == [5.0, 0.9], (r3["flagged"], r3["thin"][:1])
+        r4 = analyse(p3, FDM, n_s=30000, boxes=[(-0.9, 2.4, -0.6, 0.9, 11.6, 15.6, 0.45, 0.45)]); assert not [x for x in r4["thin"] if x["in_land"] >= 0.5], r4["thin"][:2]
         bx = os.path.join(d, "b.json"); json.dump([[-0.9, 2.4, -0.6, 0.9, 3.6, 15.6]], open(bx, "w"))
         ra = analyse(p3, FDM, n_s=30000, boxes=load_boxes(bx), out_dir=os.path.join(d, "bx"), piece="rib"); rb = analyse(p3, FDM, n_s=30000, boxes=[(-0.9, 2.4, -0.6, 0.9, 3.6, 15.6)])
         assert json.dumps({k: v for k, v in ra.items() if not k.startswith("_")}) == json.dumps({k: v for k, v in rb.items() if not k.startswith("_")}), "record not reproducible"

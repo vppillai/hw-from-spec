@@ -111,6 +111,9 @@ operating side (crank, lever, knob) is the side away from the window** — the h
 for text; raised legends on the home FDM plate; one engraved mark only where its stroke ≥ the void gate** — legible on every process. *Alt:*
 engraved text everywhere — cap ≥ ~6 mm at a 1.2 void gate, else yellow / red. *Alt:* inlay / badge plate — premium, a pinch check on the outline,
 a second material. *Alt:* two-tone print (MJF dyed + resin plate, FDM colour bands) — colour on top faces in one Z band per part.
+**Owner inputs (colour):** the palette as ROLES (structure / kinematics / accent / legend → a colour name + hex each, the yaml's only colour
+keys) and **the spool inventory — which colours are on a FULL spool and which on a small one**: the structure role takes ~60 % of the grams and
+needs a full spool, an accent (~5 %) fits a small spool (a worked example's first palette died twice on spool size — `dfm-printed-enclosure.md` §8.3).
 **C6 Fan, vents, thermal** [mech, both]. **RECOMMENDED: passive vents sized from the thermal case; a fan only when the FEA / thermal case says so, bosses =
 fan-hole count, recess dropped when the hood prints roof-down** — fewer parts. *Alt:* fan fitted — a 5 V rail, a connector, a fan header row on
 the board, an acoustic note. *Alt:* sealed — a heat path through a metal plate; the FEA thermal case is mandatory.
