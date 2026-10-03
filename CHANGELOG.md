@@ -1,6 +1,6 @@
 # CHANGELOG — hw-from-spec
 
-## Current state (0.11.0) — read this instead of replaying the entries below
+## Current state (0.11.1) — read this instead of replaying the entries below
 
 - **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
   twelve batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
@@ -26,8 +26,46 @@
   agent-ops, pitfalls — one home per rule, the others link.
 - **Checks**: three read-only tiers — inner `scripts/iteration_gate.sh [-- <cmd> ...]` (a change's `--check` + grader set), standard
   `scripts/adopt_gates.sh --no-clone` (`make gates`), release `scripts/adopt_gates.sh` (`make check`); `smoke/run_smoke.sh` runs every script selftest, the rule greps, the enforcement negatives, both lints
-  and the evals; 17 evals
+  and the evals; 18 evals
   with mechanical checks, `80-reviews/INDEX.md` and `docs/retro/INDEX.md` list every review and retro.
+
+## 0.11.1 — 2026-10-02 — beest first-article plates 1 / 1b folded: raised legends gate air gaps at 0.9 (the 0.9.2 "lands ≥ 0.45" withdrawn), the gap metric is an opening of the complement, coupons bracket the KNOB, filament slots keyed by role, a measured hole-shrink row
+
+Source: the beest project's `LEARNINGS_LOG.md` entries of 2026-10-02 and decision rows D-15 / CC-018 / CC-019 (a desk Strandbeest on a Bambu P2S,
+0.4 nozzle, 0.20 mm, PLA Basic, 4 walls; two coupon plates printed and read by the owner). The gap metric ships as the required shapely test with
+its three fixtures (the skill has no legend script; the legend gates live in the project generator). One script change so that ONE part can carry
+both kinds of legend under the new numbers — a legend box may carry its OWN limits: `print_dfm.py` `(x0, y0, z0, x1, y1, z1, land_min, void_min)`,
+`thin_wall_census.py` `[x0, y0, x1, y1, gate]`; boxes without them take the row's `legend_land_min` / `legend_void_min` (now the raised 0.9 / 0.9)
+or `--box-min`, so a coupon's always-debossed labels (0.45 / 0.45) sit beside a raised colour word on one STL. Records of plain boxes are
+byte-identical to 0.11.0 (selftests in both scripts).
+
+### Changed
+- **`dfm-printed-enclosure.md` §8 "Legends RAISED"**: cap ≥ 5.1 / stroke ≥ 0.9 / **air gap between strokes ≥ 0.9** (two 0.42 perimeters + margin;
+  a Latin capital is three strokes and two gaps; a closed "4" needs 5.6). The printer closed every 0.5–0.6 mm gap of the cap-4 bold letters (E / B /
+  S / 8) the 0.9.2 rule allowed. Font by measurement at the cap (Avenir Next Demi Bold the only pass of 24 system fonts at cap 5.2 / pad 0.08; DIN
+  Alternate Bold / Helvetica / Arial / Verdana bold fail on gaps); pad ≤ 0.1 — it trades stroke for gap one-to-one. The same numbers in the
+  "small cap" bullet, the coupon self-documenting bullet (raised: cap ≥ 5.1 / stroke ≥ 0.9 / gap ≥ 0.9; debossed unchanged), `case-pipeline.md`,
+  SKILL §8 item 5, and `templates/20-design/dfm_processes.yaml` `legend_land_min` 0.45 → 0.9 and `legend_void_min` 0.4 → 0.9 on both home rows
+  (the raised numbers; a debossed label's box carries 0.45 / 0.45 itself) / `templates/project.yaml` colour-body `void_gate` 0.45 → 0.9.
+- **The gap METRIC** (new bullet): a closing of the glyph (`buffer(h).buffer(-h) − glyph`) saturates at ~0.45 because every concave corner reads as
+  a gap above that — it could never enforce a stricter gate and silently passed the labels that printed closed. Required test: the complement's
+  thin regions under an opening by g/2 (`C − C.buffer(−g/2).buffer(g/2 + 0.02)`), parts with area > 0.5 g² (corner slivers are ~0.2 g²); the
+  pad around the complement scales with g. Fixtures stated: an E at cap 4 bold FAILs at 0.9, a 1.2 mm slot passes, a bare concave corner counts
+  0 (run at the merge with shapely 2.1.2 on synthetic polygons: 2 / 0 (1 at g = 1.3) / 0).
+- **Second-order legend rows**: the legend body inside the LENGTH of its surface (a rail word at 3/4 of the rail would have run off the end as the
+  cap grew); label pitch derived from the measured label width (pitch 19 nearly touched at cap 5.2 — 20 mm labels need ≥ 23).
+- **Coupons bracket the KNOB, not the mating feature** (§8 new bullet, §8.5, `print-kit.md` §4, SKILL §8 item 5): three variants OF THE PART THAT
+  CARRIES THE KNOB (three caps with three holes, three shoes with three slots) on ONE production-size mating feature; press / push brackets centred
+  on zero nominal clearance until hole shrink is measured; variants too small for text marked by SIZE (outer Ø 9 / 10 / 11, ski 28 / 31 / 34).
+  Plate 1 varied the pegs and tabs for one production hole / slot, both production values were outside the bracket and the plate said "none".
+- **Hole shrink, measured** (§8 "Hole shrink", dated, printer named): Ø5 hole +0.3 free pivot; D6 socket +0.2 snug / +0.3 falls out; 3 mm plate
+  in a slot +0.1 snug lap / +0.0 push-fit stays / +0.3 falls off; Ø5 press cap hole +0.0 by thumb and holds, −0.15 would not go on.
+- **Filament slots keyed by ROLE** (§8.3, `case-pipeline.md`, `print-kit.md` §1 header, kickoff C5 owner inputs): structure / kinematics / accent /
+  legend with colour name + hex as values; a palette change is a yaml-only edit (two palette changes touched 11 files while colour names were the
+  keys). Roles matched to SPOOL SIZE (structure ~60 % of the grams = a full spool; accent ~5 % fits a small one); the kickoff colour question asks
+  which spools are full and which are small.
+- `pitfalls.md`: five 2026-10-02 rows (gap rule, saturating metric, bracket-the-knob, role-keyed filaments, second-order legend rows); the
+  2026-10-01 "counters ≥ 0.45" row marked superseded.
 
 ## 0.11.0 — 2026-10-02 — the navigable layout is the default: a numbered lifecycle tree, revision-named folders, the five answer pages of `00-now/`, the kit of record, the case set shape
 

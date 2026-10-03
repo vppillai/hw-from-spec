@@ -15,7 +15,8 @@
       rail flank a wide one), and OPPOSING faces — the nearest face with an opposing normal in ANY direction (a ledge underside beside a step top,
       the root of a rim ring set inboard of its wall: invisible to normal rays, coloured by the vendor). A FAIL cluster passes only when an
       `accepted` entry {class, bbox, reason, date, evidence} covers it (bbox ± 1 mm, same class, all three text fields present).
-      A cluster mostly inside a --boxes rectangle (legend lands, [[x0, y0, x1, y1], ...]) gates at --box-min instead — wall, void AND opposing-face rows.
+      A cluster mostly inside a --boxes rectangle (legend lands, [[x0, y0, x1, y1], ...]) gates at --box-min instead — wall, void AND opposing-face rows;
+      a box with a fifth value [x0, y0, x1, y1, gate] gates at its own value (a debossed label's 0.45 beside raised 0.9 strokes on one part).
       Samples default to --samples-per-mm2 x surface area (a fixed count under-samples a large part). Prints the rows, writes --json, exit 1 on
       any unaccepted FAIL. Needs numpy + trimesh + scipy at run time.
   scripts/thin_wall_census.py --gate-dir DIR [DIR ...]
@@ -94,6 +95,21 @@ def in_box_frac(points, boxes):
     return sum(any(b[0] <= p[0] <= b[2] and b[1] <= p[1] <= b[3] for b in boxes) for p in points) / len(points)
 
 
+def box_gate(points, boxes):
+    """the own gate of the --boxes entry holding most of the cluster ([x0, y0, x1, y1, gate]); None when it carries none"""
+    best, n_best = None, 0
+    for b in boxes or []:
+        n = sum(b[0] <= p[0] <= b[2] and b[1] <= p[1] <= b[3] for p in points)
+        if n > n_best:
+            best, n_best = b, n
+    return float(best[4]) if best is not None and len(best) > 4 else None
+
+
+def _own(pp, boxes):
+    g = box_gate(pp, boxes)
+    return {"box_gate": g} if g is not None else {}        # absent unless a box carries a gate: records of plain boxes stay byte-identical
+
+
 def _extent(pp):
     lo = [min(p[i] for p in pp) for i in range(3)]; hi = [max(p[i] for p in pp) for i in range(3)]
     ext = sorted((h - l for l, h in zip(lo, hi)), reverse=True)
@@ -112,7 +128,7 @@ def cluster_rows(points, values, angles, cell=3.0, red=0.5, boxes=None):
         rows.append(dict(n=len(idx), tmin=round(tt[0], 3), tmed=round(tt[len(tt) // 2], 2), tmed_wall=round(tw[len(tw) // 2], 2),
                          n_red=sum(t < red for t in tt), wall_frac=round(wf, 2), cls="wall" if wf >= 0.5 else "wedge",
                          span=round(ext[0], 1), band=round(ext[1], 2), bbox=[round(x, 1) for x in lo + hi],
-                         in_box_frac=round(in_box_frac(pp, boxes), 2)))
+                         in_box_frac=round(in_box_frac(pp, boxes), 2), **_own(pp, boxes)))
     rows.sort(key=lambda r: (r["cls"] != "wall", -r["n"]))
     return rows
 
@@ -123,7 +139,7 @@ def void_rows(points, gaps, cell=3.0, boxes=None):
         pp = [points[i] for i in idx]; gg = sorted(gaps[i] for i in idx)
         lo, hi, ext = _extent(pp)
         rows.append(dict(n=len(idx), gmin=round(gg[0], 3), gmed=round(gg[len(gg) // 2], 2), span=round(ext[0], 1),
-                         bbox=[round(x, 1) for x in lo + hi], in_box_frac=round(in_box_frac(pp, boxes), 2)))
+                         bbox=[round(x, 1) for x in lo + hi], in_box_frac=round(in_box_frac(pp, boxes), 2), **_own(pp, boxes)))
     rows.sort(key=lambda r: -r["n"])
     return rows
 
@@ -136,7 +152,7 @@ def opp_rows(points, dists, kinds, cell=3.0, boxes=None):
         kind = "void" if sum(kinds[i] for i in idx) * 2 > len(idx) else "wall"
         lo, hi, ext = _extent(pp)
         rows.append(dict(n=len(idx), dmin=round(dd[0], 3), dmed=round(dd[len(dd) // 2], 2), kind=kind, span=round(ext[0], 1),
-                         bbox=[round(x, 1) for x in lo + hi], in_box_frac=round(in_box_frac(pp, boxes), 2)))
+                         bbox=[round(x, 1) for x in lo + hi], in_box_frac=round(in_box_frac(pp, boxes), 2), **_own(pp, boxes)))
     rows.sort(key=lambda r: -r["n"])
     return rows
 
@@ -161,20 +177,20 @@ def gate_rows(clusters, voids, gate, void_gate, box_min=None, wedge_band=None, o
         a = accepted_entry(cls, bbox, accepted)
         (acc if a else fails).append(text if not a else dict(fail=text, reason=a["reason"], date=a["date"], evidence=a["evidence"]))
     for c in clusters:
-        g = box_min if (box_min is not None and c["in_box_frac"] >= 0.5) else gate
+        g = (c.get("box_gate") or box_min) if (box_min is not None and c["in_box_frac"] >= 0.5) else gate
         if c["cls"] == "wall":
             if c["tmed_wall"] < g - 1e-9:
                 emit("wall", c["bbox"], f"WALL {c['tmed_wall']:.2f} (min {c['tmin']:.2f}) < {g} span {c['span']} bbox {c['bbox']}")
         elif wedge_band is not None and c.get("band", 0) > wedge_band + 1e-9:
             emit("wedge", c["bbox"], f"WEDGE band {c['band']:.2f} > {wedge_band} (edge {c['tmed']:.2f}, min {c['tmin']:.2f}) span {c['span']} bbox {c['bbox']} — free-standing unless an accepted entry names the backing wall")
     for v in voids:
-        g = box_min if (box_min is not None and v["in_box_frac"] >= 0.5) else void_gate
+        g = (v.get("box_gate") or box_min) if (box_min is not None and v["in_box_frac"] >= 0.5) else void_gate
         if v["gmed"] < g - 1e-9:
             emit("void", v["bbox"], f"VOID {v['gmed']:.2f} (min {v['gmin']:.2f}) < {g} span {v['span']} bbox {v['bbox']}")
     for o in opps or []:
         g = void_gate if o["kind"] == "void" else gate
         if box_min is not None and o.get("in_box_frac", 0) >= 0.5:    # a legend stroke IS two opposing faces box_min apart: the land rule owns it
-            g = box_min
+            g = o.get("box_gate") or box_min
         if o["dmin"] < g - 1e-9:                 # the root WIDTH is the minimum (exact point-to-face distance, no sampling noise); the median grows with the band
             emit("opp", o["bbox"], f"OPP {o['dmin']:.2f} (med {o['dmed']:.2f}) < {g} ({o['kind']}, opposing faces in any direction) span {o['span']} bbox {o['bbox']}")
     return fails, acc
@@ -419,6 +435,12 @@ def selftest():
     # legend boxes: a 1.0 raised stroke inside a box gates at box_min
     boxed = cluster_rows(plate, [1.0] * 900, [0.0] * 900, boxes=[[-1, -1, 31, 31]])
     assert boxed[0]["in_box_frac"] == 1.0 and gate_rows(boxed, [], 1.6, 1.0, box_min=1.0)[0] == [] and gate_rows(boxed, [], 1.6, 1.0)[0], "legend land rule"
+    assert "box_gate" not in boxed[0], "a plain box adds no key (records stay byte-identical)"
+    # a box's own gate (fifth value) wins over --box-min: a 1.0 stroke in a 0.45 box passes under box-min 1.6, the plain box fails
+    own = cluster_rows(plate, [1.0] * 900, [0.0] * 900, boxes=[[-1, -1, 31, 31, 0.45]])
+    assert own[0]["box_gate"] == 0.45 and gate_rows(own, [], 1.6, 1.0, box_min=1.6)[0] == [] and gate_rows(boxed, [], 1.6, 1.0, box_min=1.6)[0], "a box's own gate"
+    vown = void_rows([(10.0, 10.0, 6.3)], [0.5], boxes=[[0, 0, 30, 30, 0.45]])
+    assert gate_rows([], vown, 1.6, 1.0, box_min=0.9)[0] == [] and gate_rows([], void_rows([(10.0, 10.0, 6.3)], [0.5], boxes=[[0, 0, 30, 30]]), 1.6, 1.0, box_min=0.9)[0], "void rows honour the box's own gate"
     # an opposing-face pair inside a legend land gates at box_min too (a 1.3 raised stroke is two faces 1.3 apart, not a thin wall)
     lopp = opp_rows([(10.0, 10.0, 6.3), (10.0, 11.3, 6.3)], [1.3, 1.3], [0, 0], boxes=[[0, 0, 30, 30]])
     assert gate_rows([], [], 1.6, 1.0, box_min=1.0, opps=lopp)[0] == [] and gate_rows([], [], 1.6, 1.0, opps=lopp)[0], "legend land rule applies to opposing-face rows"
