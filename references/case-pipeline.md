@@ -56,9 +56,10 @@ recorded md5 in `checks/`). Everything under the set is generated; `ASSEMBLY.md`
   re-exporting (CGAL STLs are not byte-stable).
 - FDM (owner's printer, target `home_fdm`): printer-first rules as FAIL rows, numbers from `project.yaml print_targets.home_fdm` (worked example,
   0.4 nozzle / 0.20 mm / PLA-PETG: walls ≥ 1.6 = 4 perimeters — a two-line 0.85 skirt failed as a product), every external face on the bed /
-  vertical / clean top, legends RAISED cap 4 / stroke 1.0 / 0.6 on a face-up top, screws or magnets over slit tabs, coupons and a board dummy before
+  vertical / clean top, legends RAISED cap ≥ 5.1 / stroke ≥ 0.9 / air gaps ≥ 0.9 / 0.6 on a face-up top (the gap metric is an opening of the complement), screws or magnets over slit tabs, coupons and a board dummy before
   the part, slicer projects with embedded presets (`references/dfm-printed-enclosure.md` §8). Colour on TOP faces in ONE Z band per part (a coloured vertical
-  flank costs a filament swap per layer).
+  flank costs a filament swap per layer); filament slots keyed by ROLE (structure / kinematics / accent / legend) with the colour name + hex as
+  values, so a palette change is a yaml-only edit (`dfm-printed-enclosure.md` §8.3).
 - Print service (MJF / SLA, target e.g. `vendor_mjf`): every wall AND every void ≥ the checker's grey line (`print_targets.<t>.wall_gate` /
   `void_gate`; JLC3DP 2026-09-28: 1.2 — design at + `design_margin` under a no-yellow bar), no free-standing wedge (tangent fillets into walls are
   fine), engraved text only with stroke ≥ the void gate, snap features only with the slit ≥ the void gate and an engineered arm, closed rims;
