@@ -33,6 +33,11 @@ Rules the entry point makes checkable:
 - **Hardware list derived from the fastener knobs** (`hood_hold`, `magnet_rule`, `write_kit_facts` or equivalents), read by every emitter —
   README, sheets, coupon README, START_HERE, the clearance-count rows. A typed "6 inserts, 2 in the hood bosses" survived two fastener changes and
   would have put a heat-set insert into a Ø6.1 magnet pocket.
+- **Parts are named by the mark pressed into them, never by the generator's body id.** The yaml key, the CAD module and the STL name are the
+  engineer's; the technician sorts a pile by the marks on the parts, and a mark can differ from the body id for a reason of its own (a glyph the
+  census rejects is replaced by one it passes). Every display name — START_HERE, sheets, the assembly guide's part cards and steps — is derived
+  from the marks table, kept in ONE place; a mirror body (`dfm-printed-enclosure.md` §1.5) carries a DISTINCT mark and is listed under it, one line
+  per hand. The kit text gate (§3) treats a bare body id in owner text as a hit.
 - Technician-facing remedies are "report X to the engineer", never a yaml edit or a D-/CC- id. Both board-dummy variants shipped → say which to
   print ("one-piece; two-piece is the fallback"); a check the dummy cannot do (rigid nose vs bezel) is listed as EXCLUDED, not implied.
 - Ship what the texts cite: a `faces/` render cited → `faces/` in the kit; census artefacts and `.scad` out of the print folder; duplicate copies

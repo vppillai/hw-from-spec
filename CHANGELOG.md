@@ -1,17 +1,18 @@
 # CHANGELOG — hw-from-spec
 
-## Current state (0.11.1) — read this instead of replaying the entries below
+## Current state (0.11.2) — read this instead of replaying the entries below
 
 - **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
   twelve batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
   (zero errors / zero warnings / no waivers, enforced by scripts), generated-only, the decision log, parts tags [V] / [K] / [K owner-read] / [S],
   blind reviews with a record-reading verifier, layout + fab DFM mirror, the case pipeline with two PURE mesh gates (census margin, print-DFM
-  floor) and the stability row for anything that stands free (kickoff C12), the software track, release cut + production cut + the arrival checklist + spec errata, agent operations with a measured resource budget
+  floor), the stability row for anything that stands free (kickoff C12) and the three assembly-model rows (every placement det +1, a fit row per
+  mating pair, an orientation row per one-sided part type — renders are not evidence of buildability), the software track, release cut + production cut + the arrival checklist + spec errata, agent operations with a measured resource budget
   (measure → audit → change; previews on the fast engine, geometry of record on the engine that passes the mesh gates; caches as determinism checks), the retro.
 - **Scripts** (`project.yaml`-driven, every one with `--selftest`, exit 0 / 1 / 2): `project.py` (reader, scaffold, slots, kickoff --check,
   gates-required, record, env), `known_issues`, `traceability`, `release_report`, `collect_renders`, `assembly_guide`, `reorg_paths`, `dfm_check`,
   `erc_gate`, `gate_check`, `handoff_header`, `thin_wall_census` (design-margin gate), `print_dfm` (printability-floor gate + `--validate`),
-  `thin_wall_check` (quick look + pinch), `stability` (CoG vs support hull at the worst pose), `scad_lint`, `step2stl`, `arrival_checklist`, `skill_retro` (+ `--apply`), `jobs.sh` (the heavy-job
+  `thin_wall_check` (quick look + pinch), `stability` (CoG vs support hull at the worst pose; `improper_placements` = the det +1 row), `scad_lint`, `step2stl`, `arrival_checklist`, `skill_retro` (+ `--apply`), `jobs.sh` (the heavy-job
   pool), `adopt_gates.sh`, `clone_gate.sh`, `doc_voice_lint`, `generic_lint`. Mesh stack: `numpy trimesh scipy shapely rtree networkx
   mapbox-earcut embreex` (the Embree ray engine keeps a census in seconds under 1 GB).
 - **Layout** (`references/project-yaml.md` §Layout): ten numbered folders in the order of the project's life — `00-now` (five generated answer
@@ -28,6 +29,53 @@
   `scripts/adopt_gates.sh --no-clone` (`make gates`), release `scripts/adopt_gates.sh` (`make check`); `smoke/run_smoke.sh` runs every script selftest, the rule greps, the enforcement negatives, both lints
   and the evals; 18 evals
   with mechanical checks, `80-reviews/INDEX.md` and `docs/retro/INDEX.md` list every review and retro.
+
+## 0.11.2 — 2026-10-04 — the assembly model is gated, not looked at: every placement det +1, a fit row per mating pair, an orientation row per one-sided part; mirror bodies are a parts-list decision; parts named by their marks
+
+Source: the beest project's first article (a desk Strandbeest, home FDM), `LEARNINGS_LOG.md` entries of 2026-10-03 and 2026-10-04 and decision
+rows CC-022 / CC-023 / CC-024. The owner, assembling from the 3D guide, held a printed lower triangle against the guide's view: "the L piece
+seems to be mirrored … either the print is wrong or the guide is". The print was right. The assembly model's flat-part placement for the +y
+side (`print XY → machine XZ, print +z outward`) had determinant −1 — a mirror — and so had the standing-part placement for that side: 28 of
+the machine's placements (14 flat + 14 standing) drew a right side no plate can print, in every render and the walking GIF for three days.
+Written after the fact, a journal-to-socket check failed 12 of 12 D ends (each 180° from its web socket) and reversed the hands of the two
+chiral twisted journals, which had been chosen by eye from the mirrored drawing. The day before, the shoe had sat sole-up with its slot toward
+the desk in every render (CC-022). Cost: four plates and six triangles reprinted. The owner's question — *why were these issues not identified
+before?* — has four answers, each now a rule:
+1. The model was only ever LOOKED AT (renders, GIF), never checked for being physically realisable; the per-side 2D sweeps run in the part
+   plane where a mirror is a no-op, and a mirrored flat part looks plausible → every placement is a proper rotation, one CHECKS row, FAIL.
+2. Nothing compared a MATING FEATURE to its counterpart in 3D → a FIT row per mating pair through the real transforms.
+3. Print orientation ≠ assembled orientation and the transform is the only record of the turn → an ORIENTATION row per one-sided part type.
+4. The parts list never asked whether a flat part with a one-sided feature serves BOTH sides of a symmetric machine → the parts-list decision
+   (turn over / mirror body with its own mark / separate pin) before the first plate, asked at kickoff.
+
+### Added
+- **`case-pipeline.md` §Assembly model** (before §Stability): (1) every placement det +1 — a CHECKS row, FAIL, with the five-line inline form and
+  why the mirror is invisible downstream; (2) a FIT row per mating pair (D shaft ↔ D socket ≤ 1°, peg ↔ hole, tab ↔ slot) computed through
+  the placements from the geometry of record, with a generic `fit_rows(pairs)` — a pair = (feature direction, placement) vs (mate direction,
+  placement) → angle ≤ tolerance (the beest `journal_fit_rows` abstracted; the walker is named only in one labelled worked example per section);
+  (3) an ORIENTATION row per part type with a one-sided feature (slot opening, peg direction, sole normal → its mate or the ground); (4) renders
+  and GIFs are previews, rows 1–3 are the evidence. The interference bullet points at it (a per-side sweep in the part plane cannot see a mirror
+  or a D turned in its socket).
+- **`scripts/stability.py improper_placements([(label, M)])`** → `[(label, det)]` for every placement that is a mirror (det < 0) or not rigid
+  (|det| ≠ 1); the JSON CLI fails on one; selftest: a flat part laid print +z → +y flagged at det −1, the same part turned over passes, a 90°
+  turn passes, a scale is flagged. The module already weighs the CoG through these transforms, so the det row lives beside it.
+- **`dfm-printed-enclosure.md` §1.5 "One-sided parts on BOTH sides of a symmetric assembly"**: a decision-row TABLE (part type | one-sided
+  feature | serves both sides? | turn-over / mirror body / separate pin | mark for the mirror body) filled before the first plate; a mirror body
+  carries its own distinct mark, and marks on narrow members stay short (two glyphs side by side on a 4 mm member read as a tapering land to the
+  census — the beest used the letter doubled, `S S`). Kickoff **C1–C2 owner input** asks it.
+- **`print-kit.md` §1**: parts are named by the mark pressed into them, never by the generator's body id; every display name derives from the
+  marks table in one place; a mirror body is listed under its own mark; a bare body id in owner text is a kit-text-gate hit (the beest's kinked
+  bar is `k` in the yaml and carries an I — "bar I (k, …)" read as a mix-up; the reference states the rule without the letters).
+- **SKILL §8 "Assembly model"** bullet (the three rows, the mirror-body decision, renders are not evidence).
+- `pitfalls.md`: four 2026-10-04 rows (mirror transform, unchecked mating features, print-vs-assembled orientation, one-sided parts on both
+  sides), each with its detection rule, phrased for any mechanism (the project nouns stay in this entry).
+- `smoke/run_smoke.sh` §0: greps for the assembly-model rows, §1.5, the mark-naming rule and the SKILL bullet.
+
+### Not done
+- No generic script computes fit or orientation rows: the mating pairs and one-sided features are the project's (its segment lists, its
+  outlines), so the rows live in the project generator as the reference's worked example shows; `improper_placements` is the one rule general
+  enough for the skill.
+- No yaml key for the mirror-body decision; it is a decision row (the kit lists hands as plates), as the reference says.
 
 ## 0.11.1 — 2026-10-02 — beest first-article plates 1 / 1b folded: raised legends gate air gaps at 0.9 (the 0.9.2 "lands ≥ 0.45" withdrawn), the gap metric is an opening of the complement, coupons bracket the KNOB, filament slots keyed by role, a measured hole-shrink row
 

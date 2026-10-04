@@ -47,6 +47,10 @@ KIT="$SKILL/references/print-kit.md"; test -f "$KIT" || { echo "FAIL: references
 grep -q 'Stack-and-mark polarity rule' "$KIT" && grep -q 'Dry attract check before any CA' "$KIT" && grep -q 'feet LAST' "$KIT" || { echo "FAIL: print-kit.md lost the magnet / feet sequence"; exit 1; }
 grep -q '`None`, `nan`, a `{name}` brace' "$KIT" && grep -q 'Print-sheet names = project-file names' "$KIT" && grep -q 'Watertight row per exported STL' "$KIT" || { echo "FAIL: print-kit.md lost the kit text gate / naming / watertight rules"; exit 1; }
 grep -q 'bridged strips sit one layer BELOW them' "$REF" && grep -q 'exactly 45.0° is AT the overhang limit' "$REF" && grep -q 'Ship a bracket plate' "$REF" || { echo "FAIL: $REF lost §8.4 / §8.5 (plate seat, 45° limit, bracket plate)"; exit 1; }
+grep -q '^## Assembly model' "$SKILL/references/case-pipeline.md" && grep -q 'proper rotation (det +1)' "$SKILL/references/case-pipeline.md" && grep -q 'A FIT row per mating pair' "$SKILL/references/case-pipeline.md" && grep -q 'An ORIENTATION row per part type' "$SKILL/references/case-pipeline.md" || { echo "FAIL: case-pipeline.md lost the assembly-model rows (det +1 / fit / orientation)"; exit 1; }
+grep -q '^### 1.5 One-sided parts' "$REF" && grep -q 'a MIRROR BODY' "$REF" || { echo "FAIL: $REF lost §1.5 (one-sided flat parts: turn over / mirror body / separate pin)"; exit 1; }
+grep -q 'named by the mark pressed into them' "$KIT" || { echo "FAIL: print-kit.md lost the mark-naming rule"; exit 1; }
+grep -q 'improper_placements' "$SKILL/SKILL.md" || { echo "FAIL: SKILL.md §8 lost the assembly-model bullet"; exit 1; }
 grep -q 'print kit is a deliverable row' "$SKILL/references/release-and-cut.md" || { echo "FAIL: release-and-cut.md lost the kit deliverable row"; exit 1; }
 grep -q 'The machine can panic under load' "$SKILL/references/agent-ops.md" || { echo "FAIL: agent-ops.md lost the small-commits rule"; exit 1; }
 grep -q "the vendor's analysis API response, never a page" "$SKILL/SKILL.md" || { echo "FAIL: SKILL.md §8.1 lost the API-verdict rule"; exit 1; }
