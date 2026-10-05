@@ -100,6 +100,11 @@ assembly time.
 serviceable, coupon-measurable torque, works in PA12 and PLA. *Alt:* magnets — tool-free, Ø6 × 3 N42/N45 pairs, pocket + 0.4 glued (MJF) /
 + 0.1 press (PLA), polarity keyed by an asymmetric boss, ≤ 80 °C; pull force vs gap on the row. *Alt:* none (friction lap) — fit mock-up only.
 *Alt:* snap fits — possible in PA12 with a slit ≥ the void gate and an engineered arm; rarely fits a no-yellow bar's space budget; never in PLA.
+**Owner inputs (a symmetric assembly built from identical parts, C1–C2):** list every part type with a ONE-SIDED feature (integral pegs or bosses
+on one face, a one-way slot, a face that must point at its mate, an outline that must face a fixed direction) and decide per type — symmetric
+about its turn-over axis (turn over) / a mirror body for the other hand (its own mark, its own plate) / the feature on a separate pin
+(`dfm-printed-enclosure.md` §1.5, the decision-row table). One decision row, before the first plate; a one-sided part drawn on both sides without
+this row is a mirror in the assembly model and a reprint at first article.
 **C3 Coupling / stacking between units** [mech, both]. **RECOMMENDED: none** — closed rims, no open grooves. *Alt:* enclosed pocket rail in a wider part —
 allowed under the closed-rim bar; +2.4 mm width. *Alt:* external clip / bracket — a separate part, no change to the case walls.
 **C4 Feet and mounting** [mech, both]. **RECOMMENDED: 4 adhesive flat-top feet in shallow concentric pockets (no counterbore through the pocket floor), PSA

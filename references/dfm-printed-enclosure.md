@@ -98,6 +98,21 @@ The interference check proves 0 mm³ overlap on NOMINAL meshes. Add a **worst-ca
 binds at worst case is a FAIL row, not a note. **Fit clearances are per-preset knobs** (`presets.<p>.overrides.fits.*`), never numbers in the
 base block: FDM holes shrink ~0.1–0.3, MJF ±0.3, SLA ~0.1 — the coupon decides each.
 
+### 1.5 One-sided parts on BOTH sides of a symmetric assembly — a parts-list decision, before the first plate **[convention]**
+A symmetric assembly built from identical parts places a part on its other side by turning it over (a proper rotation). That works only while
+the part has no ONE-SIDED feature: integral pegs or bosses on one face, a slot that opens one way, a flat or working face that must point at a
+mate, an outline that is not symmetric about the turn-over axis and must face a fixed direction. Turned over, such a part points its feature
+inward where the other side needs it outward; drawn with the feature outward on both sides, the model is a MIRROR (det −1, `case-pipeline.md`
+§Assembly model) and no process can make it. The parts list settles it, one row per part type with a one-sided feature, before the first plate:
+
+| part type | one-sided feature | serves both sides? | turn-over / mirror body / separate pin | mark for the mirror body |
+|---|---|---|---|---|
+| (each flat part type) | pegs on one face / one-way slot / asymmetric outline / none | yes (symmetric about its own axis) / no | (a) turn-over — the part is symmetric about the axis it turns about; (b) a MIRROR BODY — `mirror()` of the design body as its own part, its own kit line, its own plate per hand; (c) the feature moved to a separate pin — one body serves both sides at the cost of a loose pin per joint | a DISTINCT mark (see below) |
+
+The kit lists hands as separate plates ("frame left", "frame right"); owner-facing names come from the marks (`print-kit.md` §1). **A mirror
+body carries its own distinct mark**; keep marks on narrow members short — two glyphs side by side on a 4 mm member read as a tapering land to
+the census. *Worked example:* one source project made this decision after its first article; four plates and six flat parts were reprinted.
+
 ## 2. Waivers are not checks — the census is a FAIL gate
 
 The census gates the DESIGN margin per `print_targets.<t>`; the printability FLOOR (walls, roots, knife edges, point contacts, voids, holes,

@@ -119,9 +119,54 @@ owner addition arrives. Budget the bump before promising "full release pipeline"
 - Planar linkages (mech): the body levels are a graph colouring — sweep every body pair over the full cycle, edge = an in-plane crossing, levels =
   chromatic number (a triangle in the conflict graph → three levels, however the bars are drawn); compute it before drawing a link.
 - Sweep 360 steps of every body PAIR per level with pins / pegs / caps as discs; min distance and overlap area per pair as a CHECKS row (`contacts = 0`).
-  A bar-only sweep or any single-pose render misses touching bosses and a peg grazing a bar.
+  A bar-only sweep or any single-pose render misses touching bosses and a peg grazing a bar. A sweep run per side in the PART plane cannot see
+  a mirrored side or a D turned 180° in its socket — those are the assembly-model rows (§Assembly model), run on the 4×4 placements.
 - Static raised features are in the sweep too: a moving part's envelope against every raised legend, boss and lug on the faces it passes, with
   the axial play added (the arm that scraped its legends had 0.5 mm of designed gap to the flat face and −0.1 to the 0.6 mm letters).
+
+## Assembly model (every instance placement, every mating pair) — buildability is PROVEN, never looked at
+The assembly model (`assembly.json`: body, colour, 4×4 placement per instance, per pose) is the only record of how a part is TURNED between
+its print (or stock) frame and the machine; renders, face sets and animations are drawn from it and inherit every error in it. Three
+transform-level rows gate it — pure arithmetic on the placement matrices and the part-frame feature directions — before any render is trusted:
+1. **Every instance placement is a proper rotation (det +1) — a CHECKS row, FAIL.** `det(M[:3,:3]) < 0` is a MIRROR, and a mirror cannot be
+   made: the render shows a part no plate or stock can produce. `scripts/stability.py improper_placements([(label, M), …]) == []` (five lines
+   inline if the generator has no stability module: `np.linalg.det(np.array(M)[:3, :3])` per instance, count `< 0`, row = `0`). The mirror is
+   invisible to everything downstream: a flat part reads as plausible mirrored (its outline is the same shape), a per-side 2D interference sweep
+   runs in the part plane where a mirror is a no-op, and the kit prints the body, not the transform. A symmetric assembly built from identical
+   parts is the usual way in: "part +z outward" on both sides of the machine makes one side improper. A part that can only be drawn mirrored
+   needs a mirrored BODY (`mirror([1,0,0])` of the design body, its own identifier mark, `dfm-printed-enclosure.md` §1.5), never a mirrored
+   transform. *Worked example:* one source project drew one whole side as a mirror image through three days of renders and an animation;
+   nothing but the owner holding a printed part against the guide caught it.
+2. **A FIT row per mating pair the design knows about** (shaft ↔ bore, D ↔ D socket, peg ↔ hole, tab ↔ slot, pin ↔ pivot, key ↔ keyway): the
+   DIRECTION of the feature and the direction of its mate, both mapped through the REAL placements into the machine frame, must agree within a
+   stated tolerance (a flat vs its socket flat ≤ 1°; an axis vs its bore axis ≤ 1°, offset ≤ the fit clearance). The interference sweep says two
+   bodies do not overlap; it never says a feature goes INTO its mate, and a chiral feature's hand (a twist, a thread, a one-way tooth) is decided
+   by this row, not by eye. Generic form — a pair is (feature direction in its part frame, its placement) vs (mate direction in its part frame,
+   its placement):
+   ```python
+   from math import atan2, degrees
+   import numpy as np
+
+   def machine_dir(M, v):                              # a part-frame direction -> machine frame (rotation only)
+       R = np.array(M, float)[:3, :3]; w = R @ np.array(v, float); return w / np.linalg.norm(w)
+   def fit_rows(pairs, tol_deg=1.0):                   # pairs: [(label, v_feature, M_feature, v_mate, M_mate)] -> CHECKS rows
+       rows = []
+       for label, vf, Mf, vm, Mm in pairs:
+           a, b = machine_dir(Mf, vf), machine_dir(Mm, vm)
+           diff = degrees(atan2(np.linalg.norm(np.cross(a, b)), np.dot(a, b)))     # unsigned angle; sign it against a reference axis if the pair is planar
+           rows.append(("fit", f"{label}: feature direction vs mate direction (deg)", f"{diff:.1f}", f"<= {tol_deg}", diff <= tol_deg))
+       return rows
+   ```
+   The feature directions come from the geometry of record (the same segment list or outline the CAD is generated from), so the row cannot
+   agree with a drawing the mesh contradicts; a feature whose mate is not in reach is a FAIL row, not a skipped one. A row of this kind written after the
+   first article has failed every end of a mating-pair type at once (180° off) and then decided the hand of the chiral part.
+3. **An ORIENTATION row per part type with a one-sided feature** (a slot that opens one way, pegs or bosses on one face, a working face that must
+   point at its mate, a flat that must face a fixed direction): the feature's axis through the placement must point at its mate or at the ground
+   — `np.dot(machine_dir(M, axis), expected) > cos(tol)`, one row per part type, `expected` from the geometry of record (the mate's position,
+   `−z` for a ground face). A flat render reads an inverted one-sided part as fine; the
+   row does not.
+4. **Renders and animations are not evidence of buildability.** They are previews of the model; rows 1–3 are the evidence, and the assembly
+   guide's 3D view is the owner's last look, not the gate.
 
 ## Stability (anything that stands, rocks, walks or is set down free)
 - A free-standing piece has a support polygon (the convex hull of what touches the ground) and a centre of gravity; it stays up only while the
