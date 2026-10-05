@@ -1,6 +1,6 @@
 ---
 name: hw-from-spec
-version: 0.11.1
+version: 0.11.2
 description: Run a hardware project (a PCB, a printed or CNC enclosure, or both — scope chosen at kickoff; contract fab such as JLCPCB) from a written specification to a production cut with an owner-gated, generated-only, blind-reviewed workflow — a kickoff questionnaire that asks every owner decision up front with recommended answers, a zero-warning manufacturability bar, and a retro that folds each project's learnings back into the skill. Use this whenever someone starts a board or enclosure project from a spec, asks to set up gates, a decision log, generators, part verification, a fab DFM mirror, a case pipeline, FEA, blind reviews, a release report or a production cut for one, or resumes such a project, or wants the skill improved from a finished project — even if they only say "new KiCad board", "order this at JLC", "review the layout", "cut the release" or "what did we learn".
 ---
 
@@ -296,6 +296,14 @@ FEA: Gmsh + scikit-fem; fTetWild for CGAL STLs; caches keyed on content; compact
   `references/case-pipeline.md` §Stability): centre of gravity from the STL set with an infill factor per body, through the assembly transforms,
   against the hull of the ground footprints; min margin over every pose ≥ a stated value. A render cannot show it: a walker with its drive behind
    the legs tips at the poses where one foot per side is down, and every render looked fine.
+- **Assembly model.** Renders and animations are previews of the model, not evidence that it can be built; three transform rows are
+  (`references/case-pipeline.md` §Assembly model): (1) every instance placement is a proper rotation — `det +1`, one CHECKS row, FAIL
+  (`scripts/stability.py improper_placements`); a det −1 placement is a mirror no process can make, and a part that only fits mirrored needs a
+  mirror BODY with its own mark, decided on the parts list before the first plate (`references/dfm-printed-enclosure.md` §1.5, kickoff C1–C2);
+  (2) a FIT row per mating pair the design knows about (shaft ↔ bore, D ↔ D socket, peg ↔ hole, tab ↔ slot, pin ↔ pivot) — feature direction vs
+  mate direction through the real placements, within a stated tolerance (≤ 1°); (3) an ORIENTATION row per part type with a one-sided feature
+  (slot opening, peg direction, a face that must point at its mate or the ground). A whole side drawn mirrored, every mating flat 180° off its
+  socket and an inverted one-sided part each survived days of renders and a per-side 2D sweep; the rows catch them in seconds.
 - **Point contacts.** Before any mark-shaped body or pocket (inlay plate, badge, deboss) run `scripts/thin_wall_check.py --pinch <stl>`: a traced
   outline of touching shapes pinches to 0.01 mm and the part arrives as lobes; a wall census cannot see it. Bridge with web discs clipped to the
   outline's closing, add the neck row, keep the components = 1 row (`references/case-pipeline.md` §Point contacts).

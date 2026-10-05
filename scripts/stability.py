@@ -14,6 +14,10 @@ Use from a generator (the poses are the project's; this module does the arithmet
     margin, hull = support_margin((cog[0], cog[1]), contact_polygons)         # contacts: shapely polygons on the ground plane (footprints)
     -> margin > 0 inside (distance to the nearest edge), < 0 outside (a single foot still has a footprint), None with no contact at all
 A CHECKS row: min margin over the poses >= a stated limit (the source project used 2 mm on a 165 g piece with 14 mm shoes).
+    improper_placements([(label, M4x4), ...])                                 # -> [(label, det)] for every placement that is a mirror or not rigid
+A placement matrix with determinant -1 is a MIRROR, and a mirror cannot be printed: the same transforms this module weighs the CoG through must
+every one be a proper rotation (det +1) — one CHECKS row, `len(improper_placements(...)) == 0`. One source project drew one whole side of the
+machine as a mirror image for three days of renders and a GIF; the printed part did not match the guide and nothing but the owner's hands caught it.
 Density: PLA 1.24e-3 g/mm3 solid; parts printed with sparse infill weigh less — pass a per-body factor (walls + top/bottom shells dominate small
 parts, so 0.5–0.7 of solid for large flat plates, ~1.0 for pins and bars). The CoG moves only if the factors differ between front and back.
 """
@@ -48,6 +52,19 @@ def cog_of_assembly(items):
     if tot <= 0:
         raise ValueError("no mass")
     return (acc / tot).tolist(), tot
+
+
+def improper_placements(items, tol=1e-6):
+    """items: [(label, M (4x4 nested list))] -> [(label, det)] for every placement whose 3x3 is not a proper rotation: det < 0 is a mirror
+    (unprintable — a part that only fits as its mirror image needs a mirrored BODY, never a mirrored transform), |det| != 1 is a scale or a
+    shear. Empty list = every placement is physically realisable."""
+    import numpy as np
+    bad = []
+    for label, M in items:
+        d = float(np.linalg.det(np.array(M, dtype=float)[:3, :3]))
+        if d < 0 or abs(abs(d) - 1.0) > tol:
+            bad.append((label, round(d, 6)))
+    return bad
 
 
 def support_margin(cog_xy, contacts):
@@ -110,7 +127,17 @@ def selftest():
         m, _ = support_margin((0.0, 0.0), []); assert m is None
         worst, lab, rows = sweep([("a", (0.0, 0.0), feet), ("b", (14.0, 0.0), feet), ("c", (0.0, 0.0), feet[:1])])
         assert lab == "c" and worst < -8.0 and rows[1][1] == -4.0, (worst, lab, rows)                  # one foot: the CoG is outside its footprint
-    print("selftest OK (volume centroid of transformed bodies with densities — not the area centroid, open mesh refused; support margin inside / outside / degenerate; sweep worst pose)")
+        # handedness: a flat part laid print-XY -> machine-XZ with print +z -> +y is a mirror (det -1) however plausible the render; the same
+        # part turned over (print +z -> -y) is a proper rotation; a 90° turn is proper; a scale is not rigid; a mirrored body may NOT be rescued by
+        # a second mirror in the transform (two mirrors = proper, but then the BODY is the mirror body, which is the point)
+        flat_mirror = [[1, 0, 0, 0], [0, 0, 1, 0], [0, 1, 0, 0], [0, 0, 0, 1]]
+        flat_turned = [[1, 0, 0, 0], [0, 0, -1, 3.0], [0, 1, 0, 0], [0, 0, 0, 1]]
+        turn90 = [[0, -1, 0, 5], [1, 0, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]
+        scaled = [[2, 0, 0, 0], [0, 2, 0, 0], [0, 0, 2, 0], [0, 0, 0, 1]]
+        bad = improper_placements([("ok_I", I), ("mirror", flat_mirror), ("turned", flat_turned), ("turn90", turn90), ("scaled", scaled)])
+        assert [b[0] for b in bad] == ["mirror", "scaled"] and bad[0][1] == -1.0 and bad[1][1] == 8.0, bad
+        assert improper_placements([]) == []
+    print("selftest OK (volume centroid of transformed bodies with densities — not the area centroid, open mesh refused; support margin inside / outside / degenerate; sweep worst pose; improper placements: mirror and scale flagged, turn-over and 90° pass)")
     return 0
 
 
@@ -121,6 +148,9 @@ def main(argv):
         # {"items": [[stl, M, rho], ...], "poses": [[label, [x, y], [[x0,y0,x1,y1], ...]], ...]} -> margins
         from shapely.geometry import box
         spec = json.load(open(argv[1]))
+        bad = improper_placements([(i[0], i[1]) for i in spec["items"]])
+        if bad:
+            print("FAIL: placements that are not proper rotations (a mirror cannot be printed): " + ", ".join(f"{l} det {d}" for l, d in bad)); return 1
         c, mass = cog_of_assembly([tuple(i) for i in spec["items"]])
         worst, lab, rows = sweep([(l, tuple(cxy) if cxy else (c[0], c[1]), [box(*b) for b in bxs]) for l, cxy, bxs in spec["poses"]])
         print(f"cog {['%.2f' % v for v in c]} mass {mass:.1f} g; worst margin {worst:.2f} mm at pose {lab}")
