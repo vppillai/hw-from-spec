@@ -111,7 +111,7 @@ inward where the other side needs it outward; drawn with the feature outward on 
 
 The kit lists hands as separate plates ("frame left", "frame right"); owner-facing names come from the marks (`print-kit.md` §1). **A mirror
 body carries its own distinct mark**; keep marks on narrow members short — two glyphs side by side on a 4 mm member read as a tapering land to
-the census. *Worked example:* the walker project made this decision after its first article; four plates and six flat parts were reprinted.
+the census. *Worked example:* one source project made this decision after its first article; four plates and six flat parts were reprinted.
 
 ## 2. Waivers are not checks — the census is a FAIL gate
 
