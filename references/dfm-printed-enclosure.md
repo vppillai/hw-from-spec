@@ -9,8 +9,8 @@ quote-page session under `60-orders/quotes/<date>/`). SLA is §11, CNC is `refer
 **Every number here carries a tag** — the same four as `references/pcb-layout-dfm.md`: **[checker]** = what the vendor's thin-wall map colours
 (the worked example: JLC3DP, on ~150 mm parts); **[vendor sheet: URL, date]** = a published capability or tolerance; **[physics]** = the material;
 **[owner bar]** = the bar the owner set (no yellow on the map, closed rims); **[convention]** = what the scripts rely on. **No number lives in a
-script**: every gate value is read from `project.yaml print_targets.<target>` (`references/project-yaml.md`), and the numbers quoted below are the
-source project's targets, labelled.
+script**: every gate value is read from `project.yaml print_targets.<target>` (`references/project-yaml.md`), and the numbers quoted below are one
+measured project's targets, labelled.
 
 ## 0. The acceptance bar (an owner decision at kickoff; written into the decision row before the first census)
 **0 FAIL / 0 WARN in every check table and in the census of every body · zero slicer warnings · no vendor flag (API read) · no yellow, no red on
@@ -40,7 +40,7 @@ seen (a dummy 0.4 mm low). The only exception path is the machine-readable `acce
   chamfers and tangent fillets into walls yes; added free edges, rails, lips, knife edges no — round the tip, give it a ≥ gate flat land, or
   remove the feature.
 - **Snap fits, living hinges, compliant detents: PA12 CAN do them** **[physics]** (E ≈ 1.7 GPa, elongation at break 15–25 %; HP's MJF design
-  guide shows both). What killed them on the source project was (a) the ≥ `void_gate` slit a no-yellow bar demands at JLC3DP, which rarely fits
+  guide shows both). What killed them on one vendor-MJF enclosure was (a) the ≥ `void_gate` slit a no-yellow bar demands at JLC3DP, which rarely fits
   the space budget, and (b) a rigid bump with no arm length (F ∝ t³ — a stiff bump blocks, in PA12 as in PETG). Allowed when the slit ≥ the void
   gate and the arm is engineered (length, root fillet, FEA); otherwise screws into inserts or magnets (§1.1). On PLA / FDM: screws.
 - **A long thin skin is a wall, never a "feature"** **[owner bar + physics]**: a sub-minimum skin well over 100 mm long **cracked on every part**
@@ -72,7 +72,7 @@ seen (a dummy 0.4 mm low). The only exception path is the machine-readable `acce
 ### 1.1 Retention hardware: inserts, screws, magnets — per material
 | Material | Insert / fastener | Bore and depth | Boss OD / wall | Notes |
 |---|---|---|---|---|
-| **MJF PA12** | thread-forming screws for plastics (Delta PT / Remform class) into a plain pilot are the usual choice **[vendor sheet]**; heat-set inserts work but at a higher iron temperature (Tm ≈ 178 °C **[physics]**) — set the temperature from the insert TDS; press-fit / self-tapping inserts also fine | from the insert or screw manufacturer's TDS, never a rule of thumb; insert 0.1–0.2 below flush | boss OD ≥ 2 × insert OD (~3 mm wall around an M3 insert) **[physics]**; the source project's 1.3 ring is marginal for hoop stress at insertion — labelled so | pull-out / torque to failure on the coupon (§8) before the value goes on the SOP as `[OWNER: …]` |
+| **MJF PA12** | thread-forming screws for plastics (Delta PT / Remform class) into a plain pilot are the usual choice **[vendor sheet]**; heat-set inserts work but at a higher iron temperature (Tm ≈ 178 °C **[physics]**) — set the temperature from the insert TDS; press-fit / self-tapping inserts also fine | from the insert or screw manufacturer's TDS, never a rule of thumb; insert 0.1–0.2 below flush | boss OD ≥ 2 × insert OD (~3 mm wall around an M3 insert) **[physics]**; one measured enclosure's 1.3 ring is marginal for hoop stress at insertion — labelled so | pull-out / torque to failure on the coupon (§8) before the value goes on the SOP as `[OWNER: …]` |
 | **PLA (FDM)** | heat-set inserts at the TDS temperature; **creep under screw preload above ~45 °C** **[physics]** → the FDM preset is a fit / assembly mock-up unless PETG / ASA and the thermal case says otherwise | TDS bore, drilled/reamed if hole shrink (§8) matters | ≥ 1.6 boss wall at 0.4 nozzle (4 perimeters) — a 1.3 ring around an M3 heat-set insert in PLA is a known crack site | insert + torque coupon in the kit |
 | **PETG** | as PLA; softens ~75–80 °C **[physics]** | | | |
 | **Magnets** | Ø6 × 3 N42 / N45 disc pairs (a standard, easy-to-find size), Ni coating; **max operating temperature N35/N42 ≈ 80 °C, N35H / N42H 120 °C** **[vendor sheet]** — record grade + coating on the BOM line | pocket Ø = magnet Ø + fit: **MJF glued (CA) Ø + 0.4, PLA light press Ø + 0.1** (drill / ream the 6.35 imperial size if that is what arrives); depth = magnet + 0.3 recess each side | pocket walls ≥ `wall_gate`; boss OD ≥ pocket + 2 × wall | **pull force vs gap** from the supplier's curve at (2 × recess + lap gap), stated on the row ("15.7 N at touch, N at 0.9 mm"); **polarity keying** by an asymmetric boss (Ø10 left / Ø11 right) — a debossed dot beside a Ø6.4 pocket in a Ø10 boss leaves 0.25 mm lands (yellow) and a raised dot in a 0.3 lap gap collides; hobby-standard discs (Ø6 × 3, Ø4 × 2) exist only in N35 … N52 (80 °C) at vendors whose pages render without a login — the H / SH grades start at 2 × 2 / 4 × 4 and need a distributor; the mating part's steel counterpart (screw head, plate) is the cheap half |
@@ -111,7 +111,7 @@ inward where the other side needs it outward; drawn with the feature outward on 
 
 The kit lists hands as separate plates ("frame left", "frame right"); owner-facing names come from the marks (`print-kit.md` §1). **A mirror
 body carries its own distinct mark**; keep marks on narrow members short — two glyphs side by side on a 4 mm member read as a tapering land to
-the census. *Worked example:* one source project made this decision after its first article; four plates and six flat parts were reprinted.
+the census. *Worked example:* one first article forced this decision; four plates and six flat parts were reprinted.
 
 ## 2. Waivers are not checks — the census is a FAIL gate
 
@@ -217,7 +217,7 @@ at in `print_targets.<t>.max_bbox_for_rule`; test the hypothesis once with the s
      evidence. A scaled-down copy of the body is not informative (every wall scales); a short probe that passes proves nothing about the full length.
   4. *Record*: the probe table names the method, every probe with its knob and verdict, the rule adopted, and the API re-verification of every body.
 
-<!-- worked example: begin (source project, 2026) — the one fenced example of this reference; the rules above are the generic form -->
+<!-- worked example: begin (2026) — the one fenced example of this reference; the rules above are the generic form -->
 Worked example (JLC3DP MJF PA12 checker, a 147 mm tray): three ray-cast censuses (60 k … 400 k samples) found nothing under 1.37 mm on a tray the
 checker read RED along both long walls; the trip was a rim 1.4 mm above a skirt-lap step with a 0.9 mm inward undercut; the identical profile
 passed at 48 mm and failed at 88 and 147 mm. Calibrated rule at this checker and ~150 mm: a rim above a skirt-lap step ≥ 2.0 mm (1.4 fails; 2.0
@@ -297,12 +297,12 @@ numbers are **[owner bar]** for a 0.4 nozzle at 0.20 mm and live in `print_targe
   legend boxes — so a debossed label and a raised colour word on one coupon are gated apart),
   never on a bridge underside or a deep inner wall. A coupon the user has to look up in a README to identify is a coupon that gets mixed up on
   the bench; the slicer's object names are gone the moment the part comes off the plate. The marker is generated from the same yaml value it
-  tests, so it cannot disagree with the geometry. **A variant too small to carry text is marked by SIZE** (caps at outer Ø 9 / 10 / 11, shoes at
+  tests, so it cannot disagree with the geometry. **A variant too small to carry text is marked by SIZE** (caps at outer Ø 9 / 10 / 11, sliders at
   ski length 28 / 31 / 34 — they sort on the bench by eye): a 2 mm cap ring has no room for a deboss and the census would fail one.
 - **Bracket the KNOB, not the mating feature.** A coupon that prints one production hole and three pegs (4.9 / 5.0 / 5.1) only answers when the
-  production hole is inside the bracket; on the worked example's first coupon plate the cap hole (−0.15) and the shoe slot (+0.3) were both outside it and the plate
+  production hole is inside the bracket; on the worked example's first coupon plate the cap hole (−0.15) and the slider slot (+0.3) were both outside it and the plate
   could only say "none" — a second plate was needed (2026-10-02). For every fit knob the coupon prints **three variants OF THE PART THAT CARRIES
-  THE KNOB** (three caps with three holes, three shoes with three slots) tried on ONE production-size mating feature; **centre the bracket on
+  THE KNOB** (three caps with three holes, three sliders with three slots) tried on ONE production-size mating feature; **centre the bracket on
   zero nominal clearance for press / push fits** while the printer's hole shrink is unknown (here it was ~0.15–0.2; a −0.15 hole became ~0.3 real
   interference). The winner is written into `fits.*` and the production part follows it.
 - **Coupon labels are ALWAYS debossed — unless the coupon also tests colour (a mark / AMS coupon), and then ONE short raised word in the

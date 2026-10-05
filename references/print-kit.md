@@ -74,7 +74,7 @@ START_HERE, every README and print sheet, and the generated ASSEMBLY.md; the run
   opacity at depth): after the coupon, print **one part** (one cap, one plate) before the multi-object plate; START_HERE says so per step.
 - **Snug-fit features ship as a bracket plate** (`dfm-printed-enclosure.md` §8.5): e.g. crush ribs at 0.20 / 0.25 / 0.30, one object each, NAMED
   by its value in the 3MF (no digit deboss — the object name carries it). **The three variants are copies of the part that CARRIES the knob**
-  (three caps with three holes, three shoes with three slots), tried on ONE production-size mating feature — a plate that varies the mating
+  (three caps with three holes, three sliders with three slots), tried on ONE production-size mating feature — a plate that varies the mating
   feature instead answers only when the production value happens to lie inside the bracket (the worked example's first plate said "none"; a second plate was needed).
   Press / push brackets centre on zero nominal clearance until the printer's hole shrink is measured; variants too small for text sort by SIZE. The technician keeps the one that seats under thumb pressure and
   survives the hang test and reports the value; **the owner picks the knob after that print** (default stays the middle value).

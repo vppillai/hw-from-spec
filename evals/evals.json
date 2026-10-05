@@ -144,7 +144,7 @@
   {
    "id": 7,
    "name": "vendor-flags-a-body-the-census-calls-clean",
-   "note": "regression test on the source project's scenario (JLC3DP checker, 2026-09-28, 147 mm tray); the generic rule is the probe method, not the 2.0 number",
+   "note": "regression test on a measured vendor-MJF scenario (JLC3DP checker, 2026-09-28, 147 mm tray); the generic rule is the probe method, not the 2.0 number",
    "prompt": "JLC3DP flags our 147 mm MJF tray 'thin walls' (API thinWall true, red along the inside of both long walls) but scripts/thin_wall_census.py finds nothing under 1.37 mm on that exact STL, and a 40 mm test piece of the same wall section uploads clean. Find the rule and fix the tray in one more round.",
    "expected_output": "Does not trust the 40 mm piece (the vendor's metric is length-dependent: the same profile can pass at 48 mm and fail at 88 / 147 mm); slices the flagged STL of record into capped slabs (trimesh slice_mesh_plane) and uploads each alone to localise the feature and the length threshold; builds plain-profile OpenSCAD polygon-extrusion probes at 40 mm AND full length with ONE knob each (rim thickness, wall, undercut filled), uploads each alone, reads every verdict from the API at parseStatus 2; identifies the trip as the rim over the skirt-lap step with an inward undercut and adopts the first full-length pass (rim >= 2.0 over the step, or the undercut filled so the inner wall runs straight to the rim top) through the yaml on BOTH presets with their own version keys; adds the rule as a named census row; re-verifies every body of record by the API; files probe/PROBES.md and a DFM_ROUND.md; proves the mating part still registers (overlap 0 mm3). Nothing saved, carted or paid.",
    "files": [],

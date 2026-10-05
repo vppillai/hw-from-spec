@@ -91,8 +91,8 @@ grep -q 'AskUserQuestion' "$SKILL/SKILL.md" && grep -q '^### 0.1 The kickoff que
 grep -c 'RECOMMENDED' "$SKILL/references/kickoff-questionnaire.md" | awk '$1 >= 30 {ok=1} END {exit !ok}' || { echo "FAIL: the questionnaire lost its recommended answers"; exit 1; }
 grep -q '^| D1 | the manufacturability bar' "$SKILL/templates/10-spec/KICKOFF_ANSWERS.md" || { echo "FAIL: KICKOFF_ANSWERS.md lost the bar row"; exit 1; }
 grep -q 'references/pcb-layout-dfm.md' "$SKILL/SKILL.md" || { echo "FAIL: SKILL.md lost the layout reference (C-07)"; exit 1; }
-LEAK='(^|[^a-z0-9])p2s([^a-z0-9]|$)|presets\.P2S|lap\.ring_down|aec[-_]tester|tenstorrent'   # generic: ok (the lint patterns themselves)
-grep -rqiE "$LEAK" "$SKILL/SKILL.md" "$SKILL/README.md" "$SKILL/templates" "$SKILL/workflows" "$SKILL/evals" && { echo "FAIL: a source-project identifier leaked into SKILL / README / templates (C-15 / B-34)"; exit 1; }
+LEAK='(^|[^a-z0-9])p2s([^a-z0-9]|$)|presets\.P2S|lap\.ring_down'   # generic: ok (the lint patterns themselves; project names are generic_lint's term file)
+grep -rqiE "$LEAK" "$SKILL/SKILL.md" "$SKILL/README.md" "$SKILL/templates" "$SKILL/workflows" "$SKILL/evals" && { echo "FAIL: a project identifier leaked into SKILL / README / templates (C-15 / B-34)"; exit 1; }
 grep -q '^## 13. Retro' "$SKILL/SKILL.md" || { echo "FAIL: SKILL.md lost the retro phase (§13)"; exit 1; }
 grep -rnE '30-board/kicad/(kicad:|drc|gen)' "$SKILL/templates" "$SKILL/references" "$SKILL/SKILL.md" && { echo "FAIL: the kicad/ -> 30-board/kicad/ reorg rewrote a non-path (the CI image kicad/kicad:<tag> or a kicad/drc, kicad/gen domain tag) — restore the literal (0.11.0 A-8)"; exit 1; }
 # 0.10.0: the arrival checklist, the spec errata, the review protocol with a record-reading verifier, the owner-read tag, the slicer optimisation home
@@ -116,7 +116,7 @@ for s in "$SKILL"/scripts/*.py "$SKILL"/scripts/*.sh; do
     *.sh) "$s" --selftest ;;
   esac
 done
-say "0c the skill reads as the current, generic procedure: no changelog voice, no version numbers in prose, no source-project names / parts / ids / dimensions outside the fenced worked examples"
+say "0c the skill reads as the current, generic procedure: no changelog voice, no version numbers in prose, no project names / parts / ids / dimensions outside the fenced worked examples"
 "$PY" "$SKILL/scripts/doc_voice_lint.py" --selftest >/dev/null && "$PY" "$SKILL/scripts/doc_voice_lint.py" || { echo "FAIL: doc_voice_lint hits (the skill narrates its history inside a rule)"; exit 1; }
 "$PY" "$SKILL/scripts/generic_lint.py" --selftest >/dev/null && "$PY" "$SKILL/scripts/generic_lint.py" || { echo "FAIL: generic_lint hits (the skill names the project it was learned on)"; exit 1; }
 say "0d print DFM: the loop is in SKILL.md as commands, the table and verdict record ship as templates, the tool and the SCAD lint selftest, eval 14's pair flags / passes through the CLI"
@@ -144,11 +144,11 @@ if [[ -n "$MESH" ]]; then
 "$PY" scripts/stability.py --selftest
 "$PY" - <<'PYEOF'
 import sys, os; sys.path.insert(0, "scripts"); import trimesh, print_dfm
-trimesh.creation.extrude_polygon(print_dfm.rim_profile(0.5), 90.0).export("40-case/mjf_case/build/eval14_root05.stl"); trimesh.creation.extrude_polygon(print_dfm.rim_profile(1.3), 90.0).export("40-case/mjf_case/build/eval14_root13.stl")
+trimesh.creation.extrude_polygon(print_dfm.rim_profile(0.5), 90.0).export("40-case/vendor_mjf/build/eval14_root05.stl"); trimesh.creation.extrude_polygon(print_dfm.rim_profile(1.3), 90.0).export("40-case/vendor_mjf/build/eval14_root13.stl")
 PYEOF
-if "$PY" scripts/print_dfm.py --process jlc_mjf_pa12 --samples 40000 40-case/mjf_case/build/eval14_root05.stl > 40-case/mjf_case/build/eval14_flag.txt; then echo "FAIL: the 0.5 root under a 2.0 rim must FLAG (exit 1)"; cat 40-case/mjf_case/build/eval14_flag.txt; exit 1; fi
-grep -q '^  FLAG  R root under a rim' 40-case/mjf_case/build/eval14_flag.txt && grep -q '^  FLAG  W wall' 40-case/mjf_case/build/eval14_flag.txt || { echo "FAIL: eval 14 FLAG lacks the W + R rows"; cat 40-case/mjf_case/build/eval14_flag.txt; exit 1; }
-"$PY" scripts/print_dfm.py --process jlc_mjf_pa12 --samples 40000 40-case/mjf_case/build/eval14_root13.stl | grep -q 'eval14_root13.stl: PASS' || { echo "FAIL: the same geometry at root 1.3 must PASS"; exit 1; }
+if "$PY" scripts/print_dfm.py --process jlc_mjf_pa12 --samples 40000 40-case/vendor_mjf/build/eval14_root05.stl > 40-case/vendor_mjf/build/eval14_flag.txt; then echo "FAIL: the 0.5 root under a 2.0 rim must FLAG (exit 1)"; cat 40-case/vendor_mjf/build/eval14_flag.txt; exit 1; fi
+grep -q '^  FLAG  R root under a rim' 40-case/vendor_mjf/build/eval14_flag.txt && grep -q '^  FLAG  W wall' 40-case/vendor_mjf/build/eval14_flag.txt || { echo "FAIL: eval 14 FLAG lacks the W + R rows"; cat 40-case/vendor_mjf/build/eval14_flag.txt; exit 1; }
+"$PY" scripts/print_dfm.py --process jlc_mjf_pa12 --samples 40000 40-case/vendor_mjf/build/eval14_root13.stl | grep -q 'eval14_root13.stl: PASS' || { echo "FAIL: the same geometry at root 1.3 must PASS"; exit 1; }
 "$PY" scripts/print_dfm.py --list | grep -q 'xometry_mjf_pa12' || { echo "FAIL: --list must show the template rows outside a project table"; exit 1; }
 # enforcement (review 0.8.0 F5 / F6 / F7 / F8 / F28), negative tests on a throwaway mech project: a tampered record, an uncensused body, a laxer process
 # row than the target's, --open with a non-OPEN id, an open mesh — each must FAIL the gate / the check
@@ -176,7 +176,7 @@ PYEOF
  grep -q '^  FLAG  M manifold' open.txt || { echo "FAIL (F8): rule M did not fire on the open mesh"; cat open.txt; exit 1; }
  rc=0; "$PY" scripts/print_dfm.py --process jlc_mjf_pa12 nonexist.stl >/dev/null 2>&1 || rc=$?; [[ $rc == 2 ]] || { echo "FAIL (F21): a missing file must exit 2 (got $rc)"; exit 1; }
  echo "enforcement (mesh): uncensused body, laxer row, free --open, tampered record, open mesh, missing file -> all FAIL as required")
-rm -f 40-case/mjf_case/build/eval14_*
+rm -f 40-case/vendor_mjf/build/eval14_*
 else echo "   (0d SKIPPED: mesh libraries absent)"; fi
 say "0e enforcement without mesh libraries: a tampered / missing census record, a commented gate line, an unauthorised release line, the slot counter and the kickoff check"
 N=$T/nomesh; mkdir -p $N/40-case/pre/parts $N/40-case/pre/checks/census $N/90-log; ln -s "$SKILL/scripts" $N/scripts
@@ -281,7 +281,7 @@ say "1 fab package of record keyed on the board md5"
 MD5=$(md5of 30-board/kicad/smoke/smoke.kicad_pcb); PKG=30-board/fab/rev0; mkdir -p $PKG
 printf 'board 30-board/kicad/smoke/smoke.kicad_pcb\nmd5 %s\ncommit %s\nbuilt 2026-01-03\nsegments 1\nvias 0\n' $MD5 $(git rev-parse --short HEAD) > $PKG/board_id.txt
 printf 'PNG-stub-panel-top-render-------------------------------------------------\n' > $PKG/panel_top.png
-mkdir -p 40-case/mjf_case/pictures; printf 'PNG-stub-case-iso-render----------------------------------------------------\n' > 40-case/mjf_case/pictures/iso.png
+mkdir -p 40-case/vendor_mjf/pictures; printf 'PNG-stub-case-iso-render----------------------------------------------------\n' > 40-case/vendor_mjf/pictures/iso.png
 say "2 known_issues (generated index)";          $PY scripts/known_issues.py
 say "3 traceability (matrix)";                   $PY scripts/traceability.py || true      # exit 1 here would mean FAILED rows: the smoke has none
 say "4 dfm_check (grading the measurer's items against fab_dfm.bar; report to fab_dfm.report)"; $PY scripts/dfm_check.py

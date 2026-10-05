@@ -1,7 +1,7 @@
 # Blind review S — hw-from-spec skill v0.8.0 (2026-09-30)
 
 Reviewer: Opus, blind (repo at tag `v0.8.0` + the checklist only; `docs/reviews/`, `docs/retro/` and git history not read).
-Scratch: `/private/tmp/claude-502/.../scratchpad/` (throwaway projects `proj/{ee,mech,both}`, `cnt/{ee,mech,both}`, meshes, retro experiments).
+Scratch: `$SCRATCH/` (throwaway projects `proj/{ee,mech,both}`, `cnt/{ee,mech,both}`, meshes, retro experiments).
 
 ## What was run
 
@@ -54,7 +54,7 @@ Fix: both gates glob `paths.mech_record` (or the sibling `stl/`) and fail on any
 
 **F6 MAJOR — `print_targets.<t>.dfm_process` is read by no script; a body checked against a laxer row passes the gate.**
 `grep -n dfm_process scripts/*.py` → docstrings only. Reproduced: plate08 (0.8 mm) run with `--process protolabs_mjf_pa12` (wall_min 0.5) into
-`h/jlc_mjf/dfm` → `PASS`, `--gate` rc 0, although the target (and kickoff C8a) names `jlc_mjf_pa12` (wall_min 1.0). The record also carries
+`h/vendor_mjf/dfm` → `PASS`, `--gate` rc 0, although the target (and kickoff C8a) names `jlc_mjf_pa12` (wall_min 1.0). The record also carries
 `version` and `thresholds`, but the gate compares neither with the current rule-set VERSION or table.
 Fix: `--gate` resolves the tag dir to its print target, requires `record.process == print_targets.<t>.dfm_process`, `record.version == VERSION`, and `record.thresholds == current row`.
 
@@ -121,12 +121,12 @@ Fix: move C8a to batch 6 or merge into C8, add C10 to batch 5/6 and the answers 
 **F19 MINOR — retro classifier does not survive a second project's conventions.** Reproduced with `ids.owner_prefix: OWN`: `read_decisions()` is
 called with the default `"D"` (skill_retro.py run()), so §7 "owner topics not asked" = 0; a `* 2026-09-03 (dfm) …` learning (the costly one) is
 silently skipped (`ENTRY` regex accepts only `- YYYY-MM-DD [tag]`) with no warning; `generalise()` hard-codes `CC|D|B` ids; `target_file()` maps only
-the source project's domain tags (`jlc`, `mjf`, …); the DFM drift reads the hard-coded `design/dfm_processes.yaml`. Fix: pass `P.get("ids.*")`,
+the originating project's domain tags (`jlc`, `mjf`, …); the DFM drift reads the hard-coded `design/dfm_processes.yaml`. Fix: pass `P.get("ids.*")`,
 count and print unparsed bullet lines, read the table path from project.yaml. (Positive: after folding a generalised line into `references/fab-dfm.md`
 the same entry re-classified CARRIED — the loop closes for well-formed input.)
 
 **F20 MINOR — the retro is a candidate list; every fold is a hand edit.** SKILL.md:405 says so; README:159-163 / SKILL §13 heading ("the skill improves
-with each project") read as automatic. On the source project it lists 88 NEW / 149 PARTIAL / 76 unasked owner topics — ~300 human judgements, and
+with each project") read as automatic. On the originating project it lists 88 NEW / 149 PARTIAL / 76 unasked owner topics — ~300 human judgements, and
 §8 drift rows are not applied to `templates/design/dfm_processes.yaml` even when cited. Fix: an `--apply-dfm` that writes cited NEW/CHANGED rows, and README wording "drafts" not "folds".
 
 **F21 MINOR — `print_dfm.py` exit code for a missing file is 1, docstring says 2.** `--process xometry_mjf_pa12 ~/nonexist.stl` → rc 1
@@ -148,8 +148,8 @@ generator are project code (schematic-phase.md:3) — for an ee user, G1 starts 
 **F25 NOTE — FDM cantilevers are reported as "bridges".** A T-section with 18 mm free cantilevers on `home_fdm_04` → B "2 horizontal ceilings …
 longer than bridge_max 10", INFO (supports = interior); a cantilever needs support, a bridge has two ends. Orientation = STL Z is assumed. Fix: split ceilings with one supported edge into an overhang row.
 
-**F26 NOTE — residue of the source project in generic text.** `tools: kicad_cli: openscad` in mech scope (templates/project.yaml); `port_a / port_b`
-sheets in the generic design-yaml example (schematic-phase.md §1); the retro report embeds absolute local paths (`Project /Users/…`) that a retro PR would publish.
+**F26 NOTE — residue of the originating project in generic text.** `tools: kicad_cli: openscad` in mech scope (templates/project.yaml); `port_a / port_b`
+sheets in the generic design-yaml example (schematic-phase.md §1); the retro report embeds absolute local paths (`Project <home>/…`) that a retro PR would publish.
 
 **F27 NOTE — evals are not executed.** evals/evals.json (14 entries, 5–9 assertions) has no runner; the smoke greps rules but no eval is graded. The kickoff/scope evals 11/12 would currently fail on F15.
 
@@ -176,7 +176,7 @@ waived in prose (F11), the mesh gates are opt-in comments and pass a body nobody
 is a free-text waiver (F7), acceptances need only a non-empty "evidence" string, and gate cells / the release line are honour-system (F12).
 Verdict: "zero FAIL / zero WARN, no waivers" is enforceable for the board DFM mirror today; for ERC, prints and gates it is aspirational until F5–F7, F11, F12.
 
-**(4) Skill maintainer.** `skill_retro.py` is a sound, deterministic candidate lister (it ran on the source project in 0.14 s: 358 learnings, 88 NEW,
+**(4) Skill maintainer.** `skill_retro.py` is a sound, deterministic candidate lister (it ran on the originating project in 0.14 s: 358 learnings, 88 NEW,
 76 unasked owner topics; a folded line re-classifies CARRIED), but it does not carry anything back by itself (F20), it cannot be run from a project
 as documented (F3, F4), and a second project with another id prefix or bullet style loses owner topics and costly learnings silently (F19). Verdict:
 the loop is a good input generator; "without hand-editing" is not met by design, and "two projects with different conventions" fails until F19.

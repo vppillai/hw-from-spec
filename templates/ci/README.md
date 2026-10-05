@@ -41,7 +41,7 @@ grep -n '{{PROJECT_' .github/workflows/*.yml && echo "unfilled placeholders" || 
 | `{{PROJECT_ARTEFACT_GLOBS}}` | newline-separated paths uploaded after the PR check (ERC json, PDFs, DRC census) | `30-board/layout/erc.json` |
 | `{{PROJECT_NIGHTLY_ARTEFACT_GLOBS}}` | case STLs / check reports | `40-case/*/parts/*.stl` |
 
-Rules baked in (from the source project's learnings log):
+Rules baked in (from measured learnings logs):
 - The gate list lives in `project.yaml gates:` (run by `scripts/adopt_gates.sh`) or the project's `Makefile` / `ci/*.sh`, not in the workflow
   YAML — the same command runs on the developer's machine. The skill's shell gates are bash (≥ 3.2); the container needs `bash`, `git`, a Python
   with `pyyaml` — install them in `{{PROJECT_SETUP_CMD}}` (`apt-get install -y git python3-yaml` on Debian-based images).

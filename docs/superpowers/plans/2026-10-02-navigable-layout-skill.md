@@ -4,7 +4,7 @@
 
 **Goal:** Make the numbered lifecycle tree of the spec the skill's default project layout, with revision-named folders, a kit-of-record shape, the five `00-now/` pages and a generalised path mover, released as hw-from-spec 0.11.0 with the smoke, evals and both lints green.
 
-**Architecture:** Every path the skill names is a `paths:` key whose default lives in one dict (`scripts/project.py` `DEFAULTS["paths"]`); the templates, references, SKILL.md and the smoke spell the same defaults. Folder identity moves from hashes to `project.revision` (`rev0`), the hash stays inside each folder as a record. A new generator `scripts/now_pages.py` derives the five answer pages from the logs and the kits and is gated like every other generated document. The migration of an existing project is the existing `scripts/reorg_paths.py` fed by a `reorg:` block, documented with the source project's move table as the worked example.
+**Architecture:** Every path the skill names is a `paths:` key whose default lives in one dict (`scripts/project.py` `DEFAULTS["paths"]`); the templates, references, SKILL.md and the smoke spell the same defaults. Folder identity moves from hashes to `project.revision` (`rev0`), the hash stays inside each folder as a record. A new generator `scripts/now_pages.py` derives the five answer pages from the logs and the kits and is gated like every other generated document. The migration of an existing project is the existing `scripts/reorg_paths.py` fed by a `reorg:` block, documented with the originating project's move table as the worked example.
 
 **Tech Stack:** Python 3.11+ (pyyaml only for the generic scripts), bash ≥ 3.2 for the smoke, git. No new dependencies.
 
@@ -16,7 +16,7 @@
 - No hash and no date as a folder name at the top of any tree; revisions are `rev0`, kits are their print target; `40-case/dfm_validation/` is the one place a hash is a name.
 - Scope tags: `30-board/` is `{{ee,both}}`; `40-case/`, `50-kits/` are `{{mech,both}}`.
 - Records are relocated, never re-written: no record md5, engine or rule-set version changes in this release.
-- The skill text is generic: `scripts/generic_lint.py` and `scripts/doc_voice_lint.py` at 0 hits; the source project's names appear only in CHANGELOG, `docs/retro/`, `docs/reviews/`, `docs/superpowers/`.
+- The skill text is generic: `scripts/generic_lint.py` and `scripts/doc_voice_lint.py` at 0 hits; the originating project's names appear only in CHANGELOG, `docs/retro/`, `docs/reviews/`, `docs/superpowers/`.
 - Every new script: executable, shebang, `--selftest` (temp dir only), `--check` where it writes, exit 0 / 1 / 2, in `smoke/run_smoke.sh` and in the template's `gates.adopt`.
 - Version 0.11.0 in `SKILL.md`, `README.md`, CHANGELOG current state and a `## 0.11.0` entry; tag `v0.11.0` after the double-blind review.
 - Heavy work only through `scripts/jobs.sh`; at most 3 writing agents at once; commit after every task.
@@ -271,7 +271,7 @@ def main(argv):
 ### Task 6: `reorg_paths.py` — whole-directory moves, frozen folders, the worked example
 
 **Files:**
-- Modify: `scripts/reorg_paths.py` (selftest + any gap found), `references/project-yaml.md` `reorg:` section (the worked example = the source project's move table of spec §2, generic names), `templates/project.yaml` (`reorg:` commented block with `moves:`, `frozen:`, `allow_missing:`, `gitignore:` keys)
+- Modify: `scripts/reorg_paths.py` (selftest + any gap found), `references/project-yaml.md` `reorg:` section (the worked example = the originating project's move table of spec §2, generic names), `templates/project.yaml` (`reorg:` commented block with `moves:`, `frozen:`, `allow_missing:`, `gitignore:` keys)
 
 **Interfaces:**
 - Consumes: `reorg.moves {old: new}` (file or directory), `reorg.frozen [dir, …]`, `reorg.allow_missing [regex, …]`, `reorg.rewrites_record`.
@@ -287,7 +287,7 @@ def main(argv):
 ### Task 7: Smoke, evals, version, changelog
 
 **Files:**
-- Modify: `smoke/run_smoke.sh` (every fixture path: `docs/governance/GATES.md` → `90-log/GATES.md`, `out/mechanical/case/v1/stl` → `40-case/mjf_case/parts`, `out/fab/2026-01-03_<md5>` → `30-board/fab/rev0`, `docs/release/PCB_DESIGN_REPORT.md` → `70-release/reports/PCB_DESIGN_REPORT.md`, `docs/production/ARRIVAL_CHECKLIST.md` → `60-orders/ARRIVAL_CHECKLIST_rev0.md`, the mech scope block, step 10), `evals/evals.json` (paths in checks), `SKILL.md` (`version: 0.11.0`), `README.md` (version line; Quick start paths), `CHANGELOG.md` (current state 0.11.0: the layout; `## 0.11.0` entry: tree, revision names, now pages, kit of record, set shape, reorg worked example, the sweep)
+- Modify: `smoke/run_smoke.sh` (every fixture path: `docs/governance/GATES.md` → `90-log/GATES.md`, `out/mechanical/case/v1/stl` → `40-case/vendor_case/parts`, `out/fab/2026-01-03_<md5>` → `30-board/fab/rev0`, `docs/release/PCB_DESIGN_REPORT.md` → `70-release/reports/PCB_DESIGN_REPORT.md`, `docs/production/ARRIVAL_CHECKLIST.md` → `60-orders/ARRIVAL_CHECKLIST_rev0.md`, the mech scope block, step 10), `evals/evals.json` (paths in checks), `SKILL.md` (`version: 0.11.0`), `README.md` (version line; Quick start paths), `CHANGELOG.md` (current state 0.11.0: the layout; `## 0.11.0` entry: tree, revision names, now pages, kit of record, set shape, reorg worked example, the sweep)
 
 - [ ] **Step 1: Run the smoke, expect FAIL** on the first old fixture path (`Run: scripts/jobs.sh -- smoke/run_smoke.sh`).
 - [ ] **Step 2: Fix every fixture path** per the table in Task 3; re-run until `SMOKE OK` with the mesh libraries; then on a pyyaml-only venv (`uv venv .venv_nomesh && uv pip install pyyaml`, symlink as `.venv` in a copy of the tree) — Expected: `SMOKE OK` twice.

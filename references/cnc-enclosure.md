@@ -1,6 +1,6 @@
 # cnc-enclosure.md — a machined (aluminium) enclosure piece: the rules a quote-page DFM will hold you to
 
-Short by design: the source project quoted CNC hoods (JLCCNC, 6061, 2026-09-20) and did not order one, so every number below is either the
+Short by design: the one quote behind it was for CNC hoods (JLCCNC, 6061, 2026-09-20), never ordered, so every number below is either the
 vendor's published capability **[fab capability: verify live, cite the date]** or machining practice **[physics]**; nothing here is measured on a
 received part. The chain (yaml → generator → STEP → quote → drawing) is `references/case-pipeline.md`; the quote-form mechanics are
 `references/fab-dfm.md` §6.

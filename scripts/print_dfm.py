@@ -881,7 +881,7 @@ def selftest():
         r = analyse(pi6, FDM, n_s=40000, supports="none"); c = [x for x in r["ceilings"] if x["extent"] > 30]
         assert c and c[0]["cls"] == "bridge" and abs(c[0]["span"] - 6) <= 0.6 and "B bridge (layers)" not in r["flagged"], ("pi 6 x 40 must read 6 and stay silent", c[:1], r["flagged"])
         # 0.10.0: a rebate split by two full-height 2.0 lands into three 6.1 strips, open at both ends, links into ONE ceiling region (gap < link): the span
-        # is the longest in-footprint chord 6.1 along the supported axis — the bbox extent (22.3) flipped three verdicts of record in the source project
+        # is the longest in-footprint chord 6.1 along the supported axis — the bbox extent (22.3) flipped three verdicts of record on one vendor-MJF tray
         w, land, wall = 6.1, 2.0, 4.0; x0 = -(1.5 * w + land + wall); pts2 = [(x0, 0)]
         for i in range(3):
             a = x0 + wall + i * (w + land) if i == 0 else pts2[-1][0]

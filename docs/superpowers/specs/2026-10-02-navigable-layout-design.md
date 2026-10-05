@@ -31,7 +31,7 @@ content, md5 or rule-set version (records are relocated, never re-written); a we
 10-spec/         SPEC.md  FINDINGS.md  KICKOFF_ANSWERS.md  spec_sections/  datasheet_notes/
 20-design/       the yaml sources of truth, briefs, design notes, test plan, software architecture, drawings index
 30-board/        kicad/   layout/ (gerbers, drc, dxf, renders, inspection)   fab/<rev>/ (the uploaded package; board_id.txt = md5 + commit)   [ee, both]
-40-case/         <set>/ per print target — e.g. mjf_case/ p2s_case/ plug_caps/ coupons/ board_dummy/ dfm_validation/ fea/                     [mech, both]
+40-case/         <set>/ per print target — e.g. vendor_case/ home_case/ caps_set/ coupons/ board_dummy/ dfm_validation/ fea/                     [mech, both]
                  each set: parts/ (STL of record, tracked)  checks/ (census + DFM records, clearance, interference = what the gates read)
                            pictures/ (previews, faces, assembly renders)  build/ (SCAD, logs, slicer scratch, caches — gitignored)
 50-kits/         <kit>/ per print target — START_HERE.md  plates/ (.3mf + .3mf.json sidecar)  parts/ (STL copies, md5-checked)  sheets/     [mech, both]
@@ -46,7 +46,7 @@ gen/  scripts/  tools/  lib/  Makefile  CLAUDE.md        the machinery, unchange
 Scope tags: an ee-only project has no `40-case/` or `50-kits/`; a mech-only project has no `30-board/`. The folder numbers are fixed so the
 order reads the same in every project; a project that lacks a stage simply has no folder at that number.
 
-Where today's folders go (the source project's current layout, D-70):
+Where today's folders go (the originating project's current layout at the time):
 
 | today | new |
 |---|---|
@@ -58,8 +58,8 @@ Where today's folders go (the source project's current layout, D-70):
 | `docs/release/*_DESIGN_REPORT.md`, `RELEASE_NOTES_*`, `collateral/<md5>`, `marketing/<md5>_<ver>` | `70-release/reports/`, `70-release/collateral/rev0/`, `70-release/marketing/rev0/` |
 | `docs/reviews/<ROUND>_*.md` | `80-reviews/<round>/…` |
 | `kicad/`, `out/<board>/layout/`, `out/<board>/fab/<date>_<md5>/` | `30-board/kicad/`, `30-board/layout/`, `30-board/fab/rev0/` |
-| `out/<board>/mechanical/case/<ver>/`, `…/v3-p2s/`, `…/plug_cap/`, `…/p2s_coupons/`, `…/board_dummy/`, `…/dfm_validation/`, `…/pcb_fea/` | `40-case/mjf_case/`, `p2s_case/`, `plug_caps/`, `coupons/`, `board_dummy/`, `dfm_validation/`, `fea/` — each split into parts/ checks/ pictures/ build/ |
-| the four Downloads kit folders | `50-kits/p2s_case/`, `50-kits/plug_caps/` + the mirror `~/Downloads/<project>_kits/`; old folders → one-line `SUPERSEDED.md` |
+| `out/<board>/mechanical/case/<ver>/`, `…/v3-home/`, `…/caps/`, `…/home_coupons/`, `…/board_dummy/`, `…/dfm_validation/`, `…/pcb_fea/` | `40-case/vendor_case/`, `home_case/`, `caps_set/`, `coupons/`, `board_dummy/`, `dfm_validation/`, `fea/` — each split into parts/ checks/ pictures/ build/ |
+| the four Downloads kit folders | `50-kits/home_case/`, `50-kits/caps_set/` + the mirror `~/Downloads/<project>_kits/`; old folders → one-line `SUPERSEDED.md` |
 
 ## 3. `00-now/` — the five pages
 
@@ -82,7 +82,7 @@ STATUS.md remains the append log in `90-log/`; the "read this first" paragraphs 
 
 - **The repo folder is the kit.** Generators write into `50-kits/<kit>/` directly (today they copy from four `out/` folders into Downloads).
   `~/Downloads/<project>_kits/<kit>/` is a plain byte-identical mirror; the collateral gate checks it as now.
-- **One current kit per target**, named for the printer and what it prints (`p2s_case`, `plug_caps`), no version in the name; the version is a
+- **One current kit per target**, named for the printer and what it prints (`home_case`, `caps_set`), no version in the name; the version is a
   line in START_HERE and in every sheet. Old Downloads folders receive a one-line `SUPERSEDED.md` pointing at the mirror, written once.
 - **Plates carry their identity**: every `.3mf.json` names the STL md5s and the case version it was sliced from; the kit text gate keeps every
   sheet consistent with the sidecars. `WHAT_TO_PRINT.md` is derived from these folders only.

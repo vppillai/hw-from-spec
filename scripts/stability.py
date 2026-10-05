@@ -5,7 +5,7 @@ A piece that stands, rocks, walks or is set down on a desk has a support polygon
 gravity (CoG). It stays up only while the CoG's ground projection lies INSIDE that polygon, by a margin the geometry's errors cannot eat
 (SKILL §8, `references/case-pipeline.md` "Stability"). This is a GEOMETRY check: it is computed from the STL set of record (volume centroids),
 the assembly transforms, a density per body (infill-aware) and the ground-contact footprints per pose — never from a render or a guess.
-The source project's walker had its CoG 21 mm behind the hip because the drive sat at the back; at a third of the crank angles only one foot per
+A six-leg desk walker once had its CoG 21 mm behind the hip because the drive sat at the back; at a third of the crank angles only one foot per
 side was down and the margin was −17 mm: it would have tipped onto its gear. One row found it before the first plate.
 
 Use from a generator (the poses are the project's; this module does the arithmetic):
@@ -13,10 +13,10 @@ Use from a generator (the poses are the project's; this module does the arithmet
     cog, mass = cog_of_assembly([(stl_path, M4x4, density_g_mm3), ...])      # M maps the STL's print frame into the machine frame
     margin, hull = support_margin((cog[0], cog[1]), contact_polygons)         # contacts: shapely polygons on the ground plane (footprints)
     -> margin > 0 inside (distance to the nearest edge), < 0 outside (a single foot still has a footprint), None with no contact at all
-A CHECKS row: min margin over the poses >= a stated limit (the source project used 2 mm on a 165 g piece with 14 mm shoes).
+A CHECKS row: min margin over the poses >= a stated limit (one walker used 2 mm on a 165 g piece with 14 mm feet).
     improper_placements([(label, M4x4), ...])                                 # -> [(label, det)] for every placement that is a mirror or not rigid
 A placement matrix with determinant -1 is a MIRROR, and a mirror cannot be printed: the same transforms this module weighs the CoG through must
-every one be a proper rotation (det +1) — one CHECKS row, `len(improper_placements(...)) == 0`. One source project drew one whole side of the
+every one be a proper rotation (det +1) — one CHECKS row, `len(improper_placements(...)) == 0`. One project drew one whole side of the
 machine as a mirror image for three days of renders and a GIF; the printed part did not match the guide and nothing but the owner's hands caught it.
 Density: PLA 1.24e-3 g/mm3 solid; parts printed with sparse infill weigh less — pass a per-body factor (walls + top/bottom shells dominate small
 parts, so 0.5–0.7 of solid for large flat plates, ~1.0 for pins and bars). The CoG moves only if the factors differ between front and back.

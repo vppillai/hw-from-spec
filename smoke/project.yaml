@@ -51,15 +51,15 @@ reorg:                                        # the layout of record; `scripts/r
   rewrites_record: 80-reviews/REORG_REWRITES.txt
 assembly_guide:                               # scripts/assembly_guide.py; the smoke's renderer is a stub that writes the camera + defs into the file
   yaml: 20-design/assembly_guide.yaml
-  steps_md: 40-case/mjf_case/ASSEMBLY.md
-  scad: 40-case/mjf_case/build/case.scad
+  steps_md: 40-case/vendor_mjf/ASSEMBLY.md
+  scad: 40-case/vendor_mjf/build/case.scad
   out_dir: 70-release/{REV}
   doc_name: VISUAL_ASSEMBLY_GUIDE.md
   size: '640,480'
   render_cmd: "printf 'PNG-stub %s %s' {CAMERA} {DEFS} > {OUT}"
 renders:
   - {name: panel_top, kind: copy, src: "30-board/fab/{REV}/panel_top.png"}
-  - {name: case_iso, kind: copy, src: "40-case/mjf_case/pictures/iso.png", sub: case}
+  - {name: case_iso, kind: copy, src: "40-case/vendor_mjf/pictures/iso.png", sub: case}
 reports:
   - name: PCB_DESIGN_REPORT
     title: smoke PCB design report

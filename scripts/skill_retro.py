@@ -8,7 +8,7 @@
       every entry against the skill's SKILL.md + references/*.md sections by keyword overlap (rare tokens weigh more): CARRIED (the best section
       shares >= --threshold of the entry's distinctive tokens), PARTIAL (>= half of that), NEW. Marks entries whose text names a failure that cost
       a round (cracked / wrong / premature / stale / reorder …). Compares the project's recorded skill version (`skill.version` or `skill_version`
-      in project.yaml) with the skill's SKILL.md version. Writes DIR/<project>_<date>.md (default: <skill>/docs/retro/) with: counts, the NEW and
+      in project.yaml) with the skill's SKILL.md version. Writes DIR/<project>_<date>.md (default: <skill>/docs/retro/, working material deleted once folded) with: counts, the NEW and
       PARTIAL tables (entry, best section, score), a CHANGELOG entry draft, one reference patch stub per target file (bullets to append), an eval
       stub per costly NEW entry, the owner decision topics the kickoff questionnaire does not ask yet, and the DFM process-table drift
       (the project's 20-design/dfm_processes.yaml vs templates/20-design/dfm_processes.yaml: NEW rows, changed numbers, validation evidence the
@@ -221,7 +221,7 @@ def row_block(table_path, row):
         elif on and re.match(r"^  \S", ln):
             break
         if on:
-            out.append(re.sub(r"^(\s+validated_on:).*$", r"\1 []        # retro: validated in the source project; the template ships []", ln) if ln.lstrip().startswith("validated_on:") else ln)
+            out.append(re.sub(r"^(\s+validated_on:).*$", r"\1 []        # retro: validated in the retro's project; the template ships []", ln) if ln.lstrip().startswith("validated_on:") else ln)
     return "\n".join(out) + ("\n" if out else "")
 
 

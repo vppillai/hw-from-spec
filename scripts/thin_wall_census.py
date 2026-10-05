@@ -363,7 +363,7 @@ def census(stl, samples, gate, void_gate, cell, self_hit, red, boxes, box_min, o
     dopp, kind = opposing_faces(m, pts, nrm, fid, max(gate, void_gate), np)
     P = pts.tolist(); T = th.tolist(); A = ang.tolist(); G = gap.tolist(); D = dopp.tolist(); K = kind.tolist()
     # cluster WALL-class and WEDGE-class samples SEPARATELY: one mixed cluster that chained across a body through chamfer flanks was labelled
-    # "wedge" and swallowed a 1.0..1.2 lip and 1.3 slot lands (retro of the source project, 2026-09-28)
+    # "wedge" and swallowed a 1.0..1.2 lip and 1.3 slot lands (a vendor-MJF retro, 2026-09-28)
     clusters = []
     for pick in (lambda i: A[i] < WALL_DEG, lambda i: A[i] >= WALL_DEG):
         thin = [i for i in range(samples) if T[i] < thr and pick(i)]

@@ -35,7 +35,7 @@ processes:
   jlc_mjf_pa12:
     vendor: JLC3DP
     process: MJF PA12-HP (Nylon)
-    wall_min: 1.0       # [V] "Minimum wall thickness 1.0 mm" https://jlc3dp.com/3d-printing/multi-jet-fusion (2026-09-30); [K source-project mail, not reproducible] JLC3DP engineer mail 2026-09-22 "nylon >= 1.0 mm (2.0 better)"
+    wall_min: 1.0       # [V] "Minimum wall thickness 1.0 mm" https://jlc3dp.com/3d-printing/multi-jet-fusion (2026-09-30); [K vendor mail, not reproducible] JLC3DP engineer mail 2026-09-22 "nylon >= 1.0 mm (2.0 better)"
     wall_reco: 1.2      # [K] the quote-page heat map's grey line (grey >= 1.2, yellow 0.5..1.2, red < 0.5; read 2026-09-28)
     feature_min: 0.5    # [V] Protolabs MJF "minimum feature size 0.020 in (0.5 mm)", "raised text and cosmetic features smaller than 0.5 mm might not survive post-processing" https://www.protolabs.com/resources/design-tips/how-to-use-multi-jet-fusion-for-functional-3d-printed-parts/ (2026-09-30); [V] Xometry MJF "0.020 in (0.040 in recommended)" https://www.xometry.com/capabilities/3d-printing-service/hp-multi-jet-fusion/ (2026-09-30); = the JLC map's red line
     detail_min: 0.8     # [V] JLC3DP MJF "embossed & engraved details 0.8 mm deep & 0.8 mm wide" (same page); [V] Hubs SLS PA12 pins / protrusions >= 0.8 https://www.hubs.com/knowledge-base/how-design-parts-sls-3d-printing/ (2026-09-30)
@@ -47,11 +47,11 @@ processes:
     sliver_area: 5.0    # [K] see the header (with the 2 x thickness aspect test)
     build_max: [370, 276, 360]   # [V] JLC3DP PA12-HP build 370 x 276 x 360
     published: {tolerance: "+/-0.3 mm or 0.4 % [V JLC]", gap_assembled: "0.2..0.4 [V JLC]", gap_moving: "0.6 [V JLC]", escape_hole: "3.5 mm [V Hubs SLS]", text_height: ">= 2 mm [V Hubs SLS]", engraving_depth: "1.0 [V Hubs SLS]"}
-    validated_on: []    # the skill's reference (references/print-dfm.md §4) records the source project's 32-verdict validation: W / R / K validated, P by the engineer, F / V / H / S not decidable
+    validated_on: []    # the skill's reference (references/print-dfm.md §4) records one 32-verdict vendor validation: W / R / K validated, P by the engineer, F / V / H / S not decidable
   jlc_sla_9600:
     vendor: JLC3DP
     process: SLA 9600 / 8001 resin
-    wall_min: 0.8       # [K source-project mail, not reproducible] JLC3DP engineer mail 2026-09-22 "resin >= 0.8 mm (1.5 better)"; Formlabs design specs NOT fetched (formlabs.com 404, 2026-09-30) — fetch before an SLA body relies on it
+    wall_min: 0.8       # [K vendor mail, not reproducible] JLC3DP engineer mail 2026-09-22 "resin >= 0.8 mm (1.5 better)"; Formlabs design specs NOT fetched (formlabs.com 404, 2026-09-30) — fetch before an SLA body relies on it
     wall_reco: 1.2      # [K] the same upload-time heat map (the flag is material-independent at JLC3DP)
     feature_min: 0.5    # [K] the map's red line; SLA resolves finer (Formlabs supported-wall figures not fetched)
     detail_min: 0.5     # [K] not fetched; the map's red line

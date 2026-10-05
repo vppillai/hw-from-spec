@@ -24,7 +24,7 @@ Worktree `/tmp/hwfs_review_wt` (read-only). Read: README.md, SKILL.md, reference
 | 16 | (a) `gate_check.py G1` empty / filled; `--release` prose / uncommitted / agent-committed / owner-committed | 1 / 0 / 1 / 1 / 1 / 0 — exactly as claimed; `release_report.py` DRAFT on prose but **RELEASED on the agent-committed cell** (F2) |
 | 17 | (b) `erc_gate.py` on hand-made KiCad-format erc.json: error / unaccepted warning / accepted+live decision / unknown decision / REJECTED decision / `excluded: true` / stale entry / wrong field names / missing file | 1 / 1 / 0 / 1 / 1 / 1 / 1 / 1 / 2 — all as claimed |
 | 18 | (c) `print_dfm.py --process jlc_mjf_pa12 --out … plate2.stl` / `plate08.stl` | PASS rc 0 / `FLAG … W wall … min 0.799 med 0.8` rc 1 |
-| 19 | (c) `--gate <dir>`: body without record / FLAG record / `--open …=WHATEVER` / `--open …=D-08` (APPROVED) / `--open …=D-07` (OPEN) / verdict hand-edited FLAG→PASS / record from `protolabs_mjf_pa12` vs target `jlc_mjf_pa12` / dir whose parent is not a target | 1 / 1 / 1 / 1 / **0** (prints `OPEN D-07 (widen the thin plate)`) / 1 `signature does not verify` / 1 `checked against process row 'protolabs_mjf_pa12' but …dfm_process = 'jlc_mjf_pa12'` / 1 — all as claimed |
+| 19 | (c) `--gate <dir>`: body without record / FLAG record / `--open …=WHATEVER` / `--open …=<APPROVED row>` / `--open …=<OPEN row>` / verdict hand-edited FLAG→PASS / record from `protolabs_mjf_pa12` vs target `jlc_mjf_pa12` / dir whose parent is not a target | 1 / 1 / 1 / 1 / **0** (prints `OPEN <row> (widen the thin plate)`) / 1 `signature does not verify` / 1 `checked against process row 'protolabs_mjf_pa12' but …dfm_process = 'jlc_mjf_pa12'` / 1 — all as claimed |
 | 20 | (c) non-watertight box, two-body STL, two-body with `--bodies 2` | FLAG M rc 1 / FLAG M `2 bodies, expected 1` rc 1 / PASS rc 0 |
 | 21 | (d) `thin_wall_census.py --gate-dir`: STL without record / FAIL record / hand-edited `fails: []` / accepted via `print_targets.*.accepted` / acceptance deleted / empty dir | 1 / 1 / 1 `signature does not verify` / 0 / 1 `acceptance was withdrawn` / 1 — all as claimed |
 | 22 | (e) `adopt_gates.sh --no-clone`: STL set + no census/print_dfm line; board + no DRC line; schematic + no erc_gate line; erc line commented in yaml | all `GATE FAILED: an artefact exists whose gate line is missing…`; but `echo nodrcyet` satisfies the DRC requirement (F8) |
@@ -32,7 +32,7 @@ Worktree `/tmp/hwfs_review_wt` (read-only). Read: README.md, SKILL.md, reference
 | 24 | (g) `skill_retro.py --project p8 --skill <copy> --out …` with `ids.owner_prefix: OWN`, mixed `-`/`*`/odd bullets | 2 owner topics listed (OWN-01, OWN-02); odd bullet listed in §0 (`line 5`); `--apply` ×2 idempotent for pitfalls + CHANGELOG; NEW process row **silently not folded** when its row line carries a trailing comment (F7) |
 | 25 | Doc checks: every `scripts/ templates/ references/ workflows/ smoke/ evals/` path cited in SKILL/README/references/templates exists | 0 missing |
 | 26 | README fences balanced (14), fenced lines ≤ 90 chars | OK (0 over) |
-| 27 | Source-project identifiers in skill text | none in SKILL/README/templates/scripts; `references/pitfalls.md:3` and `dfm-printed-enclosure.md` §8.2/§8.5 name the source project / its connector family as the labelled worked example (NOTE N5) |
+| 27 | Project-name identifiers in skill text | none in SKILL/README/templates/scripts; `references/pitfalls.md:3` and `dfm-printed-enclosure.md` §8.2/§8.5 name the originating project / its connector family as the labelled worked example (NOTE N5) |
 
 ## Findings
 
@@ -101,7 +101,7 @@ So the toolchain proof of step 3 may run against a venv that is not the one `too
 Reproduced in both runs (mesh venv and pyyaml-only venv): lines 72–115 of the output are `Traceback … yaml.parser.ParserError … kick/project.yaml line 83` (see F3) followed by `slots: fresh ee scaffold -> exit 1 …`. A cold user reading the log cannot tell a real failure from this expected one. Fix: `2>/dev/null` on that one negative probe (or assert on the message, F3).
 
 ### F7 — MINOR — `skill_retro.py --apply` silently skips a NEW process row whose row-name line carries a trailing comment
-Docstring and SKILL §13: "`--apply` … every NEW process row with its citations into the template". With a project row written as `  acme_mjf_pa11:   # NEW vendor row …` (the style `templates/project.yaml` itself uses for `{{VENDOR_TARGET}}:  # e.g. jlc_mjf`):
+Docstring and SKILL §13: "`--apply` … every NEW process row with its citations into the template". With a project row written as `  acme_mjf_pa11:   # NEW vendor row …` (the style `templates/project.yaml` itself uses for `{{VENDOR_TARGET}}:  # e.g. vendor_mjf`):
 ```
 $ skill_retro.py --project p8 --skill skillcopy2 --out p8/retro            # §8 of the report
 | NEW | `acme_mjf_pa11` | (row) | ACME / MJF: wall_min 1.1, ... | - |
@@ -146,7 +146,7 @@ Harmless for git (the skill's `.gitignore` lists `__pycache__/`) but it is a wri
 `gate_check.py G1` → rc 0 on `Owner Person, 2026-01-02, abc123` before any commit (`(a2)` above). Documented behaviour (only `--release` checks the author), but the "agents never write approval cells" rule for G0–G2 rests on discipline, not on the script.
 
 ### N2 — NOTE — `--open <tag>/<piece>=<id>` accepts any OPEN row, whatever its topic
-`--open jlc_mjf/plate08=D-07` passed with D-07 = "widen the thin plate"; any other OPEN row (e.g. an unrelated OPEN owner question) would pass the same way. The id is tied to a decision, not to the body.
+`--open vendor_mjf/plate08=<OPEN row>` passed with that row = "widen the thin plate"; any other OPEN row (e.g. an unrelated OPEN owner question) would pass the same way. The id is tied to a decision, not to the body.
 
 ### N3 — NOTE — retro report / markers are named after the project DIRECTORY, not `project.name`
 `p8_2026-09-30.md`, `## Retro p8 …`, `<!-- retro: p8 … -->` although `project.name: retroproj` (`skill_retro.py:341 project = os.path.basename(root)`). Two projects in folders named `hw/` collide.
@@ -154,8 +154,8 @@ Harmless for git (the skill's `.gitignore` lists `__pycache__/`) but it is a wri
 ### N4 — NOTE — classifier marked three plausible-new learnings CARRIED
 With `--threshold 0.5` the magnet-pocket undersize learning and the vendor-rim learning were CARRIED (0 NEW) until an absurd "zebra toroidal quench harness" entry was added. Expected of a keyword matcher and the report says so; a cold user should not read "NEW 0" as "nothing to fold".
 
-### N5 — NOTE — source-project names in references
-`references/pitfalls.md:3` ("the source project's (AEC-CT2-MINI, the worked example) learnings log…"), `references/dfm-printed-enclosure.md` §8.2 / §8.5 and `pitfalls.md:263` name a QSFP-DD cap as the worked example. Labelled as worked examples, not leaked constants; SKILL/README/templates/scripts are clean (the smoke greps for this).
+### N5 — NOTE — project names in references
+`references/pitfalls.md:3` ("the originating project's (<board>, the worked example) learnings log…"), `references/dfm-printed-enclosure.md` §8.2 / §8.5 and `pitfalls.md:263` name a connector cap as the worked example. Labelled as worked examples, not leaked constants; SKILL/README/templates/scripts are clean (the smoke greps for this).
 
 ### N6 — NOTE — things that worked exactly as claimed (so the sceptic found nothing to add)
 `erc_gate.py` (all nine cases incl. GUI exclusion, REJECTED decision, stale entry, wrong field names → `lacks ref, reason`), `print_dfm.py --gate` (signature, md5, process-row mismatch, laxer row, uncensused body, unknown target dir, empty dir), `thin_wall_census.py --gate-dir` (signature, withdrawn acceptance, uncensused body, empty dir), `step2stl.py` (rc 2 + routes; canonical md5 deterministic; the bare executable works without pyyaml), `adopt_gates.sh` read-only guard + `gates-required` for STL/schematic, the mech scaffold's scope isolation, `project.py slots` default set, README fence lengths, every cited path exists, batch count "twelve" = 0–11 in the questionnaire.

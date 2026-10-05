@@ -135,7 +135,7 @@ transform-level rows gate it — pure arithmetic on the placement matrices and t
    runs in the part plane where a mirror is a no-op, and the kit prints the body, not the transform. A symmetric assembly built from identical
    parts is the usual way in: "part +z outward" on both sides of the machine makes one side improper. A part that can only be drawn mirrored
    needs a mirrored BODY (`mirror([1,0,0])` of the design body, its own identifier mark, `dfm-printed-enclosure.md` §1.5), never a mirrored
-   transform. *Worked example:* one source project drew one whole side as a mirror image through three days of renders and an animation;
+   transform. *Worked example:* one project drew one whole side as a mirror image through three days of renders and an animation;
    nothing but the owner holding a printed part against the guide caught it.
 2. **A FIT row per mating pair the design knows about** (shaft ↔ bore, D ↔ D socket, peg ↔ hole, tab ↔ slot, pin ↔ pivot, key ↔ keyway): the
    DIRECTION of the feature and the direction of its mate, both mapped through the REAL placements into the machine frame, must agree within a
@@ -176,7 +176,7 @@ transform-level rows gate it — pure arithmetic on the placement matrices and t
   `support_margin(cog_xy, footprints)` → signed distance to the hull edge. A CHECKS row: **min margin over every pose ≥ a stated value**
   (a walker: every crank angle with the feet in their ground phase as footprints; a rocking or hinged piece: every position; a part set down: each
   face it can rest on). A piece that moves is judged at its WORST pose — a six-leg walker stands on one foot per side for a third of the cycle, and
-  there the hull is the length of a shoe.
+  there the hull is the length of one foot.
 - The CoG goes where the heavy parts are, not where the designer looks: a drive, gears, winders and bands hung behind the legs put a walker's CoG
   behind its hip (a negative margin at a third of the poses). Fix by LAYOUT (drive over the feet, frame extended forward), never by ballast
   bolted on afterwards; then the row proves it. Kickoff **C12** asks whether the piece stands free; the row is mandatory when it does.

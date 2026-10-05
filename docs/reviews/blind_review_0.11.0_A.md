@@ -1,7 +1,7 @@
 <!-- blind reviewer A: Agent tool, Claude Opus, venv without the mesh libraries; artefact + checklist only; 2026-10-02 -->
 # Blind review A — hw-from-spec `layout-0.11.0` (cold user, venv without mesh libraries)
 
-Scratch: `$R=/private/tmp/claude-502/-Users-vpillai-temp-aec-tester/d3f10fc6-10e5-4769-b4fd-2330e8da1aae/scratchpad/review_A`.
+Scratch: `$R=$SCRATCH/review_A`.
 Projects: `$R/proj` (both), `$R/proj_ee`, `$R/proj_mech`; each = README step 4 copy block verbatim, skill copied to `vendor/hw-from-spec`,
 relative `scripts` symlink, `.venv` -> the skill's pyyaml-only venv. Slots filled mechanically by `$R/fill.py` for the day-1 gate run.
 
