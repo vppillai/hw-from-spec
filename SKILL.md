@@ -1,6 +1,6 @@
 ---
 name: hw-from-spec
-version: 0.11.3
+version: 0.11.4
 description: Run a hardware project (a PCB, a printed or CNC enclosure, or both — scope chosen at kickoff; contract fab such as JLCPCB) from a written specification to a production cut with an owner-gated, generated-only, blind-reviewed workflow — a kickoff questionnaire that asks every owner decision up front with recommended answers, a zero-warning manufacturability bar, and a retro that folds each project's learnings back into the skill. Use this whenever someone starts a board or enclosure project from a spec, asks to set up gates, a decision log, generators, part verification, a fab DFM mirror, a case pipeline, FEA, blind reviews, a release report or a production cut for one, or resumes such a project, or wants the skill improved from a finished project — even if they only say "new KiCad board", "order this at JLC", "review the layout", "cut the release" or "what did we learn".
 ---
 
@@ -401,6 +401,12 @@ folder `70-release/<rev>/records/`** (the cut yaml's `records_dir`; RELEASE_NOTE
 - **Vendor review after the order** (`references/vendor-review.md`, record `templates/VENDOR_REVIEW_RECORD.md`): file the mail + images under
   `60-orders/quotes/<date>/`, map every flag on the files of record (STLs [mech, both]; gerbers / BOM [ee, both]), decide per line in the log, fix through the generator, re-run the vendor's DFM on
   the replacements before uploading, then Replace File / chat **only on the owner's explicit word** — agents never pay, agree, cart or change a line.
+  [ee, both] A PCBA fab's **engineer questions** (polarity, placement, "okay to proceed?") are answered on the board's pad-1 positions, never on
+  the CPL rotation, class by class, with a body-on-their-snapshot picture for any custom-footprint connector; its **production-file package** is
+  diffed per layer against the upload the day it arrives (compensation, drill oversizes, inner pad removal, mask relief, via plugging = expected;
+  anything else = finding) and approved with at most two confirmations (`references/vendor-review.md` §5–§6). **Both are pre-answered upfront**:
+  `ASSEMBLY_NOTES` in the package (a cut deliverable, `references/fab-dfm.md` §9), a fab's-eye silk pass at G2 (a G2 prerequisite), the fab-side hole sizes and
+  via treatment in the order remark, arrival-checklist §A rows A-0 / A-5 (`references/vendor-review.md` §7).
 - **Illustrated assembly guide** [mech, both] beside the text SOP: `scripts/assembly_guide.py` (authored short yaml + generated step text + one keyed render per
   page, `--check`), registered as a cut deliverable (`references/release-and-cut.md` §8).
 

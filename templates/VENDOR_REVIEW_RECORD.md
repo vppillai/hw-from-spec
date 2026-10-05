@@ -41,3 +41,17 @@ address, shipping; Cancel; the other lines ({{LIST}}); other orders; account set
 ## 6. Follow-up (read-only status checks, one line per check)
 - {{DATE TIME}}: order history / detail / message centre read; the vendor's "please replace files" mail = the replace action activated, not a
   rejection; lines approved {{TIMES}}; pending on our side: {{NOTHING / ITEM}}; owner next: {{PAY / NOTHING}}; watch: {{FACTORY CLOSURES}}.
+
+## 7. PCBA only — engineer questions and the production-file package (`references/vendor-review.md` §5–§6)
+| Part | Side | Fab shows | Board says (pad 1, net) | Verdict |
+|---|---|---|---|---|
+| {{REFDES}} | top / bottom | `−` toward {{END}} | cathode = pad 1 at {{XY}} toward {{LANDMARK}} | OK / REVERSED — rotate 180° |
+Placement picture sent: `{{ORDER_ID}}_{{CONNECTOR}}_placement.png` (body outline, pin 1, mating direction on the fab's snapshot).
+
+| Layer | Difference vs the upload | Cause | Verdict |
+|---|---|---|---|
+| outer copper | +{{MM}} on every aperture | etch compensation ({{OZ}} oz) | OK — finished minimum confirmed by the fab |
+| inner copper | {{N}} pads yours-only | non-functional pad removal; none on a press-fit hole | OK |
+| drill | finished → drill: via {{VIA_D}}, PTH +{{PTH_D}}, press-fit {{PRESSFIT_D}}, NPTH +{{NPTH_D}} | plating allowance | OK — {{CONFIRMATION_ASKED}} |
+| mask / silk / paste / outline | {{DIFF}} | {{CAUSE}} | OK |
+Order-parameter file vs order sheet: {{IDENTICAL / DIFFERENCES}}. Reply: APPROVED, confirmations asked: {{LIST}}. Arrival checklist rows A-0 / A-5 written.

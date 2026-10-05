@@ -152,6 +152,12 @@ Defaults the questionnaire proposes:
   confirmed only there).
 - Polarity mark on the silk of **every** polarised footprint (the fab places per silkscreen when it conflicts with the CPL): pin-1 dot on every
   IC, cathode band / triangle on diodes, + on electrolytics, pin 1 on headers; the F.Fab layer carries the same marks for the assembly drawing.
+- **Pre-answer the fab's engineer** **[convention]**: at G2, beside the silk check, a fab's-eye pass — a polarised footprint whose only mark is on the
+  bottom at an odd rotation, a mark under mask or a pad, a custom footprint with no body outline on the fab layer — each is a production-hold
+  question waiting to happen; fix the footprint. The package ships `ASSEMBLY_NOTES` (renders with the cathode end / pin-1 corner per part class,
+  body + pin 1 + mating direction of every custom-footprint connector, the empty / unplated holes with finished sizes and tolerances;
+  `references/fab-dfm.md` §9), the order remark points at it, and the fab's engineer questions, when they still come, are answered on the board's
+  pad-1 positions, never on the CPL rotation (`references/vendor-review.md` §5–§7).
 
 ## 11. Fiducials, test points, silk, courtyards
 - **Fiducials** **[fab capability]**: 3 per side that carries parts (1 mm copper, 3 mm mask opening, ≥ 5 mm from the edge, not on a symmetry
