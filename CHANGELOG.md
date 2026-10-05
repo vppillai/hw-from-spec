@@ -10,7 +10,7 @@
   mating pair, an orientation row per one-sided part type — renders are not evidence of buildability), the software track, release cut + production cut + the arrival checklist + spec errata, agent operations with a measured resource budget
   (measure → audit → change; previews on the fast engine, geometry of record on the engine that passes the mesh gates; caches as determinism checks), the retro,
   the PCBA fab after the order (engineer questions answered on pad-1 positions, the production-file package diffed per layer) and its upfront
-  half (`ASSEMBLY_NOTES` in the package, the fab's-eye silk pass, hole sizes in the order remark, arrival rows A-4 / A-5).
+  half (`ASSEMBLY_NOTES` in the package, the fab's-eye silk pass, hole sizes in the order remark, arrival rows A-0 / A-5).
 - **Scripts** (`project.yaml`-driven, every one with `--selftest`, exit 0 / 1 / 2): `project.py` (reader, scaffold, slots, kickoff --check,
   gates-required, record, env), `known_issues`, `traceability`, `release_report`, `collect_renders`, `assembly_guide`, `reorg_paths`, `dfm_check`,
   `erc_gate`, `gate_check`, `handoff_header`, `thin_wall_census` (design-margin gate), `print_dfm` (printability-floor gate + `--validate`),
@@ -52,9 +52,9 @@ fab's picture), then sent the CAM production package for approval.
 - `references/fab-dfm.md` §9: the `ASSEMBLY_NOTES` contract (project-side generator; renders with the cathode end / pin-1 corner per part
   class, custom-footprint connector bodies with pin 1 and mating direction, empty / unplated holes with finished sizes and tolerances, keyed on
   the board md5 + models). `templates/production_cut.yaml`: deliverable `assembly_notes` (MFG-004, `{{ASSEMBLY_NOTES_CHECK}}` slot, ee / both).
-- `templates/20-design/arrival_checklist.yaml` §A: A-4 (production-file package reviewed the day it arrived), A-5 (every engineer-question answer
-  verified on the delivered boards). `templates/90-log/GATES.md` board-order row: `ASSEMBLY_NOTES` in the package and the order remark pointing
-  at it. `templates/VENDOR_REVIEW_RECORD.md` §7: the per-part and per-layer tables.
+- `templates/20-design/arrival_checklist.yaml` §A: A-0 (production-file package reviewed the day it arrived, before the fab's approval reply),
+  A-5 (the engineer-question answers seen in the fab's final photos); B-2 checks the rotated parts first on the bench. `templates/90-log/GATES.md`:
+  G2 prerequisite "fab's-eye polarity pass", board-order row `ASSEMBLY_NOTES` in the package and the order remark pointing at it. `templates/VENDOR_REVIEW_RECORD.md` §7: the per-part and per-layer tables.
 - `references/pcb-layout-dfm.md` §10: the fab's-eye silk pass (a mark only on the bottom at an odd rotation, a mark under mask, a custom
   footprint without a body outline = a production-hold question) and the pointer to the notes. `SKILL.md` §10: one bullet for both halves.
 - `references/pitfalls.md` jlc / fab: two rows (snapshot reading; CAM package review).

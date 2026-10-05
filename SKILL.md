@@ -405,8 +405,8 @@ folder `70-release/<rev>/records/`** (the cut yaml's `records_dir`; RELEASE_NOTE
   the CPL rotation, class by class, with a body-on-their-snapshot picture for any custom-footprint connector; its **production-file package** is
   diffed per layer against the upload the day it arrives (compensation, drill oversizes, inner pad removal, mask relief, via plugging = expected;
   anything else = finding) and approved with at most two confirmations (`references/vendor-review.md` §5–§6). **Both are pre-answered upfront**:
-  `ASSEMBLY_NOTES` in the package (a cut deliverable, `references/fab-dfm.md` §9), a fab's-eye silk pass at G2, the fab-side hole sizes and
-  via treatment in the order remark, arrival-checklist §A rows A-4 / A-5 (`references/vendor-review.md` §7).
+  `ASSEMBLY_NOTES` in the package (a cut deliverable, `references/fab-dfm.md` §9), a fab's-eye silk pass at G2 (a G2 prerequisite), the fab-side hole sizes and
+  via treatment in the order remark, arrival-checklist §A rows A-0 / A-5 (`references/vendor-review.md` §7).
 - **Illustrated assembly guide** [mech, both] beside the text SOP: `scripts/assembly_guide.py` (authored short yaml + generated step text + one keyed render per
   page, `--check`), registered as a cut deliverable (`references/release-and-cut.md` §8).
 

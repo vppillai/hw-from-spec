@@ -52,6 +52,6 @@ Placement picture sent: `{{ORDER_ID}}_{{CONNECTOR}}_placement.png` (body outline
 |---|---|---|---|
 | outer copper | +{{MM}} on every aperture | etch compensation ({{OZ}} oz) | OK — finished minimum confirmed by the fab |
 | inner copper | {{N}} pads yours-only | non-functional pad removal; none on a press-fit hole | OK |
-| drill | finished → drill: via {{D}}, PTH +{{D}}, press-fit {{D}}, NPTH +{{D}} | plating allowance | OK — {{CONFIRMATION_ASKED}} |
+| drill | finished → drill: via {{VIA_D}}, PTH +{{PTH_D}}, press-fit {{PRESSFIT_D}}, NPTH +{{NPTH_D}} | plating allowance | OK — {{CONFIRMATION_ASKED}} |
 | mask / silk / paste / outline | {{DIFF}} | {{CAUSE}} | OK |
-Order-parameter file vs order sheet: {{IDENTICAL / DIFFERENCES}}. Reply: APPROVED, confirmations asked: {{LIST}}. Arrival checklist rows A-4 / A-5 written.
+Order-parameter file vs order sheet: {{IDENTICAL / DIFFERENCES}}. Reply: APPROVED, confirmations asked: {{LIST}}. Arrival checklist rows A-0 / A-5 written.
