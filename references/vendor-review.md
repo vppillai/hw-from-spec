@@ -67,8 +67,8 @@ drafts it into the record.
   map the board frame into the snapshot (board-colour bounding box → px/mm; mirror the bottom), and compare crops side by side with the renders
   of record. A table per part: side, what the fab shows, what the board says, OK / REVERSED (rotate 180°). The electrical intent (anodes on the
   sources, cathodes on the shared bus; LED cathodes on the sink nets) is the cross-check that the footprint pin numbering itself is right.
-- Expect the fab's picture to be wrong on a part class, not at random: one footprint family at one rotation (a SOD-123 on the bottom at 90°) was
-  drawn 180° off while every LED, SMA diode and SOT part at the same CPL rotations matched. Answer the class, not only the listed refdes.
+- Expect the fab's picture to be wrong on a part class, not at random (worked example: one SOD-123 family on the bottom at 90° drawn 180° off
+  while every LED, SMA diode and SOT part at the same CPL rotations matched). Answer the class, not only the listed refdes.
 - **A connector on a custom footprint gets no body in their picture.** Send a picture back: the fab's own snapshot with the body outline (from
   the STEP's footprint-frame bbox) drawn over the pad rows, pin 1 circled, the mating direction arrowed, and beside it a render of the board with
   the cage / shield model removed so the body is visible. Name the holes that stay empty (press-fit for a cage pressed later) and the unplated
@@ -88,29 +88,28 @@ the order remark the quote generated). Approve it the same day; it is the last l
 2. **Read the compensation from the aperture headers**, not the raster: every fab aperture = yours + one constant (etch compensation for the
    copper weight; +0.065 mm on 2 oz outer layers in the worked example, i.e. half that per edge). The artwork spacing at your minimum shrinks by
    that constant and etches back; ask the fab to confirm the finished minimum, do not "fix" the files.
-3. **Expected, harmless CAM differences** — list them in the record so the review is a diff against expectations: a uniform ring around every
-   outer feature (compensation); discs at via / component-hole sites on the inner layers that only you have (non-functional pad removal — check
-   that no press-fit hole lost its inner pad); mask windows over the rail / tab rout slots and the rail tooling holes; the outline band on
-   every layer; one flash per via on a separate layer (via plugging / tenting as ordered); code placeholders on the rails; added small NPTH
-   relief holes in the tab slots only. Drill oversize for plating: via 0, PTH ≈ +0.15, press-fit ≈ +0.11 (finished size stays yours), NPTH
-   ≈ +0.05. Silk and paste must be identical (paste is often absent from the CAM Gerber set — compare it from the ODB feature counts).
+3. **Expected, harmless CAM differences** — list them in the record so the review is a diff against expectations:
+   - a uniform ring around every outer feature (compensation);
+   - discs at via / component-hole sites on the inner layers that only you have (non-functional pad removal — no press-fit hole may lose its pad);
+   - mask windows over the rail / tab rout slots and the rail tooling holes; the outline band on every layer;
+   - one flash per via on a separate layer (via plugging / tenting as ordered); code placeholders on the rails; small NPTH relief holes in the tab slots only;
+   - drill oversize for plating — read yours from the ODB `drl/tools` FINISH_SIZE vs DRILL_SIZE (worked-example numbers: via 0, PTH +0.15,
+     press-fit +0.11 with the finished size unchanged, NPTH +0.05);
+   - silk and paste identical (paste is often absent from the CAM Gerber set — compare it from the ODB feature counts).
 4. **Compare the order-parameter file with your order sheet** line by line (copper, finish, colours, via treatment, panel, press-fit, customer
    code, the remark text) — a wrong option here is cheaper to catch than on the board.
-5. **Reply**: APPROVED with the list of what was checked and at most two confirmations (press-fit finished-hole tolerance against the connector
+5. **Reply** (owner sends, §1): APPROVED with the list of what was checked and at most two confirmations (press-fit finished-hole tolerance against the connector
    drawing; an NPTH peg hole drilled +0.05 — hold the design size if they can). Record: the per-layer table + the evidence crops under
    `60-orders/quotes/<date>/`, the zip filed beside it, the reply text in the same record as §5 when both arrive together.
 
 ## 7. Upfront: pre-answer the engineer before the order (the cheap half of §5–§6)
 Every question in §5 and every confirmation in §6 can be in the package before the fab asks — then the mail is a yes instead of a day's
 exchange. At G2 / package build (`references/fab-dfm.md` §9, `references/pcb-layout-dfm.md` §10):
-- **Assembly notes in the fab package** (`ASSEMBLY_NOTES.md` + one picture per side, a cut deliverable): the top / bottom renders of record
-  with every polarised part class marked (cathode end / pin-1 corner named relative to a board landmark, not a rotation), the body outline of
-  every connector on a custom footprint with pin 1 and the mating direction, the holes that stay empty / unplated with their finished sizes and
-  tolerances, and the press-fit hole tolerance from the connector drawing. The order remark points at it ("see ASSEMBLY_NOTES in the package").
-- **A fab's-eye pass on the silk** before the package: a polarised footprint whose only mark is on the bottom side at an odd rotation, a mark
-  the mask or a pad hides, or a custom footprint with no body outline on the fab layer is a question waiting to happen — fix the footprint, not
-  the mail.
-- **The order remark carries the fab-side decisions** that the CAM would otherwise take silently: finished sizes and tolerances of press-fit and
-  peg holes, which holes are NPTH, via treatment, "mask openings as designed", minimum trace/space finished — the same list §6 step 4 checks back.
-- **The arrival checklist** gets its §A rows for these at the order (template rows A-4 / A-5): the fab's picture answers verified on the delivered
-  boards, the production-file diff on file before shipment approval.
+- **Assembly notes in the fab package** (`ASSEMBLY_NOTES`, a cut deliverable; the contract is `references/fab-dfm.md` §9). The order remark
+  points at it ("see ASSEMBLY_NOTES in the package").
+- **A fab's-eye pass on the silk at G2** (`references/pcb-layout-dfm.md` §10; a G2 prerequisite beside the silk check): fix the footprint, not the mail.
+- **The order remark carries the fab-side decisions** the CAM would otherwise take silently — press-fit and peg hole finished sizes and
+  tolerances, which holes are NPTH, via treatment, "mask openings as designed", minimum trace/space finished — within the remark cap (§4); what
+  does not fit is in `ASSEMBLY_NOTES`, which the remark names. §6 step 4 checks the same list back.
+- **The arrival checklist** gets its §A rows at the order (template rows A-0 and A-5): the production-file diff on file before the fab's approval
+  reply, the engineer-question answers seen in the fab's final photos; B-2 checks the rotated parts first on the bench.
