@@ -16,7 +16,7 @@ Use from a generator (the poses are the project's; this module does the arithmet
 A CHECKS row: min margin over the poses >= a stated limit (the source project used 2 mm on a 165 g piece with 14 mm shoes).
     improper_placements([(label, M4x4), ...])                                 # -> [(label, det)] for every placement that is a mirror or not rigid
 A placement matrix with determinant -1 is a MIRROR, and a mirror cannot be printed: the same transforms this module weighs the CoG through must
-every one be a proper rotation (det +1) — one CHECKS row, `len(improper_placements(...)) == 0`. The walker project drew one whole side of the
+every one be a proper rotation (det +1) — one CHECKS row, `len(improper_placements(...)) == 0`. One source project drew one whole side of the
 machine as a mirror image for three days of renders and a GIF; the printed part did not match the guide and nothing but the owner's hands caught it.
 Density: PLA 1.24e-3 g/mm3 solid; parts printed with sparse infill weigh less — pass a per-body factor (walls + top/bottom shells dominate small
 parts, so 0.5–0.7 of solid for large flat plates, ~1.0 for pins and bars). The CoG moves only if the factors differ between front and back.

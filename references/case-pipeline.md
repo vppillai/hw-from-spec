@@ -135,7 +135,7 @@ transform-level rows gate it — pure arithmetic on the placement matrices and t
    runs in the part plane where a mirror is a no-op, and the kit prints the body, not the transform. A symmetric assembly built from identical
    parts is the usual way in: "part +z outward" on both sides of the machine makes one side improper. A part that can only be drawn mirrored
    needs a mirrored BODY (`mirror([1,0,0])` of the design body, its own identifier mark, `dfm-printed-enclosure.md` §1.5), never a mirrored
-   transform. *Worked example:* the walker project drew one whole side as a mirror image through three days of renders and an animation;
+   transform. *Worked example:* one source project drew one whole side as a mirror image through three days of renders and an animation;
    nothing but the owner holding a printed part against the guide caught it.
 2. **A FIT row per mating pair the design knows about** (shaft ↔ bore, D ↔ D socket, peg ↔ hole, tab ↔ slot, pin ↔ pivot, key ↔ keyway): the
    DIRECTION of the feature and the direction of its mate, both mapped through the REAL placements into the machine frame, must agree within a
@@ -144,6 +144,9 @@ transform-level rows gate it — pure arithmetic on the placement matrices and t
    by this row, not by eye. Generic form — a pair is (feature direction in its part frame, its placement) vs (mate direction in its part frame,
    its placement):
    ```python
+   from math import atan2, degrees
+   import numpy as np
+
    def machine_dir(M, v):                              # a part-frame direction -> machine frame (rotation only)
        R = np.array(M, float)[:3, :3]; w = R @ np.array(v, float); return w / np.linalg.norm(w)
    def fit_rows(pairs, tol_deg=1.0):                   # pairs: [(label, v_feature, M_feature, v_mate, M_mate)] -> CHECKS rows
