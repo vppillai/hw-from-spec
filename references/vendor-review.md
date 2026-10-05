@@ -1,4 +1,4 @@
-# vendor-review.md — a fab's engineering review mail arrives after the order: map → decide → replace files → re-DFM → replace on the order
+# vendor-review.md — a fab's engineering mail arrives after the order: map → decide → replace files → re-DFM → replace on the order; PCBA engineer questions and the production-file package (§5–§7)
 
 The order is placed (the owner's click). Hours later the print service / CNC / PCB vendor mails "please confirm the risks" with marked-up
 pictures and per-line file ids, and an order-page **Replace File** button that exists only after a reply. This is a review round like any
@@ -55,3 +55,62 @@ any mark-shaped body or pocket: `scripts/thin_wall_check.py --pinch <stl>`, web 
   *display* moves — a quote figure while unpaid, say so in the record.
 - Remark caps (PCB 200 / assembly 500 chars) and a mandatory customs description cascader exist on the quote form; a placed order has no free-text
   box — the full remark goes as an attachment and into the production-file confirmation reply.
+
+## 5. PCBA fab after the order: the engineer's questions (polarity, placement, "is it okay to proceed?")
+The assembly fab's engineer mails a numbered question with its own "corrected part placement" snapshots (top and bottom renders of the board as the
+fab will place it) and asks for a yes within a day; production waits on the answer. Same boundaries as §1: the reply is the owner's, the agent
+drafts it into the record.
+- **Read the fab's marks on the board's pad-1 positions, never on the CPL rotation.** The snapshot convention (verify on the first picture; it
+  is stable per fab): a red `+` at the anode, a red `−` at the cathode, a red dot at pin 1, a two-letter flag (e.g. `FL`) on a part the engineer
+  could not resolve; the bottom view is mirrored in X. For every queried part read pad 1's position, the footprint's pin-1 meaning (cathode on the
+  CAD library's SOD / chip-LED footprints, anode on some vendor-library SMA footprints — check the silk bar) and its nets from the board file,
+  map the board frame into the snapshot (board-colour bounding box → px/mm; mirror the bottom), and compare crops side by side with the renders
+  of record. A table per part: side, what the fab shows, what the board says, OK / REVERSED (rotate 180°). The electrical intent (anodes on the
+  sources, cathodes on the shared bus; LED cathodes on the sink nets) is the cross-check that the footprint pin numbering itself is right.
+- Expect the fab's picture to be wrong on a part class, not at random: one footprint family at one rotation (a SOD-123 on the bottom at 90°) was
+  drawn 180° off while every LED, SMA diode and SOT part at the same CPL rotations matched. Answer the class, not only the listed refdes.
+- **A connector on a custom footprint gets no body in their picture.** Send a picture back: the fab's own snapshot with the body outline (from
+  the STEP's footprint-frame bbox) drawn over the pad rows, pin 1 circled, the mating direction arrowed, and beside it a render of the board with
+  the cage / shield model removed so the body is visible. Name the holes that stay empty (press-fit for a cage pressed later) and the unplated
+  peg holes.
+- **Reply format** (owner sends; attach the picture): per question a numbered answer; per part "CORRECT, place as shown" or "REVERSED: the
+  cathode (your `−`, the band end) goes toward <board landmark>; rotate 180°, position unchanged"; the sentence "with <parts> rotated it is okay
+  to proceed". Then: arrival checklist §A row for the rotated parts (cathode band toward <landmark>), order-sheet row marked SENT.
+
+## 6. The fab's production-file package ("please review the production file")
+The package the fab sends back is its CAM output, not your upload: production Gerbers (often inch 2.6, one file per layer plus drill map, rout
+profile, via-plug layer, code-mark layers), an ODB++ job (`steps/<step>/layers/<layer>/features`, `drl/tools` with FINISH_SIZE vs DRILL_SIZE),
+your own upload for reference, and an order-parameter file (layers, copper weights, finish, mask / silk colours, via treatment, press-fit flag,
+the order remark the quote generated). Approve it the same day; it is the last look before copper.
+1. **Rasterise both sets on one frame** (a Gerber library → SVG with forced bounds → PNG at ~16 px/mm, white background) and XOR per layer:
+   both / fab-only / yours-only. Connected components of each difference, mapped to the drill table by position, name the cause of every
+   square millimetre; a component that maps to no hole and is not a thin edge sliver is a finding.
+2. **Read the compensation from the aperture headers**, not the raster: every fab aperture = yours + one constant (etch compensation for the
+   copper weight; +0.065 mm on 2 oz outer layers in the worked example, i.e. half that per edge). The artwork spacing at your minimum shrinks by
+   that constant and etches back; ask the fab to confirm the finished minimum, do not "fix" the files.
+3. **Expected, harmless CAM differences** — list them in the record so the review is a diff against expectations: a uniform ring around every
+   outer feature (compensation); discs at via / component-hole sites on the inner layers that only you have (non-functional pad removal — check
+   that no press-fit hole lost its inner pad); mask windows over the rail / tab rout slots and the rail tooling holes; the outline band on
+   every layer; one flash per via on a separate layer (via plugging / tenting as ordered); code placeholders on the rails; added small NPTH
+   relief holes in the tab slots only. Drill oversize for plating: via 0, PTH ≈ +0.15, press-fit ≈ +0.11 (finished size stays yours), NPTH
+   ≈ +0.05. Silk and paste must be identical (paste is often absent from the CAM Gerber set — compare it from the ODB feature counts).
+4. **Compare the order-parameter file with your order sheet** line by line (copper, finish, colours, via treatment, panel, press-fit, customer
+   code, the remark text) — a wrong option here is cheaper to catch than on the board.
+5. **Reply**: APPROVED with the list of what was checked and at most two confirmations (press-fit finished-hole tolerance against the connector
+   drawing; an NPTH peg hole drilled +0.05 — hold the design size if they can). Record: the per-layer table + the evidence crops under
+   `60-orders/quotes/<date>/`, the zip filed beside it, the reply text in the same record as §5 when both arrive together.
+
+## 7. Upfront: pre-answer the engineer before the order (the cheap half of §5–§6)
+Every question in §5 and every confirmation in §6 can be in the package before the fab asks — then the mail is a yes instead of a day's
+exchange. At G2 / package build (`references/fab-dfm.md` §9, `references/pcb-layout-dfm.md` §10):
+- **Assembly notes in the fab package** (`ASSEMBLY_NOTES.md` + one picture per side, a cut deliverable): the top / bottom renders of record
+  with every polarised part class marked (cathode end / pin-1 corner named relative to a board landmark, not a rotation), the body outline of
+  every connector on a custom footprint with pin 1 and the mating direction, the holes that stay empty / unplated with their finished sizes and
+  tolerances, and the press-fit hole tolerance from the connector drawing. The order remark points at it ("see ASSEMBLY_NOTES in the package").
+- **A fab's-eye pass on the silk** before the package: a polarised footprint whose only mark is on the bottom side at an odd rotation, a mark
+  the mask or a pad hides, or a custom footprint with no body outline on the fab layer is a question waiting to happen — fix the footprint, not
+  the mail.
+- **The order remark carries the fab-side decisions** that the CAM would otherwise take silently: finished sizes and tolerances of press-fit and
+  peg holes, which holes are NPTH, via treatment, "mask openings as designed", minimum trace/space finished — the same list §6 step 4 checks back.
+- **The arrival checklist** gets its §A rows for these at the order (template rows A-4 / A-5): the fab's picture answers verified on the delivered
+  boards, the production-file diff on file before shipment approval.

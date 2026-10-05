@@ -109,3 +109,17 @@ The morning after an order is placed the live stock gate turns against its own p
 - The frozen package: fab files, panel/, board_id.txt byte-identical forever (a rebuild re-exports the panel and re-stamps the commit — never on
   a placed order); generator-owned prose (ORDER_PARAMETERS, PACKAGE.md) may be re-derived with a `--refresh-notes` that re-hashes the manifest.
 - Look for a moved records file under both its old and new path when reading the build commit after a re-layout (`scripts/reorg_paths.py --map`).
+
+## 9. Assembly notes in the fab package (project-side generator; contract here) — pre-answering the engineer
+A PCBA fab's engineer asks the same questions on every order: which end is the cathode on the diodes, where is pin 1 on the SOT parts, what does
+the connector on the custom footprint look like, which holes stay empty, is it okay to proceed (`references/vendor-review.md` §5–§7). The package
+answers them before they are asked:
+- **`ASSEMBLY_NOTES.md` + `assembly_notes_top.png` / `_bottom.png`** beside the fab files: the renders of record with a marker per polarised part
+  (cathode end / pin-1 corner), one caption per part CLASS ("SOD-123 diodes on the bottom: cathode band toward the <landmark> edge"), a body
+  outline + pin-1 circle + mating arrow for every connector whose footprint is custom or whose body the fab's library will not draw, a table of
+  holes that stay empty or unplated (refdes, count, finished Ø, tolerance, plated / NPTH, why), the press-fit finished-hole tolerance from the
+  connector drawing, and the order remark text that points at the file.
+- Inputs: the board file (pad-1 positions, rotations, nets), the footprint 3-D models (body bbox in the footprint frame), the polarised-part
+  class list derived from the footprints (not typed by hand), `ORDER_PARAMETERS.md`. Keyed on the board md5 + the models: a copper change
+  re-renders, a prose edit does not. `--check` STALE on a key move; part of the package MANIFEST; `production_cut.yaml` row `assembly_notes`.
+- The same pictures are the answer to the engineer's mail (attach, do not redraw) and the §A rows of the arrival checklist.

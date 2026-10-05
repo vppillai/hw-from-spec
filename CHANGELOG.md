@@ -1,6 +1,6 @@
 # CHANGELOG — hw-from-spec
 
-## Current state (0.11.3) — read this instead of replaying the entries below
+## Current state (0.11.4) — read this instead of replaying the entries below
 
 - **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
   twelve batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
@@ -8,7 +8,9 @@
   blind reviews with a record-reading verifier, layout + fab DFM mirror, the case pipeline with two PURE mesh gates (census margin, print-DFM
   floor), the stability row for anything that stands free (kickoff C12) and the three assembly-model rows (every placement det +1, a fit row per
   mating pair, an orientation row per one-sided part type — renders are not evidence of buildability), the software track, release cut + production cut + the arrival checklist + spec errata, agent operations with a measured resource budget
-  (measure → audit → change; previews on the fast engine, geometry of record on the engine that passes the mesh gates; caches as determinism checks), the retro.
+  (measure → audit → change; previews on the fast engine, geometry of record on the engine that passes the mesh gates; caches as determinism checks), the retro,
+  the PCBA fab after the order (engineer questions answered on pad-1 positions, the production-file package diffed per layer) and its upfront
+  half (`ASSEMBLY_NOTES` in the package, the fab's-eye silk pass, hole sizes in the order remark, arrival rows A-4 / A-5).
 - **Scripts** (`project.yaml`-driven, every one with `--selftest`, exit 0 / 1 / 2): `project.py` (reader, scaffold, slots, kickoff --check,
   gates-required, record, env), `known_issues`, `traceability`, `release_report`, `collect_renders`, `assembly_guide`, `reorg_paths`, `dfm_check`,
   `erc_gate`, `gate_check`, `handoff_header`, `thin_wall_census` (design-margin gate), `print_dfm` (printability-floor gate + `--validate`),
@@ -32,6 +34,33 @@
 - **Generic by rule**: the skill names no project, part, board, order, account or person — `scripts/generic_lint.py` reads the whole repo
   (CHANGELOG and docs included; history keeps its measured numbers), a fenced worked example keeps numbers and kinds but never a name, and the
   repo carries no project retro (a retro report is folded, then deleted).
+
+## 0.11.4 — 2026-10-05 — PCBA fab after the order: engineer questions, the production-file package, and pre-answering both before the order
+
+Owner: "do it. but also make it so that we proactively do things upfront as well whenever possible". Source: one board order whose assembly
+engineer asked for a connector placement picture and the polarity of sixteen parts (two of one footprint family were drawn 180° off in the
+fab's picture), then sent the CAM production package for approval.
+
+### Added
+- `references/vendor-review.md` §5 **engineer questions**: the snapshot convention (`+` anode, `−` cathode, dot pin 1, flag, bottom mirrored),
+  read against the board's pad-1 positions and nets, never the CPL rotation; answer per part class; a body-on-their-snapshot picture for a
+  custom-footprint connector; the reply format and the follow-up rows. §6 **production-file package**: what the package is (CAM Gerbers, ODB++
+  job, the upload, the order-parameter file), the per-layer XOR method with difference components mapped to the drill table, the compensation
+  read from the aperture headers, the list of expected CAM differences (compensation ring, inner non-functional pad removal, rail-slot mask
+  relief, via-plug layer, code placeholders, drill oversizes), the order-parameter comparison, the APPROVED-with-two-confirmations reply.
+  §7 **upfront**: the same questions answered in the package before the fab asks.
+- `references/fab-dfm.md` §9: the `ASSEMBLY_NOTES` contract (project-side generator; renders with the cathode end / pin-1 corner per part
+  class, custom-footprint connector bodies with pin 1 and mating direction, empty / unplated holes with finished sizes and tolerances, keyed on
+  the board md5 + models). `templates/production_cut.yaml`: deliverable `assembly_notes` (MFG-004, `{{ASSEMBLY_NOTES_CHECK}}` slot, ee / both).
+- `templates/20-design/arrival_checklist.yaml` §A: A-4 (production-file package reviewed the day it arrived), A-5 (every engineer-question answer
+  verified on the delivered boards). `templates/90-log/GATES.md` board-order row: `ASSEMBLY_NOTES` in the package and the order remark pointing
+  at it. `templates/VENDOR_REVIEW_RECORD.md` §7: the per-part and per-layer tables.
+- `references/pcb-layout-dfm.md` §10: the fab's-eye silk pass (a mark only on the bottom at an odd rotation, a mark under mask, a custom
+  footprint without a body outline = a production-hold question) and the pointer to the notes. `SKILL.md` §10: one bullet for both halves.
+- `references/pitfalls.md` jlc / fab: two rows (snapshot reading; CAM package review).
+
+### Changed
+- Nothing measured; no script changed.
 
 ## 0.11.3 — 2026-10-04 — the skill is generic: no project, part, board, order or person named anywhere in the repo, project retros removed from the repo, the generic lint covers the whole repo
 
