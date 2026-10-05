@@ -55,7 +55,7 @@ weaker (same model family) — say so in the merged report's reviewer-quality se
 ## Why these shapes
 - Blindness is structural: a detached worktree, a hand-off as the only briefing, forbidden file patterns named in the prompt, reports written
   outside the worktree. Reviews that read the author's dispositions or another reviewer's output found what they were told to find.
-- Adversarial verification (default REFUTED) removed ~30–50 % of BLOCKER/MAJOR claims per round in the source project; the merge lists refuted
+- Adversarial verification (default REFUTED) removed ~30–50 % of BLOCKER/MAJOR claims per round in one measured project; the merge lists refuted
   items with the reason so they are not re-raised.
 - Visual gates read images; geometric silk checks passed boards with blank bars and mutilated words.
 - Every round is a file set in `80-reviews/` plus one merged report; the hand-off version bumps; the workflow file itself is committed.

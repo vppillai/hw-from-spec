@@ -11,4 +11,4 @@ steps:
   1: {camera: '0,0,5,55,0,215,400', parts: [tray, board], tools: [ESD wrist strap], check: board sits flat on all bosses}
   2: {parts: [hood, 4 x M3], tools: [T10 driver], check: hood seam closed all round}
 where_the_words_are:
-  - "Every step in full, with the numbers: `40-case/mjf_case/ASSEMBLY.md` (generated) and SOP-001."
+  - "Every step in full, with the numbers: `40-case/vendor_mjf/ASSEMBLY.md` (generated) and SOP-001."

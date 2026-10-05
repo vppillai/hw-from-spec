@@ -1,19 +1,48 @@
-# scripts/generic_lint_terms.yaml — what the skill may NOT say outside CHANGELOG.md, docs/retro/ and 80-reviews/ (owner rule: the skill
-# describes the METHOD for any hardware project, never one project). Read by scripts/generic_lint.py; every entry is a Python regex matched
-# per line, case-sensitive unless it starts with (?i). Lines inside a fenced worked example are skipped:
-#   <!-- worked example: begin (source project, 2026) -->  …  <!-- worked example: end -->   (at most ONE block per file)
+# scripts/generic_lint_terms.yaml — what the skill repo may NOT say anywhere (owner rule: the skill describes the METHOD for any hardware
+# project, never one project). Read by scripts/generic_lint.py over the WHOLE repo (CHANGELOG.md and docs/ included; only .git, .venv, LICENSE
+# and this file are skipped); every entry is a Python regex matched per line, case-sensitive unless it starts with (?i).
+# A fenced worked example skips every group EXCEPT the *_names and *_ids groups — a worked example keeps numbers and kinds, never a name:
+#   <!-- worked example: begin (2026) -->  …  <!-- worked example: end -->   (at most ONE block per file)
+# CHANGELOG.md and docs/ keep their measured numbers and the skill's own review finding ids (design_dimensions, review_ids_as_citations).
 # Extend this list at a retro when a new project's names leak in; never shorten it to make a hit go away — rewrite the sentence.
-project_names:
-  - '\bAEC-CT2\b'
-  - '\bAEC\b'
+project_names:                                     # the projects the skill was learned on: board, case, product, company, the phrase that stands for them
+  - '(?i)\baec'                                    # aec, AEC, AEC-CT2, aec-tester, aec_ct2
+  - '(?i)\bct2\b'
   - '\bMINI\b'
   - '(?i)tenstorrent'
-  - '\bQSFP-DD\b'
-  - '\bQSFP\b'
+  - '(?i)qsfp'                                     # QSFP, QSFP-DD
   - '\bCMIS\b'
   - '\bMSA\b'
+  - '(?i)\bwankel\b'
+  - '(?i)beest'                                    # beest, Strandbeest
+  - '(?i)\bjansen\b'
+  - '(?i)\bthe (walker|engine) project\b'
+  - '(?i)\bsource[- ]project'                      # "the source project", "one source project": write the generic statement instead
+part_names:                                        # one project's part labels; the generic kind ("cap", "inlay plate", "foot") is fine
+  - '(?i)\bmjf_case\b'
+  - '(?i)\bp2s_case\b'
+  - '(?i)\bplug[_ ]caps?\b'
+  - '(?i)\bjournals?\b'
+  - '(?i)\bshoes?\b'
+  - '\b[A-Z]\d+_m\b'                               # body ids of the T1_m kind
+  - '(?i)\bletter doubled\b|\bdoubled (letter|mark)s?\b'
+  - '\b[a-z]–[a-z]–T\d\b'                          # a linkage's bar labels (c–k–T1)
+  - '\bJ\d–J\d\b'                                  # joint labels
+project_ids:                                       # board md5s, order / account / quote ids
+  - '\bed9431d7\b'
+  - '\b13595591\b'
+  - '\b[WD]20\d{6,}\b'                             # vendor order ids W2026…, D2026…
+  - '\bSMT\d{10,}\b'
+  - '\bW\d{14,}\b'
+people_names:
+  - '(?i)vysakh'
+  - '(?i)vpillai'
+  - '(?i)\bpillai\b'
+machine_paths:
+  - '/Users/'
+  - '/private/tmp/claude-'
 parts_and_refdes:
-  - '\b(J|U|R|C|D|SW|TP|Q|L|H)\d{3}\b'            # the source project's refdes scheme (sheet x 100 + n)
+  - '\b(J|U|R|C|D|SW|TP|Q|L|H)\d{3}\b'            # a sheet x 100 + n refdes scheme
   - '\bFT2232H\b'
   - '\bSTUSB4500\b'
   - '\bUE36-'
@@ -25,35 +54,23 @@ parts_and_refdes:
   - '(?i)amphenol'
   - '\b74LVC14A\b'
   - '\bBAT54\b'
-record_ids_as_citations:
+record_ids_as_citations:                           # a project's decision / change / blocker ids cited in prose
   - '\bCC-(?!001\b)\d{3}\b'                      # CC-001 / D-01 are the template's own seed rows (the process row, the spec row)
   - '\bD-(?!01\b)\d{2}[a-z]?\b'
+  - '\bCC-\d{3}\.\d\b'
+  - '\b(SILK_R\d|CASE_MJF_DFM_|TRAY_ISSUE|ORDER_STATUS|JLC_RULES|JLC_QUOTES|REPO_CLEANUP|FEET_MCMASTER|CASE_V3_NOTES)'
+  - '\bround 6[a-z]\b'
+  - '\baudit #\d\b'
+review_ids_as_citations:                           # finding ids of a review; CHANGELOG.md and docs/ cite the skill's own reviews by them
   - '\bR1-\d+\b'
   - '\bB-\d{2}\b'
   - '\bFA-\d+\b'
-  - '\bCC-\d{3}\.\d\b'
-  - '\b(SILK_R\d|CASE_MJF_DFM_|TRAY_ISSUE|ORDER_STATUS|OPUS_|JLC_RULES|JLC_QUOTES|REPO_CLEANUP|FEET_MCMASTER|CASE_V3_NOTES)'
-  - '\bround 6[a-z]\b'
-  - '\baudit #\d\b'
-other_source_projects:                             # later retros' projects: their names, part labels and local paths stay in docs/retro/ and CHANGELOG.md
-  - '(?i)\bwankel\b'
-  - '(?i)\bbeest\b'
-  - '(?i)strandbeest'
-  - '(?i)\bjansen\b'
-  - '\bretro (wankel|beest)\b'
-  - '\b[a-z]–[a-z]–T\d\b'                         # a linkage's bar labels (c–k–T1)
-  - '\bJ\d–J\d\b'                                 # joint labels
-owner_and_machine:
-  - '(?i)vysakh'
-  - '(?i)vpillai'
-  - '/Users/'
-  - '\bSMT\d{10,}\b'
-  - '\bW\d{14,}\b'
+  - '\bOPUS_'
 preset_names:
   - '(?i)\bp2s\b'
   - '\bjlc_mjf\b(?!_)'                             # the preset name; the process-table ROW jlc_mjf_pa12 is per-vendor by design
   - '\bBambu Lab P2S\b'
-design_dimensions:
+design_dimensions:                                 # one design's dimensions; CHANGELOG.md and docs/ keep them as measured history
   - '\b18\.65\b'
   - '\b8\.80\b'
   - '\b18\.35\b'

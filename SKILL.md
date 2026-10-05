@@ -1,6 +1,6 @@
 ---
 name: hw-from-spec
-version: 0.11.2
+version: 0.11.3
 description: Run a hardware project (a PCB, a printed or CNC enclosure, or both — scope chosen at kickoff; contract fab such as JLCPCB) from a written specification to a production cut with an owner-gated, generated-only, blind-reviewed workflow — a kickoff questionnaire that asks every owner decision up front with recommended answers, a zero-warning manufacturability bar, and a retro that folds each project's learnings back into the skill. Use this whenever someone starts a board or enclosure project from a spec, asks to set up gates, a decision log, generators, part verification, a fab DFM mirror, a case pipeline, FEA, blind reviews, a release report or a production cut for one, or resumes such a project, or wants the skill improved from a finished project — even if they only say "new KiCad board", "order this at JLC", "review the layout", "cut the release" or "what did we learn".
 ---
 
@@ -454,7 +454,8 @@ Then the retro (§13) folds the learnings back into this skill at the next produ
 After every production cut (and after any round that cost an order or a reprint): `scripts/skill_retro.py --project <root> --since <the project's
 first day>` reads the project's `LEARNINGS_LOG.md` and `DECISIONS.md`, classifies every dated entry against this skill's sections (CARRIED /
 PARTIAL / NEW, "costly" when the text names a failure that cost a round), compares the skill version the project recorded (`project.yaml skill:
-{version}`) with `SKILL.md`, and writes `docs/retro/<project>_<date>.md` in the skill repo: the NEW and PARTIAL tables, a CHANGELOG entry draft,
+{version}`) with `SKILL.md`, and writes `docs/retro/<project>_<date>.md` in the skill repo (working material: fold it, then delete it — the skill repo carries no
+project retro, and the generic lint reads the whole repo): the NEW and PARTIAL tables, a CHANGELOG entry draft,
 one reference patch stub per target file, an eval stub per costly NEW entry, the owner decision topics the kickoff questionnaire does not
 ask yet, and the DFM process-table drift (`20-design/dfm_processes.yaml` vs the skill's template: NEW rows, CHANGED numbers with their citation,
 VALIDATED rows — §8.1 item 1); every dated bullet it cannot parse is listed in §0, never dropped; the project's `ids.owner_prefix` and
@@ -494,6 +495,6 @@ row. The classifier is a keyword matcher: the report is the input to the change;
 | the fab's review mail after the order, Replace File boundaries, quote-page DFM mechanics | `references/vendor-review.md` |
 | orchestration, git, reviews, read-only checkers, memory / pause points, the resource budget (job pool, measure-audit-change, caching + engine policy, serialized record round, preview vs render, inline vs agent) | `references/agent-ops.md`, `scripts/jobs.sh`, `templates/ci/Makefile` |
 | every recorded pitfall, one line each | `references/pitfalls.md` |
-| the retro after a cut: what the project learned that the skill lacks | `scripts/skill_retro.py`, `docs/retro/` |
+| the retro after a cut: what the project learned that the skill lacks | `scripts/skill_retro.py` (its report in `docs/retro/` is deleted once folded) |
 | instantiating a workflow | `workflows/README.md` |
 | the dry run | `smoke/README.md` |

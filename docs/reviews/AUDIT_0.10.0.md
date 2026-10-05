@@ -39,11 +39,11 @@ skill, not a changelog"). Findings carry `file:line` at the audited commit; disp
 | S15 | `README.md:7-9,66,69` | version prose ("0.9.1 mirrors…", "0.9.0 closed…"), hand-typed counts (19 tools, fourteen evals) | one version line; counts removed or derived |
 | S16 | `scripts/doc_voice_lint.py` run at `f04cfe8`: **47 hits in 58 files** — `references/dfm-printed-enclosure.md` 21 (blind-review ids `(B-15)` … inside rules, "the old rule", a `(was "SANITY …")` parenthetical), `pitfalls.md` 6 (version numbers in headings), `templates/REVIEW_HANDOFF.md` 2 / `DFM_ROUND.md` 2 ("this round"), `SKILL.md` 2, `fab-dfm.md` 2, one each in `README.md`, `agent-ops.md`, `fdm-print-optimisation.md`, `kickoff-questionnaire.md`, `print-kit.md`, `project-yaml.md`, `templates/CLAUDE.md`, `DECISIONS.md`, `project.yaml`, `design/dfm_processes.yaml`, `design/arrival_checklist.yaml`, `ci/README.md` | the skill narrates its own history inside rules | every hit rewritten as the standing rule; the lint runs in the smoke |
 
-## 3. Source-project residue in templates / workflows / scripts
+## 3. Project-name residue in templates / workflows / scripts
 
 | # | file:line | Finding | Fix |
 |---|---|---|---|
-| R1 | `templates/project.yaml:112` | `# e.g. "Bambu Lab P2S, …"` — the owner's printer; the smoke's leak guard was case-sensitive and did not scan `templates/design` | `<printer model>`; guard widened (retro commit) |
+| R1 | `templates/project.yaml:112` | `# e.g. "<the owner's printer model>, …"` — the owner's printer; the smoke's leak guard was case-sensitive and did not scan `templates/design` | `<printer model>`; guard widened (retro commit) |
 | R2 | `templates/project.yaml:92,99` | "(JLC3DP 2026-09-28: 1.2)", "(147)" as THE reference values | "read on checker_date (e.g. …)", "the size your first vendor round calibrated at" |
 | R3 | `templates/DFM_ROUND.md:8-11,15,17` | `{{VENDOR}}` header, JLC3DP API field names hard-coded in the body | `{{VERDICT_API}}` slot with the JLC3DP worked example in one parenthesis; the smoke grep follows |
 | R4 | `templates/VENDOR_REVIEW_RECORD.md:35,42` | "Replace File → upload → Confirm", "audit failed" mails = JLC3DP UI terms under `{{VENDOR}}` | `{{VENDOR_REPLACE_ACTION}}` (e.g. …) |
@@ -52,7 +52,7 @@ skill, not a changelog"). Findings carry `file:line` at the audited commit; disp
 | R7 | `templates/CENSUS_GATE_ROWS.md:32`, `templates/ci/README.md:17,41` | `out/<board>/mechanical/…` — the source layout; the template record path is `out/mechanical/case/*/stl/*.stl` | drop `<board>/` |
 | R8 | `templates/ci/{pr-check,nightly,release}.yml`, `templates/ci/README.md:13,33`, `templates/ENV.md:6` | KiCad presupposed as THE CAD (`{{PROJECT_KICAD_IMAGE}}`, `import pcbnew`) while CLAUDE / project.yaml are CAD-neutral | `{{PROJECT_CAD_IMAGE}}`; ENV row "the CAD's module import" |
 | R9 | `templates/project.yaml:64-65`, `templates/design/traceability.yaml:11`, `templates/REVIEW_HANDOFF.md:18` | `kicad/{{BOARD}}/…` while CLAUDE says `<cad>/<board>/` | documented: `kicad/` is the CAD dir name, rename for another CAD (the key names are historical, as `tools:` says) |
-| R10 | `templates/design/dfm_processes.yaml:38,45,54` | `[K] JLC3DP engineer mail 2026-09-22` — a private mail no project can re-fetch | tag `[K source-project mail, not reproducible]` |
+| R10 | `templates/design/dfm_processes.yaml:38,45,54` | `[K] JLC3DP engineer mail 2026-09-22` — a private mail no project can re-fetch | tag `[K vendor mail, not reproducible]` |
 | R11 | `workflows/silk-audit-verify.js:25,31` | the source board's font / via numbers and silk feature set hard-coded in the prompt | `{{SILK_METRICS}}` placeholder; feature set folded into `{{SILK_DESIGN_INTENT}}` |
 | R12 | `templates/SPEC.md:18` | `{{USB-C 5 V 3 A}}` example | `{{interface, e.g. power in}}` |
 | R13 | `templates/project.yaml:78` vs `templates/CLAUDE.md:48`, `templates/ENV.md:7` | the mech geometry CLI slot is `{{GEOMETRY_CLI_PATH}}` in one file and `{{CAD_CLI_PATH}}` in two; in `both` scope ENV has two tools in one slot | `{{GEOMETRY_CLI_PATH}}` everywhere |
@@ -64,7 +64,7 @@ skill, not a changelog"). Findings carry `file:line` at the audited commit; disp
 | R19 | `scripts/traceability.py:73` | default `scratch_links: ["lib"]` = the source layout | `[]` |
 | R20 | `scripts/print_dfm.py:10,187,354,390,404` | review ids / source episodes in code comments and in a row printed to every user ("the construction that cracked on a 141 mm lip"); `3.5 mm [V Hubs]` as a code fallback | generic wording; the fallback reads the row |
 | R21 | `scripts/project.py:221`, `scripts/reorg_paths.py:45` | path defaults hard-coded in code instead of `DEFAULTS["paths"]` | moved |
-| R22 | `scripts/skill_retro.py:391-392` | fixture rows quote source-project decisions (magnets, purple badge) | neutral text |
+| R22 | `scripts/skill_retro.py:391-392` | fixture rows quote one project's decisions (magnets, purple badge) | neutral text |
 | R23 | `scripts/print_dfm.py:744-857` | the selftest names template rows (`jlc_mjf_pa12`, …) | ACCEPTED — a data table the selftest tests against; renaming a row is a selftest change by design |
 
 ## 4. Scripts — dead code, duplicated helpers, CLI conventions, docstring vs behaviour
@@ -99,7 +99,7 @@ for a human after an agent run, as documented in `run_evals.py`). Eval 8's batch
 
 `smoke/run_smoke.sh`: **OK, exit 0, 2 min 00 s wall** at `6d93d54` (section 0d ran with the mesh libraries); after the retro commit 2 min 05 s. Negative
 cases proven: 31 (listed in the auditor's report; unchanged). Dependencies outside the repo: the caller's `.venv`, `python3`, git, sed, awk, tar — no
-network, no path into the source project.
+network, no path into the originating project.
 
 ## 7. Workflows
 

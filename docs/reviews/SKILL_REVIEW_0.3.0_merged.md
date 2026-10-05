@@ -1,7 +1,7 @@
 # SKILL_REVIEW_0.3.0_merged — blind double review of hw-from-spec 0.3.0 (HEAD 790326b + uncommitted pitfalls header), 2026-09-26
 
 Two independent general-purpose reviewer agents; each received ONLY the repo path and a checklist (completeness vs CHANGELOG, project-agnosticism,
-selftests, SKILL consistency, no source-project leakage; B additionally read the three new scripts line by line and probed the gate guard).
+selftests, SKILL consistency, no project-name leakage; B additionally read the three new scripts line by line and probed the gate guard).
 Neither saw the other's output nor the author's reasoning. Reports: A = 16 findings (2 MUST / 7 SHOULD / 7 COULD), B = 30 findings
 (4 MUST / 17 SHOULD / 9 COULD). Both verdicts: **RELEASE AFTER THE MUST LIST**. Both ran every selftest, both shell selftests and the smoke: green
 (A saw one unreproduced clone-gate abort in five smoke runs → ERR trap added).
@@ -21,7 +21,7 @@ Neither saw the other's output nor the author's reasoning. Reports: A = 16 findi
 | day-1 recipe: project venv never gets pyyaml → step 5 ImportError | A-05 | B-16 | REQUIRED | step 1 installs pyyaml in the project venv too |
 | clone_gate / adopt_gates abort without naming the line | A-06 | — | REQUIRED | ERR traps |
 | vendor-review names two homes for the mapping / replacement tables | A-07 | — | REQUIRED | tables live in the record (§2 / §4) |
-| script docstrings cite source-project decision ids | A-08 | B-20 | REQUIRED | cite pitfalls / case-pipeline instead |
+| script docstrings cite the project's decision ids | A-08 | B-20 | REQUIRED | cite pitfalls / case-pipeline instead |
 | `reorg.gitignore` key undocumented | A-09 | B-12 | REQUIRED | schema row |
 | read-only guard blind to a re-modified already-dirty file; gitignored writes unseen | — | B-05 | REQUIRED (partly) | `git diff HEAD` hash added to the snapshot + selftest; gitignored paths stay unwatched and the failure message says so (ACCEPT: watching ignored paths would flag every scratch write) |
 | pr-check guard assumes a clean tree after Bootstrap; silent pass on a failing `git status` | — | B-06 | REQUIRED | snapshot after Bootstrap, diff, `|| exit 1` |
@@ -30,7 +30,7 @@ Neither saw the other's output nor the author's reasoning. Reports: A = 16 findi
 | `guide.json` never pruned: orphan renders ship | — | B-09 | REQUIRED | pruned on build, flagged on `--check`; selftest |
 | render key = one scad file; `include <…>` edits do not move it | — | B-10 | DOCUMENT | stated in docstring, project-yaml.md, release-and-cut §8 |
 | un-migrated `docs/SOFTWARE_ARCHITECTURE.md` literal | — | B-13 | REQUIRED | → docs/design/ |
-| "≈ 45 min" stated as a rule in SKILL; source-project piece names / one vendor's wording in vendor-review; project-side generators named as if skill scripts in §3.1 | — | B-17/18/19 | REQUIRED | generic wording; italics for project-side generators |
+| "≈ 45 min" stated as a rule in SKILL; one project's piece names / one vendor's wording in vendor-review; project-side generators named as if skill scripts in §3.1 | — | B-17/18/19 | REQUIRED | generic wording; italics for project-side generators |
 | same-repo URLs to moved files neither rewritten nor flagged | — | B-21 | DOCUMENT | docstring + release-and-cut §9 |
 | "62 literals" rotting count; `datasheet_notes` missing from a comment; eval fixture name `ct1`; smoke README / README / CHANGELOG counts | A-10/13/14/15 | B-28/29 | REQUIRED (trivial) | applied |
 | selftest messages stronger than their assertions (assembly "stales all", thin_wall "self-hit") | A-11 | B-26 | REQUIRED | every stem asserted; `{SIZE}` in the fixture; messages name the uncovered mesh wrappers |

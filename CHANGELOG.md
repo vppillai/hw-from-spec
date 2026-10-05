@@ -1,6 +1,6 @@
 # CHANGELOG — hw-from-spec
 
-## Current state (0.11.2) — read this instead of replaying the entries below
+## Current state (0.11.3) — read this instead of replaying the entries below
 
 - **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
   twelve batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
@@ -28,18 +28,56 @@
 - **Checks**: three read-only tiers — inner `scripts/iteration_gate.sh [-- <cmd> ...]` (a change's `--check` + grader set), standard
   `scripts/adopt_gates.sh --no-clone` (`make gates`), release `scripts/adopt_gates.sh` (`make check`); `smoke/run_smoke.sh` runs every script selftest, the rule greps, the enforcement negatives, both lints
   and the evals; 18 evals
-  with mechanical checks, `80-reviews/INDEX.md` and `docs/retro/INDEX.md` list every review and retro.
+  with mechanical checks; `docs/reviews/INDEX.md` lists every blind review of the skill.
+- **Generic by rule**: the skill names no project, part, board, order, account or person — `scripts/generic_lint.py` reads the whole repo
+  (CHANGELOG and docs included; history keeps its measured numbers), a fenced worked example keeps numbers and kinds but never a name, and the
+  repo carries no project retro (a retro report is folded, then deleted).
+
+## 0.11.3 — 2026-10-04 — the skill is generic: no project, part, board, order or person named anywhere in the repo, project retros removed from the repo, the generic lint covers the whole repo
+
+Owner: "clean up the skill, not to refer to specific projects, but to be a generic skill". A wording and naming pass: no measured value,
+threshold, rule or code path changed.
+
+### Changed
+- Every reference, script docstring and comment, template, smoke fixture, eval note and workflow comment that cited the project the skill was learned on (or
+  a project, board, case or part by name) now states the rule generically and attributes the number to its kind of evidence ("a measured first
+  article on a 0.4-nozzle desktop printer", "one vendor-MJF tray", "a six-leg desk walker"); the numbers are unchanged. Part labels become their
+  generic kind (sliders, feet, bearing necks, pins); the two worked-example block markers lose their project tag.
+- The smoke fixture set is renamed `40-case/vendor_mjf/` (the fixture's print-target key; the geometry is unchanged), and the
+  `project.py` selftest's set likewise; the smoke's leak grep keeps the preset patterns and leaves project names to the lint's term file.
+- **`scripts/generic_lint.py`**: default file set = every text file of the repo except `.git/`, `.venv/`, `__pycache__/`, `LICENSE` (the
+  copyright holder is a legal notice) and the term file — `CHANGELOG.md` and `docs/` are no longer skipped; a worked-example block still skips the
+  number groups but NOT the `*_names` / `*_ids` groups (a block may not carry a project name); a marker counts only when it opens a line (so the
+  lint can read its own source); CHANGELOG and `docs/` keep their measured numbers and the skill's own review finding ids (`design_dimensions`,
+  `review_ids_as_citations` do not apply there). Selftest: whole-repo walk, a name inside a block is a hit, history keeps numbers, LICENSE /
+  `.venv` / term file skipped.
+- **`scripts/generic_lint_terms.yaml`**: regrouped — `project_names` (every project, board and case name the skill was learned on, and the
+  phrase that stood for them), `part_names` (one project's part labels and body ids), `project_ids` (board md5s, order / account ids),
+  `people_names`, `machine_paths`, plus the existing parts / refdes, record-id, review-id, preset and dimension groups.
+- `CHANGELOG.md`: history kept, names removed — the three projects are "a hand-crank engine model project (mech scope)", "a desk-walker project
+  (mech scope)" and "a board-and-enclosure project (both scope)"; part names became their kind; decision, order and account ids removed.
+- `docs/reviews/*.md`, `docs/superpowers/*`: project nouns scrubbed the same way (the layout spec's example set and kit names are neutral;
+  scratch paths read `$SCRATCH`).
+- SKILL §13, README, `skill_retro.py` docstring: the retro report in `docs/retro/` is working material — fold it, then delete it.
+
+### Removed
+- `docs/retro/` — `INDEX.md` and the six per-project retro reports (three board-and-enclosure retros of 2026-09-28 … 2026-09-30 plus its 0.7.1
+  retro, one engine-model retro of 2026-09-30, one desk-walker retro of 2026-10-01). Their learnings are already in the references; git history
+  keeps the files.
+
+### Not done
+- The lints stay word lists: a new project's names enter `generic_lint_terms.yaml` at its retro, before the fold.
 
 ## 0.11.2 — 2026-10-04 — the assembly model is gated, not looked at: every placement det +1, a fit row per mating pair, an orientation row per one-sided part; mirror bodies are a parts-list decision; parts named by their marks
 
-Source: the beest project's first article (a desk Strandbeest, home FDM), `LEARNINGS_LOG.md` entries of 2026-10-03 and 2026-10-04 and decision
-rows CC-022 / CC-023 / CC-024. The owner, assembling from the 3D guide, held a printed lower triangle against the guide's view: "the L piece
+Source: a desk-walker project's first article (mech scope, home FDM), its `LEARNINGS_LOG.md` entries of 2026-10-03 and 2026-10-04 and three of
+its decision rows. The owner, assembling from the 3D guide, held a printed lower triangle against the guide's view: "the L piece
 seems to be mirrored … either the print is wrong or the guide is". The print was right. The assembly model's flat-part placement for the +y
 side (`print XY → machine XZ, print +z outward`) had determinant −1 — a mirror — and so had the standing-part placement for that side: 28 of
 the machine's placements (14 flat + 14 standing) drew a right side no plate can print, in every render and the walking GIF for three days.
-Written after the fact, a journal-to-socket check failed 12 of 12 D ends (each 180° from its web socket) and reversed the hands of the two
-chiral twisted journals, which had been chosen by eye from the mirrored drawing. The day before, the shoe had sat sole-up with its slot toward
-the desk in every render (CC-022). Cost: four plates and six triangles reprinted. The owner's question — *why were these issues not identified
+Written after the fact, a pin-to-socket check failed 12 of 12 D ends (each 180° from its web socket) and reversed the hands of the two
+chiral twisted pins, which had been chosen by eye from the mirrored drawing. The day before, the foot had sat sole-up with its slot toward
+the desk in every render. Cost: four plates and six triangles reprinted. The owner's question — *why were these issues not identified
 before?* — has four answers, each now a rule:
 1. The model was only ever LOOKED AT (renders, GIF), never checked for being physically realisable; the per-side 2D sweeps run in the part
    plane where a mirror is a no-op, and a mirrored flat part looks plausible → every placement is a proper rotation, one CHECKS row, FAIL.
@@ -52,7 +90,7 @@ before?* — has four answers, each now a rule:
 - **`case-pipeline.md` §Assembly model** (before §Stability): (1) every placement det +1 — a CHECKS row, FAIL, with the five-line inline form and
   why the mirror is invisible downstream; (2) a FIT row per mating pair (D shaft ↔ D socket ≤ 1°, peg ↔ hole, tab ↔ slot) computed through
   the placements from the geometry of record, with a generic `fit_rows(pairs)` — a pair = (feature direction, placement) vs (mate direction,
-  placement) → angle ≤ tolerance (the beest `journal_fit_rows` abstracted; the walker is named only in one labelled worked example per section);
+  placement) → angle ≤ tolerance (the project's own fit-row helper abstracted; the walker appears only in one labelled worked example per section);
   (3) an ORIENTATION row per part type with a one-sided feature (slot opening, peg direction, sole normal → its mate or the ground); (4) renders
   and GIFs are previews, rows 1–3 are the evidence. The interference bullet points at it (a per-side sweep in the part plane cannot see a mirror
   or a D turned in its socket).
@@ -62,10 +100,10 @@ before?* — has four answers, each now a rule:
 - **`dfm-printed-enclosure.md` §1.5 "One-sided parts on BOTH sides of a symmetric assembly"**: a decision-row TABLE (part type | one-sided
   feature | serves both sides? | turn-over / mirror body / separate pin | mark for the mirror body) filled before the first plate; a mirror body
   carries its own distinct mark, and marks on narrow members stay short (two glyphs side by side on a 4 mm member read as a tapering land to the
-  census — the beest used the letter doubled, `S S`). Kickoff **C1–C2 owner input** asks it.
+  census — the project used one glyph twice side by side). Kickoff **C1–C2 owner input** asks it.
 - **`print-kit.md` §1**: parts are named by the mark pressed into them, never by the generator's body id; every display name derives from the
-  marks table in one place; a mirror body is listed under its own mark; a bare body id in owner text is a kit-text-gate hit (the beest's kinked
-  bar is `k` in the yaml and carries an I — "bar I (k, …)" read as a mix-up; the reference states the rule without the letters).
+  marks table in one place; a mirror body is listed under its own mark; a bare body id in owner text is a kit-text-gate hit (the project's kinked
+  bar had one letter in the yaml and carried another as its mark — "bar I (k, …)" read as a mix-up; the reference states the rule without the letters).
 - **SKILL §8 "Assembly model"** bullet (the three rows, the mirror-body decision, renders are not evidence).
 - `pitfalls.md`: four 2026-10-04 rows (mirror transform, unchecked mating features, print-vs-assembled orientation, one-sided parts on both
   sides), each with its detection rule, phrased for any mechanism (the project nouns stay in this entry).
@@ -77,9 +115,9 @@ before?* — has four answers, each now a rule:
   enough for the skill.
 - No yaml key for the mirror-body decision; it is a decision row (the kit lists hands as plates), as the reference says.
 
-## 0.11.1 — 2026-10-02 — beest first-article plates 1 / 1b folded: raised legends gate air gaps at 0.9 (the 0.9.2 "lands ≥ 0.45" withdrawn), the gap metric is an opening of the complement, coupons bracket the KNOB, filament slots keyed by role, a measured hole-shrink row
+## 0.11.1 — 2026-10-02 — a desk-walker project's first-article plates 1 / 1b folded: raised legends gate air gaps at 0.9 (the 0.9.2 "lands ≥ 0.45" withdrawn), the gap metric is an opening of the complement, coupons bracket the KNOB, filament slots keyed by role, a measured hole-shrink row
 
-Source: the beest project's `LEARNINGS_LOG.md` entries of 2026-10-02 and decision rows D-15 / CC-018 / CC-019 (a desk Strandbeest on a Bambu P2S,
+Source: a desk-walker project's `LEARNINGS_LOG.md` entries of 2026-10-02 and three of its decision rows (mech scope, a desktop FDM printer,
 0.4 nozzle, 0.20 mm, PLA Basic, 4 walls; two coupon plates printed and read by the owner). The gap metric ships as the required shapely test with
 its three fixtures (the skill has no legend script; the legend gates live in the project generator). One script change so that ONE part can carry
 both kinds of legend under the new numbers — a legend box may carry its OWN limits: `print_dfm.py` `(x0, y0, z0, x1, y1, z1, land_min, void_min)`,
@@ -103,7 +141,7 @@ byte-identical to 0.11.0 (selftests in both scripts).
 - **Second-order legend rows**: the legend body inside the LENGTH of its surface (a rail word at 3/4 of the rail would have run off the end as the
   cap grew); label pitch derived from the measured label width (pitch 19 nearly touched at cap 5.2 — 20 mm labels need ≥ 23).
 - **Coupons bracket the KNOB, not the mating feature** (§8 new bullet, §8.5, `print-kit.md` §4, SKILL §8 item 5): three variants OF THE PART THAT
-  CARRIES THE KNOB (three caps with three holes, three shoes with three slots) on ONE production-size mating feature; press / push brackets centred
+  CARRIES THE KNOB (three caps with three holes, three sliders with three slots) on ONE production-size mating feature; press / push brackets centred
   on zero nominal clearance until hole shrink is measured; variants too small for text marked by SIZE (outer Ø 9 / 10 / 11, ski 28 / 31 / 34).
   Plate 1 varied the pegs and tabs for one production hole / slot, both production values were outside the bracket and the plate said "none".
 - **Hole shrink, measured** (§8 "Hole shrink", dated, printer named): Ø5 hole +0.3 free pivot; D6 socket +0.2 snug / +0.3 falls out; 3 mm plate
@@ -222,7 +260,7 @@ gates, five pages present, no gate approved).
   `sweep()` over poses names the worst one; `--selftest`. SKILL §8 bullet, `case-pipeline.md` §Stability, kickoff **C12** "does the piece stand
   free" (→ `kickoff.enclosure.stands_free`, a commented slot in `templates/project.yaml`, a row in `templates/10-spec/KICKOFF_ANSWERS.md`), one pitfall.
   Owner rule: anything that stands, rocks, walks or is set down free carries a CoG-vs-support row at its worst pose; a render cannot show it.
-  Found on the beest: drive behind the legs, CoG 21 mm behind the hip, −17 mm margin at a third of the crank angles; fixed by moving the drive
+  Found on a desk walker: drive behind the legs, CoG 21 mm behind the hip, −17 mm margin at a third of the crank angles; fixed by moving the drive
   over the feet and the frame forward, then proven by the row.
 
 ### Fixed
@@ -236,13 +274,13 @@ gates, five pages present, no gate approved).
   area-weighted average of the triangle centroids and read 8.2 for a body whose volume centroid is 6.0 — an asymmetric selftest body now
   separates the two, and an open mesh is refused (its volume is undefined). Smoke runs the selftest; eval 17 asks the question.
 
-## 0.10.2 — 2026-10-01 — two mechanical-only project retros folded (wankel 2026-09-30, beest 2026-10-01): census OPP rows honour legend lands, `embreex`, legend geometry, colour-body target, linkage sweeps, arranger facts; `--gate-dir` resolves STLs in its own tree
+## 0.10.2 — 2026-10-01 — two mechanical-only project retros folded (2026-09-30 and 2026-10-01): census OPP rows honour legend lands, `embreex`, legend geometry, colour-body target, linkage sweeps, arranger facts; `--gate-dir` resolves STLs in its own tree
 
-Sources: `docs/retro/wankel_2026-09-30.md` (a hand-crank Wankel engine model, 11 bodies, 3 plates, scope `mech` on 0.8.0 → 0.9.0; 15 learnings,
-10 NEW / 5 PARTIAL; two host restarts and three census rounds) and `docs/retro/beest_2026-10-01.md` (a desk Strandbeest, 36 bodies, 7 plates, three
+Sources: two retro reports (since removed from the repo) — a hand-crank engine model project (mech scope; 11 bodies, 3 plates, scope `mech` on 0.8.0 → 0.9.0; 15 learnings,
+10 NEW / 5 PARTIAL; two host restarts and three census rounds) and a desk-walker project (mech scope; 36 bodies, 7 plates, three
 AMS colours, scope `mech` on 0.9.2; 25 learnings, 14 NEW / 7 PARTIAL / 4 CARRIED — three CARRIED rows folded because the number they carry is new;
-three census / print-DFM rounds on the colour bodies and two aborted slices). Opened as PR #1 against 0.9.2 and merged onto 0.10.1 here; the
-project names stay in this file and in `docs/retro/` (`generic_lint_terms.yaml` lists them now).
+three census / print-DFM rounds on the colour bodies and two aborted slices). Opened as PR #1 against 0.9.2 and merged onto 0.10.1 here;
+`generic_lint_terms.yaml` lists the project names now.
 
 ### Fixed
 - **`scripts/thin_wall_census.py --gate-dir`** followed the ABSOLUTE `stl` path stored in a record, so a gate run from another checkout path read
@@ -281,7 +319,7 @@ project names stay in this file and in `docs/retro/` (`generic_lint_terms.yaml` 
 - The twisted-band motor vs spool-and-loop energy budget (a drive choice for one piece, not a skill rule), the Homebrew cask coexistence note
   (install trivia), the project-created / selftests-green bookkeeping line, and the O-rule cantilever bevel (`print-dfm.md` rule O carries it).
 
-## 0.10.1 — 2026-10-01 — the source project's measured performance round folded (its PERF analysis of 2026-09-30, decision CC-220, `jobs.sh`, `make record-round`, the perf / tools / cache learnings)
+## 0.10.1 — 2026-10-01 — a board-and-enclosure project's measured performance round folded (its PERF analysis of 2026-09-30 and decision row, `jobs.sh`, `make record-round`, the perf / tools / cache learnings)
 
 ### Changed (corrects 0.10.0's engine rule)
 - **Manifold caveat** (`agent-ops.md` §8 item 6, `case-pipeline.md` Presets + Process rules, `pitfalls.md`): the snapshot's Manifold backend is
@@ -316,7 +354,7 @@ project names stay in this file and in `docs/retro/` (`generic_lint_terms.yaml` 
 
 ## 0.10.0 — 2026-09-30 — the fifth retro folded, the skill audited and made generic
 
-### Added (retro of the source project's landing round)
+### Added (retro of the board-and-enclosure project's landing round)
 - **Arrival / first-article checklist, generated** (`scripts/arrival_checklist.py`, `templates/20-design/arrival_checklist.yaml`; SKILL §10.1,
   `release-and-cut.md` §10; cut deliverable REC-002; `project.py gates-required` demands the `--check` line once the yaml exists): before shipment
   (the fab's photos), bench checks in gate order with what each row opens, software gates with their closing commit, case first article, owner
@@ -372,15 +410,15 @@ project names stay in this file and in `docs/retro/` (`generic_lint_terms.yaml` 
   face-up plate, legibility thresholds FAIL-gated, generated from the same yaml value) — `references/dfm-printed-enclosure.md` coupon block,
   `references/print-kit.md` §4, one pitfall line.
 
-## 0.9.1 — 2026-09-30 — print DFM rule set mirrored from the source project (its M-B blind review + CC-215 / CC-217; `scripts/print_dfm.py` VERSION 0.9.1)
+## 0.9.1 — 2026-09-30 — print DFM rule set mirrored from a board-and-enclosure project (its M-B blind review + two decision rows; `scripts/print_dfm.py` VERSION 0.9.1)
 
-The source project's `gen/print_dfm.py` (rule set 2026-09-30f) was revised in parallel with 0.9.0 after a blind review tested the tool against
+That project's `gen/print_dfm.py` (rule set 2026-09-30f) was revised in parallel with 0.9.0 after a blind review tested the tool against
 constructs its author never built (a plate, a pin, a 50° ridge, a tunnel, a sealed void, two touching cubes) and found a dead measurement behind
 a green gate. Every rule change below is physics, not vendor tuning; 0.9.0's enforcement (record signature, `--open` only against an OPEN
 decision row naming the piece, STL-set and `print_targets.<t>.dfm_process` checks, `fix:` on every FLAG row, project-root paths, the cantilever test) is kept.
 
 ### Mirrored (`scripts/print_dfm.py`)
-- Ray origin nudged INTO the material — already fixed in 0.9.0 (blind review F1 = the project's CC-215); verified, now asserted finite and near 0.8 on the 0.8 plate with R SILENT.
+- Ray origin nudged INTO the material — already fixed in 0.9.0 (blind review F1 = the project's own decision row); verified, now asserted finite and near 0.8 on the 0.8 plate with R SILENT.
 - Knife-edge field `COS_K` 0.05 (any face that faces back) + rule K by the tip band `feature_min / (2 tan(a/2))` > `KNIFE_BAND × feature_min` (included angle < 53°) over ≥ `slender × feature_min`: ridges 30 / 40 / 50° FLAG, 60 / 90° read but pass; the former 45° cone cut-off is gone.
 - Sliver exemption needs the aspect test: area < `sliver_area` AND extent ≤ 2 × thickness; a Ø0.4 × 3.5 or Ø0.3 × 2.9 pin is rule F, a Ø1.2 pin passes.
 - 3-D legend boxes `(x0, y0, z0, x1, y1, z1)` in the print frame: `--boxes file.json`, the `<piece>.boxes.json` sidecar written / removed beside the record, `--land` kept as the every-Z spelling; W and R respect the boxes like every other rule; non-manifold edges and point contacts inside boxes listed in row L.
@@ -399,7 +437,7 @@ decision row naming the piece, STL-set and `print_targets.<t>.dfm_process` check
 - `references/print-dfm.md`: rules table (M C W R Z F K P V H O B S + L Y), legend-box sidecar, `--expect`, the geometry grouping and coverage reading; `references/pitfalls.md` +3 (negative selftest case, sliver aspect test, validation deduped by geometry).
 
 ### Not done
-- The project's record paths (`out/MINI/...`) and its 42-file validation set stay in the project; the skill ships the schema and the selftest constructs.
+- The project's record paths (`out/<board>/...`) and its 42-file validation set stay in the project; the skill ships the schema and the selftest constructs.
 - `thin_wall_census.py` VERSION stays 0.9.0 (no census rule changed).
 
 ## 0.9.0 — 2026-09-30 — gates enforced by scripts, every documented command runs as written (closes blind review S of 0.8.0)
@@ -438,7 +476,7 @@ and 0d carry the negative cases as permanent checks).
 | F23 | MINOR | §1.2 before §1.1; "the owner writes D rows" contradicts §0.1 | FIXED — reordered; "the agent transcribes the owner's words into D rows, quoted" |
 | F24 | NOTE | 119 / 122 / 151 hand-filled slots | ACCEPTED, made visible — `scripts/project.py slots` lists them per file and exits 1 while any remain; the smoke proves a trivially filled project reads 0 (the kickoff / board slots added for F10 raise the raw count: every answer now has a key) |
 | F25 | NOTE | cantilevers reported as bridges | FIXED — a ceiling with < 2 supported ends (horizontal ray from each end) is a cantilever under O; B keeps two-ended bridges; selftest: T-section 2 cantilevers / 0 bridges, inverted U 1 bridge |
-| F26 | NOTE | source-project residue (openscad default, port_a / port_b, absolute paths in retro reports) | FIXED — mech CLI is a slot, generic `channel_a` / `channel_b`, retro prints basenames; the three shipped reports scrubbed |
+| F26 | NOTE | project residue (openscad default, port_a / port_b, absolute paths in retro reports) | FIXED — mech CLI is a slot, generic `channel_a` / `channel_b`, retro prints basenames; the three shipped reports scrubbed |
 | F27 | NOTE | evals not executed | FIXED — `evals/run_evals.py` runs `checks:` (8 evals carry them), lists 6 as manual |
 | F28 | NOTE | pure gates trust the JSON | FIXED — every record carries `sig = sha256(canonical body \| VERSION)`; both gates refuse a record that fails it (tampered FLAG→PASS = FAIL) |
 
@@ -472,7 +510,7 @@ token is word-start, `kickoff.answers` is read, `--open` rows must name the piec
 ## 0.8.0 — 2026-09-30 — print DFM: a vendor-independent manufacturability check for printed bodies, and the loop that improves it
 
 Owner: "since the tool is reusable for future designs, should it go into the skill repo and we leave commands in there to self improve as the
-skill is used and new things are identified?" — yes. Source: the fourth retro of the source project (its CC-213 round: 44 bodies, 32 labelled
+skill is used and new things are identified?" — yes. Source: the fourth retro of a board-and-enclosure project (one of its rounds: 44 bodies, 32 labelled
 vendor verdicts, 0 looser / 24 agree / 8 stricter).
 
 ### Added
@@ -506,7 +544,7 @@ vendor verdicts, 0 looser / 24 agree / 8 stricter).
   fired on every thin wall while the tangent ball kept the verdicts right. Fixed (nudge into the side the ray travels); the selftest now asserts the
   ray reads ~0.8 on a 0.8 plate and that a free 0.6 × 60 rib is W-only. Also from the review: numeric limits and a `fix:` hint on every rule row,
   exit codes 0 / 1 / 2, the no-project README block, Xometry's build volume corrected to the usable 356 × 279 × 330, citation rule for untagged
-  repeats. The same ray defect exists in the source project's copy — reported there as an OPEN decision row, not patched silently.
+  repeats. The same ray defect exists in the project's own copy — reported there as an OPEN decision row, not patched silently.
 
 ### Changed
 - `thin_wall_census.py` stays: `print_dfm.py` does not import it and does not replace it — the census gates the DESIGN margin
@@ -517,14 +555,14 @@ vendor verdicts, 0 looser / 24 agree / 8 stricter).
 
 ### Not done
 - No `--target <print target>` shortcut reading `print_targets.<t>.dfm_process` from `project.yaml` (one flag; add when two projects want it).
-- The source project's 32 verdicts and their STLs are not shipped (project data); their reading is `references/print-dfm.md` §4. A probe generator
+- The project's 32 verdicts and their STLs are not shipped (project data); their reading is `references/print-dfm.md` §4. A probe generator
   for one-knob profiles stays project-side (`rim_profile()` in the selftest is the one shipped shape).
-- `--validate` writes only the generated sections; the stricter-case reasons are hand-written under the marker, as in the source project.
+- `--validate` writes only the generated sections; the stricter-case reasons are hand-written under the marker, as in the project of the retro.
 
 ## 0.7.1 — 2026-09-30 — the print kit as a deliverable: START_HERE, kit text gate, plate seat datum, bracket plate
 
-Third retro on the source project (`docs/retro/aec-tester_2026-09-30.md`: 8 learnings, 3 NEW / 5 PARTIAL, from the two blind reviews of the
-P2S kit — a technician persona on the kit as received and an FDM DFM persona on the meshes, CC-211 / CC-212).
+Third retro on a board-and-enclosure project (its retro report, since removed: 8 learnings, 3 NEW / 5 PARTIAL, from the two blind reviews of
+the home-FDM kit — a technician persona on the kit as received and an FDM DFM persona on the meshes).
 
 ### Added
 - **`references/print-kit.md`** (new, short): the kit's ONE generated entry point (`START_HERE.md`: print-order table step / project file /
@@ -585,7 +623,7 @@ Owner's directive (2026-09-29): "the skill should be able to do ee only, mechani
 
 ## 0.6.0 — 2026-09-29 — FDM brand marks (ironed top face / AMS bed layers), dust caps, Bambu CLI facts, one worktree per agent
 
-Second retro on the source project (`docs/retro/aec-tester_2026-09-29.md`: 19 learnings, 15 NEW, 5 costly). The owner's directive: "push the
+Second retro on a board-and-enclosure project (its retro report, since removed: 19 learnings, 15 NEW, 5 costly). The owner's directive: "push the
 learnings into the hw-from-spec skill as well. ironed surface and bottom ams are both viable options."
 
 ### Added
@@ -684,11 +722,11 @@ same day: every question up front with recommended answers, a skill that improve
   identity / envelope / delegation), each with a RECOMMENDED answer and 2–3 alternatives with consequences; answers → D rows, `project.yaml`,
   traceability, before any CAD.
 - **`scripts/skill_retro.py` + SKILL §13 + `docs/retro/`**: the self-improvement step (classify a project's learnings against the skill, draft the
-  CHANGELOG / reference patches / evals / questionnaire questions; version drift); first run on the source project folded in (per-class census
+  CHANGELOG / reference patches / evals / questionnaire questions; version drift); first run on a board-and-enclosure project folded in (per-class census
   clustering, magnet grades and polarity keying, colliding owner rules, eight pitfalls lines, questionnaire batch 10).
 - **`references/cnc-enclosure.md`** (B-10): corner radii, pocket depth, walls, threads, tolerances, anodising build-up, quote page, case-order gate.
 - **`references/dfm-printed-enclosure.md`** §1.1 retention hardware per material (inserts: type / bore / depth / boss OD from the TDS, temperature;
-  magnets: the D-85 pattern — grade, coating, max temperature, pull vs gap, pocket fits glued MJF / pressed PLA, polarity by an asymmetric boss),
+  magnets: one project's decision pattern — grade, coating, max temperature, pull vs gap, pocket fits glued MJF / pressed PLA, polarity by an asymmetric boss),
   §1.2 post-processing effects, §1.3 material rating and thermal, §1.4 tolerance stack + per-preset fits, §8 FDM elephant foot / hole shrink / seam /
   2 × line width / anisotropy / g-code as the support record / rotate not mirror / insert + torque coupon, §10 post-mortem with the received-part
   caliper table, photo protocol, fractography, vendor-fault decision table, §11 SLA rule set (B-08 / B-09 / B-11 / B-16 / B-21 / B-23 / B-24 / B-28 /
@@ -705,11 +743,11 @@ owner-topic matcher is a keyword scorer (71 of 87 source owner rows still listed
 recurring ones) · `pitfalls.md` still names source rows as provenance (a note explains them; a footnote file was judged not worth it) · the SLA
 and CNC references are literature + two quote sessions, not received parts · evals 6 / 7 stay the source scenario as regression tests.
 
-## 0.4.1 — 2026-09-28 — vendor quote-page verdicts done right, the length-dependent thin-wall metric, p2s mirror, one-piece dummy, bought hardware (source project late 2026-09-28: CC-205 r4 / r5, D-84, CC-206 / B-11, PROBES.md)
+## 0.4.1 — 2026-09-28 — vendor quote-page verdicts done right, the length-dependent thin-wall metric, home-preset mirror, one-piece dummy, bought hardware (a board-and-enclosure project, late 2026-09-28: two case rounds, its decision and blocker rows, PROBES.md)
 
-0.4.0 shipped the same evening the source project found that two of its "no flag" quote-page readings were false, that JLC3DP's thin-wall metric
+0.4.0 shipped the same evening the project found that two of its "no flag" quote-page readings were false, that JLC3DP's thin-wall metric
 depends on part LENGTH, and that its home-printer preset had to carry every vendor decision. Owner's words: "the skill we are developing should handle
-p2s and jlc like operations properly". 0.4.1 corrects the procedure and adds the probe method that closes such a round in one pass. No script changes.
+home-printer and vendor operations properly" (paraphrased: the owner named the printer and the vendor). 0.4.1 corrects the procedure and adds the probe method that closes such a round in one pass. No script changes.
 
 ### Changed
 - **`references/dfm-printed-enclosure.md` §7 (quote-page procedure) rewritten**: the verdict of record is the analysis API response
@@ -731,10 +769,10 @@ p2s and jlc like operations properly". 0.4.1 corrects the procedure and adds the
   (`trimesh slice_mesh_plane`) to localise the feature and the length threshold, then plain-profile OpenSCAD polygon extrusions at **40 mm AND full
   length with ONE knob each**, each uploaded alone and API-read, tabulated in `probe/PROBES.md`; a 40 mm pass proves nothing about a 147 mm body; a
   scaled body is not informative. `templates/DFM_ROUND.md` §5 Probes; §1 pointer line.
-- **§9 P2S mirror**: every vendor DFM decision (rails off, key off, closed rim, undercut filled, feet concentric, hood on screws) applied to the home
+- **§9 home-preset mirror**: every vendor DFM decision (rails off, key off, closed rim, undercut filled, feet concentric, hood on screws) applied to the home
   preset the same day in the SAME yaml under its own version key with the deciding round in the comment; its census gate (walls 1.6 / ribs 1.2 /
   voids 1.0) and slicer log clean; a vendor-only geometry fix must prove partner overlap 0 mm³.
-- **§8 one-piece board dummy pattern (D-84)**: cage / sink fused to the slab at final dimensions; the nose overhang on a break-away shim (1.2 mm block
+- **§8 one-piece board dummy pattern**: cage / sink fused to the slab at final dimensions; the nose overhang on a break-away shim (1.2 mm block
   on the bed, inset 0.5 from the nose sides, 0.6 clear of the board edge, 8 posts 1.2 × 1.2 across a 0.4 mm two-layer perforation gap); **the README
   says the shim looks like a "PCB lip" and comes off** (the owner read it as the board); one-piece vs two-piece proven by section symmetric
   difference 0 mm² and both bboxes against the cage envelope of record; both versions kept; kit folder = case pieces + coupons + BOTH dummies (with
@@ -749,21 +787,21 @@ p2s and jlc like operations properly". 0.4.1 corrects the procedure and adds the
   claim independently before it becomes a decision row (the "no flag" claims were re-read); the DevTools browser is shared state — another agent
   can restart it between turns, so page ids and sign-in are re-derived before every upload / read.
 - **`references/pitfalls.md`**: +12 dfm lines (API verdict, flag at upload, previewUrl / unhide / signed out, length dependence, calibrated rim rule,
-  probe method, opposing faces in any direction, p2s mirror, one-piece dummy, vendor-only divergence, coordinator re-read), +3 agents / git (turn
+  probe method, opposing faces in any direction, home-preset mirror, one-piece dummy, vendor-only divergence, coordinator re-read), +3 agents / git (turn
   limit, tag re-point, browser restart), +3 sourcing (McMaster / distributors, feet-over-screws bond ring, count drift); header 0.4.1.
 - **Smoke step 0** greps the API-verdict, flag-independent-of-material, LENGTH-DEPENDENT, rim-over-lap-step and full-length-probe rules in the
-  reference, SKILL §8.1 and `DFM_ROUND.md` §5. **Eval 6** re-worded (API verdict, no "material flips the flag" claim, coordinator re-read, p2s mirror,
+  reference, SKILL §8.1 and `DFM_ROUND.md` §5. **Eval 6** re-worded (API verdict, no "material flips the flag" claim, coordinator re-read, home-preset mirror,
   kit contents); **eval 7** "vendor flags a body the census calls clean" (probe method, one knob each, both presets, named census row, API
   re-verification, partner overlap 0).
 
 ### Not done (deferred)
 A probe-generator script (the polygon-extrusion probes stay project-side; the recipe is §7.1) · a `--slabs` mode in `thin_wall_census.py` (the
 `slice_mesh_plane` call is one line in the reference) · the census "opposing face in any direction" metric as a skill script (recorded, not gated,
-on the source project — over-reads on 0.4 offsets the vendor accepts) · the 0.4.0 deferrals stand.
+on the project — over-reads on 0.4 offsets the vendor accepts) · the 0.4.0 deferrals stand.
 
-## 0.4.0 — 2026-09-28 — printed-enclosure DFM: one vendor round instead of four (source project D-79 … D-84, CC-204 / CC-205, learnings 2026-09-27 / 09-28)
+## 0.4.0 — 2026-09-28 — printed-enclosure DFM: one vendor round instead of four (a board-and-enclosure project's decision and case rows, learnings 2026-09-27 / 09-28)
 
-The source project's MJF trays cracked on a 0.88 × 141 mm lip that a "kept below minimum (listed)" row had waived, and its FDM preset passed its own
+A board-and-enclosure project's MJF trays cracked on a 0.88 × 141 mm lip that a "kept below minimum (listed)" row had waived, and its FDM preset passed its own
 census and failed as a print. Four vendor rounds and twelve full rebuilds later every rule was measured; 0.4.0 ships them so the next enclosure is
 vendor-clean before its first quote. Owner's words: "include all the learnings into the skills so that next time we reduce the number of iterations".
 
@@ -776,7 +814,7 @@ vendor-clean before its first quote. Owner's words: "include all the learnings i
   rims; designed asymmetries rendered + in the order sheet + KNOWN_ISSUES; every face incl. the sole; the JLC3DP quote-page procedure (ONE STL per
   session, process + material set BEFORE reading the flag — the default is resin and its map differs, flag first, viewer → Analysis Results → Thin
   Wall Heatmap on every face, screenshots named with the md5, verdict flips → diff the meshes, canonical STL so the md5 is the geometry); the FDM /
-  Bambu P2S printer-first preset (walls ≥ 1.6, raised legends cap 4 / stroke 1.0 / 0.6, no rigid bump on a slit tab, fan bosses = holes, hood
+  home-printer-first preset (one desktop printer) (walls ≥ 1.6, raised legends cap 4 / stroke 1.0 / 0.6, no rigid bump on a slit tab, fan bosses = holes, hood
   roof-down on screws + inserts, coupons before the case, two-piece AND one-piece board dummy at final dimensions, 3MF projects with project-named
   presets + `different_settings_to_system`, floating-region warning = FAIL, auto-orientation); two versions from one yaml (hook tokens, own version
   key, byte-identical vendor SCAD); the cracked-part post-mortem pattern (measure the ordered STL, intent vs defect, accept-and-ship reply with the
@@ -784,7 +822,7 @@ vendor-clean before its first quote. Owner's words: "include all the learnings i
 - **`scripts/thin_wall_census.py`** — inward rays = walls, outward rays = voids, clusters below `gate − 0.05` classified wall / wedge by the
   opposite-face angle, legend boxes gate at `--box-min`, `--json` record (`stl_md5`, clusters, voids, `fails`), pure `--gate-dir` for `gates.adopt`,
   exit 1 on FAIL; `--selftest` runs the pure core without mesh libraries and three trimesh primitives when installed (1.0 plate FAIL, 45° prism
-  wedges only, 2.0 plate 0 FAIL). Validated read-only on the source project's ordered tray (WALL 1.00 × 144 mm + 0.50 detent voids → FAIL 5) and on
+  wedges only, 2.0 plate 0 FAIL). Validated read-only on the project's ordered tray (WALL 1.00 × 144 mm + 0.50 detent voids → FAIL 5) and on
   its v3.16 tray (0 FAIL, SANITY 0.00 % / 0.00 %). `thin_wall_check.py --census` stays the quick look and points at the gate.
 - **`templates/CENSUS_GATE_ROWS.md`** — the check-table rows every printed body carries (census header, WALL / VOID / wedge clusters, SANITY,
   band-by-design, bodies = 1, concentricity from mesh sections, designed offsets, six face renders) + the adopt-list line.
@@ -806,9 +844,9 @@ a canonical-STL writer as a skill script (the contract is in the reference §7.7
 board-dummy and 3MF generators (project-side; their rules are in the reference §8) · concentricity / face-render measurers (project-side; rows in
 `CENSUS_GATE_ROWS.md`) · a workflow `.js` for the DFM round (prose + `DFM_ROUND.md`).
 
-## 0.3.0 — 2026-09-26 — post-order learnings of the source project (D-70…D-76, CC-190…CC-199, learnings 2026-09-22 late … 09-26)
+## 0.3.0 — 2026-09-26 — post-order learnings of a board-and-enclosure project (its decision and change rows, learnings 2026-09-22 late … 09-26)
 
-Both 0.2.1 "Next" candidates plus the learnings logged after the order went in. Everything generic; the source project is cited as the worked example.
+Both 0.2.1 "Next" candidates plus the learnings logged after the order went in. Everything generic; the project is cited as the worked example.
 
 ### Added
 - **docs/ governance layout as the default paths** — `scripts/project.py` DEFAULTS: `90-log/` (DECISIONS STATUS GATES BLOCKERS KNOWN_ISSUES
@@ -862,7 +900,7 @@ their pitfalls are in `pitfalls.md`).
 
 ## 0.2.0 — 2026-09-22 — blind-review fix round
 
-Fixes from the skill's own blind double review (`SKILL_REVIEW_merged.md` in the source project, readers A / B / executor + verifier: 5 MUST,
+Fixes from the skill's own blind double review (`SKILL_REVIEW_merged.md` in the project, readers A / B / executor + verifier: 5 MUST,
 17 SHOULD, 15 COULD; verdict "fix MUST list first"). All five MUST items and 17/17 SHOULD items applied (SHOULD-13 by labelling, not by a new
 generator); COULD items applied where trivial.
 
@@ -880,7 +918,7 @@ generator); COULD items applied where trivial.
    `workflows/README.md` says so.
 4. **dfm_check acceptances** — `accepted()` returns the matching entry; the dict-form budget applies to that entry only; mixed-form selftest.
 5. **CI templates** — `templates/ci/README.md` says nothing substitutes the placeholders and gives the `sed` recipe + `project.env`;
-   `release.yml` uses `{{PROJECT_CLONE_GATE_CMD}}`; SKILL §0 step 7 names the folder; source-project name removed; both shell gates ported
+   `release.yml` uses `{{PROJECT_CLONE_GATE_CMD}}`; SKILL §0 step 7 names the folder; project name removed; both shell gates ported
    from zsh to bash (≥ 3.2), README requirement updated.
 
 ### SHOULD

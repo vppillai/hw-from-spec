@@ -1,7 +1,7 @@
 # schematic-phase.md — G0 → G1: what the design yaml holds, the ERC gate, map checks, the G1 review pack
 
 The schematic generator is project code (`gen/build_sch.py`); this page fixes what it must consume and produce so the gates in `90-log/GATES.md`
-mean the same thing in every project. The source project's generator (KiCad 10, sheet fragments instantiated per port) is the worked example; the
+mean the same thing in every project. One generator of record (KiCad 10, sheet fragments instantiated per port) is the worked example; the
 shapes below are the generic contract.
 
 ## 1. Design yaml — the minimum a schematic needs (`design/<board>.yaml`, `20-design/parts.yaml`, `design/sheets/*.yaml`)

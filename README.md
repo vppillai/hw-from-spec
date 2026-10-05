@@ -4,7 +4,7 @@ A Claude Code skill that takes a board, an enclosure, or both from a written spe
 owner-gated phases, generated-only artefacts, a zero-warning manufacturability bar, blind reviews with
 a record-reading verifier, and a retro that folds every project's learnings back into the skill.
 
-`version 0.11.2` · MIT · `SKILL.md` is the procedure; everything else is reference, template or tool.
+`version 0.11.3` · MIT · `SKILL.md` is the procedure; everything else is reference, template or tool.
 What changed per version: `CHANGELOG.md` (its first section is the current state).
 
 ## Quick start
@@ -59,7 +59,7 @@ Exit 0 = PASS, 1 = FLAG with one line per rule (measured | limit | where | fix):
 | `workflows/` | blind-review workflow templates + how to instantiate them |
 | `smoke/` | the automated dry run (`run_smoke.sh`, about two minutes) |
 | `evals/` | the skill evals + `run_evals.py` (every eval carries mechanical checks) |
-| `docs/retro/`, `docs/reviews/` | retro reports and blind reviews of the skill, one index file each |
+| `docs/reviews/`, `docs/superpowers/` | blind reviews of the skill (one index file), the skill's own design specs and plans |
 | `CHANGELOG.md` | the current state, then what changed per version |
 
 ## Install
@@ -166,7 +166,7 @@ landed) and `10-spec/KICKOFF_ANSWERS.md`. Detail: `references/kickoff-questionna
 After a production cut, `scripts/skill_retro.py --project <root>` reads the project's learnings log
 and decision log, lists what the skill does not carry yet, and drafts the CHANGELOG entry, the
 reference patches, the evals and the questionnaire questions for the next version
-(`docs/retro/<project>_<date>.md`); `--apply` folds the mechanical part (pitfalls lines, new process
+(`docs/retro/<project>_<date>.md`, deleted once folded: the repo carries no project retro); `--apply` folds the mechanical part (pitfalls lines, new process
 rows, a CHANGELOG stub), the rest stays a draft a maintainer reads. The project pins the skill version
 it ran in `project.yaml skill: {repo, commit, version}`. Detail: `SKILL.md` §13.
 

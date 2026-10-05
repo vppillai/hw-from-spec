@@ -2,7 +2,7 @@
 // verifiers → merge. Replace every double-brace placeholder (workflows/README.md lists them); delete roles you do not need. ROLE_SET 'spec'
 // is the G0 round (the briefing is 10-spec/SPEC.md; header rows for board/package/case read MISSING by design), 'board' every later round in ee / both,
 // 'mech' the M1 / M2 / case-order rounds of a mech-scope project (case_dfm + mechanical intent + hardware sourcing + gates; no electrical role).
-// Generalised from the source project's final deep review (five audits, 8 roles × 3 reviewers).
+// Generalised from one board-and-enclosure project's final deep review (five audits, 8 roles × 3 reviewers).
 export const meta = {
   name: '{{PROJECT}}-deep-review-{{ROUND}}',
   description: '{{PROJECT}} {{ROUND}} double-blind review: each specialty reviewed by one in-session reviewer and two external models, briefed only with the hand-off in a frozen worktree; every BLOCKER/MAJOR adversarially verified; merged disposition with owner rows and a generator fix list',

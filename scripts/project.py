@@ -373,10 +373,10 @@ def selftest():
     assert decision_status(f"{d}/DS.md") == {"D-03": "APPROVED", "CC-010": "APPLIED (!)"} and decision_status(f"{d}/nope.md") == {}, decision_status(f"{d}/DS.md")
     # scope + record id: board md5 in ee / both, the STL set in mech, MISSING when absent
     assert P.scope() == "both" and P.record_md5()[1] is None, "no board: MISSING"
-    os.makedirs(f"{d}/40-case/mjf_case/parts"); open(f"{d}/40-case/mjf_case/parts/a.stl", "wb").write(b"A")
+    os.makedirs(f"{d}/40-case/vendor_mjf/parts"); open(f"{d}/40-case/vendor_mjf/parts/a.stl", "wb").write(b"A")
     P.cfg["project"] = {"scope": "mech"}
     lbl, m = P.record_md5(); assert m and "1 files" in lbl and P.scope() == "mech"
-    open(f"{d}/40-case/mjf_case/parts/b.stl", "wb").write(b"B"); assert P.record_md5()[1] != m, "a new STL moves the mech record md5"
+    open(f"{d}/40-case/vendor_mjf/parts/b.stl", "wb").write(b"B"); assert P.record_md5()[1] != m, "a new STL moves the mech record md5"
     open(f"{d}/t.md", "w").write("all {{SCOPE}}\n| G1 | {{ee,both}}\n| M1 | {{mech}}\n{{ee,both}}{{mech}} either\n")
     assert scaffold("mech", [f"{d}/t.md"]) == 1 and open(f"{d}/t.md").read() == "all mech\n| M1 |\n either\n", open(f"{d}/t.md").read()
     # record signing, OPEN rows, required gate lines
@@ -384,13 +384,13 @@ def selftest():
     open(f"{d}/D.md", "w").write("| ID | Date | Status | Topic | P | R |\n|---|---|---|---|---|---|\n| **D-07** | d | **OPEN** | widen root | p | r |\n| CC-010 | d | APPLIED | x | p | r |\n| CC-011 | d | OPEN (owner) | y | p | r |\n")
     assert open_decisions(f"{d}/D.md") == {"D-07": "widen root p r", "CC-011": "y p r"}, open_decisions(f"{d}/D.md")
     P.cfg["paths"] = {"mech_record": "40-case/*/parts/*.stl", "schematic": "k/k.kicad_sch"}; P.cfg["gates"] = {"adopt": ["$PY scripts/known_issues.py --check"]}
-    bad = required_gate_lines(P); assert len(bad) == 1 and "40-case/mjf_case" in bad[0] and "--gate-dir" in bad[0] and "print_dfm.py --gate" in bad[0], bad
+    bad = required_gate_lines(P); assert len(bad) == 1 and "40-case/vendor_mjf" in bad[0] and "--gate-dir" in bad[0] and "print_dfm.py --gate" in bad[0], bad
     P.cfg["gates"]["adopt"] += ["$PY scripts/thin_wall_census.py --gate-dir out/x/census", "$PY scripts/print_dfm.py --gate out/x/dfm"]
-    bad = required_gate_lines(P); assert len(bad) == 1 and "40-case/mjf_case" in bad[0], ("a gate line must name the set's checks dir", bad)
-    P.cfg["gates"]["adopt"] += ["$PY scripts/thin_wall_census.py --gate-dir 40-case/mjf_case/checks/census", "$PY scripts/print_dfm.py --gate 40-case/mjf_case/checks/dfm"]
+    bad = required_gate_lines(P); assert len(bad) == 1 and "40-case/vendor_mjf" in bad[0], ("a gate line must name the set's checks dir", bad)
+    P.cfg["gates"]["adopt"] += ["$PY scripts/thin_wall_census.py --gate-dir 40-case/vendor_mjf/checks/census", "$PY scripts/print_dfm.py --gate 40-case/vendor_mjf/checks/dfm"]
     assert required_gate_lines(P) == []
     os.makedirs(f"{d}/40-case/other/parts"); open(f"{d}/40-case/other/parts/x.stl", "wb").write(b"X")   # a second set with STLs and no gate line
-    bad = required_gate_lines(P); assert len(bad) == 1 and "40-case/other" in bad[0] and "mjf_case" not in bad[0], bad
+    bad = required_gate_lines(P); assert len(bad) == 1 and "40-case/other" in bad[0] and "vendor_mjf" not in bad[0], bad
     P.cfg["gates"]["adopt"] += ["$PY scripts/thin_wall_census.py --gate-dir 40-case/other/checks/census --x", "$PY scripts/print_dfm.py --gate 40-case/other/checks/dfm"]
     assert required_gate_lines(P) == []
     os.makedirs(f"{d}/k"); open(f"{d}/k/k.kicad_sch", "w").write("x"); assert "erc_gate.py" in required_gate_lines(P)[0]

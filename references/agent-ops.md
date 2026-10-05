@@ -191,7 +191,7 @@ the ENV.md row `scripts/project.py env` prints on day 1. The rules are in the or
 10. **The project's CLAUDE.md carries the five operating lines** (`templates/CLAUDE.md` "Agent operations": wrapper only, ≤ pool writing agents,
     one record round per batch, the caching + engine policy, one-knob changes inline) with the host's pool number filled from `scripts/project.py env`.
 
-<!-- worked example: begin (source project, 2026-09-30 — the one fenced example of this reference; the rules above are the generic form) -->
+<!-- worked example: begin (2026-09-30 — the one fenced example of this reference; the rules above are the generic form) -->
 Worked example — one measured round on a 14-core / 24 GB laptop, three agents, a two-piece printed case with a lid chain and a caps chain:
 - Trigger: two kernel watchdog panics in one day at load ~40 — two OpenSCAD chains (each a cores-2 pool), the adopt gates (4 steps) and the
   traceability matrix at once = 36–40 runnable processes on 14 cores. Measured alone: the adopt gates at 4 steps reach load 35; ONE `kicad-cli`
