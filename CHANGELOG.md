@@ -1,6 +1,6 @@
 # CHANGELOG — hw-from-spec
 
-## Current state (0.11.4) — read this instead of replaying the entries below
+## Current state (0.11.5) — read this instead of replaying the entries below
 
 - **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
   twelve batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
@@ -10,11 +10,13 @@
   mating pair, an orientation row per one-sided part type — renders are not evidence of buildability), the software track, release cut + production cut + the arrival checklist + spec errata, agent operations with a measured resource budget
   (measure → audit → change; previews on the fast engine, geometry of record on the engine that passes the mesh gates; caches as determinism checks), the retro,
   the PCBA fab after the order (engineer questions answered on pad-1 positions, the production-file package diffed per layer) and its upfront
-  half (`ASSEMBLY_NOTES` in the package, the fab's-eye silk pass, hole sizes in the order remark, arrival rows A-0 / A-5).
+  half (`ASSEMBLY_NOTES` in the package, the fab's-eye silk pass, hole sizes in the order remark, arrival rows A-0 / A-5), the fab's second
+  round pixel-diffed before an answer, colour / cosmetic inserts (the whole face, host frame + lip + sill, the edge budget, fused STL for DFM
+  and colour 3MF for the order) and the at-the-gate map rule (design 0.3 above the vendor's gate; six views counted by `heatmap_count`).
 - **Scripts** (`project.yaml`-driven, every one with `--selftest`, exit 0 / 1 / 2): `project.py` (reader, scaffold, slots, kickoff --check,
   gates-required, record, env), `known_issues`, `traceability`, `release_report`, `collect_renders`, `assembly_guide`, `reorg_paths`, `dfm_check`,
   `erc_gate`, `gate_check`, `handoff_header`, `thin_wall_census` (design-margin gate), `print_dfm` (printability-floor gate + `--validate`),
-  `thin_wall_check` (quick look + pinch), `stability` (CoG vs support hull at the worst pose; `improper_placements` = the det +1 row), `scad_lint`, `step2stl`, `arrival_checklist`, `skill_retro` (+ `--apply`), `jobs.sh` (the heavy-job
+  `thin_wall_check` (quick look + pinch), `heatmap_count` (yellow / red of a vendor map capture, stdlib), `stability` (CoG vs support hull at the worst pose; `improper_placements` = the det +1 row), `scad_lint`, `step2stl`, `arrival_checklist`, `skill_retro` (+ `--apply`), `jobs.sh` (the heavy-job
   pool), `adopt_gates.sh`, `clone_gate.sh`, `doc_voice_lint`, `generic_lint`. Mesh stack: `numpy trimesh scipy shapely rtree networkx
   mapbox-earcut embreex` (the Embree ray engine keeps a census in seconds under 1 GB).
 - **Layout** (`references/project-yaml.md` §Layout): ten numbered folders in the order of the project's life — `00-now` (five generated answer
@@ -34,6 +36,32 @@
 - **Generic by rule**: the skill names no project, part, board, order, account or person — `scripts/generic_lint.py` reads the whole repo
   (CHANGELOG and docs included; history keeps its measured numbers), a fenced worked example keeps numbers and kinds but never a name, and the
   repo carries no project retro (a retro report is folded, then deleted).
+
+## 0.11.5 — 2026-10-05 — Colour inserts, the vendor's map at the gate, and the fab's second round
+
+Source: one case moved its whole UI face to a full-colour MJF insert (owner: "design the entire UI with the full color inserts that I can glue in.
+there should be guides for repeatability ... professional and clean"), the vendor's heat map rejected a wall the API had passed, the full-colour
+line refused a 1.5 mm plate at the form, and the PCBA fab's "updated DFM" was the first render re-titled.
+
+### Added
+- `references/dfm-printed-enclosure.md` §12 **full-colour / multi-material inserts**: the insert is the whole functional face; the host keeps a
+  frame ≥ gate, a lip ≥ gate × ≥ gate, a sill; glue gap 0.3 self-centres, the hanging block keys rotation; the **edge budget** (host wall + gap +
+  land ≥ 2 × gate + gap) and the way out when the span is short (features run out through the insert's edge); files (fused STL for the analyser
+  and the census, colour 3MF with basematerials and fixed zip timestamps for the order, colour-split bodies never censused, the insert routed
+  through the inlay path); the full-colour line facts (min bbox 2 × 2 × 10 at the form, colours read, 14-day build, HDT 80 = cosmetic only, tone
+  judged on arrival with a designed fallback); a pocket over cuts from the other face; a logotype is never a deboss. §13 **the map at the gate**:
+  a wall at the gate reads yellow (design 0.3 above, six views counted by `scripts/heatmap_count.py`), the opposing-sample metric reads convex steps
+  (slice the mesh before changing geometry; remove the step, never thin), the odd-one-out pass on repeated features.
+- `scripts/heatmap_count.py`: yellow / red pixel count of a vendor heat-map capture outside the legend box (`--legend-x/-y` fractions),
+  exit 1 on any; `--selftest`.
+- `references/vendor-review.md` §5 **round 2**: the "updated DFM" diffed pixel-wise against the first, the ambiguous picture (labels turned,
+  marks unchanged) answered with a request to state the cathode position and the fab's picture marked red / green, skipped confirmations
+  re-asked, no release on an ambiguous picture; §4: signing in empties the quote (reload all lines in one upload), the order-detail page as the
+  record of line ids by text capture.
+- `templates/20-design/arrival_checklist.yaml` FA-3b: colour / cosmetic inserts dry-fitted before glue, legends crisp, tone judged beside the body.
+- `references/pitfalls.md`: jlc / fab (at-the-gate yellow, full-colour min bbox, round-2 re-title, sign-in empties the quote) and mechanical /
+  case (insert edge budget, inlay ≠ piece, pocket over the other face's cuts, odd-one-out, two OpenSCAD traps: `[0:-1]` on an empty list, a
+  `//` comment swallowing a one-line module's brace). `SKILL.md`: one bullet for the insert + the gate rule, one sentence for round 2.
 
 ## 0.11.4 — 2026-10-05 — PCBA fab after the order: engineer questions, the production-file package, and pre-answering both before the order
 
