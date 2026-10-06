@@ -1,6 +1,6 @@
 ---
 name: hw-from-spec
-version: 0.11.4
+version: 0.11.5
 description: Run a hardware project (a PCB, a printed or CNC enclosure, or both — scope chosen at kickoff; contract fab such as JLCPCB) from a written specification to a production cut with an owner-gated, generated-only, blind-reviewed workflow — a kickoff questionnaire that asks every owner decision up front with recommended answers, a zero-warning manufacturability bar, and a retro that folds each project's learnings back into the skill. Use this whenever someone starts a board or enclosure project from a spec, asks to set up gates, a decision log, generators, part verification, a fab DFM mirror, a case pipeline, FEA, blind reviews, a release report or a production cut for one, or resumes such a project, or wants the skill improved from a finished project — even if they only say "new KiCad board", "order this at JLC", "review the layout", "cut the release" or "what did we learn".
 ---
 
@@ -406,7 +406,12 @@ folder `70-release/<rev>/records/`** (the cut yaml's `records_dir`; RELEASE_NOTE
   diffed per layer against the upload the day it arrives (compensation, drill oversizes, inner pad removal, mask relief, via plugging = expected;
   anything else = finding) and approved with at most two confirmations (`references/vendor-review.md` §5–§6). **Both are pre-answered upfront**:
   `ASSEMBLY_NOTES` in the package (a cut deliverable, `references/fab-dfm.md` §9), a fab's-eye silk pass at G2 (a G2 prerequisite), the fab-side hole sizes and
-  via treatment in the order remark, arrival-checklist §A rows A-0 / A-5 (`references/vendor-review.md` §7).
+  via treatment in the order remark, arrival-checklist §A rows A-0 / A-5 (`references/vendor-review.md` §7). The fab's second round ("we
+  updated the DFM") is pixel-diffed against the first before any answer; an ambiguous picture gets a request to state the change, never a release.
+  [mech, both] A **colour / cosmetic insert** is the whole functional face glued into a host that keeps a frame, a lip and a sill, with the
+  insert's edge budgeted (host wall + gap + land) and its features run out through the edge where the span is short; the fused body is the
+  DFM file, the colour 3MF the order file; a wall AT the vendor's gate reads yellow — design 0.3 above it and read the six views
+  (`references/dfm-printed-enclosure.md` §12–§13, `scripts/heatmap_count.py`).
 - **Illustrated assembly guide** [mech, both] beside the text SOP: `scripts/assembly_guide.py` (authored short yaml + generated step text + one keyed render per
   page, `--check`), registered as a cut deliverable (`references/release-and-cut.md` §8).
 

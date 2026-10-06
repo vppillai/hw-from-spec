@@ -56,6 +56,11 @@ any mark-shaped body or pocket: `scripts/thin_wall_check.py --pinch <stl>`, web 
 - Remark caps (PCB 200 / assembly 500 chars) and a mandatory customs description cascader exist on the quote form; a placed order has no free-text
   box — the full remark goes as an attachment and into the production-file confirmation reply.
 
+- **Signing in empties the signed-out quote**: expect to reload every line (upload all files in one call, Batch Edit the same-material lines,
+  the colour / special lines one by one); a refusal (a full-colour line below its minimum bounding box) appears only as a notice at Save. The
+  moment the owner reports the order id, read the order-detail page and record every line id with its file and md5 — the user-center pages
+  may not screenshot through the browser bridge; capture their text instead.
+
 ## 5. PCBA fab after the order: the engineer's questions (polarity, placement, "is it okay to proceed?")
 The assembly fab's engineer mails a numbered question with its own "corrected part placement" snapshots (top and bottom renders of the board as the
 fab will place it) and asks for a yes within a day; production waits on the answer. Same boundaries as §1: the reply is the owner's, the agent
@@ -76,6 +81,13 @@ drafts it into the record.
 - **Reply format** (owner sends; attach the picture): per question a numbered answer; per part "CORRECT, place as shown" or "REVERSED: the
   cathode (your `−`, the band end) goes toward <board landmark>; rotate 180°, position unchanged"; the sentence "with <parts> rotated it is okay
   to proceed". Then: arrival checklist §A row for the rotated parts (cathode band toward <landmark>), order-sheet row marked SENT.
+- **Round 2 — "we updated them on the attached DFM, is that correct?"** can arrive as the SAME render under a new title (the first said
+  "Corrected Part Place", the second "Original Part Placement"). Pixel-diff the new picture against the previous one (title row excluded) and
+  crop the queried parts at 6×: in the worked example only the refdes labels on the two bodies had turned 180° while the `+` / `−` pad marks
+  were identical — an AMBIGUOUS picture (the mark may follow the placed part or the pad data). Do not infer: the reply states what the picture
+  shows, asks the fab to **state the cathode position in words**, attaches THEIR picture marked (red = as drawn, green = required), and
+  re-asks every confirmation the fab skipped (hole tolerances). Production is released only on a picture or a sentence that shows the change;
+  the arrival checklist checks those parts first either way.
 
 ## 6. The fab's production-file package ("please review the production file")
 The package the fab sends back is its CAM output, not your upload: production Gerbers (often inch 2.6, one file per layer plus drill map, rout

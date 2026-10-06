@@ -524,3 +524,44 @@ duplicate-aware SafeLoader and fail on a duplicate. Prove byte identity before c
   resin within weeks in daylight; **brittleness**: the standard 8000 / 9600 class resins are stiff and brittle (elongation a few %) — no snap
   fits, no press fits, no thin cantilevers; the inlay plate that arrived "in pieces" was point-contact geometry in a brittle resin.
 - Colour / dye adds a day; the material rating (§1.3) per the TDS — most standard resins are unrated and soften < 60 °C.
+
+## 12. Full-colour / multi-material inserts (worked example: a full-colour MJF line beside a dyed MJF body) **[design + vendor form]**
+- **The insert is the whole functional face, not a label plate in a rebate**: the UI skin together with the blocks that hang from it (a finger
+  dish, a channel) becomes one coloured part; the host keeps a **frame ≥ gate** around the opening, a **lip ≥ gate × ≥ gate** under the insert's
+  edges (trimmed `clearance` clear of the hanging blocks), any roof / pillar tops at the same Z as the old skin underside (so the insert's top
+  face comes out flush), and a **sill** where the host must close a feature the insert leaves open. Gap 0.3 per side self-centres a ±0.3
+  process; a block that hangs through the opening is the anti-rotation key for free. Glue = pin-head dabs on the lands, never on the block or
+  the edges; press flat with the mating part; dry-fit every unit first.
+- **Budget the insert's edge before drawing it**: between a fixed insert feature (a slot over a switch) and a fixed host feature (a seat for the
+  mating cover) the edge needs host wall ≥ gate + glue gap + insert land ≥ gate (2.7 mm on a 1.2 process). When the span is shorter, the host
+  carries the wall and the insert's features **run out through its edge** (an open-ended dish, a U-notched slot / hole facing the host wall
+  across the gap) — a sub-gate land is never the answer. One slit line at the host's foot is clean; a 1.0 land is yellow.
+- **Files**: the FUSED body (colour has no geometry) is what the vendor's analyser, the six-view map and the census see; the **colour 3MF** (3MF
+  core spec: one `<object>` per colour with a `<basematerials>` entry, objects fused in the build, zip entries with a fixed timestamp so the md5
+  is a function of geometry + colours) is the order file — the vendor's form reads the colours (the line thumbnail shows them). The colour-split
+  bodies (the base with 0.3 ink voids, the letter bodies) are **not geometry**: never censused, never a printed piece (the piece-count row counts
+  printed bodies against the decision); route the insert through the inlay path (export + census of the fused body + its order line + its own
+  face renders). Legends are flush colour bodies 0.3 deep at a cap the vendor's smallest-text answer allows (ask before ordering).
+- **Full-colour line facts (worked example, verify live)**: a minimum BOUNDING BOX of 2 × 2 × 10 mm enforced at the form ("unavailable ... Min:
+  2x2x10mm") — a 1.5 mm plate is refused however large its face while a 6 cm³ part with 1.3 walls is accepted, so the "2 mm" on the material page
+  is (at least) a part-size rule; the colour material's HDT (80 °C) makes it a room-side cosmetic part only; a full-colour line sets the WHOLE
+  quote's build time (14 days against 3); the colour "black" is printed, the body material is through-dyed — judge the tone on arrival with the
+  fallback designed (the same insert in the body material with debossed legends).
+- **A pocket deepened on one face lives over whatever is cut from the other face** (a plate pocket over magnet pockets: 2.9 − 2.1 = 0.8); a
+  pad under such a pocket stops at the inner wall faces (it met the side vent slots) and starts where it fuses with the neighbouring bosses
+  (0.3–0.5 behind a boss is a void); a chamfered pad outline meets the wall at a knife angle — plain rectangle.
+- **A debossed logotype never passes a 1.2 land rule at any width** (the letters kiss or run 0.2–0.6 apart; the gaps scale with the cap, the
+  land does not): the mark alone, eroded by the gate/2, passes; a logotype is a colour body or a plate.
+
+## 13. The vendor's map at the gate, and the metrics that over-read **[measured]**
+- A wall designed EXACTLY at the vendor's gate reads yellow on its heat map although the API passes (a 2.0 sole with a 0.8 deboss = 1.20 left
+  came back yellow): design lands 0.3 above the gate (a 0.4 pad on the hidden side), and keep the six-view map read as the gate, not the flag —
+  `scripts/heatmap_count.py` counts the yellow / red pixels outside the legend box (any > 0 = FAIL).
+- The nearest-opposing-sample metric (the one that mimics the vendor's map) flags **convex steps** as thin walls — a lip top 0.3 behind a band's
+  rear face, a sill end 0.3 beside a strip's inner face, a pad edge 0.55 from a slot end — and the FDM support heuristic merges coplanar
+  interior and in-wall faces into one "outer" cluster. Before changing geometry, **slice the mesh** (a plane section with `trimesh`) and read
+  the faces; then remove the step (start the strip where the band starts, make the sill full width, move the pad front to a feature-free span)
+  rather than thinning anything. The support-contact row is informational on a powder process.
+- **Odd-one-out pass** on every repeated feature of a visible face: three identical blind holes and one through notch at the fourth corner
+  (the fan's lead exit) read as a mistake to the owner. Draw the symmetric pattern (four identical holes; the vendor part uses three) and put the
+  odd feature on a centre line under the part that hides it.
