@@ -264,6 +264,10 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A part with a stock shortfall is auto-deselected; PCBA qty is a free field; a catalogue part without a fab footprint shows nothing until the paid step — jlc/pcba.
 - Browser session expires within hours: the decisive signed-in check is a fresh tab on the orders URL (passport redirect = signed out); reload the quote tab after re-sign-in — jlc/browser.
 - Quote form is Vue: `.click` registers on leaf spans but NEXT needs a real click; "Panel by Customer" REQUIRES the panel format field; branded material lists re-order — click by text, never by position — jlc/browser.
+- A wall designed exactly at the vendor's gate (1.20 under a deboss) reads YELLOW on its map while the API says thinWall false: `design_margin` ≥ 0.3, the six-view read is the gate — jlc/3dp map (dfm-printed-enclosure §13).
+- The full-colour MJF line has a minimum BOUNDING BOX (2 × 2 × 10) enforced at the form: a 1.5 plate is refused however large, a 1.3-wall body passes; its colours are read from the 3MF basematerials; one such line sets the whole quote to 14 days — jlc/3dp colour.
+- The fab's "updated DFM" can be the previous render re-titled (labels turned, polarity marks unchanged): pixel-diff first, ask them to state the cathode position, mark their picture red / green; never release on an ambiguous picture — jlc/pcba round 2.
+- Signing in on the quote page empties the signed-out lines; the order-detail page is the record of line ids (text capture — screenshots of the user-center hang) — jlc/browser.
 - DFM viewer: rows read "Unanalyzed" until its own button is pressed; "Export analysis report" is an icon-only `li[title]` — jlc/dfm.
 - Print service (JLC3DP): DFM is a thin-wall heat map + one yes/no risk gate — compare process rule sets, not colours; FDM refuses parts < 30×30×10 mm; SLA refuses < 2 mm at the Edit dialog, not at upload; a mandatory customs cascader makes Save a silent no-op; pricing is linear in qty — jlc/3dp.
 - CNC (JLCCNC): a faceted STL-sewn STEP goes to manual quote; a true B-rep STEP quotes instantly; UV-print finish drops the mandatory drawing upload whenever the finish select changes — jlc/cnc.
@@ -287,6 +291,11 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A pluggable module is not a plain box (a cabled transceiver module: bottom open at the leading edge, latch recess on top, corners R 0.15..0.60): anything that grips it bears on the faces the standard's drawing shows solid, and a pocket corner radius comes from the drawing (R > 0.66 clips a legal module), not from a print rule of thumb — 2026-09-29 [mechanical/msa].
 - Coloured marks on vertical FDM flanks cost a filament swap per layer; keep colour on top faces in one Z band per part.
 - A single bottom dovetail is a hinge under torsion; two rail pairs ~17 mm apart give ~2.5× stiffness *(worked example)* — 123.
+- A colour / cosmetic INSERT's edge needs host wall + gap + land ≥ 2 × gate + gap; a shorter span → the insert's features run out through its edge, never a sub-gate land — mech/colour insert (dfm-printed-enclosure §12).
+- An inlay that replaces part of a printed body is NOT a printed piece (the piece-count row failed on 4): export / census / order it through the inlay path; its colour-split bodies are not geometry — mech/colour insert.
+- A pocket deepened on one face lives over whatever is cut from the other (plate pocket vs magnet pockets 0.8 by design, 0.91 measured); a pad under it must stop at the inner wall faces and fuse with the bosses behind it — mech/hood.
+- Three identical holes + one different (the vendor fan's lead corner) on a visible face: draw the symmetric pattern and hide the odd feature under the part — mech/aesthetics (dfm-printed-enclosure §13).
+- OpenSCAD: `for (i = [0 : len(list) - 1])` on an EMPTY list iterates `[0:-1]` backwards (2021.01) — guard with `len(list) > 0`; a `//` comment inside a one-line module swallows the closing brace (parse error at EOF) — use `/* */` or a new line — mech/openscad.
 - A "part not fitted" yaml flag must also reach the mesh check (the CAD 3D model still carries the solid): flag → `board_stl.ignore` component; "0 components matched = WARN" — mech/case v3.11.
 - OpenSCAD/CGAL STL exports are not byte-stable: every md5-stamped consumer runs AFTER the final `--stl` pass — tooling/mesh.
 - Batch numbers in generated docs come from the artefact (measured STL volume), not the design intent; write the method next to the number — mech/docs.
