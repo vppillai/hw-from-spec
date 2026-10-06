@@ -74,7 +74,7 @@ print_targets:                            # one entry per print target; scripts/
     wall_gate: 1.2
     void_gate: 1.2
     red_line: 0.5
-    design_margin: 0.1
+    design_margin: 0.3          # walls drawn at wall_gate + margin; a wall AT the gate reads yellow on the vendor's map (dfm-printed-enclosure §13)
     wedge_band: 1.5
     tolerance: 0.3
     tolerance_source: "<vendor tolerance page>, <date>"
@@ -217,7 +217,7 @@ is this layout. Changing it later is a decision row + a `reorg:` block + `script
 - Shell gate commands run with cwd = repo root (or the archive) and `$PY` set; write them root-relative. `$PY` is the first interpreter that
   imports `yaml` among `$PYTHON`, the project `.venv`, the skill's `.venv`, `python3` (printed at the top of every run).
 - Which scripts are generators and which are graders: `known_issues`, `traceability`, `release_report`, `collect_renders`, `dfm_check`,
-  `assembly_guide` have `--check`; `reorg_paths --check` is a grader (no generator side); `thin_wall_check` is a measurer (`--census`, `--pinch`,
+  `assembly_guide` have `--check`; `reorg_paths --check` is a grader (no generator side); `heatmap_count` is a measurer of vendor-map captures (yellow / red outside the legend; exit 1 on any); `thin_wall_check` is a measurer (`--census`, `--pinch`,
   exit 1 on a finding); `print_dfm` is the printability-floor GATE on the mesh (`--process <row> <stl> --out DIR`, exit 1 on FLAG; PURE `--gate DIR`; `--validate`
   exit 1 on a RULE DEFECT); `scad_lint` is a grader of generated SCAD; `thin_wall_census` is the printed-body design-margin GATE (`<stl> --target <print target> --json out/…/census/<piece>.json`, exit 1 on a
   WALL / VOID / WEDGE-band / OPPOSING cluster below its gate that no dated `accepted` entry covers) plus a PURE `--gate-dir <census dir>` for
