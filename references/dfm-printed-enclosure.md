@@ -22,7 +22,7 @@ seen (a dummy 0.4 mm low). The only exception path is the machine-readable `acce
 ## 1. MJF rules (worked example: JLC3DP PA12-HP; checker grey line 1.2 mm)
 - **Three numbers, three sources — never confuse them**: the vendor's **published printable minimum** (JLC review mail: "nylon ≥ 1.0";
   Shapeways / Sculpteo / HP direct list 0.6–1.0 for PA12) **[vendor sheet]**; the **checker's yellow line** (JLC3DP heat map: grey ≥ 1.2, yellow
-  0.5–1.2, red < 0.5) **[checker]**; and the **owner's bar** (no yellow → design at `wall_gate + design_margin` = 1.2 + 0.1 = 1.3) **[owner bar]**.
+  0.5–1.2, red < 0.5) **[checker]**; and the **owner's bar** (no yellow → design at `wall_gate + design_margin`; `design_margin` ≥ 0.3 — a wall AT the gate read yellow on the vendor's map while the API passed, §13) **[owner bar]**.
   A team at another vendor or without the no-yellow bar designs to a different number; the mechanism (design above the line the checker
   flags, by a margin the sampling and the process spread need) is what generalises. A 1.2 nominal samples 1.19 on the mesh; the 0.1 margin
   costs nothing on a 2 mm shell.
@@ -191,7 +191,7 @@ Every rim and wall reads CLOSED on the single part: no through-slot, notch, key 
 3. **The flag is computed at UPLOAD and does not depend on the process / material chosen on the line.** Setting the material (Edit dialog SAVED —
    form state, not a cart) is still done first: it gives the price and the legend of the material's heat map; the record names the material on the
    line and **the quote price per body** before reading anything. Changing the material never flips `thinWall`. The page defaults to a resin.
-4. **Open the heat map on every face** even when `thinWall` is false: inside, sole, iso top, front; record **the legend thresholds as displayed
+4. **Open the heat map on every face** even when `thinWall` is false — six captures per body: the origin view, three 90° azimuth drags (a horizontal drag of canvas-height/2 px is 180°), both poles (±canvas-height/2 vertical, from the origin); `scripts/heatmap_count.py` on the six captures must print 0 / 0 (yellow / red in the model area: the legend column and the tool-bar strip are skipped); record **the legend thresholds as displayed
    that day** — the census turns a colour into a number.
 5. **Save screenshots named `<piece>_<round>_<md5-8>_<material>_heatmap_<face>.png`** plus `quote_page_<round>_flags.png`, keep the uploaded STL
    beside them, and write `templates/DFM_ROUND.md` into `60-orders/quotes/<date>/` with the API fields, the browser / UA / signed-in state per body.
@@ -528,9 +528,9 @@ duplicate-aware SafeLoader and fail on a duplicate. Prove byte identity before c
 ## 12. Full-colour / multi-material inserts (worked example: a full-colour MJF line beside a dyed MJF body) **[design + vendor form]**
 - **The insert is the whole functional face, not a label plate in a rebate**: the UI skin together with the blocks that hang from it (a finger
   dish, a channel) becomes one coloured part; the host keeps a **frame ≥ gate** around the opening, a **lip ≥ gate × ≥ gate** under the insert's
-  edges (trimmed `clearance` clear of the hanging blocks), any roof / pillar tops at the same Z as the old skin underside (so the insert's top
+  edges (trimmed `clearance` clear of the hanging blocks), any roof / pillar tops at the Z of the insert's underside (so the insert's top
   face comes out flush), and a **sill** where the host must close a feature the insert leaves open. Gap 0.3 per side self-centres a ±0.3
-  process; a block that hangs through the opening is the anti-rotation key for free. Glue = pin-head dabs on the lands, never on the block or
+  process; a block that hangs through the opening is the anti-rotation key. Glue = pin-head dabs on the lands, never on the block or
   the edges; press flat with the mating part; dry-fit every unit first.
 - **Budget the insert's edge before drawing it**: between a fixed insert feature (a slot over a switch) and a fixed host feature (a seat for the
   mating cover) the edge needs host wall ≥ gate + glue gap + insert land ≥ gate (2.7 mm on a 1.2 process). When the span is shorter, the host
@@ -547,7 +547,7 @@ duplicate-aware SafeLoader and fail on a duplicate. Prove byte identity before c
   is (at least) a part-size rule; the colour material's HDT (80 °C) makes it a room-side cosmetic part only; a full-colour line sets the WHOLE
   quote's build time (14 days against 3); the colour "black" is printed, the body material is through-dyed — judge the tone on arrival with the
   fallback designed (the same insert in the body material with debossed legends).
-- **A pocket deepened on one face lives over whatever is cut from the other face** (a plate pocket over magnet pockets: 2.9 − 2.1 = 0.8); a
+- **A pocket deepened on one face lives over whatever is cut from the other face** (a plate pocket over magnet pockets: 2.9 − 2.1 = 0.8; the census read 0.91); a
   pad under such a pocket stops at the inner wall faces (it met the side vent slots) and starts where it fuses with the neighbouring bosses
   (0.3–0.5 behind a boss is a void); a chamfered pad outline meets the wall at a knife angle — plain rectangle.
 - **A debossed logotype never passes a 1.2 land rule at any width** (the letters kiss or run 0.2–0.6 apart; the gaps scale with the cap, the
@@ -555,13 +555,13 @@ duplicate-aware SafeLoader and fail on a duplicate. Prove byte identity before c
 
 ## 13. The vendor's map at the gate, and the metrics that over-read **[measured]**
 - A wall designed EXACTLY at the vendor's gate reads yellow on its heat map although the API passes (a 2.0 sole with a 0.8 deboss = 1.20 left
-  came back yellow): design lands 0.3 above the gate (a 0.4 pad on the hidden side), and keep the six-view map read as the gate, not the flag —
-  `scripts/heatmap_count.py` counts the yellow / red pixels outside the legend box (any > 0 = FAIL).
+  came back yellow at `design_margin` 0): set `design_margin` ≥ 0.3 (§0; worked example: a 0.4 pad on the hidden side → 1.6) and keep the
+  six-view map read of §7 step 4 as the gate, not the API flag.
 - The nearest-opposing-sample metric (the one that mimics the vendor's map) flags **convex steps** as thin walls — a lip top 0.3 behind a band's
   rear face, a sill end 0.3 beside a strip's inner face, a pad edge 0.55 from a slot end — and the FDM support heuristic merges coplanar
   interior and in-wall faces into one "outer" cluster. Before changing geometry, **slice the mesh** (a plane section with `trimesh`) and read
   the faces; then remove the step (start the strip where the band starts, make the sill full width, move the pad front to a feature-free span)
   rather than thinning anything. The support-contact row is informational on a powder process.
-- **Odd-one-out pass** on every repeated feature of a visible face: three identical blind holes and one through notch at the fourth corner
-  (the fan's lead exit) read as a mistake to the owner. Draw the symmetric pattern (four identical holes; the vendor part uses three) and put the
-  odd feature on a centre line under the part that hides it.
+- **Odd-one-out pass** on every repeated feature of a visible face (three identical blind holes and one through notch at the fourth corner, the
+  fan's lead exit, is the worked example): draw the symmetric pattern (four identical holes; the vendor part uses three) and put the odd feature
+  on a centre line under the part that hides it.

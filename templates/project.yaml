@@ -109,7 +109,7 @@ print_targets:                                # every printed body is censused a
     wall_gate: {{WALL_GATE}}                  # the vendor checker's grey line, read on checker_date       [checker] {{mech,both}}
     void_gate: {{VOID_GATE}}                  # slots / slits / engraved strokes (1.2)                    [checker] {{mech,both}}
     red_line: {{RED_LINE}}                    # the checker's red band (0.5)                              [checker] {{mech,both}}
-    design_margin: {{DESIGN_MARGIN}}          # walls drawn at wall_gate + margin (0.1)                   [owner bar] {{mech,both}}
+    design_margin: {{DESIGN_MARGIN}}          # walls drawn at wall_gate + margin (0.3: at-the-gate reads yellow)  [owner bar] {{mech,both}}
     wedge_band: 1.5                           # a wedge whose sub-gate band is wider FAILs unless accepted [convention] {{mech,both}}
     tolerance: {{TOLERANCE}}                  # the vendor's published dimensional tolerance (cite it: `published.tolerance` of the process row); replaced by the first-article spread {{mech,both}}
     tolerance_source: {{URL_AND_DATE}} {{mech,both}}

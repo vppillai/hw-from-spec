@@ -55,7 +55,6 @@ any mark-shaped body or pocket: `scripts/thin_wall_check.py --pinch <stl>`, web 
   *display* moves — a quote figure while unpaid, say so in the record.
 - Remark caps (PCB 200 / assembly 500 chars) and a mandatory customs description cascader exist on the quote form; a placed order has no free-text
   box — the full remark goes as an attachment and into the production-file confirmation reply.
-
 - **Signing in empties the signed-out quote**: expect to reload every line (upload all files in one call, Batch Edit the same-material lines,
   the colour / special lines one by one); a refusal (a full-colour line below its minimum bounding box) appears only as a notice at Save. The
   moment the owner reports the order id, read the order-detail page and record every line id with its file and md5 — the user-center pages
