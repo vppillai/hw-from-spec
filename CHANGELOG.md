@@ -12,7 +12,7 @@
   the PCBA fab after the order (engineer questions answered on pad-1 positions, the production-file package diffed per layer) and its upfront
   half (`ASSEMBLY_NOTES` in the package, the fab's-eye silk pass, hole sizes in the order remark, arrival rows A-0 / A-5), the fab's second
   round pixel-diffed before an answer, colour / cosmetic inserts (the whole face, host frame + lip + sill, the edge budget, fused STL for DFM
-  and colour 3MF for the order) and the at-the-gate map rule (design 0.3 above the vendor's gate; six views counted by `heatmap_count`).
+  and colour 3MF for the order) and the at-the-gate map rule (`design_margin` ≥ 0.3; the six-view read of §7 step 4 counted by `heatmap_count`).
 - **Scripts** (`project.yaml`-driven, every one with `--selftest`, exit 0 / 1 / 2): `project.py` (reader, scaffold, slots, kickoff --check,
   gates-required, record, env), `known_issues`, `traceability`, `release_report`, `collect_renders`, `assembly_guide`, `reorg_paths`, `dfm_check`,
   `erc_gate`, `gate_check`, `handoff_header`, `thin_wall_census` (design-margin gate), `print_dfm` (printability-floor gate + `--validate`),
@@ -50,7 +50,7 @@ line refused a 1.5 mm plate at the form, and the PCBA fab's "updated DFM" was th
   and the census, colour 3MF with basematerials and fixed zip timestamps for the order, colour-split bodies never censused, the insert routed
   through the inlay path); the full-colour line facts (min bbox 2 × 2 × 10 at the form, colours read, 14-day build, HDT 80 = cosmetic only, tone
   judged on arrival with a designed fallback); a pocket over cuts from the other face; a logotype is never a deboss. §13 **the map at the gate**:
-  a wall at the gate reads yellow (design 0.3 above, six views counted by `scripts/heatmap_count.py`), the opposing-sample metric reads convex steps
+  a wall at the gate reads yellow (`design_margin` ≥ 0.3 in §0 and the yaml knobs; §7 step 4 is the one home of the six-view read, counted by `scripts/heatmap_count.py`), the opposing-sample metric reads convex steps
   (slice the mesh before changing geometry; remove the step, never thin), the odd-one-out pass on repeated features.
 - `scripts/heatmap_count.py`: yellow / red pixel count of a vendor heat-map capture outside the legend box (`--legend-x/-y` fractions),
   exit 1 on any; `--selftest`.

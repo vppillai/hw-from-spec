@@ -408,10 +408,9 @@ folder `70-release/<rev>/records/`** (the cut yaml's `records_dir`; RELEASE_NOTE
   `ASSEMBLY_NOTES` in the package (a cut deliverable, `references/fab-dfm.md` §9), a fab's-eye silk pass at G2 (a G2 prerequisite), the fab-side hole sizes and
   via treatment in the order remark, arrival-checklist §A rows A-0 / A-5 (`references/vendor-review.md` §7). The fab's second round ("we
   updated the DFM") is pixel-diffed against the first before any answer; an ambiguous picture gets a request to state the change, never a release.
-  [mech, both] A **colour / cosmetic insert** is the whole functional face glued into a host that keeps a frame, a lip and a sill, with the
-  insert's edge budgeted (host wall + gap + land) and its features run out through the edge where the span is short; the fused body is the
-  DFM file, the colour 3MF the order file; a wall AT the vendor's gate reads yellow — design 0.3 above it and read the six views
-  (`references/dfm-printed-enclosure.md` §12–§13, `scripts/heatmap_count.py`).
+  [mech, both] A **colour / cosmetic insert** is the whole functional face, its edge is budgeted and it goes through the inlay path
+  (`references/dfm-printed-enclosure.md` §12); a wall AT the vendor's gate reads yellow — `design_margin` ≥ 0.3 and the six-view read of §7
+  step 4 is the gate (§13).
 - **Illustrated assembly guide** [mech, both] beside the text SOP: `scripts/assembly_guide.py` (authored short yaml + generated step text + one keyed render per
   page, `--check`), registered as a cut deliverable (`references/release-and-cut.md` §8).
 

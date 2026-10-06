@@ -74,7 +74,7 @@ print_targets:                            # one entry per print target; scripts/
     wall_gate: 1.2
     void_gate: 1.2
     red_line: 0.5
-    design_margin: 0.1
+    design_margin: 0.3          # walls drawn at wall_gate + margin; a wall AT the gate reads yellow on the vendor's map (dfm-printed-enclosure §13)
     wedge_band: 1.5
     tolerance: 0.3
     tolerance_source: "<vendor tolerance page>, <date>"
