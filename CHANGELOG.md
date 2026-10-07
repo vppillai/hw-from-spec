@@ -1,6 +1,6 @@
 # CHANGELOG — hw-from-spec
 
-## Current state (0.11.5) — read this instead of replaying the entries below
+## Current state (0.11.6) — read this instead of replaying the entries below
 
 - **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
   twelve batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
@@ -36,6 +36,32 @@
 - **Generic by rule**: the skill names no project, part, board, order, account or person — `scripts/generic_lint.py` reads the whole repo
   (CHANGELOG and docs included; history keeps its measured numbers), a fenced worked example keeps numbers and kinds but never a name, and the
   repo carries no project retro (a retro report is folded, then deleted).
+
+## 0.11.6 — 2026-10-06 — FDM colour case: the CLI writes the project, seam by geometry, mesh hygiene, fit by boolean
+
+Source: one two-colour FDM case whose hand-written project the slicer GUI refused ("invalid config, load geometry data only") while the CLI sliced
+it, whose aligned seam wandered over filleted corners, whose exports failed the manifold rule on flush faces, and whose glyph closing left
+corner spikes the void rule caught.
+
+### Added
+- `references/dfm-printed-enclosure.md` §8.3: the GUI's config loader throws on any unknown key, the CLI tolerates it — write a plain 3MF and let
+  the CLI `--export-3mf` write the project (bare file name into `--outputdir`, machine and process presets in separate files, `inherits` flattened
+  by the caller, `--export-settings` not a project-settings source), then patch `filament_colour` and the flush matrix to n × n / 2n (the CLI
+  writes 4 × 4 / 8 and its own `--slice` then fails). §8 seam rule: a full-height 0.7 mm V groove down a hidden filleted corner snaps an aligned
+  seam. §8 colour bodies: per-glyph closing then erosion, round joins, never close a mark defined by its negative space; §8.1 the inter-glyph gap
+  row (≥ 0.84). §8.5: flush faces export zero-area triangles and T-junctions under Manifold — overlap unions by 0.01 into the neighbour, one
+  `difference()` for a cavity, accept at 1 body + watertight.
+- `references/fdm-print-optimisation.md` §1 prime tower: height from the g-code (`WIPE_TOWER_START`), never from the Prepare view;
+  `wipe_tower_no_sparse_layers` clearance validation. §3 seam: the proof row from `; FEATURE: Outer wall` starts per layer.
+- `references/case-pipeline.md` §Interference: the fit test by boolean on the exported meshes with a negative control, a touch control and a
+  volume read before a FAIL; §Board mesh of record: `kicad-cli pcb export stl --board-only --no-components` as the board body (core thickness
+  1.46 → scale Z to nominal and to the fab's upper tolerance).
+- `references/pitfalls.md`: GUI vs CLI on project files, the flush-matrix size, macOS debugging aids (encrypted logs, dialogs invisible to
+  System Events, `recent_projects` as the record of what was opened, plain mesh parts in a sub-folder), flush-face slivers.
+
+### Changed
+- `references/dfm-printed-enclosure.md` §8 legend closing: ROUND joins (`quad_segs` 16) replace the mitre closing — a mitre leaves spikes at
+  acute corners that read as sub-gate voids.
 
 ## 0.11.5 — 2026-10-05 — Colour inserts, the vendor's map at the gate, and the fab's second round
 

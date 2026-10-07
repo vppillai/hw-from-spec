@@ -254,7 +254,10 @@ numbers are **[owner bar]** for a 0.4 nozzle at 0.20 mm and live in `print_targe
   out; a 3 mm plate in a slot: +0.1 snug lap, +0.0 push-fit that stays on when shaken, +0.3 falls off; Ø5 press cap: hole +0.0 goes on by thumb
   and holds, −0.15 would not go on any peg. So on this printer press fits sit at ZERO nominal clearance and running fits at +0.2…+0.3; another
   printer / filament re-measures with the coupon, never inherits these.
-- **Seam placement**: the seam is set to the rear / a hidden edge in the slicer project (recorded key), never on a legend face.
+- **Seam placement**: the seam is set to the rear / a hidden edge in the slicer project (recorded key), never on a legend face. On a body whose
+  vertical corners are all fillets an `aligned` seam wanders from layer to layer **[K]**; cut a V groove (0.7 mm square section turned 45°, full
+  height) down one or two hidden vertical corners — the aligned seam snaps into the groove on every layer and the groove reads as a design
+  line. Proof from the g-code: `fdm-print-optimisation.md` §3 seam row.
 - **Layer anisotropy**: a tab or boss loaded across layers is 30–50 % weaker; boss walls shear along layers — orient bosses so the load is in-plane
   where possible, and read the FEA with the anisotropy factor.
 - **Legends RAISED**: **cap ≥ 5.1 / stroke ≥ 0.9 / AIR GAP between strokes ≥ 0.9** / height 0.6 on a face-up top (a 0.4-deep, 0.45-wide debossed void at cap 2.2 is illegible on a 0.4
@@ -265,7 +268,7 @@ numbers are **[owner bar]** for a 0.4 nozzle at 0.20 mm and live in `print_targe
   every stroke ≥ 0.9 inside 5.7 mm of height; DIN Alternate Bold / Helvetica / Arial / Verdana bold fail on gaps. Pad (outline offset) trades
   stroke for gap one-to-one — keep it ≤ 0.1 and pick the weight in the font instead; raised text cannot print face-down — a face-down face gets a flush colour body (§8.1 option b), never a deboss (its recess ceiling is a bridge underside). A fit filter keeps a legend only where it
   fits its land and LISTS what it dropped.
-- **Legend geometry, not font choice, meets the void gate**: every font's crotches (A K N W) and counters (e 4 R) fall below 1.0 at a cap that fits a 10–12 mm band — CLOSE the glyph polygons at the void gate (buffer +g/2 / −g/2, mitre) after placement, gate the inter-letter gap as a row, and on a curved band set letters one by one along the band's offset curve anchored by POLAR ANGLE (nearest-point anchoring lands on a lobe when the waist is concave). The census's opposing-face rows honour legend lands like its wall and void rows (`--boxes` → `--box-min`): a raised stroke inside its land is two faces a stroke apart, not a thin wall. Example: a bold sans at cap 7, pad 0.5, spacing 1.6, closing 1.0 — 0 census FAIL.
+- **Legend geometry, not font choice, meets the void gate**: every font's crotches (A K N W) and counters (e 4 R) fall below 1.0 at a cap that fits a 10–12 mm band — CLOSE the glyph polygons at the void gate (buffer +g/2 then −g/2, ROUND joins, `quad_segs` 16 — a mitre closing leaves spikes at acute corners that the mesh reads as sub-gate voids (0.04–0.3 mm at letter corners **[K]**); a dilate–erode pair with round joins restores convex corners exactly) after placement, gate the inter-letter gap as a row, and on a curved band set letters one by one along the band's offset curve anchored by POLAR ANGLE (nearest-point anchoring lands on a lobe when the waist is concave). The census's opposing-face rows honour legend lands like its wall and void rows (`--boxes` → `--box-min`): a raised stroke inside its land is two faces a stroke apart, not a thin wall. Example: a bold sans at cap 7, pad 0.5, spacing 1.6, closing 1.0 — 0 census FAIL.
 - **Legend at a small cap (a word on a 6 mm rail)**: `text(size=)` is NOT the cap height — render one H per font, measure it, derive the size (a condensed DIN: cap = 0.72 × size; every font differs); pick the font by MEASUREMENT at that cap (erode for strokes ≥ 0.9, open the COMPLEMENT for gaps ≥ 0.9 after padding — the 2026-10-01 "counters ≥ 0.45" bar printed closed; Arial / Helvetica / Futura / DIN all fail on gaps at cap 5.2, Avenir Next Demi Bold passes); glyph polygons from the SVG path with holes classified by ring COVERAGE (a point test put a D's outer ring inside its own counter and dropped the letter); morphology OPEN (tips) → CLOSE (gaps) → neck thickening, never the other order (an opening after the closing reopens every filled slit); fill gaps ~0.05 over the gate because the mesh tools read under the polygon (0.95 for a 0.9 gate). Rows: thin regions < 0.9 longer than 1.2 mm = 0 (an erosion AREA ratio penalises corners, not strokes), gaps < 0.9 = 0 by the complement-opening metric (next bullet), one body per character, every label inside its face **and the legend body inside the LENGTH of the surface it sits on** (a rail word at 3/4 of the rail ran off the end once the cap grew), **label pitch grows with the cap** (labels at pitch 19 nearly touched at cap 5.2 — 20 mm wide labels need pitch ≥ 23; derive the pitch from the measured label width, never a constant).
 - **The gap metric is an OPENING of the complement, never a closing of the glyph.** The closing test (`geom.buffer(h).buffer(-h).difference(geom)`) saturates at ~0.45: above that every concave corner reads as a gap, so it can never enforce a stricter gate — it passed the cap-4 labels the printer closed. Required test (shapely), gate `g`:
   ```python
@@ -278,7 +281,7 @@ numbers are **[owner bar]** for a 0.4 nozzle at 0.20 mm and live in `print_targe
       return sum(1 for p in getattr(thin, "geoms", [thin]) if p.area > 0.5 * g * g)   # corner slivers ~0.05 g² at a right angle (≤ 0.2 on real glyphs), real gaps are elongated
   ```
   Selftest it against three fixtures before trusting a FAIL row: an `E` at cap 4 bold must FAIL at g = 0.9, a 1.2 mm slot between two bars must pass, a bare concave (L-shaped) corner must count 0.
-- **Colour bodies are their own print target** (`print_targets.home_fdm_colour` in the project.yaml template → process row `home_fdm_04_colour_body`, own STL set, own census): the wall gate is the body's THICKNESS (0.6 = 3 layers), strokes are gated on the polygon and by print_dfm W; censused against the host's 1.6 gate a colour body FAILs on itself.
+- **Colour bodies are their own print target** (`print_targets.home_fdm_colour` in the project.yaml template → process row `home_fdm_04_colour_body`, own STL set, own census): the wall gate is the body's THICKNESS (0.6 = 3 layers), strokes are gated on the polygon and by print_dfm W; censused against the host's 1.6 gate a colour body FAILs on itself. **Process each glyph on its own**: close (buffer +g/2 then −g/2, round joins) to fill crotches and the hairline necks of a traced outline, THEN erode by e per side to widen the gaps between glyphs — per glyph, never on the whole word (a closing over the word fuses neighbouring letters). Do NOT close a mark whose negative space defines it (a logo with channels between lobes): erode it instead until the channels are ≥ two line widths. The inter-glyph gap is a row (§8.1 table).
 - No rigid bump on a slit tab (it blocks, F ∝ t³); screws + heat-set inserts in ≥ 1.6 boss walls, or magnets (§1.1), instead of snap tabs where the
   arm cannot be long enough.
 - **Fan boss count = fan hole count** (consumer 30 mm fans have 4 holes even when one SKU drawing shows 3); any point set drawn in two places is
@@ -373,6 +376,7 @@ measure the FAILURE MODE instead:
 | enclosed first-layer island (a solid region the recess or the colour body encloses), inscribed Ø | ≥ 2.5 mm, else close the recess over it | the island joins the body only above the recess |
 | colour-region width, EITHER colour (option b) | ≥ 0.84 mm = two 0.42 first-layer lines; separate lobes touching at points are fine (a colour region is not a void) | a one-line region does not print |
 | point-contact necks | INFO: they fuse over ~one line width at the print | the artwork's own look |
+| inter-glyph gap on the PROCESSED polygons (sorted by x, pairwise shapely `distance`) | ≥ 0.84 mm = two 0.42 first-layer lines **[K]** | two letters fuse into one colour region |
 | mark to every edge of its face (and to a lug root) | ≥ 1.5 mm (≥ 1.0 to a lug) | the face's perimeter lines |
 | depth / height | whole layers on the MESH (0.6 = 3.00 × 0.20) | a partial layer is a slicer guess |
 | material behind a recess | ≥ the target's `rib_gate` (1.2) AND ≥ the profile's top shell | strength; infill show-through |
@@ -429,7 +433,20 @@ ironing, fuzzy skin, per-object overrides) and how each is PROVEN from the g-cod
         <metadata key="instance_id" value="0"/></model_instance></plate></config>
   ```
   Slice with `--arrange 0` (the parts stay where the layout put them). Alternative route: pre-placed part STLs with `--load-filament-ids 1,2
-  --assemble --arrange 0` — same colour requirement.
+  --assemble --arrange 0` — same colour requirement. The CLI slices this file; the GUI also needs `Metadata/project_settings.config`, which the
+  CLI round-trip of the next bullet supplies.
+- **The GUI rejects what the CLI accepts — let the CLI write the project** (02.08.02, 2026-10-06 **[K]**). The GUI's project-config loader
+  (`ConfigBase::load_from_json`) throws on ANY option key it does not know; the GUI then reports "The 3mf file has invalid config, load geometry
+  data only" and, when the file is tagged as a Bambu project, "The file does not contain any geometry data". The CLI tolerates the same keys.
+  Robust route: write a plain 3MF (geometry + `model_settings.config` with the per-part extruder, NO `Application` tag), then `BambuStudio
+  --load-settings "machine.json;process.json" --load-filaments "f1.json;f2.json" --export-3mf out.3mf --outputdir DIR plain.3mf`. Facts: the
+  export path is `outputdir + "/" + the --export-3mf value` — pass a BARE file name (an absolute path is concatenated and fails "Unable to open
+  the file"); machine and process presets are SEPARATE files (one merged JSON fails "process not compatible with printer"); the caller flattens
+  every `inherits` chain (the CLI applies `--load-settings` files literally — an unflattened machine file slices with a 200 × 200 bed and a
+  generic start g-code); `--export-settings` output is NOT flattened either, so it is no `project_settings` source. After the export patch two
+  things only: `filament_colour` (the CLI writes one default colour) and the **flush matrix size** — the CLI export carries a 4 × 4
+  `flush_volumes_matrix` and an 8-entry `flush_volumes_vector` for two filaments on a P-series printer, and a CLI `--slice` of that file fails
+  "Flush volumes matrix do not match to the correct size!"; GUI-saved projects carry n × n and 2n — patch to n × n / 2n.
 - **Report filament per colour and purge per plate**: per-filament grams from `Metadata/slice_info.config`, filament changes from the g-code
   (`M620 S..A`). Purge + tower mass is NOT in the header — derive it as used − (part volume × density) **only for a SOLID part** (the 2–3 layer
   colour mark); a 20 % infill body gives a negative "purge" — report the mark filament's share and say the body's cannot be separated.
@@ -466,7 +483,12 @@ ironing, fuzzy skin, per-object overrides) and how each is PROVEN from the g-cod
   50 where it is an overhang, 45 where it is not) plus a **measured steepest-overhang row per print orientation** (bridges and the deliberate side
   debosses excluded). A rib lead-in taper scales with the rib height (a fixed 0.30 taper on a 0.30 rib was exactly 45.0°).
 - **Watertight row per exported STL** and a `legend_edge` margin for raised legend items (§ print-kit.md §5): a slicer drops or fills a
-  non-manifold sliver silently and still says "clean".
+  non-manifold sliver silently and still says "clean". **Flush faces make slivers** (OpenSCAD Manifold exports, print-DFM rule M fires
+  **[K]**): a unioned solid whose face lies IN the plane of a neighbour's face (a pillar's outer face in the plane of a lip's end face, a rib
+  that ends exactly on a wall face, a face through a fillet's tangent point) exports zero-area triangles and T-junctions (trimesh `split`
+  reports extra "bodies" of 1–2 faces, zero area). Fixes: overlap every union INTO its neighbour by 0.01 — never past a design face (the slab
+  of §1 "Overshoots become slabs"); build an upper block as ONE solid and cut the cavity through shell and block in ONE `difference()` so every
+  inner face is one face; no face through a tangent point. Acceptance: 1 body and `watertight = true` after trimesh `split`.
 
 ## 9. Two versions from one yaml (vendor MJF + home FDM)
 Presets `base + overrides` deep-merged before any module reads the yaml (`references/case-pipeline.md` §Presets); the geometry may differ wherever
