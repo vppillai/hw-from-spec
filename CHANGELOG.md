@@ -37,7 +37,7 @@
   (CHANGELOG and docs included; history keeps its measured numbers), a fenced worked example keeps numbers and kinds but never a name, and the
   repo carries no project retro (a retro report is folded, then deleted).
 
-## 0.11.6 — 2026-10-06 — FDM colour case: the CLI writes the project, seam by geometry, mesh hygiene, fit by boolean
+## 0.11.6 — 2026-10-07 — FDM colour case: the CLI writes the project, seam by geometry, mesh hygiene, fit by boolean; the colour file is one shell
 
 Source: one two-colour FDM case whose hand-written project the slicer GUI refused ("invalid config, load geometry data only") while the CLI sliced
 it, whose aligned seam wandered over filleted corners, whose exports failed the manifold rule on flush faces, and whose glyph closing left
@@ -59,9 +59,23 @@ corner spikes the void rule caught.
 - `references/pitfalls.md`: GUI vs CLI on project files, the flush-matrix size, macOS debugging aids (encrypted logs, dialogs invisible to
   System Events, `recent_projects` as the record of what was opened, plain mesh parts in a sub-folder), flush-face slivers.
 
+- `references/dfm-printed-enclosure.md` §12 (second source: the full-colour MJF insert order of the previous release at the vendor's file
+  review, and the owner's look at the colour deck): the colour file is ONE shell per file with the colours on the triangles (export recipe,
+  canonical bytes, the four gate rows: shells / watertight / every colour / volume = the fused body); one legend cap flattens the type hierarchy
+  and a cap change re-admits dropped labels that hang over the insert's edge (read the piece's land, read the dropped list); the switch-well
+  layout rule (two word columns, one cap per row, band words when nothing fits beside the slot, no rotated column, marker legend in the
+  marker's direction) and the scratch-copy prototyping of a layout change.
+- `references/vendor-review.md` §4: a print-orientation sheet with every print order line (the vendor asked for the picture the remark
+  described); §5 round 3: the fab answers with pictures — crop every round side by side, release on the picture that shows the change, the
+  inline images of a reply thread are your own attachments quoted back, re-ask skipped confirmations as non-blocking.
+- `references/pitfalls.md`: [3mf/one-shell], [case/legends], [case/legend-layout], [vendor/orientation-picture], [fab/engineer-questions] round 3.
+- `SKILL.md` insert bullet points to the one-shell file, the legend rules and the orientation sheet.
+
 ### Changed
 - `references/dfm-printed-enclosure.md` §8 legend closing: ROUND joins (`quad_segs` 16) replace the mitre closing — a mitre leaves spikes at
   acute corners that read as sub-gate voids.
+- `references/dfm-printed-enclosure.md` §12 Files: the previous release's "one `<object>` per colour" recipe is withdrawn — the vendor refuses
+  it as multiple shells; one watertight mesh with per-triangle colours replaces it.
 
 ## 0.11.5 — 2026-10-05 — Colour inserts, the vendor's map at the gate, and the fab's second round
 

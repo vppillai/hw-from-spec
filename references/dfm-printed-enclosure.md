@@ -558,12 +558,18 @@ duplicate-aware SafeLoader and fail on a duplicate. Prove byte identity before c
   mating cover) the edge needs host wall ≥ gate + glue gap + insert land ≥ gate (2.7 mm on a 1.2 process). When the span is shorter, the host
   carries the wall and the insert's features **run out through its edge** (an open-ended dish, a U-notched slot / hole facing the host wall
   across the gap) — a sub-gate land is never the answer. One slit line at the host's foot is clean; a 1.0 land is yellow.
-- **Files**: the FUSED body (colour has no geometry) is what the vendor's analyser, the six-view map and the census see; the **colour 3MF** (3MF
-  core spec: one `<object>` per colour with a `<basematerials>` entry, objects fused in the build, zip entries with a fixed timestamp so the md5
-  is a function of geometry + colours) is the order file — the vendor's form reads the colours (the line thumbnail shows them). The colour-split
-  bodies (the base with 0.3 ink voids, the letter bodies) are **not geometry**: never censused, never a printed piece (the piece-count row counts
-  printed bodies against the decision); route the insert through the inlay path (export + census of the fused body + its order line + its own
-  face renders). Legends are flush colour bodies 0.3 deep at a cap the vendor's smallest-text answer allows (ask before ordering).
+- **Files**: the FUSED body (colour has no geometry) is what the vendor's analyser, the six-view map and the census see; the **colour 3MF** is
+  the order file — and it is **ONE shell per file**: a 3MF with one `<object>` per colour (the earlier recipe) was refused at file review as
+  "multiple shells which cannot be merged automatically — each file could only support 1 part (shell)" **[vendor form, measured]**; flush colour
+  bodies share faces with the base and never overlap it, so nothing merges them. The colour rides on the TRIANGLES of one watertight mesh (3MF
+  core `<basematerials>`, per-triangle `pid` / `p1`). Export it from the CAD's colour-tagged union — OpenSCAD snapshot (worked example):
+  `--backend Manifold -o x.3mf -O export-3mf/color-mode=model -O export-3mf/material-type=basematerial`; the union keeps the coplanar top
+  triangles of a flush colour body with their own colour, so the body's "ink depth" is irrelevant to the vendor (colour is a surface property) and
+  the colour-split bodies need not exist as files. Make it a record: strip the random `p:UUID` and the `CreationDate` (the only non-deterministic
+  bytes), drop the unused default material, fixed zip timestamps; gate rows per file: **shells = 1, watertight, every colour on ≥ 1 triangle,
+  volume = the fused body the vendor analysed** (±0.5 %). Route the insert through the inlay path (export + census of the fused body + its order
+  line + its own face renders). Legends are flush colour bodies at a cap the vendor's smallest-text answer allows — ask the vendor's FILE rule and
+  smallest text before ordering, not after (a refused file costs a day of a 14-day build).
 - **Full-colour line facts (worked example, verify live)**: a minimum BOUNDING BOX of 2 × 2 × 10 mm enforced at the form ("unavailable ... Min:
   2x2x10mm") — a 1.5 mm plate is refused however large its face while a 6 cm³ part with 1.3 walls is accepted, so the "2 mm" on the material page
   is (at least) a part-size rule; the colour material's HDT (80 °C) makes it a room-side cosmetic part only; a full-colour line sets the WHOLE
@@ -572,6 +578,19 @@ duplicate-aware SafeLoader and fail on a duplicate. Prove byte identity before c
 - **A pocket deepened on one face lives over whatever is cut from the other face** (a plate pocket over magnet pockets: 2.9 − 2.1 = 0.8; the census read 0.91); a
   pad under such a pocket stops at the inner wall faces (it met the side vent slots) and starts where it fuses with the neighbouring bosses
   (0.3–0.5 behind a boss is a void); a chamfered pad outline meets the wall at a knife angle — plain rectangle.
+- **One legend cap for every label flattens the type hierarchy** (labels / captions / identity) the base design had, and the owner reads the
+  face as "all too big and cluttered" (3.0 caps in 4 mm rows leave 1 mm of air): keep `cap` and an identity `cap_id` in the legend block. A cap
+  CHANGE re-admits labels the fit filter had dropped silently (port names, a subtitle, a field label), and the ones placed for the host FACE hang
+  over the INSERT's edge (the insert is a clearance narrower per side): the builder reads the PIECE's land, never the face's, and the
+  "dropped for lack of land" list is read after every cap change.
+- **Switch-well layout rule (colour legends; the floor beside a slot end is ~4.5 mm)**: position words in TWO common columns in line with the
+  slot (left words right-aligned at slot x0 − gap, right words left-aligned at slot x1 + gap + a triangle's width where a default marker sits),
+  ONE cap per row = the largest in `cap_pos … cap_pos_min` (1.9 → 1.6) that fits BOTH words; when a word fits nowhere beside the slot, BOTH
+  words go in the band ahead of the slot over their own ends and the name caption is dropped (`AUTO | MAN` is the function); the first slot has
+  no band ahead of it and no caption. Never a rotated column of stacked words (it reads as one word). A marker legend reads in the marker's
+  direction (`▸ = DEFAULT`, never `= START ▸`). Prototype a layout change by editing the item rows of the SCAD of record in a scratch copy
+  (sizes / positions only, rendered from inside the output folder so relative imports resolve) and show a before / after sheet in the reader's
+  orientation — owner rounds then cost minutes and the builder changes once, after the pick.
 - **A debossed logotype never passes a 1.2 land rule at any width** (the letters kiss or run 0.2–0.6 apart; the gaps scale with the cap, the
   land does not): the mark alone, eroded by the gate/2, passes; a logotype is a colour body or a plate.
 
