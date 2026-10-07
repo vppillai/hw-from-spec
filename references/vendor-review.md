@@ -59,6 +59,12 @@ any mark-shaped body or pocket: `scripts/thin_wall_check.py --pinch <stl>`, web 
   the colour / special lines one by one); a refusal (a full-colour line below its minimum bounding box) appears only as a notice at Save. The
   moment the owner reports the order id, read the order-detail page and record every line id with its file and md5 — the user-center pages
   may not screenshot through the browser bridge; capture their text instead.
+- **A print-orientation PICTURE goes with every print order**, not a remark ("top face up" drew "please provide the picture to show how to place
+  the part for printing" at file review): one tile per line — the body exactly as its uploaded file is framed (print frame: Z = build direction,
+  a grey plate at Z 0, a red Z arrow), captioned with the order line id, the file name and how it sits (sole down, skirt down, colour face up),
+  all tiles on one sheet. Render the body ALONE (a `colour = all` preview of a shell draws the fitted insert inside it, which the vendor does not
+  print with the shell); the sheet is re-cut whenever a line's file changes. The colour-file rule the same review enforces (one shell per file)
+  is `dfm-printed-enclosure.md` §12 Files.
 
 ## 5. PCBA fab after the order: the engineer's questions (polarity, placement, "is it okay to proceed?")
 The assembly fab's engineer mails a numbered question with its own "corrected part placement" snapshots (top and bottom renders of the board as the
@@ -87,6 +93,12 @@ drafts it into the record.
   shows, asks the fab to **state the cathode position in words**, attaches THEIR picture marked (red = as drawn, green = required), and
   re-asks every confirmation the fab skipped (hole tolerances). Production is released only on a picture or a sentence that shows the change;
   the arrival checklist checks those parts first either way.
+- **Round 3 — the fab answers with pictures, not words.** After "please confirm in words … and send a picture that shows it" the third render
+  came with the marks moved (and the refdes labels turned back) and still no sentence; three rounds for one rotation is the normal cost. Each
+  round: crop the queried parts from every round so far at 4×, side by side with their titles, and read the pad marks against the board file;
+  release production on the picture that shows the change. The inline images in a reply thread are often YOUR OWN pictures quoted back —
+  compare their md5 against your attachments before analysing anything; the fab's new content is in the attachments of the latest mail. Once
+  the blocking item is settled, re-ask the skipped confirmations (hole tolerances) "for our records — production does not need to wait".
 
 ## 6. The fab's production-file package ("please review the production file")
 The package the fab sends back is its CAM output, not your upload: production Gerbers (often inch 2.6, one file per layer plus drill map, rout

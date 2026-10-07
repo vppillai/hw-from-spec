@@ -1,6 +1,6 @@
 ---
 name: hw-from-spec
-version: 0.11.5
+version: 0.11.6
 description: Run a hardware project (a PCB, a printed or CNC enclosure, or both — scope chosen at kickoff; contract fab such as JLCPCB) from a written specification to a production cut with an owner-gated, generated-only, blind-reviewed workflow — a kickoff questionnaire that asks every owner decision up front with recommended answers, a zero-warning manufacturability bar, and a retro that folds each project's learnings back into the skill. Use this whenever someone starts a board or enclosure project from a spec, asks to set up gates, a decision log, generators, part verification, a fab DFM mirror, a case pipeline, FEA, blind reviews, a release report or a production cut for one, or resumes such a project, or wants the skill improved from a finished project — even if they only say "new KiCad board", "order this at JLC", "review the layout", "cut the release" or "what did we learn".
 ---
 
@@ -409,7 +409,9 @@ folder `70-release/<rev>/records/`** (the cut yaml's `records_dir`; RELEASE_NOTE
   via treatment in the order remark, arrival-checklist §A rows A-0 / A-5 (`references/vendor-review.md` §7). The fab's second round ("we
   updated the DFM") is pixel-diffed against the first before any answer; an ambiguous picture gets a request to state the change, never a release.
   [mech, both] A **colour / cosmetic insert** is the whole functional face, its edge is budgeted and it goes through the inlay path
-  (`references/dfm-printed-enclosure.md` §12); a wall AT the vendor's gate reads yellow — `design_margin` ≥ 0.3 and the six-view read of §7
+  (`references/dfm-printed-enclosure.md` §12); its colour file is ONE shell with the colours on the triangles (never one object per colour), its
+  legends keep a cap hierarchy and the switch-well layout rule of §12, and a print-orientation sheet goes with every order line
+  (`references/vendor-review.md` §4); a wall AT the vendor's gate reads yellow — `design_margin` ≥ 0.3 and the six-view read of §7
   step 4 is the gate (§13).
 - **Illustrated assembly guide** [mech, both] beside the text SOP: `scripts/assembly_guide.py` (authored short yaml + generated step text + one keyed render per
   page, `--check`), registered as a cut deliverable (`references/release-and-cut.md` §8).
