@@ -46,6 +46,10 @@ recorded md5 in `checks/`). Everything under the set is generated; `ASSEMBLY.md`
   removed solid → the flag implies a `board_stl.ignore` connected component inside the part's yaml box; "0 components matched = WARN" tells you when
   model and flag disagree.
 - "Silk-only hop" describes the last commit, not the distance from the mesh's board: check footprint positions per refdes between the two boards.
+- **Board body for a dummy / fit input**: `kicad-cli pcb export stl --board-only --no-components` writes the outline exactly (drill holes included)
+  but at the stackup CORE thickness (1.46 for a nominal 1.6 board — copper and mask are not in the body) **[K]**: scale Z to the nominal thickness,
+  and to the fab's upper tolerance (1.7) for the fit check. Prefer this export to redrawing the outline — a hand-drawn fillet construction sat
+  0.36 mm off at two corners; compare two outlines by subtracting each from the other with a 0.01 margin in OpenSCAD, both ways, both empty.
 
 ## Presets (print targets)
 - `case.presets.<name>.overrides` deep-merged into `case:` BEFORE any module reads the yaml (generator, drawing, FEA all apply the same merge —
@@ -114,6 +118,12 @@ owner addition arrives. Budget the bump before promising "full release pipeline"
 ## Interference / clearance
 - Voxel/containment first, CGAL boolean only on flagged pairs (minutes per piece otherwise). Whole-piece overlaps empty except designed preloads.
 - Guard rows: "board md5 = recorded, mesh md5 = recorded" must be OK or the whole check is about another board.
+- **Fit test on the EXPORTED meshes by boolean** (never on the design modules): import the STL / 3MF bodies into OpenSCAD at their use positions,
+  `intersection()`, `--export-format binstl`; "Current top level object is empty" on stderr = no interference. Clearance ≥ c: intersect the case
+  with the part grown by `minkowski(part, cube(2c, center=true))`, lifted by c + 0.01 so a face the part rests on (floor, shoulder) is not
+  counted. Two controls or the check has no teeth: a NEGATIVE control (grown by more than the design gap must be NON-empty) and a TOUCH control
+  (a mating part lowered by 0.05 must intersect — the part seats where designed). A zero-volume intersection (coplanar resting faces) is contact,
+  not interference: measure the intersection's volume (signed tetrahedron sum over the STL) before a FAIL **[K]**.
 - Every envelope (connector housings, cage, heat sink, fan, inserts, screws) is a yaml box; the census asserts each is either inside a piece or in
   a declared cut-out.
 - Planar linkages (mech): the body levels are a graph colouring — sweep every body pair over the full cycle, edge = an in-plane crossing, levels =
