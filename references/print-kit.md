@@ -4,8 +4,9 @@ A kit is reviewed as a technician receives it — no repo, no git — and the tw
 rules are FAIL-gated where a generator can check them; the numbers quoted are one kit's and stand for the mechanism.
 
 ## 1. One entry point: a generated `START_HERE.md` at the top of the kit
-The kit is a folder of the repo, `50-kits/<kit>/`, one per print target, named by the `print_targets` key it prints for (`home_fdm`; a second kit
-for the same printer adds what it prints: `home_fdm_caps`), no version in the name: the version is a line in START_HERE and in every sheet). Inside: `START_HERE.md` at the root, `plates/` (every `.3mf` with its
+The kit is a folder of the repo, `50-kits/<kit>/`, one per print target. Its name is the `print_targets` key it prints for (`home_fdm`). A second
+kit for the same printer adds what it prints: `home_fdm_caps`. The name carries no version: the version is a line in START_HERE and in every
+sheet. Inside: `START_HERE.md` at the root, `plates/` (every `.3mf` with its
 `.3mf.json` sidecar), `parts/` (the STL set of this kit, copied from `40-case/<set>/parts/` and md5-checked), `sheets/` (print sheets, coupon and
 dummy READMEs, the assembly sequence). The generators write here directly; `~/Downloads/<project>_kits/<kit>/` is a byte-identical mirror the
 collateral gate checks. One current kit per target: a superseded kit folder outside the repo receives a one-line `SUPERSEDED.md` pointing at the
@@ -19,12 +20,16 @@ sidecars, prose from the knobs, nothing typed**. Four blocks, in this order:
    board dummy → tray → body → hood (option A plates / option B AMS: *choose ONE*, one line) → legend plate → fixture → caps (bracket → coupon →
    plate). Each check is a pass/fail sentence and says what to do on FAIL ("stop and report"); the coupon row states the gate explicitly
    (*print on, the answers only tune the legend plate* or *stop until the regenerated kit arrives*). Total printer time per option.
-3. **Assembly sequence**, numbered, with the order-critical facts (§2): supports out → drill the bores → inserts from the pillar ENDS (body upside
-   down) → dry-fit body on tray → screws → **magnets dry, then CA** → legend plate (CA) → hood plate (CA on the lands only) → fixture = real
-   board only → **feet LAST** over the screw counterbores (a foot fitted early is peeled and wasted).
-4. **Report-back table** with **numeric pass criteria per interface** (body-on-tray play ≤ 0.3 at the seam; plates ≈ 1.2 proud, LED holes
-   concentric; hood pulls itself down at both magnet pairs and holds upside down; a cap mouth within its tolerance window by calliper; coupon:
-   which cap / stroke reads) **and a recipient** ("reply in the project chat" / a name). A kit without a recipient gets no answer.
+3. **Assembly sequence**, numbered, with the order-critical facts (§2). The order: supports out → drill the bores → inserts from the pillar
+   ENDS (body upside down) → dry-fit body on tray → screws. Then: **magnets dry, then CA** → legend plate (CA) → hood plate (CA on the lands
+   only) → fixture = real board only → **feet LAST** over the screw counterbores. A foot fitted early is peeled and wasted.
+4. **Report-back table** with **numeric pass criteria per interface** **and a recipient** ("reply in the project chat" / a name). A kit
+   without a recipient gets no answer. The criteria:
+   - body-on-tray play ≤ 0.3 at the seam;
+   - plates ≈ 1.2 proud, LED holes concentric;
+   - hood pulls itself down at both magnet pairs and holds upside down;
+   - a cap mouth within its tolerance window by calliper;
+   - coupon: which cap / stroke reads.
 
 Rules the entry point makes checkable:
 - **Print-sheet names = project-file names** (`PRINT_SHEET_<piece>.md` names its `.3mf`; sheets called `shell` / `plate_ui` for projects called
@@ -34,8 +39,8 @@ Rules the entry point makes checkable:
   README, sheets, coupon README, START_HERE, the clearance-count rows. A typed "6 inserts, 2 in the hood bosses" survived two fastener changes and
   would have put a heat-set insert into a Ø6.1 magnet pocket.
 - **Parts are named by the mark pressed into them, never by the generator's body id.** The yaml key, the CAD module and the STL name are the
-  engineer's; the technician sorts a pile by the marks on the parts, and a mark can differ from the body id for a reason of its own (a glyph the
-  census rejects is replaced by one it passes). Every display name — START_HERE, sheets, the assembly guide's part cards and steps — is derived
+  engineer's. The technician sorts a pile by the marks on the parts. A mark can differ from the body id for a reason of its own: a glyph the
+  census rejects is replaced by one it passes. Every display name — START_HERE, sheets, the assembly guide's part cards and steps — is derived
   from the marks table, kept in ONE place; a mirror body (`dfm-printed-enclosure.md` §1.5) carries a DISTINCT mark and is listed under it, one line
   per hand. The kit text gate (§3) treats a bare body id in owner text as a hit.
 - Technician-facing remedies are "report X to the engineer", never a yaml edit or a D-/CC- id. Both board-dummy variants shipped → say which to
@@ -66,25 +71,28 @@ START_HERE, every print sheet, the generated ASSEMBLY.md and every folder README
 README a repo path is allowed, every other class still fails); the run FAILS on a hit; the row is in the census record.
 
 ## 4. Coupon, ONE part, then the plate
-- Every plate carries a sidecar `<plate>.3mf.json` beside it with at least `print_time_s` (int), `filament_g` (float), `objects` (the slicer's
-  object list), `stl_md5s` (the md5 of every STL the plate was sliced from — its identity against `parts/`) and `case_version`, and when known
-  `filament_changes` (int), `proves` (what printing it settles: fit, legend, colour path) and `order` (print order within the kit, 1 = first). A plate
+- Every plate carries a sidecar `<plate>.3mf.json` beside it. The sidecar holds at least `print_time_s` (int), `filament_g` (float), `objects`
+  (the slicer's object list), `stl_md5s` and `case_version`. `stl_md5s` is the md5 of every STL the plate was sliced from: its identity against
+  `parts/`. When known, the sidecar also holds `filament_changes` (int), `proves` (what printing it settles: fit, legend, colour path) and `order`
+  (print order within the kit, 1 = first). A plate
   whose `.3mf` is missing, whose sidecar lacks the required keys or whose `stl_md5s` are not in `parts/` is listed as BROKEN. `scripts/now_pages.py` derives `00-now/WHAT_TO_PRINT.md` from these sidecars alone — a plate without a sidecar
   does not exist to the reader.
 - Coupons and bracket variants carry their identifier and tested value as printed text on the part (dfm-printed-enclosure.md
   "Coupons are self-documenting"); START_HERE refers to them by that printed text, not by slicer object names.
 - A mark coupon proves GEOMETRY and first-layer behaviour, not the thermal state of a 99-minute print (warp, sag on a long span, colour
-  opacity at depth): after the coupon, print **one part** (one cap, one plate) before the multi-object plate; START_HERE says so per step.
+  opacity at depth). After the coupon, print **one part** (one cap, one plate) before the multi-object plate. START_HERE says so per step.
 - **Snug-fit features ship as a bracket plate** (`dfm-printed-enclosure.md` §8.5): for example crush ribs at 0.20 / 0.25 / 0.30, one object each, NAMED
   by its value in the 3MF (no digit deboss — the object name carries it). **The three variants are copies of the part that CARRIES the knob**
-  (three caps with three holes, three sliders with three slots), tried on ONE production-size mating feature — a plate that varies the mating
-  feature instead answers only when the production value happens to lie inside the bracket (the worked example's first plate said "none"; a second plate was needed).
+  (three caps with three holes, three sliders with three slots). The technician tries them on ONE production-size mating feature. A plate that
+  varies the mating feature instead answers only when the production value happens to lie inside the bracket. The worked example's first plate
+  said "none", and a second plate was needed.
   Press / push brackets centre on zero nominal clearance until the printer's hole shrink is measured; variants too small for text sort by SIZE. The technician keeps the one that seats under thumb pressure and
   survives the hang test and reports the value; **the owner picks the knob after that print** (default stays the middle value).
 
 ## 4.1 Slicer-level optimisation (waste / strength / quality) — `references/fdm-print-optimisation.md`
-One table there, every knob with the g-code-derived row that proves it (`purge_g`, `tower_g`, `support_g`, `print_time_s`, `wall_loops` read back);
-the plate yaml's `optimise:` block = the kickoff C11 default set; START_HERE may claim a saving only when the sidecar shows it (the text gate §3).
+One table there lists every knob with the g-code-derived row that proves it (`purge_g`, `tower_g`, `support_g`, `print_time_s`, `wall_loops` read
+back). The plate yaml's `optimise:` block = the kickoff C11 default set. START_HERE may claim a saving only when the sidecar shows it (the text
+gate §3).
 
 ## 5. Records that travel with the kit
 - **Watertight row per exported STL** (a slicer fills or drops a non-manifold feature silently and reports "clean"); a `watertight: false` was

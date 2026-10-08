@@ -4,11 +4,11 @@ Slicer-side knobs buy waste, strength or surface — purging a colour change int
 one home for slicer-side optimisation; the geometry rules stay in
 `references/dfm-printed-enclosure.md` §8 and the kit mechanics in `references/print-kit.md` — both link here, neither repeats a row.
 
-**The rule.** Every knob used is set in the plate yaml (`20-design/bambu_plates.yaml` or the project's equivalent — per plate, or per object through
-the per-object overrides the CLI honours, `dfm-printed-enclosure.md` §8.3), is recorded in the `.3mf.json` sidecar and drift-checked against the
-3MF's embedded `project_settings.config` / `model_settings.config` (`print-kit.md` §5), and is **proven from the g-code / slice report, never from
-the yaml**: the "how proven" column names the derived row (`purge_g`, `tower_g`, `support_g`, `print_time_s`, `wall_loops` read back, a feature
-count inside an object footprint). A knob without its proof row is a wish. Kickoff **C11** (`kickoff.enclosure.optimise`: *speed / strength /
+**The rule.** Every knob used is set in the plate yaml (`20-design/bambu_plates.yaml` or the project's equivalent). It is set per plate, or per
+object through the per-object overrides the CLI honours (`dfm-printed-enclosure.md` §8.3). It is recorded in the `.3mf.json` sidecar. It is
+drift-checked against the 3MF's embedded `project_settings.config` / `model_settings.config` (`print-kit.md` §5). It is **proven from the g-code /
+slice report, never from the yaml**. The "how proven" column names the derived row (`purge_g`, `tower_g`, `support_g`, `print_time_s`,
+`wall_loops` read back, a feature count inside an object footprint). A knob without its proof row is a wish. Kickoff **C11** (`kickoff.enclosure.optimise`: *speed / strength /
 surface / minimal waste*) selects the default knob set (§4); every deviation per plate is a yaml line with the reason.
 
 Key names are Bambu Studio's (02.08 / 2.x); PrusaSlicer's equivalents in brackets where they differ. Sources: Bambu Lab Wiki pages fetched
