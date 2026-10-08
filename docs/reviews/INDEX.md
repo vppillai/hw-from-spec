@@ -2,6 +2,7 @@
 
 | File | Date | Lens | Outcome |
 |---|---|---|---|
+| `blind_review_0.11.13_A.md`, `_B.md` (Agent tool, Claude Opus: A cold user both scopes, B domain expert), `_C.md` (GitHub Copilot CLI, GPT-5.6 Terra, cold user), `_D.md` (GitHub Copilot CLI, GPT-5.4, domain expert), `_brief.md` (the identical briefing), `_verified.md` (Opus verifier with record access) | 2026-10-08 | double-blind review of 0.11.13 (frozen `git archive`, no earlier reviews in the tree); Gemini CLI unavailable (not signed in) | 64 findings: 49 CONFIRMED, 12 PARTLY, 1 ALREADY DECIDED, 2 REFUTED; 24 REQUIRED fixes → 0.11.14; owner decisions listed in `_verified.md` |
 | `blind_review_0.11.0_A.md`, `_B.md` (Agent tool, Claude Opus; A without the mesh libraries, B with), `_C.md` (GitHub Copilot CLI, gpt-5.4), `_verified.md` | 2026-10-02 | the navigable layout release 0.11.0 (branch layout-0.11.0 at 32a0408), checklist-only, three setups | 61 finding ids → 39 merged rows: 20 CONFIRMED (3 BLOCKER, 10 MAJOR, 7 MINOR), 10 PARTLY, 4 ALREADY DECIDED, 5 REFUTED; all CONFIRMED and the MAJOR PARTLY parts fixed before the merge (CHANGELOG 0.11.0 "Review round") |
 | `blind_review_0.10.0.md` | 2026-09-30 | one cold user, both scopes, repro commands only | see the file (findings numbered, dispositions per finding) |
 | `AUDIT_0.10.0.md` | 2026-09-30 | whole-skill audit: duplication, stale mentions, residue, scripts, evals, smoke, workflows, voice | findings with file:line; §9 dispositions; two lints added (`doc_voice_lint.py`, `generic_lint.py`) |
