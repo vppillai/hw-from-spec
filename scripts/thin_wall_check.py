@@ -5,7 +5,7 @@
       inward ray-cast wall-thickness census: histogram (mm bins) + clusters of thin samples (n, min, median, n_red, bbox) so a heat-map colour
       becomes a number and a named feature. Needs trimesh + numpy at run time. The GATE form (wall / wedge classification, outward void rays,
       --json record + a pure --gate-dir for the adopt list) is `scripts/thin_wall_census.py` — use that to gate a body; this mode stays a quick look.
-  scripts/thin_wall_check.py --pinch PIECE.stl [--z Z] [--close 0.05] [--path-frac 0.05] [--merge 3.0] [--web D] [--clip R]
+  scripts/thin_wall_check.py --pinch PIECE.stl [--z Z] [--close 0.05] [--path-min 0.5] [--merge 3.0] [--web D] [--clip R]
       POINT CONTACTS of a mark-shaped body: section the piece at Z, take the outline, report non-adjacent boundary vertices closer than --close
       (a potrace path of touching shapes pinches to 0.003–0.03 mm; a ridge / distance-transform "thinnest arm" census cannot see it). With --web,
       also the neck each contact would have after a web disc of diameter D clipped to the outline's closing (offset +R then -R; needs shapely).
@@ -38,9 +38,14 @@ def clusters(points, thick, cell=3.0, red=0.5):
     return rows
 
 
-def pinch_points(coords, close=0.05, path_frac=0.05, merge=3.0):   # ponytail: O(n²) over the vertices; grid-bucket by `close` if outlines exceed ~5 k vertices
+# Arc-length floor of a contact: 0.5 mm = 10 x the 0.05 contact width, the floor print_dfm rule P uses (10 x neck_max) [K]. An absolute floor,
+# not a share of the perimeter: 5 % of a 100 mm outline (20 mm) hid a 3 mm-deep hairline slit that a 20 mm outline showed (review 0.11.13 B-27).
+PATH_MIN = 0.5
+
+
+def pinch_points(coords, close=0.05, path_min=PATH_MIN, merge=3.0):   # ponytail: O(n²) over the vertices; grid-bucket by `close` if outlines exceed ~5 k vertices
     """Point contacts of a closed outline (list of [x, y], last != first): pairs of vertices closer than `close` whose distance ALONG the boundary
-    exceeds `path_frac` of the perimeter (a smoothed tip has close vertices too, but adjacent ones); contacts within `merge` are one.
+    exceeds `path_min` mm (a smoothed tip has close vertices too, but adjacent ones); contacts within `merge` are one.
     Returns [(x, y, gap)] sorted."""
     n = len(coords)
     if n < 4:
@@ -56,7 +61,7 @@ def pinch_points(coords, close=0.05, path_frac=0.05, merge=3.0):   # ponytail: O
             d = math.dist(coords[i], coords[j])
             if d < close:
                 along = cum[j] - cum[i]; along = min(along, per - along)
-                if along > path_frac * per:
+                if along > path_min:
                     found.append(((coords[i][0] + coords[j][0]) / 2, (coords[i][1] + coords[j][1]) / 2, d))
     out = []
     for q in sorted(found, key=lambda q: q[2]):
@@ -145,10 +150,10 @@ def cross_ring_contacts(rings, close, merge):
     return out
 
 
-def pinch(poly, close, path_frac, merge, web, clip):
+def pinch(poly, close, path_min, merge, web, clip):
     geoms = list(getattr(poly, "geoms", [poly]))
     rings = [[list(c) for c in list(g.exterior.coords)[:-1]] for g in geoms] + [[list(c) for c in list(i.coords)[:-1]] for g in geoms for i in g.interiors]
-    found = [c for r in rings for c in pinch_points(r, close, path_frac, merge)] + cross_ring_contacts(rings, close, merge)
+    found = [c for r in rings for c in pinch_points(r, close, path_min, merge)] + cross_ring_contacts(rings, close, merge)
     print(f"outline polygons at the section: {len(geoms)} (a mark-shaped body must be 1); point contacts (< {close} mm, non-adjacent, within and between rings): {len(found)}")
     for x, y, gap in found:
         print(f"   at ({x:.3f}, {y:.3f}) gap {gap:.4f} mm")
@@ -175,7 +180,12 @@ def selftest():
     # adjacent close vertices (a smoothed tip) are not a contact
     tip = [[0, 0], [10, 0], [10, 5], [5.001, 5.0], [5.0, 5.001], [0, 5]]
     assert pinch_points(tip, close=0.05) == [], "adjacent vertices are a tip, not a contact"
-    print("selftest OK (pure core: self-hit discard, histogram, clusters, point contacts on a figure-eight / square / tip, cross-ring contacts — the mesh wrappers need trimesh/numpy/shapely and are not covered here)")
+    # an absolute path floor: a 0.01 mm-wide, 3 mm-deep slit reads one contact at its mouth on a 20 mm AND a 100 mm square (5 % of the
+    # perimeter, 4.3 / 20.3 mm, found the first and missed the second)
+    for L in (20.0, 100.0):
+        sq = [[0, 0], [L / 2 - 0.005, 0], [L / 2 - 0.005, 3], [L / 2 + 0.005, 3], [L / 2 + 0.005, 0], [L, 0], [L, L], [0, L]]
+        c = pinch_points(sq, close=0.05); assert len(c) == 1 and abs(c[0][0] - L / 2) < 0.01 and c[0][1] == 0, (L, c)
+    print("selftest OK (pure core: self-hit discard, histogram, clusters, point contacts on a figure-eight / square / tip, a hairline slit on a 20 and a 100 mm outline, cross-ring contacts — the mesh wrappers need trimesh/numpy/shapely and are not covered here)")
     return 0
 
 
@@ -185,7 +195,7 @@ def main(argv):
     ap.add_argument("--selftest", action="store_true"); ap.add_argument("--json")
     ap.add_argument("--samples", type=int, default=40000); ap.add_argument("--thin", type=float, default=1.0); ap.add_argument("--red", type=float, default=0.5)
     ap.add_argument("--self-hit", type=float, default=0.02); ap.add_argument("--cell", type=float, default=3.0)
-    ap.add_argument("--z", type=float); ap.add_argument("--close", type=float, default=0.05); ap.add_argument("--path-frac", type=float, default=0.05)
+    ap.add_argument("--z", type=float); ap.add_argument("--close", type=float, default=0.05); ap.add_argument("--path-min", type=float, default=PATH_MIN, help="mm along the outline between the two vertices of a contact")
     ap.add_argument("--merge", type=float, default=3.0); ap.add_argument("--web", type=float, default=0.0); ap.add_argument("--clip", type=float, default=0.0)
     a = ap.parse_args(argv[1:])
     if a.selftest:
@@ -195,10 +205,10 @@ def main(argv):
     if a.pinch:
         poly, m = section_outline(a.pinch, a.z)
         print(f"{a.pinch}: bodies {len(m.split(only_watertight=False))} (a mark-shaped body must be 1)")
-        return pinch(poly, a.close, a.path_frac, a.merge, a.web, a.clip)
+        return pinch(poly, a.close, a.path_min, a.merge, a.web, a.clip)
     if a.pinch_polygon:
         coords = json.load(open(a.pinch_polygon))
-        found = pinch_points(coords, a.close, a.path_frac, a.merge)
+        found = pinch_points(coords, a.close, a.path_min, a.merge)
         print(f"point contacts: {len(found)}"); [print(f"   at ({x:.3f}, {y:.3f}) gap {g:.4f} mm") for x, y, g in found]
         if found and a.web:
             need("shapely"); from shapely.geometry import Polygon
