@@ -124,6 +124,15 @@ owner addition arrives. Budget the bump before promising "full release pipeline"
   counted. Two controls or the check has no teeth: a NEGATIVE control (grown by more than the design gap must be NON-empty) and a TOUCH control
   (a mating part lowered by 0.05 must intersect — the part seats where designed). A zero-volume intersection (coplanar resting faces) is contact,
   not interference: measure the intersection's volume (signed tetrahedron sum over the STL) before a FAIL **[K]**.
+- **Fit rows per degree of freedom, not per part.** A fit test that places every part at its NOMINAL position proves nothing about the
+  directions the part can move in. List each part's degrees of freedom in the assembly: shift along each axis, lift, and the 180° turn of a
+  symmetric part (a lid, a cover, a tray). Write one row pair per degree of freedom: a POSITIVE control (moved by less than the designed play:
+  empty) and a NEGATIVE control (moved by more than the play: overlaps the stop meant to catch it). A degree of freedom without a stop is a
+  design defect, not a missing row. A rib BETWEEN parts guides their faces; only a face ACROSS the slot stops a part along the slot **[K]**:
+  boards whose "end ribs" sat between the slots slid 6.6 mm along their length past a 14-row fit test that passed. A symmetric lid turned 180°
+  about Z can seat on the wrong parts (pads over the low slots land on the high parts): the turned pose is a row, or the lid gets a key.
+- **A pocket that opens to air is probed twice**: a body as tall as the inserted part (magnet, insert) at the pocket must be EMPTY, and a thin
+  body just BELOW the designed floor must OVERLAP. A probe taller than the pocket pokes into air and proves nothing about the depth.
 - Every envelope (connector housings, cage, heat sink, fan, inserts, screws) is a yaml box; the census asserts each is either inside a piece or in
   a declared cut-out.
 - Planar linkages (mech): the body levels are a graph colouring — sweep every body pair over the full cycle, edge = an in-plane crossing, levels =
@@ -196,6 +205,14 @@ transform-level rows gate it — pure arithmetic on the placement matrices and t
 ## Drawings
 Silhouettes + sections from the STLs of record (trimesh/shapely), dimension lines carry the yaml numbers (so a yaml change moves the number and the
 geometry together), per-piece and assembly STEP (OCP/cadquery), `--check` = md5 sidecar keyed on the STL md5s. Run AFTER the final STL pass.
+- **Generate the sheet from the exported meshes**: projections and sections through the CAD's own projection of the STL set of record, every
+  number from the parameter block or ONE echo run of the generator, never typed. A self-check on every sheet: each dimension end point lies on
+  the mesh linework within 0.03 mm, and every outer size equals the mesh bounding box. REV from `git describe`; regenerate from a clean tree
+  before release (a dirty tree stamps `-dirty`).
+- Pick each section plane through a plain region of the part: a plane through a scallop or a cut-out draws a seated lid as unseated. One
+  numbering convention for repeated features (slots, ribs) on every view; no text over an arrow.
+- The sheet is reviewed by the double-blind drawing round (SKILL §5): the sheet gets a reader who has nothing else, and a verifier measures
+  every claim on the meshes.
 
 ## Process rules
 - The render + STL + interference chain runs through the job pool (`references/agent-ops.md` §8): previews regenerated on every run on the fast
@@ -211,4 +228,12 @@ geometry together), per-piece and assembly STEP (OCP/cadquery), `--check` = md5 
   (`references/agent-ops.md` §8 items 1 / 6). STL exports of record stay on the preset's `engine:` — the one that passes the mesh gates. Two
   constructs that break watertightness under Manifold: `hull()` of two thin slabs (draw a solid wedge or a bevelled cut instead) and a standing
   D-shaft as D-extrude + cylinder + ramp unions (many shells — ONE cylinder minus bevelled flat cuts is manifold by construction); the watertight
-  row per STL catches both, which is what the engine rule gates on.
+  row per STL catches both, which is what the engine rule gates on. A third: straight rib faces that meet an end plane — the Manifold export
+  carried 20–40 zero-area sliver triangles (trimesh `split`: 41 "bodies", not watertight) where CGAL exported one watertight body in 9 s **[K]**.
+  Removing the degenerate triangles afterwards leaves open edges: post-processing is not a fix, the kernel of record is.
+- **CSG construction order** (OpenSCAD, any CSG tree) **[K]**: (1) a positive feature unioned INSIDE the `difference()` that cuts the cavity is
+  removed by the cut — bosses on a ceiling vanished and their pocket read 0.7 mm deep instead of 3.2. Add positive features AFTER the cut, then
+  cut their pockets through the feature AND the plate it stands on (a pocket cut through the boss only is as deep as the boss is tall).
+  (2) `hull()` of the full-depth cavity outline with a wider rim outline is a DRAFT over the whole depth, not a lead-in chamfer: the mating gap
+  read 0.5–0.6 instead of 0.2. Confine the hull to the last 0.4 mm of the rim. Both traps passed the fit test and print DFM; acceptance rows on
+  the MESH catch them: pocket depth by the two probes of §Interference, cavity width 1 mm above the rim = nominal.
