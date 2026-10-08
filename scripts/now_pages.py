@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """scripts/now_pages.py — the five pages of `00-now/`, each the answer to its own file name, derived from the logs and the kits only:
   WHERE_THINGS_STAND.md   gates (approved / open), the last three landed log entries, the revision + record identity, open blockers
-  BLOCKED_ON_OWNER.md     OPEN decision rows that name the owner, arrival-checklist rows the owner closes, kit fit results still pending
+  BLOCKED_ON_OWNER.md     every OPEN decision row, arrival-checklist rows the owner closes, kit fit results still pending
   WHAT_TO_PRINT.md        one row per plate sidecar under <kits_dir>/<kit>/plates/ (time, grams, changes, what it proves, case version), in print
                           order; a row is BROKEN when its .3mf or the kit's START_HERE.md is missing, a required key is absent, or an stl_md5s
                           entry is not a part of the kit
@@ -94,7 +94,7 @@ def where(P):
 def blocked(P):
     L = head("Blocked on the owner")
     _, d = table(P.path("decisions"))
-    dec = [r for r in d if len(r) > 3 and "OPEN" in r[2].upper() and "owner" in r[2].lower()]
+    dec = [r for r in d if len(r) > 3 and re.match(r"\**OPEN", r[2].strip(), re.I)]   # OPEN = needs the owner (DECISIONS.md legend)
     L += ["## Decisions waiting for the owner", ""]
     L += [f"- {r[0].strip('* ')}: {r[3]} — answer in `{rel(P, 'decisions')}`" for r in dec] or ["- nothing"]
     own = [r for r in arrival_rows(P) if not str(r.get("status", "")).upper().startswith(CLOSED) and "owner" in (str(r.get("item", "")) + str(r.get("opens", ""))).lower()]
@@ -200,7 +200,7 @@ def selftest():
     w = lambda p, t: (os.makedirs(os.path.dirname(p) or ".", exist_ok=True), open(p, "w", encoding="utf-8").write(t))
     w("project.yaml", "project: {name: t, scope: both, revision: rev0}\narrival_checklist: {yaml: 20-design/arrival_checklist.yaml}\nkickoff: {enclosure: {fit_result: 'pending: bracket print'}}\n")
     w("90-log/GATES.md", "# G\n| Gate | Meaning | Prerequisites | Owner approval |\n|---|---|---|---|\n| **G0** | spec | x | owner, 2026-01-01, SPEC r1 |\n| **G1** | sch | y | _not yet approved_ |\n")
-    w("90-log/DECISIONS.md", "| ID | Date | Status | Topic | Proposal | Reason |\n|---|---|---|---|---|---|\n| **D-07** | d | **OPEN** (owner) | widen root | yes or no | r |\n| CC-010 | d | APPLIED | x | p | r |\n")
+    w("90-log/DECISIONS.md", "| ID | Date | Status | Topic | Proposal | Reason |\n|---|---|---|---|---|---|\n| **D-07** | d | **OPEN** (owner) | widen root | yes or no | r |\n| CC-010 | d | APPLIED | x | p | r |\n| CC-011 | d | OPEN | plain open row | p | r |\n| CC-012 | d | REOPENED later, not OPEN | x | p | r |\n")
     w("90-log/STATUS.md", "# S\n## Log\n**2026-01-01 09:00 — created.**\n**2026-01-02 09:00 — schematic drawn.**\n**2026-01-03 09:00 — layout started.**\n**2026-01-04 09:00 — layout routed.**\n")
     w("90-log/BLOCKERS.md", "| ID | Date | Item | What was tried | Result | Impact |\n|---|---|---|---|---|---|\n| B-01 | d | datasheet page 4 missing | mail | open | none |\n")
     w("20-design/arrival_checklist.yaml", "sections:\n  - key: B\n    rows:\n      - {id: B-1, item: 'switch sense', how: 'continuity', status: TODO}\n      - {id: B-2, item: 'polarity', how: 'Vf', status: 'DONE 2026-01-05'}\n      - {id: E-1, item: 'the owner decides the fit knob', how: 'print', status: TODO, opens: owner}\n")
@@ -222,7 +222,7 @@ def selftest():
     assert wt.index("2026-01-04") < wt.index("2026-01-03") < wt.index("2026-01-02") and "2026-01-01 09:00" not in wt, "last three entries, newest first"
     assert len(wt.splitlines()) < 60
     bl = pages["BLOCKED_ON_OWNER.md"]
-    assert "D-07: widen root" in bl and "CC-010" not in bl and "E-1: the owner decides" in bl and "B-1" not in bl and "pending: bracket print" in bl, bl
+    assert "D-07: widen root" in bl and "CC-011: plain open row" in bl and "CC-012" not in bl and "CC-010" not in bl and "E-1: the owner decides" in bl and "B-1" not in bl and "pending: bracket print" in bl, bl
     tp = pages["WHAT_TO_PRINT.md"]
     assert "| home_fdm | coupon | 10 min | 1.5 g | 0 changes | legend | - | `50-kits/home_fdm/START_HERE.md` | ok |" in tp and tp.index("coupon") < tp.index("| body |"), tp
     assert "| home_fdm | body | 60 min | 12.5 g | 2 changes | fit | v3 | `50-kits/home_fdm/START_HERE.md` | ok |" in tp, tp
