@@ -20,6 +20,20 @@ cd "$R"; git init -q; git add -A; git -c user.name=smoke -c user.email=s@s commi
 git archive HEAD | tar -tf - | grep -qx scripts || { echo "FAIL: the archive must carry the relative scripts symlink"; exit 1; }
 say() { printf -- '\n--- %s\n' "$*"; }
 md5of() { md5of_py "$1"; }
+say "0 layout literals: no pre-layout path (design/, out/) in SKILL.md, references/, templates/; no 0.1 / 0.2 design_margin there or in the smoke yaml"
+"$PY" - "$SKILL" <<'EOF' || { echo "FAIL: a pre-layout path or a design_margin under 0.3 (a line that shows the old layout on purpose carries <!-- legacy-path: ok -->)"; exit 1; }
+import pathlib, re, sys
+root = pathlib.Path(sys.argv[1]); old = re.compile(r"(?<![0-9A-Za-z_/.-])(design|out)/"); margin = re.compile(r"design_margin:\s*0\.[12]\b|\+ ?0\.[12] \(?MJF")
+docs = [root / "SKILL.md"] + [f for d in ("references", "templates") for f in sorted((root / d).rglob("*")) if f.is_file()]
+bad = []
+for f in docs + [root / "smoke" / "project.yaml"]:
+    for n, line in enumerate(f.read_text(encoding="utf-8", errors="replace").splitlines(), 1):
+        if f in docs and old.search(line) and "legacy-path: ok" not in line:
+            bad.append(f"{f.relative_to(root)}:{n}: pre-layout path: {line.strip()[:120]}")
+        if margin.search(line):
+            bad.append(f"{f.relative_to(root)}:{n}: design_margin under 0.3: {line.strip()[:120]}")
+print("\n".join(bad) or "OK: no pre-layout path, no design_margin under 0.3"); sys.exit(1 if bad else 0)
+EOF
 say "0 printed-enclosure DFM contract: the reference carries the measured rules and the census gate selftests without mesh libraries"
 REF="$SKILL/references/dfm-printed-enclosure.md"
 grep -q 'Every parallel-faced wall ≥ `wall_gate`, designed at `wall_gate + design_margin`' "$REF" || { echo "FAIL: $REF lost the wall rule"; exit 1; }

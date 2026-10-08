@@ -4,10 +4,10 @@ The schematic generator is project code (`gen/build_sch.py`); this page fixes wh
 mean the same thing in every project. One generator of record (KiCad 10, sheet fragments instantiated per port) is the worked example; the
 shapes below are the generic contract.
 
-## 1. Design yaml — the minimum a schematic needs (`design/<board>.yaml`, `20-design/parts.yaml`, `design/sheets/*.yaml`)
+## 1. Design yaml — the minimum a schematic needs (`20-design/<board>.yaml`, `20-design/parts.yaml`, `20-design/sheets/*.yaml`)
 
 ```yaml
-# design/<board>.yaml — the root: identity, libraries, sheets, root-level nets
+# 20-design/<board>.yaml — the root: identity, libraries, sheets, root-level nets
 board:
   name: <board>                     # file stem of the generated CAD project (<cad>/<board>/<board>.*)
   title: <one line>  rev: "0"  date: YYYY-MM-DD  paper: A3
@@ -17,12 +17,12 @@ board:
   power_rails: [GND, +3V3, VBUS]    # names that get power symbols / PWR_FLAG handling
   notes: |                          # the root NOTES block (intent, key values, rework links, test points, checklist) — a review reads it
 sheets:                             # one entry per sheet; refdes = sheet × 100 + n; a fragment may be instantiated more than once ({P} prefix)
-  - {no: 1, name: power,  file: design/sheets/power.yaml}
-  - {no: 2, name: channel_a, file: design/sheets/channel.yaml, prefix: CA_}   # one fragment instantiated twice = two generated sheet files
-  - {no: 3, name: channel_b, file: design/sheets/channel.yaml, prefix: CB_}
+  - {no: 1, name: power,  file: 20-design/sheets/power.yaml}
+  - {no: 2, name: channel_a, file: 20-design/sheets/channel.yaml, prefix: CA_}   # one fragment instantiated twice = two generated sheet files
+  - {no: 3, name: channel_b, file: 20-design/sheets/channel.yaml, prefix: CB_}
 nets: {}                            # root-level connections between sheets (hierarchical labels), by REF.PIN: NET
 
-# design/sheets/<sheet>.yaml — one sheet or a reusable fragment
+# 20-design/sheets/<sheet>.yaml — one sheet or a reusable fragment
 title: "{P}channel"                 # {P} = instance prefix; nets without {P} are shared between instances
 groups: [ic, passives, connectors]  # placement groups for the drawer
 components:
@@ -59,14 +59,14 @@ feeds the `netlist_net` checks of `scripts/traceability.py`.
 
 ## 3. Map checks
 
-A "map" is any table in the spec or in `design/` that says which pin, address or connector position carries what: an MCU / bridge GPIO map, an
+A "map" is any table in the spec or in `20-design/` that says which pin, address or connector position carries what: an MCU / bridge GPIO map, an
 I²C address map, a connector pinout, a switch/strap table, a test-point map. **Map checks** = a project script (`gen/check_maps.py --check`) that
 reads every map and the exported netlist and asserts both directions: every map row is present in the netlist as written (net name on that pin;
 address on that device), and every relevant netlist net appears in exactly one map. Output `30-board/layout/check_maps.md` (one table per map: row,
 netlist evidence, OK/FAIL) — a G1 prerequisite in `90-log/GATES.md` and a `gates.adopt` line. A map row the spec names but the design does not
 implement is a CC row (rule 2), not a silent omission.
 
-## 4. The G1 review pack (`out/G1/`, generated, committed)
+## 4. The G1 review pack (`80-reviews/G1/`, generated, committed)
 
 | File | Produced by | Why the reviewer needs it |
 |---|---|---|
@@ -84,7 +84,7 @@ board as MISSING at G1 (no routed board yet) — that is expected and said in th
 
 ## 5. G0 → G1 in order
 
-1. G0 cell written by the owner → 2. `design/*.yaml` from SPEC (every spec value that must change → CC row OPEN first) → 3. `gen/build_sch.py`
+1. G0 cell written by the owner → 2. `20-design/*.yaml` from SPEC (every spec value that must change → CC row OPEN first) → 3. `gen/build_sch.py`
 (`--check` green, ERC zero errors, netlist) → 4. map checks → 5. G1 pack → 6. `scripts/traceability.py` entries for every spec requirement now
 landing in the yaml (stage `schematic`) → 7. freeze, hand-off, blind round (SKILL §5), merged report `80-reviews/G1_merged.md` → 8. REQUIRED
 items applied, regenerate, re-run 3-6 → 9. ask for the G1 cell (SKILL §1.1). Layout CAD starts only after the cell exists.

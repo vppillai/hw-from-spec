@@ -133,7 +133,7 @@ the owner sees the proposed tree. Method: decision row → `reorg:` block → `-
 generated file that embeds paths (never edit them) → `--check` 0 findings → AFTER dump → `--proof BEFORE AFTER REWRITES` (every blob at its mapped
 path with the same sha, or in the rewrite list) → gates → tag. Frozen records keep the old paths (`--map` reads them); an uploaded package's
 generator-owned notes are re-derived, its fab files never rebuilt. URLs into the repo are not rewritten (grep `blob/.*/<old>` by hand). Before a deletion: grep basenames AND exact paths, separate live citations
-(gen/, design/, CI, live docs) from record citations (DECISIONS / STATUS / merged reviews) — treating records as blockers freezes the tree; a
+(gen/, 20-design/, CI, live docs) from record citations (DECISIONS / STATUS / merged reviews) — treating records as blockers freezes the tree; a
 traceability `exists` check on a file that leaves the tree becomes `git show <tag>:<path> | grep -qF '<same string>'`, nothing weakened.
 
 ## 10. The arrival / first-article checklist (`scripts/arrival_checklist.py`) — written at the order, closed as the parts arrive

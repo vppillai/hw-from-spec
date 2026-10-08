@@ -31,8 +31,8 @@ kickoff:                                      # the owner's kickoff answers, mac
     stands_free: {{C12_STANDS_FREE}}          # C12: yes -> a CoG-vs-support-polygon row at the worst pose is a gate (scripts/stability.py) {{mech,both}}
   verification: {rounds: {{E1_ROUNDS}}, visual: {{E2_VISUAL}}, fea: {{E4_FEA}}}   # E1 / E2 / E4
   coupons: {{E3_COUPONS}}                     # E3 {{mech,both}}
-  sourcing: {sources: {{F1_SOURCES}}, stock_floor: {{F2_STOCK}}}   # F1 / F2
-  software: {modes: {{G1_MODES}}, criteria: {{G2_CRITERIA}}}       # G1 / G2 {{ee,both}}
+  sourcing: {sources: {{F1_SOURCES}}, stock_floor: {{F2_STOCK}}, attrition: {{F2_ATTRITION}}}   # F1 / F2; attrition = the run multiplier on qty × boards (F2 recommends 1.2)
+  software: {modes: {{G1_MODES}}, posture: {{G1_POSTURE}}, criteria: {{G2_CRITERIA}}}   # G1 / G2; posture = warn / throttle / refuse (G1 recommends warn + throttle until the criteria are approved) {{ee,both}}
   release: {reports: {{H1_REPORTS}}, cut: {{H2_CUT}}, ci: {{H3_CI}}, retro: {{H4_RETRO}}}   # H1–H4
   identity: {envelope: {{I1_ENVELOPE}}, branding: {{I2_BRANDING}}, delegation: {{I4_DELEGATION}}}   # I1 / I2 / I4
   debug_access: {{I3_DEBUG}}                  # I3 {{ee,both}}
@@ -118,7 +118,7 @@ print_targets:                                # every printed body is censused a
     checker_date: {{DATE}}                    # when checker_url and the numbers above were last read {{mech,both}}
     samples_per_mm2: 10                       # census density (a fixed count under-samples a large part) {{mech,both}}
     post_process: none                        # dye | bead-blast | vapour-smooth | paint — subtracted in the margin, printed on the order sheet {{mech,both}}
-    rating: {ul94: {{UL94}}, tg_c: {{TG}}, source: {{TDS_URL}}}   # printed on the order sheet; owner row "engineering sample" if unrated {{mech,both}}
+    rating: {ul94: {{UL94}}, hdt_c: {{HDT}}, source: {{TDS_URL}}}   # hdt_c = HDT at 0.45 MPa (°C) from the TDS; printed on the order sheet; owner row "engineering sample" if unrated {{mech,both}}
     accepted: []                              # [{class: wall|void|wedge|opp, bbox: [x0,y0,z0,x1,y1,z1], reason, date, evidence}] — the only way a FAIL cluster passes {{mech,both}}
   home_fdm:                                   # the home printer preset (printer-first; mirrors every vendor DFM decision the same day) {{mech,both}}
     vendor: home {{mech,both}}
@@ -135,7 +135,7 @@ print_targets:                                # every printed body is censused a
     tolerance: 0.2                            # hole shrink 0.1..0.3 until the coupon says otherwise {{mech,both}}
     samples_per_mm2: 10 {{mech,both}}
     post_process: none {{mech,both}}
-    rating: {ul94: unrated, tg_c: 55, source: {{TDS_URL}}} {{mech,both}}
+    rating: {ul94: unrated, hdt_c: 55, source: {{TDS_URL}}} {{mech,both}}
     accepted: [] {{mech,both}}
 # home_fdm_colour:                            # OPTIONAL: flush AMS colour bodies (C9 option b) are their OWN print target — the wall gate is the body's thickness, never the host's {{mech,both}}
 #   vendor: home
@@ -143,7 +143,7 @@ print_targets:                                # every printed body is censused a
 #   material: {{FILAMENT}}
 #   printer: {{PRINTER_AND_NOZZLE}}
 #   dfm_process: home_fdm_04_colour_body      # the printability floor for a 2-3 layer body (strokes are walls; print_dfm rule W gates them)
-#   wall_gate: 0.6                            # = the colour body's thickness (3 layers at 0.20) — the census gates the body on itself
+#   wall_gate: 0.4                            # = colour layers × layer height (default 2 × 0.20 = 0.4; 3 layers = 0.6) — the census gates the body on itself
 #   void_gate: 0.9                            # two perimeters: the air gaps between raised strokes (the worked-example printer closed every 0.5–0.6 gap, 2026-10-02); glyph gaps are filled in the polygon ~0.05 over it (the mesh tools read under the polygon)
 #   red_line: 0.4
 #   design_margin: 0.0
@@ -166,8 +166,8 @@ arrival_checklist:                            # written BEFORE the order ships (
 #     docs/production/<md5-8>: 70-release/rev0 # the folder takes the revision name, the hash stays inside
 #     docs/release: 70-release/reports
 #     docs/reviews: 80-reviews
-#     out/<board>/fab/<date>_<md5-8>: 30-board/fab/rev0
-#     out/<board>/mechanical/<set>: 40-case/<set>
+#     out/<board>/fab/<date>_<md5-8>: 30-board/fab/rev0 <!-- legacy-path: ok -->
+#     out/<board>/mechanical/<set>: 40-case/<set> <!-- legacy-path: ok -->
 #   frozen: [60-orders/quotes, '70-release/*/records']   # moved whole, content never rewritten or checked; old or new spelling, `*` = one segment; `--map` explains their paths
 #   allow_missing: ['^60-orders/quotes/', '^70-release/rev[0-9]+/']   # literals allowed to be dangling (dated rows quoting evidence, deliverables named before they exist)
 #   gitignore: ['40-case/*/build/']            # appended to .gitignore by --apply
