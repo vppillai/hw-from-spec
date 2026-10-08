@@ -1,13 +1,13 @@
 # fea-stage.md — structural / thermal checks on the case, the board and the assembly
 
 ## Stack (all pip/brew, verified 2026-09-20/21)
-Gmsh (Python API; boxes, plates from the outline polygon with drilled holes) · **fTetWild** via `wildmeshing` (tetrahedralises OpenSCAD/CGAL STLs
+Gmsh (Python API; boxes, plates from the outline polygon with drilled holes) · **fTetWild** through `wildmeshing` (tetrahedralises OpenSCAD/CGAL STLs
 that Gmsh rejects: overlapping/self-intersecting facets, zero dihedral) · scikit-fem (P1/P2 tets, linear elasticity, heat) · pyamg (SA-AMG + CG for
 > 60k DOF) · trimesh/rtree/shapely (STL load, ray probes, capped crops) · meshio · matplotlib Agg (figures). Optional: cadquery to read vendor STEPs
 for heavy solids (heat sink, cage).
 
 ## Recipe
-1. **Geometry of record**: case STLs of the build of record (after the FINAL `--stl` pass), the board plate from the CAD outline polygon + drills via
+1. **Geometry of record**: case STLs of the build of record (after the FINAL `--stl` pass), the board plate from the CAD outline polygon + drills with
    the CAD's Python in a subprocess, vendor STEP solids where the mass matters. Every case names its inputs; dry-run each case's lookups before a
    long run (a case lost its geometry source silently when a part was removed).
 2. **Mesh**: fTetWild for CGAL STLs, Gmsh for analytic geometry; drop zero-volume slivers, then **compact the node set** (`np.unique(t,
@@ -22,7 +22,7 @@ for heavy solids (heat sink, cage).
    `dfm-printed-enclosure.md` §1) is applied as a factor and stated.
 6. **Report**: FEA_REPORT.md generated with a version-to-version table (previous version's record extracted from the commit that produced it),
    per-case: load, BCs, mesh size, DOF, peak/p99 von Mises, displacement, status, figure paths; composites (undeformed/deformed pairs ≥ 2000 px + 16:9
-   slide variants) from per-case `.npz` sidecars via one shared plotting module.
+   slide variants) from per-case `.npz` sidecars through one shared plotting module.
 7. **Selftest**: a cantilever with the analytic deflection within a few %, a NaN case that must read FAIL, a merge of a subset record.
 
 ## Cases that paid for themselves (worked examples)

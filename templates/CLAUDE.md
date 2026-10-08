@@ -23,9 +23,9 @@ written specification, for fabrication and assembly at {{FAB}}. Humans review at
 5. **Everything is generated, nothing is hand-edited.** CAD files, reports and indexes come from `gen/` scripts reading `20-design/*.yaml`. A review
    finding changes the YAML or the generator, then regenerates. Every generator has `--check` and `--selftest`. Exceptions are logged decision rows
    with a chain-of-record table. Commit after every meaningful step with a descriptive message and explicit paths.
-6. **{{SHEET_AND_REFDES_CONVENTION}}** (e.g. one generated sheet file per instance; refdes = sheet × 100 + n). {{ee,both}}
-6. **{{GEOMETRY_CONVENTION}}** (e.g. one module per piece, presets `base + overrides` deep-merged, a version key per preset, canonical STL export). {{mech}}
-7. **Validate after every generation:** ERC/DRC via the CAD CLI with all severities, zero errors (`references/schematic-phase.md` §2 has the {{ee,both}}
+6. **{{SHEET_AND_REFDES_CONVENTION}}** (for example one generated sheet file per instance; refdes = sheet × 100 + n). {{ee,both}}
+6. **{{GEOMETRY_CONVENTION}}** (for example one module per piece, presets `base + overrides` deep-merged, a version key per preset, canonical STL export). {{mech}}
+7. **Validate after every generation:** ERC/DRC through the CAD CLI with all severities, zero errors (`references/schematic-phase.md` §2 has the {{ee,both}}
    command); `scripts/erc_gate.py 30-board/layout/erc.json` green — a warning passes only through an entry of `20-design/erc_accept.yaml` naming its {{ee,both}}
    decision row (no prose waivers; a GUI exclusion is a hidden waiver and fails). {{ee,both}}
 7. **Validate after every generation:** census `--gate-dir` 0 unaccepted FAIL on every body of every preset, `print_dfm.py --process <row>` PASS on {{mech}}
@@ -42,16 +42,17 @@ written specification, for fabrication and assembly at {{FAB}}. Humans review at
    unaccepted FAIL, `print_dfm.py` PASS, slicer log clean, vendor checker no flag by API read; CNC — vendor DFM clean (`references/dfm-printed-enclosure.md`). {{mech,both}}
 10. **Say what you don't know.** If a datasheet, drawing or page cannot be fetched, mark the item BLOCKED in `90-log/BLOCKERS.md` and continue elsewhere.
 11. **Capture learnings.** Before your final commit, append every non-obvious learning as a dated, domain-tagged line to `90-log/LEARNINGS_LOG.md`.
+12. **Write to the standard.** Every README, record, kit text, vendor reply and chat report follows the skill's `references/writing-style.md`: Google developer style, ASD-STE100 sentences (one instruction per sentence, at most 20 words), Zinsser's clarity, simplicity, brevity and humanity. `scripts/style_lint.py --project .` checks the written files before a gate.
 
 ## Environment (verify on first run, record in 90-log/ENV.md)
 - CAD CLI: `{{CAD_CLI_PATH}}`; CAD Python: `{{CAD_PYTHON_PATH}}`; project venv `.venv` (Python ≥ 3.11) with {{VENV_PACKAGES}}. {{ee,both}}
-- Geometry CLI: `{{GEOMETRY_CLI_PATH}}` (e.g. openscad); slicer CLI: `{{SLICER_CLI_PATH}}`; project venv `.venv` (Python ≥ 3.11) with {{VENV_PACKAGES}}. {{mech}}
+- Geometry CLI: `{{GEOMETRY_CLI_PATH}}` (for example openscad); slicer CLI: `{{SLICER_CLI_PATH}}`; project venv `.venv` (Python ≥ 3.11) with {{VENV_PACKAGES}}. {{mech}}
 - All tool paths live in `project.yaml tools:`; generators read them from there (`scripts/project.py`), never hard-code them.
 - Heavy tools (geometry kernel, slicer, renderer, FEA, the record round) run through `scripts/jobs.sh -- <cmd>` (one pool per machine, sized from
   the host; `make <target>`), never directly — the "Agent operations" block below (`references/agent-ops.md` §8).
 
 ## Agent operations
-- **Heavy jobs only via `scripts/jobs.sh`** (geometry kernel, slicer, headless browser, chains, FEA, `make check`): slot pool = {{JOBS_POOL}}
+- **Heavy jobs only through `scripts/jobs.sh`** (geometry kernel, slicer, headless browser, chains, FEA, `make check`): slot pool = {{JOBS_POOL}}
   (cores // 4), memory floor {{MIN_FREE_GB}} GB, load gate = cores, `nice`; the generators and the Makefile route through it — never a bare
   geometry / slicer / chain call, never a `--jobs` above the pool. Numbers from `scripts/project.py env` (the ENV.md host row).
 - **At most {{JOBS_POOL}} agents writing or running chains at once**; readers are free. Stacked per-tool pools panic the host.

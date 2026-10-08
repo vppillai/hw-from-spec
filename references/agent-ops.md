@@ -52,7 +52,7 @@
   scope per specialty, the known/open list with dispositions, the claims of the round (for a delta audit) — the ONLY briefing. Plus the one-paragraph
   waiver list without reasoning so verifiers spend their budget on new defects.
 - Reviewers never read other reviewers' output nor the author's reasoning (name the forbidden file patterns explicitly in the prompt).
-- External models via the a second agent CLI agent CLI: `agent -p --mode ask --model <m> --output-format text "<prompt>"` from the frozen worktree (ask/plan
+- External models through a second agent CLI: `agent -p --mode ask --model <m> --output-format text "<prompt>"` from the frozen worktree (ask/plan
   modes are read-only; `-p` alone has shell access — never for reviews); prompt ≤ ~30 kB naming the files (the model reads them; observed CLI
   limit, unversioned); packet ceiling ≈ 440 kB (observed: the CLI returns 0 bytes above it); rotate two vendors per role; an EMPTY report is a
   failure → retry once with the fallback model, note the substitution, else write the failure into the report and return zero findings. macOS has
@@ -102,6 +102,9 @@
   owner addition arrives through the coordinator.
 
 ## 6. Reporting
+- Every report, record and README follows `references/writing-style.md`: lead with the result, second person, active voice, present tense,
+  one instruction per sentence, at most 20 words in an instruction, plain words, no Latin abbreviations. `scripts/style_lint.py --project`
+  checks the written files; the chat report follows the same rules by hand.
 - Report before/after per class, not one number (a repo-wide grep count is not a work estimate).
 - "Already done by <agent>" in the manifest instead of editing twice; re-read each target line before editing on a multi-agent day.
 - Numbers in a record carry the mode they were measured in (check mode vs full run) and the file md5 they refer to.

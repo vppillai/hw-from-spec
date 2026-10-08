@@ -171,7 +171,7 @@ re-asserts each one every run; the merge lists every acceptance added per round.
 per surprise; not recommended.
 **D2 What may be waived (default: nothing).** **RECOMMENDED: nothing — an item is fixed through the generator, or a dated `accepted` / `dfm_accepted`
 entry with the vendor's written acceptance is the only exception, per refdes / per cluster, listed in the merge.** *Alt:* a named class waived
-(e.g. the fab's "sharp trace corner" presence check) — one decision row per class with the vendor's statement. *Alt:* prose waivers — forbidden
+(for example the fab's "sharp trace corner" presence check) — one decision row per class with the vendor's statement. *Alt:* prose waivers — forbidden
 (a waived sub-minimum lip cracked on every part of one order).
 **D3 Design margin and tolerance source per target** [mech, both]. **RECOMMENDED: walls at the checker's line + 0.1 (MJF), first-article caliper table
 replaces the vendor's published tolerance after the first order, INFO until then** — no "PASS by design". *Alt:* design at the line — the mesh
@@ -179,7 +179,7 @@ samples 0.01 under and the argument is lost. *Alt:* + 0.3 everywhere — heavy, 
 
 ## E. Verification (SKILL §5, `references/pcb-layout-dfm.md`, `references/dfm-printed-enclosure.md`)
 **E1 Review rounds per gate.** **RECOMMENDED: one review round (in-session + two external models per role, adversarial verifiers, merge) before
-G0, G1, G2, the board order and the case order; a delta audit after a bounded change** — external models via a read-only CLI. *Alt:* in-session
+G0, G1, G2, the board order and the case order; a delta audit after a bounded change** — external models through a read-only CLI. *Alt:* in-session
 only — same model family, weaker; say so in the merged report. *Alt:* owner review only — no blind pass; the owner reads every heat map.
 **E2 Visual inspections.** **RECOMMENDED: routing inspection on ≥ 40 px/mm tiles, silk legibility read from renders, six face renders per printed
 body incl. the sole, every designed asymmetry rendered and listed** — geometry-only checks passed blank bars and mutilated words. *Alt:* renders
