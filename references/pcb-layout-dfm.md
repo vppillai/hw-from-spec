@@ -4,7 +4,7 @@ Every quantitative rule below carries one of four tags, so a reader knows what m
 
 | Tag | Meaning | What changes it |
 |---|---|---|
-| **[checker]** | what the fab's DFM viewer or the CAD DRC grades (a number the mirror reproduces) | the fab changes its viewer → re-copy `design/dfm_thresholds.json` |
+| **[checker]** | what the fab's DFM viewer or the CAD DRC grades (a number the mirror reproduces) | the fab changes its viewer → re-copy `20-design/dfm_thresholds.json` |
 | **[fab capability: URL, date]** | a published limit of the fab, fetched live and dated | the fab's capability page → re-fetch before every quote |
 | **[physics]** | a material or process fact independent of the vendor | never silently; a decision row with a source |
 | **[owner choice]** | a bar the owner set (recorded as a D row from the kickoff questionnaire) | the owner |
@@ -19,14 +19,14 @@ warning threshold as Warning) — limit + 0.01 mm for copper rules, one full ste
 
 | | |
 |---|---|
-| **Inputs** | the G1 schematic of record (yaml + generated CAD), `design/<board>_board.yaml` (outline, stack-up, design rules, net classes, keep-outs, `dfm_accepted`), `design/placement.csv`, `design/dfm_thresholds.json`, the fab's rotation table (`design/<fab>_rotation.yaml`) |
+| **Inputs** | the G1 schematic of record (yaml + generated CAD), `20-design/<board>_board.yaml` (outline, stack-up, design rules, net classes, keep-outs, `dfm_accepted`), `20-design/placement.csv`, `20-design/dfm_thresholds.json`, the fab's rotation table (`20-design/<fab>_rotation.yaml`) |
 | **Generators (project `gen/`)** | `place_pcb` (placement CSV → footprints, rule areas, canary) → router (`route_*`, the router session file is the record) → post-pass (stub snap, staircase merge — scripted, never hand edits) → `silk_pass` → `export` (Gerbers/drill/pos, DRC json, parity, route quality, DFM items) → `panelize` → `fab_package` |
-| **Outputs** | `30-board/kicad/<board>/<board>.kicad_pcb` (board of record, md5 keys everything), the router session (`*.ses`/`*.dsn`), `out/G2/` review pack (§1.3), `out/dfm_items.json` + `out/dfm.json`, `30-board/fab/<rev>/` package (board_id.txt carries the md5) |
+| **Outputs** | `30-board/kicad/<board>/<board>.kicad_pcb` (board of record, md5 keys everything), the router session (`*.ses`/`*.dsn`), `80-reviews/G2/` review pack (§1.3), `30-board/layout/dfm_items.json` + `30-board/layout/dfm.json`, `30-board/fab/<rev>/` package (board_id.txt carries the md5) |
 | **Gate** | SKILL §6 adopt rule: DRC 0 errors / 0 unconnected, **0 warnings unless a dated waiver row** (§9), schematic parity 0, canary fires exactly once, route quality 0 unjustified HIGH, fab DFM mirror 0 open, silk check 0, every `--selftest` / `--check` green, clone gate on `git archive HEAD`, visual inspection round merged |
 | **Decider** | the owner writes the G2 cell after one review round (`board` role set + `routing-inspection.js`) is merged; the agent asks (SKILL §1.1) |
 
 ### 1.1 Placement CSV **[convention]**
-`design/placement.csv`: `ref, x, y, rot, side, locked, group, note` — mm in the board frame (origin the drill/place origin, Y up), rotation CCW
+`20-design/placement.csv`: `ref, x, y, rot, side, locked, group, note` — mm in the board frame (origin the drill/place origin, Y up), rotation CCW
 degrees, `side` = top/bottom, `locked` = the part is fixed for the router, `group` = the placement cluster (connectors, power, mcu, …). The
 generator refuses a refdes missing from the schematic or a part outside the outline; a part the spec pins (connector positions, mounting holes,
 the cage) is `locked: true` with the spec section in `note`. Placement is regenerated from the CSV — the CAD GUI is never the source.
@@ -36,7 +36,7 @@ The routed board + the router's session file (Freerouting `.ses` with its `.dsn`
 never re-run to reproduce them (deterministic only with one thread and the same inputs). Re-import (`--import-ses`) is the replay. Keep-outs and
 net classes must be exported into the router input — grep the DSN for them after any flag change (`references/pitfalls.md` kicad).
 
-### 1.3 The G2 review pack (`out/G2/`, generated, committed)
+### 1.3 The G2 review pack (`80-reviews/G2/`, generated, committed)
 | File | Produced by | Why the reviewer needs it |
 |---|---|---|
 | `<board>.kicad_pcb` md5 + `board_id.txt` | export | identity: the board of record |
@@ -52,7 +52,7 @@ net classes must be exported into the router input — grep the DSN for them aft
 ## 2. Stack-up and copper weight
 - **Stack-up = the fab's named template, copied into the CAD's physical stack-up** **[fab capability]**: the fab publishes templates per
   layer count / thickness / outer / inner copper (JLC 2026-09-13: `JLC04162H-7628` = 4 layers, 1.6 mm, 2 oz outer, 0.5 oz inner, 7628 prepreg
-  0.2104 mm, core 1.065 mm, Dk 4.4 / 4.6; total 1.656 mm). Record the template name in `design/<board>_board.yaml` and on the order sheet;
+  0.2104 mm, core 1.065 mm, Dk 4.4 / 4.6; total 1.656 mm). Record the template name in `20-design/<board>_board.yaml` and on the order sheet;
   the same template is selected on the quote form.
 - **Copper weight is an owner choice with consequences** **[owner choice]**: heavier outer copper (2 oz) buys current capacity and costs
   minimum trace/space (JLC: 0.15/0.15 at 2 oz vs 0.09/0.09 at 1 oz), mask dam width (0.20 vs 0.10) and the fab's impedance calculator support
@@ -67,14 +67,14 @@ net classes must be exported into the router input — grep the DSN for them aft
   requirement per net class in the spec (`R-Exx: 90 Ω ±10 % differential`), or the row "no controlled impedance — every pair < N cm" as a D row.
 - **Recording the calculation** **[convention]**: the CAD's calculator on the fab's stack-up (coupled microstrip / stripline with the mask
   layer), cross-checked by the fab's own calculator where it supports the copper weight; the result (w / s / layer / reference plane / Z / tool)
-  is a row in `design/<board>_board.yaml net_classes` with the source, and the pack quotes it. Keep w ≥ 0.20 mm so the fab's ±20 % width
+  is a row in `20-design/<board>_board.yaml net_classes` with the source, and the pack quotes it. Keep w ≥ 0.20 mm so the fab's ±20 % width
   tolerance **[fab capability]** stays inside ±10 % Z.
 - Differential rules the CAD enforces: pair gap, uncoupled length ≤ N mm, skew ≤ N mm, no via stubs on the pair, reference plane continuous
   (an In2 signal over an In1 antipad edge is a route-quality HIGH, §10). Impedance control is an order option **[fab capability]**: ask for it
   on the quote form; if the form refuses it for the copper weight, that is a decision row, not a silent drop.
 
 ## 4. Trace / space / via / annular / drill minimums vs the fab table
-Copy the fab's table into `design/dfm_thresholds.json` (source URL + date) and design strictly greater **[checker]**. Worked example
+Copy the fab's table into `20-design/dfm_thresholds.json` (source URL + date) and design strictly greater **[checker]**. Worked example
 (JLCPCB, 2 oz outer, multilayer, 2026-09-13) **[fab capability]**:
 
 | Rule | Fab limit | Design value (limit + margin) |
@@ -99,7 +99,7 @@ Copy the fab's table into `design/dfm_thresholds.json` (source URL + date) and d
 ## 6. Thermal reliefs and teardrops
 - **Thermal reliefs** **[physics + owner choice]**: on PTH pads into pours always (a solid connection wicks heat from the joint and tombstones
   a hand-soldered pin); on SMD pads into pours the default is solid for power/GND pads under ICs (thermal path) and relief spokes on small
-  passives (reflow balance) — record the choice per zone in `design/<board>_board.yaml zones`, with spoke width ≥ the track minimum + margin.
+  passives (reflow balance) — record the choice per zone in `20-design/<board>_board.yaml zones`, with spoke width ≥ the track minimum + margin.
   A class clearance larger than the fill's zone clearance is unenforceable — write the as-built geometry into scoped rules
   (`references/pitfalls.md` kicad).
 - **Teardrops** **[owner choice]**: on at the track/pad and track/via junctions of the fine-pitch escape when the ring is at the fab minimum
@@ -146,7 +146,7 @@ Defaults the questionnaire proposes:
   Y up, rotation **CCW positive viewed from the top**, bottom rows `(180 − rotation) mod 360`; BOM `Comment, Designator, Footprint, <fab part
   field>`; DNP excluded from both; **the generator hard-fails on an empty fab-code field on a fitted part — never falls back to the MPN**.
 - **The fab has no per-package zero-rotation table**: "zero = tape/reel orientation, corrected per the silkscreen" (JLC). Two community
-  rotation databases disagree by 180° on SOT-23 and QFN. So: a **project-owned rotation table** (`design/<fab>_rotation.yaml`, footprint-name
+  rotation databases disagree by 180° on SOT-23 and QFN. So: a **project-owned rotation table** (`20-design/<fab>_rotation.yaml`, footprint-name
   regex → offset, seeded from two databases, only agreeing rows `review: false`), `rotation_log.csv` in the pack listing every applied offset,
   and **the fab's 3-D placement preview is the only authoritative check** before paying — a G2 checklist item (a +90 for 1×N headers was
   confirmed only there).

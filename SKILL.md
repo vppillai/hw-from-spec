@@ -153,14 +153,17 @@ The release cut = reports RELEASED, collateral, tag; the production cut = docume
 5. After the cell exists: one STATUS paragraph "Gn approved (cell text)", regenerate the records, commit, start the phase.
 
 ### 1.2 The manufacturability bar (the gate rule the owner confirms at kickoff)
-**Zero errors, zero warnings, no waivers** — recorded as an owner row on day 1 and enforced by the scripts, never by prose: **board** — ERC
+**Zero errors, zero warnings, no waivers** — recorded as an owner row on day 1 and enforced by a named check, never by prose: **board** — ERC
 `scripts/erc_gate.py` 0 errors / 0 unaccepted warnings (an acceptance is a typed entry of `20-design/erc_accept.yaml` naming a live decision row; a
 GUI exclusion or a stale entry fails), CAD DRC 0 errors / 0 unconnected / **0 warnings** unless a dated waiver row + generated accept rule
 (`references/pcb-layout-dfm.md` §14), fab DFM mirror **0 open (0 Danger, 0 Warning)** unless a `dfm_accepted` entry with refdes, reason, date and
 vendor evidence (`scripts/dfm_check.py` reads `fab_dfm.bar`); **printed enclosure** — census 0 unaccepted FAIL per body per preset (only a dated
 `print_targets.<t>.accepted` entry with vendor evidence passes a cluster, re-matched against the yaml every run), `print_dfm.py` PASS on every
 body of the STL set against the target's own process row, zero slicer warnings, vendor checker **no flag by API read**, no yellow / red on the heat
-map; **CNC** — the vendor's DFM clean. Both mesh gates glob the STL set of record (a body nobody checked fails), verify every record's signature
+map; **CNC** — the vendor's DFM clean. **Who enforces each item:** the skill's scripts enforce ERC, the fab DFM mirror, the census and
+print DFM; `kicad-cli pcb drc` enforces DRC. The project's slicer wrapper enforces zero slicer warnings. No skill script reads the vendor API
+flag or the heat map. The owner reads both at the case-order gate: the filed analyze JSON and six captures per body, counted by
+`scripts/heatmap_count.py`. Both mesh gates glob the STL set of record (a body nobody checked fails), verify every record's signature
 (a hand-edited record fails) and the rule-set version. `scripts/adopt_gates.sh` fails when a schematic / board / STL set exists and its gate line
 is missing or still commented out in `gates.adopt`. `templates/90-log/GATES.md` carries the bar as a prerequisite on G2, the board order and the case
 order. A WARN that is "known" is not a bar; it is either fixed or a dated, evidence-bearing acceptance the checker re-asserts every run.
@@ -345,8 +348,9 @@ sub-minimum wall cracks in service. **Every number is a `project.yaml print_targ
 void / red gates, design margin, tolerance + source, max bbox the rule was calibrated at, checker URL + date, post-process, rating, `accepted`
 list) tagged **[checker]** / **[vendor sheet]** / **[physics]** / **[owner bar]** in the reference; the numbers below are one MJF checker's line on
 ~150 mm parts and a 0.4-nozzle FDM printer's — substitute yours, keep the mechanism.
-1. **Two PURE mesh gates on every body of every preset, before the first upload** — the census gates the DESIGN margin, the print-DFM check the
-   printability FLOOR; both read the MESH, never the yaml; both glob the STL set of record and sign their records:
+1. **Two PURE mesh gates on every body of every preset, before the first upload** — the census gates `wall_gate` (the checker's line), the print-DFM check the
+   printability FLOOR. No script reads `design_margin`: the case generator draws walls at `wall_gate + design_margin`, and the owner's heat-map read checks it (`references/dfm-printed-enclosure.md` §7 step 4).
+   Both gates read the MESH, never the yaml; both glob the STL set of record and sign their records:
    - `scripts/thin_wall_census.py <stl> --target <t> --json 40-case/<set>/checks/census/<piece>.json` (rows `templates/CENSUS_GATE_ROWS.md`; walls AND voids
      against the target's gates, wedges by the width of their sub-gate band, the nearest OPPOSING face in any direction, samples ∝ area, a
      NOISE-FLOOR row, bodies = 1, geometry signature, retention present in the mesh, worst-case clearance per mating pair, six face renders; the
@@ -368,7 +372,7 @@ list) tagged **[checker]** / **[vendor sheet]** / **[physics]** / **[owner bar]*
    default; **engraved text is allowed when the stroke ≥ the void gate** (cap ≥ ~6 mm at 1.2), else a label carrier; closed rims (no slot / notch /
    gap on the single part unless it has an obvious job) **[owner bar]**; designed asymmetries rendered + in the order sheet + KNOWN_ISSUES or
    removed; inserts / bosses / magnets per material from the TDS (bore, depth, boss ≥ 2 × insert OD, temperature); post-processing removal and
-   the material rating (UL 94 / Tg) named on the order sheet; re-derive every yaml value set against an older print rule; a feature that cannot be
+   the material rating (UL 94 / HDT) named on the order sheet; re-derive every yaml value set against an older print rule; a feature that cannot be
    clean in its space budget goes; every wall change reruns the whole table.
 3. **Canonical STL + geometry signature** (own binary writer, sorted triangles, normals from the float32 vertices; volume / area / bbox / facets
    beside the md5) so the md5 IS the geometry; the census gate, vendor uploads and the cut key on it.

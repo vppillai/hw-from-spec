@@ -1,6 +1,6 @@
 # <MPN> — datasheet notes (rule 3: read before the part is drawn)
 
-Datasheet: <live URL of the fitted code> · revision / date on the document: <…> · read on {{DATE}} by <agent>.
+Datasheet: <live URL of the fitted code> · revision / date on the document: <…> · read on <date> by <agent>.
 
 | VERIFY item (spec value or claim) | Where in the datasheet (page, section, table, figure) | Value read | Matches the spec? | Note |
 |---|---|---|---|---|

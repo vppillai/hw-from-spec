@@ -5,7 +5,7 @@ stages:
     reached: [{type: exists, path: 10-spec/SPEC.md}]
   schematic: {{ee,both}}
     requires: [spec] {{ee,both}}
-    reached: [{type: exists, path: design/{{BOARD}}.yaml}]     # the schematic yaml exists once G0 is approved {{ee,both}}
+    reached: [{type: exists, path: 20-design/{{BOARD}}.yaml}]     # the schematic yaml exists once G0 is approved {{ee,both}}
   layout: {{ee,both}}
     requires: [schematic] {{ee,both}}
     reached: [{type: exists, path: 30-board/kicad/{{BOARD}}/{{BOARD}}.kicad_pcb}] {{ee,both}}

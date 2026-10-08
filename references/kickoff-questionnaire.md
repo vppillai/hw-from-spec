@@ -173,9 +173,10 @@ per surprise; not recommended.
 entry with the vendor's written acceptance is the only exception, per refdes / per cluster, listed in the merge.** *Alt:* a named class waived
 (for example the fab's "sharp trace corner" presence check) — one decision row per class with the vendor's statement. *Alt:* prose waivers — forbidden
 (a waived sub-minimum lip cracked on every part of one order).
-**D3 Design margin and tolerance source per target** [mech, both]. **RECOMMENDED: walls at the checker's line + 0.1 (MJF), first-article caliper table
-replaces the vendor's published tolerance after the first order, INFO until then** — no "PASS by design". *Alt:* design at the line — the mesh
-samples 0.01 under and the argument is lost. *Alt:* + 0.3 everywhere — heavy, slow, unnecessary on a 2 mm shell.
+**D3 Design margin and tolerance source per target** [mech, both]. **RECOMMENDED: walls at the checker's line + 0.3 (`design_margin` ≥ 0.3), first-article caliper table
+replaces the vendor's published tolerance after the first order, INFO until then** — no "PASS by design". A wall at the line read yellow on
+the vendor's map while the API passed (`references/dfm-printed-enclosure.md` §13). *Alt:* + 0.1 — lighter; the vendor map reads yellow near the
+gate. *Alt:* design at the line — the mesh samples 0.01 under and the argument is lost.
 
 ## E. Verification (SKILL §5, `references/pcb-layout-dfm.md`, `references/dfm-printed-enclosure.md`)
 **E1 Review rounds per gate.** **RECOMMENDED: one review round (in-session + two external models per role, adversarial verifiers, merge) before
@@ -246,7 +247,7 @@ window and lists every action taken.
 |---|---|---|
 | A0 | `project.scope` | CLAUDE.md scope line, GATES.md rows (scaffold), KICKOFF_ANSWERS `n/a (scope)` rows |
 | A1–A4 | `kickoff.product_class`, `kickoff.quantity`, `kickoff.fab`, `print_targets.<t>` (vendor, process, material, rating) | SPEC §1, §8; D rows |
-| B1–B8 | `board.layers / thickness / copper / stackup_template / impedance / finish / mask / silk / min_package / link_parts / sides / test_points / panel` | SPEC §4–§6 (R-M01…), `design/<board>_board.yaml`, `design/dfm_thresholds.json` (source + date) |
+| B1–B8 | `board.layers / thickness / copper / stackup_template / impedance / finish / mask / silk / min_package / link_parts / sides / test_points / panel` | SPEC §4–§6 (R-M01…), `20-design/<board>_board.yaml`, `20-design/dfm_thresholds.json` (source + date) |
 | C1–C12 | `kickoff.enclosure` (pieces, retention, coupling, feet, labelling, fan, light_pipe, targets, marks, kit_recipient, fit_decider, fit_result, optimise, stands_free); C8a `print_targets.<t>.dfm_process` | SPEC §8, `20-design/case.yaml` presets + `fits` knobs; START_HERE report-back recipient; the plate yaml `optimise:` block; ARRIVAL_CHECKLIST E-FIT |
 | D1–D3 | `fab_dfm.bar`, `print_targets.<t>.design_margin / tolerance / accepted` | GATES.md `{{D-BAR}}` row id, CLAUDE.md rule 9 |
 | E1–E4 | `kickoff.verification` (rounds, visual, fea), `kickoff.coupons` (E3) | GATES prerequisites, `workflows/` model list |

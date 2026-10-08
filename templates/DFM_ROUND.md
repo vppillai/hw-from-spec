@@ -36,7 +36,7 @@ same body: confirm both reads were API reads at parseStatus 2, then compare the 
 ## 4. Verdict of the round
 **{{PASS / NOT YET}}** — acceptance bar: every body no flag (API read) + no yellow / red under the material of the order, 0 unaccepted FAIL in the
 tables and census, zero slicer warnings (home build), every face looked at, no waivers. Bodies of record after the round: {{PIECE}} `{{MD5_8}}`, …
-**Material rating per target on the order sheet**: {{TARGET}} = {{MATERIAL}}, UL 94 {{RATING}}, Tg / softening {{TG}} °C (TDS {{URL}}, {{DATE}});
+**Material rating per target on the order sheet**: {{TARGET}} = {{MATERIAL}}, UL 94 {{RATING}}, HDT (0.45 MPa) {{HDT}} °C (TDS {{URL}}, {{DATE}});
 owner's "engineering sample, not a rated enclosure" row: {{D-nn}}. **Build orientation** (asked / answered / n.a.): {{ORIENTATION}}.
 **Post-process** named: {{POST}}. Owner items: {{NONE / LIST}}. Decision row: {{CC-nnn}} (APPLIED / OPEN). Not done: {{LIST}}.
 

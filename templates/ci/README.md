@@ -12,9 +12,9 @@ cp "$S"/{setup_linux,nightly,release_archive}.sh ci/            # project-owned 
 for f in pr-check nightly release; do
   sed -e 's|{{PROJECT_NAME}}|MY-BOARD|g' -e 's|{{PROJECT_CAD_IMAGE}}|kicad/kicad:10.0.5-full|g' -e 's|{{PROJECT_SETUP_CMD}}|ci/setup_linux.sh|g' \
       -e 's|{{PROJECT_CHECK_CMD}}|scripts/adopt_gates.sh --no-clone|g' -e 's|{{PROJECT_CLONE_GATE_CMD}}|scripts/clone_gate.sh|g' \
-      -e 's|{{PROJECT_NIGHTLY_CMD}}|ci/nightly.sh|g' -e 's|{{PROJECT_RELEASE_CMD}}|ci/release_archive.sh out/release_artefacts|g' \
+      -e 's|{{PROJECT_NIGHTLY_CMD}}|ci/nightly.sh|g' -e 's|{{PROJECT_RELEASE_CMD}}|ci/release_archive.sh build/release_artefacts|g' \
       -e 's|{{PROJECT_TAG_PATTERN}}|board-*|g' -e 's|{{PROJECT_VENDOR_EXCLUDE}}|lib/vendor/|g' \
-      -e 's|{{PROJECT_ARTEFACT_GLOBS}}|out/*/erc.json|g' -e 's|{{PROJECT_NIGHTLY_ARTEFACT_GLOBS}}|40-case/*/parts/*.stl|g' $S/$f.yml > .github/workflows/$f.yml
+      -e 's|{{PROJECT_ARTEFACT_GLOBS}}|30-board/layout/erc.json|g' -e 's|{{PROJECT_NIGHTLY_ARTEFACT_GLOBS}}|40-case/*/parts/*.stl|g' $S/$f.yml > .github/workflows/$f.yml
 done
 printf 'PROJECT_VENDOR_EXCLUDE=lib/vendor/\n' > ci/project.env
 grep -n '{{PROJECT_' .github/workflows/*.yml && echo "unfilled placeholders" || echo "ci templates filled"   # '{{PROJECT_' only: GitHub's own ${{ github.ref }} expressions must stay
@@ -35,7 +35,7 @@ grep -n '{{PROJECT_' .github/workflows/*.yml && echo "unfilled placeholders" || 
 | `{{PROJECT_CLONE_GATE_CMD}}` | the fresh-checkout gate run on tags (release.yml) | `scripts/clone_gate.sh` |
 | `{{PROJECT_SETUP_CMD}}` | Linux bootstrap (path shims, fonts, venv from a pinned requirements file) | `ci/setup_linux.sh` |
 | `{{PROJECT_NIGHTLY_CMD}}` | long checks that are still bounded (case chain, FEA *selftests*) | `ci/nightly.sh` |
-| `{{PROJECT_RELEASE_CMD}}` | stages the package of record + release docs and REFUSES licensed vendor files | `ci/release_archive.sh out/release_artefacts` |
+| `{{PROJECT_RELEASE_CMD}}` | stages the package of record + release docs and REFUSES licensed vendor files | `ci/release_archive.sh build/release_artefacts` |
 | `{{PROJECT_TAG_PATTERN}}` | release tag glob | `board-*` |
 | `{{PROJECT_VENDOR_EXCLUDE}}` | path prefix of licensed vendor data (SnapEDA/SnapMagic, vendor STEPs) that never leaves the repo | `lib/vendor/<vendor>` |
 | `{{PROJECT_ARTEFACT_GLOBS}}` | newline-separated paths uploaded after the PR check (ERC json, PDFs, DRC census) | `30-board/layout/erc.json` |

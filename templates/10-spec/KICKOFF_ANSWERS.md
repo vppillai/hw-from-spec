@@ -37,14 +37,14 @@ answered question is a defect; changing an answer is a new D row that supersedes
 | C12 | does the piece stand free | {{yes — stability row at the worst pose}} | yes | D-{{nn}} | `kickoff.enclosure.stands_free`; the generator's stability CHECKS row (`scripts/stability.py`) | {{mech,both}}
 | D1 | the manufacturability bar | {{zero errors / zero warnings / no waivers}} | yes | D-{{nn}} = `{{D-BAR}}` | `fab_dfm.bar` (ee / both), `print_targets.*.accepted` (mech / both); GATES.md; CLAUDE.md rule 9 |
 | D2 | what may be waived | {{nothing}} | yes | D-{{nn}} | `print_targets.*.accepted: []` (mech / both), `dfm_accepted: []` (ee / both) |
-| D3 | design margin / tolerance source | {{+0.1 MJF; first article replaces the vendor sheet}} | yes | D-{{nn}} | `print_targets.*.design_margin / tolerance` | {{mech,both}}
+| D3 | design margin / tolerance source | {{+0.3 MJF; first article replaces the vendor sheet}} | yes | D-{{nn}} | `print_targets.*.design_margin / tolerance` | {{mech,both}}
 | E1 | review rounds per gate | {{one round per gate, two external models}} | yes | D-{{nn}} | `kickoff.verification.rounds`; `{{EXTERNAL_MODELS}}` |
 | E2 | visual inspections | {{tiles + renders + six faces}} | yes | D-{{nn}} | `kickoff.verification.visual` |
 | E3 | coupons / dummies / first article | {{yes}} | yes | D-{{nn}} | `kickoff.coupons` | {{mech,both}}
 | E4 | vendor DFM before order + FEA | {{yes}} | yes | D-{{nn}} | `kickoff.verification.fea`; GATES prerequisites |
 | F1 | verification sources | {{fab API + manufacturer TDS; owner opens walled sites}} | yes | D-{{nn}} | `kickoff.sourcing.sources` |
-| F2 | stock policy / alternates | {{× 1.2, ≥ 1000 jellybeans, Alt_MPN}} | yes | D-{{nn}} | `kickoff.sourcing.stock_floor` |
-| G1 | software modes / posture | {{operator + engineering; warn / throttle}} | yes | D-{{nn}} | `kickoff.software.modes`; SOFTWARE_ARCHITECTURE §1 | {{ee,both}}
+| F2 | stock policy / alternates | {{× 1.2, ≥ 1000 jellybeans, Alt_MPN}} | yes | D-{{nn}} | `kickoff.sourcing.stock_floor`, `kickoff.sourcing.attrition` |
+| G1 | software modes / posture | {{operator + engineering; warn / throttle}} | yes | D-{{nn}} | `kickoff.software.modes`, `kickoff.software.posture`; SOFTWARE_ARCHITECTURE §1 | {{ee,both}}
 | G2 | criteria + codes | {{yaml, owner-approved}} | yes | D-{{nn}} | `kickoff.software.criteria`; test_criteria.yaml header | {{ee,both}}
 | H1 | report set | {{generated reports + notes + tag}} | yes | D-{{nn}} | `kickoff.release.reports`; `reports:` |
 | H2 | production cut | {{full document set}} | yes | D-{{nn}} | `kickoff.release.cut`; production_cut.yaml |

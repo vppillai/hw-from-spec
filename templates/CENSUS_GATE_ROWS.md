@@ -4,7 +4,7 @@ One block per exported body per print preset, emitted by the case generator's ch
 are the project's check table (`# | group | item | value | limit | status | note`); `status` is **OK / FAIL only** — a row with no threshold goes to
 the INFO table (§6 of the reference) **and states why it has no threshold**. Every number comes from `project.yaml print_targets.<target>`
 (`references/project-yaml.md`): `{{GATE}}` = `wall_gate` (worked example: JLC3DP checker 1.2, home FDM 0.4 nozzle 1.6), `{{MARGIN}}` =
-`design_margin` (owner bar, 0.1), `{{VGATE}}` = `void_gate` (1.2 / 1.0), `{{RED}}` = `red_line` (0.5), `{{BAND}}` = `wedge_band` (1.5, convention),
+`design_margin` (owner bar, ≥ 0.3), `{{VGATE}}` = `void_gate` (1.2 / 1.0), `{{RED}}` = `red_line` (0.5), `{{BAND}}` = `wedge_band` (1.5, convention),
 `{{THR}}` = `{{GATE}} − 0.05` (clustering convention), `{{TOL}}` = `tolerance` (the vendor's published figure until first-article measured).
 
 | # | group | item | value | limit | status | note |
@@ -27,7 +27,7 @@ the INFO table (§6 of the reference) **and states why it has no threshold**. Ev
 INFO table (no threshold — each row says why): `WALL-class surface in the band {{GATE}}..{{GATE}}+0.3` (no threshold until the first-article
 caliper table gives the process spread; the vendor's published tolerance is ±{{TOL}}, so a {{GATE}}+{{MARGIN}} wall may print below the gate —
 this row is INFO, not "PASS by design"); `build orientation` (vendor's choice, recorded when answered); `post-process` (`{{POST}}`, subtracted in
-the margin); `material rating` (UL 94 / Tg from the TDS, printed on the order sheet).
+the margin); `material rating` (UL 94 / HDT at 0.45 MPa from the TDS, printed on the order sheet).
 
 Adopt-list lines (PURE gates, recompute nothing): `"$PY scripts/thin_wall_census.py --gate-dir 40-case/<set>/checks/census"` — every
 `<piece>.json` must carry `stl_md5` = md5 of the committed `stl/<piece>.stl` beside it and an empty `fails` list (accepted clusters live in

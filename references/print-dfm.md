@@ -5,8 +5,8 @@ logo arms touched at 0.01 mm; the engineer refused it), length-tolerant (a 0.5 m
 longer lengths — a long lip built that way cracked on five parts), and tied to one vendor. The owner's framing: *"this need not be tuned to JLC, just
 that that is where we saw good results."* So the rules are physics + the published process minimums, one row per process in
 `20-design/dfm_processes.yaml` with a citation on every number; the vendors' verdicts are a **validation set**, never a fitting target. The tool
-runs on the exported MESH (never the yaml) before every upload, and the census (`thin_wall_census.py`) keeps the DESIGN margin (`wall_gate`,
-the vendor's grey line) — print DFM gates the printability floor, the census gates the margin; both are PURE adopt gates.
+runs on the exported MESH (never the yaml) before every upload, and the census (`thin_wall_census.py`) gates `wall_gate` (the vendor's grey line).
+Print DFM gates the printability floor, the census gates `wall_gate`; the generator applies `design_margin`; both are PURE adopt gates.
 
 ## 1. What it measures and the rules (one row each in the record)
 
