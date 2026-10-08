@@ -104,9 +104,13 @@ vendor/hw-from-spec/smoke/run_smoke.sh
 .venv/bin/python vendor/hw-from-spec/evals/run_evals.py
 ```
 
-## Use in a new project
    A selftest that exits 2 says SKIP: the mesh libraries are absent in that venv (`print_dfm.py`, `stability.py`); every other
    non-zero exit is a failure.
+
+## Use in a new project
+
+Run the kickoff questionnaire first (`SKILL.md` §0.1, `references/kickoff-questionnaire.md`). Its A0 answer sets the scope
+of the copy block in step 4. Write the other answers into the records after the copy.
 
 4. Copy the templates and resolve the scope (`T` is the templates folder); `project.py slots` counts
 the unfilled `{{…}}` slots per file — CLAUDE.md / project.yaml / records now, SPEC + KICKOFF_ANSWERS
@@ -134,7 +138,7 @@ cp "$T/20-design/traceability.yaml" "$T/production_cut.yaml" 20-design/
 .venv/bin/python scripts/project.py slots     # unfilled {{…}} per file: fill them now
 ```
 
-5. Follow `SKILL.md` §0: the kickoff questionnaire, ENV record (`scripts/project.py env` prints the
+5. Follow `SKILL.md` §0 from step 3: project.yaml, ENV record (`scripts/project.py env` prints the
 host row), first records, adopt gates, then G0. Fill slots that sit inside a path unquoted
 (`30-board/kicad/sensor/sensor.kicad_pcb`). `templates/20-design/arrival_checklist.yaml` is copied at the order, never on day 1 (SKILL §10.1; its `--check` line joins the gates the same commit). Scripts find `project.yaml` by walking up from the
 cwd (or `HWFS_PROJECT=…`); the shell gates print which interpreter they use. Never put the submodule
