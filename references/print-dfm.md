@@ -1,19 +1,20 @@
 # Print DFM — the vendor-independent manufacturability check and its self-improvement loop (`scripts/print_dfm.py`)
 
-**Why it exists.** A vendor's upload-time checker is a free, fast second opinion — and it is weaker than its own engineer (it passed a plate whose
-logo arms touched at 0.01 mm; the engineer refused it), length-tolerant (a 0.5 mm root under a rim passed up to ~60 mm and flagged at
-longer lengths — a long lip built that way cracked on five parts), and tied to one vendor. The owner's framing: *"this need not be tuned to JLC, just
-that that is where we saw good results."* So the rules are physics + the published process minimums, one row per process in
-`20-design/dfm_processes.yaml` with a citation on every number; the vendors' verdicts are a **validation set**, never a fitting target. The tool
+**Why it exists.** A vendor's upload-time checker is a free, fast second opinion. It is weaker than its own engineer: it passed a plate whose
+logo arms touched at 0.01 mm, and the engineer refused it. It is length-tolerant: a 0.5 mm root under a rim passed up to ~60 mm and flagged at
+longer lengths. A long lip built that way cracked on five parts. It is also tied to one vendor. The owner's framing: *"this need not be tuned to JLC, just
+that that is where we saw good results."* So the rules are physics + the published process minimums. Each process has one row in
+`20-design/dfm_processes.yaml`, with a citation on every number. The vendors' verdicts are a **validation set**, never a fitting target. The tool
 runs on the exported MESH (never the yaml) before every upload, and the census (`thin_wall_census.py`) gates `wall_gate` (the vendor's grey line).
 Print DFM gates the printability floor, the census gates `wall_gate`; the generator applies `design_margin`; both are PURE adopt gates.
 
 ## 1. What it measures and the rules (one row each in the record)
 
-Per surface sample (area-weighted, fixed seed): `t_ray` = thickness along the inverse normal (the census ray, origin nudged 1e-3 INTO the material —
-nudged outward it hit its own face and read inf on every sample for a day while the ball covered every wall); `t_med` = the largest ball tangent
-at the sample that no OPPOSING face (normal within 45° of the inverse normal) enters — reads a root / neck no ray sees and leaves convex 90° edges
-alone; `t = min`; `t_k` = the same ball against ANY face that faces back (`COS_K` 0.05) = the knife-edge field. Both cast outward = void width `g`.
+The tool reads these fields per surface sample (area-weighted, fixed seed). `t_ray` = thickness along the inverse normal. It is the census ray, with
+its origin nudged 1e-3 INTO the material. Nudged outward, the ray hit its own face and read inf on every sample for a day while the ball covered every
+wall. `t_med` = the largest ball tangent at the sample that no OPPOSING face (normal within 45° of the inverse normal) enters. It reads a root / neck
+no ray sees and leaves convex 90° edges alone. `t = min`. `t_k` = the same ball against ANY face that faces back (`COS_K` 0.05) = the knife-edge
+field. Both cast outward = void width `g`.
 Sub-threshold samples link (radius `max(3 sample spacings, 2.5 mm)` — a purely density-scaled radius broke a long root band into 25 pieces) into
 REGIONS with area, extent, min / median and class (wall < 30° limiting face, else wedge; on a layer process a wall whose normals lie within 30° of
 the print Z is a **skin**). A **sliver** = area < `sliver_area` AND extent ≤ 2 × its thickness (a tangency / boolean patch); anything longer is a
@@ -40,10 +41,11 @@ feature however small its area (a Ø0.4 × 3.5 pin is 4.4 mm²).
 **Legend boxes** are 3-D — `(x0, y0, z0, x1, y1, z1)` in the print frame, the legend's own Z band (a full-height box would exempt the wall under
 the legend; the generator must not draw one). The generator writes them beside the record as `<piece>.boxes.json`; `--boxes <file>` loads them,
 so a CLI run reproduces the gated record **byte for byte** (no run time inside the record — `_seconds` is printed, not written). `--land x0 y0 x1 y1`
-is the legacy spelling (spans every Z). Inside a box: wall limit `legend_land_min`, void limit `legend_void_min` (the row's values are the RAISED
-numbers, 0.9 / 0.9; a box may carry its own pair after its corners — `(x0, y0, z0, x1, y1, z1, land_min, void_min)`, a debossed label's 0.45 / 0.45
-beside raised strokes on one coupon; `thin_wall_census.py --boxes` reads the same 6- or 8-tuple; its legacy 2-D `[x0, y0, x1, y1(, gate)]` spans every Z and prints a WARNING), every rule's findings listed in
-row L instead of flagged; a region is inside when ≥ 50 % of its samples are. Every rule respects the boxes, W and R included.
+is the legacy spelling (spans every Z). Inside a box, the wall limit is `legend_land_min` and the void limit is `legend_void_min`. The row's values
+are the RAISED numbers, 0.9 / 0.9. A box may carry its own pair after its corners: `(x0, y0, z0, x1, y1, z1, land_min, void_min)`. An example is a
+debossed label's 0.45 / 0.45 beside raised strokes on one coupon. `thin_wall_census.py --boxes` reads the same 6- or 8-tuple. Its legacy 2-D
+`[x0, y0, x1, y1(, gate)]` spans every Z and prints a WARNING. Inside a box, row L lists every rule's findings instead of flagging them. A region is
+inside when ≥ 50 % of its samples are. Every rule respects the boxes, W and R included.
 
 Heat maps (`--render`, matplotlib): per-FACE minimum in the vendors' palette (grey ≥ `wall_reco`, yellow, red < `feature_min`, narrow voids dark
 red), six faces + two isos — a per-sample field looks nothing like the vendor's picture; per-face MIN does.
@@ -72,8 +74,8 @@ project has none yet), verdicts `60-orders/quotes/dfm_verdicts.yaml`, records `4
   measure that cannot see the feature, a missing class), fix it in `print_dfm.py`, bump `VERSION`, re-validate, run `scripts/skill_retro.py` so the
   change flows back to the skill. Vendor PASS + ours FLAG = **stricter**: write the physical reason under the hand marker of the validation doc;
   the rule stands (the vendor's checker is the weaker instrument). Never move a threshold to match a vendor.
-- **(c) A new vendor or process** = ONE new row in `20-design/dfm_processes.yaml`: its published minimums `[V]` with URL + date (a 404 = BLOCKED,
-  value `null`, the row refuses to gate), the rest `[K]` with the source named, `validated_on: []`. The retro (`skill_retro.py` §8) diffs the
+- **(c) A new vendor or process** = ONE new row in `20-design/dfm_processes.yaml`. Its published minimums are `[V]` with URL + date. A 404 = BLOCKED,
+  value `null`, and the row refuses to gate. The rest are `[K]` with the source named, and `validated_on: []`. The retro (`skill_retro.py` §8) diffs the
   project's table against `templates/20-design/dfm_processes.yaml` and lists NEW rows, CHANGED numbers (with the citation on the line) and
   VALIDATED rows as items to carry into the template.
 - **(d) Check rows read the MESH, never the yaml** — a row that quotes a design number proves nothing about the part; generated code is linted
@@ -81,10 +83,10 @@ project has none yet), verdicts `60-orders/quotes/dfm_verdicts.yaml`, records `4
 
 ## 4. Validation on record (the first validation set: 42 labelled JLC3DP MJF / SLA files = 37 geometries, 27 with a verdict)
 
-**Grouping by geometry first**: four uploads of one tray (OpenSCAD triangle order, an ASCII twin) are ONE data point; `--validate` unions files
-whose face count is equal and whose volume (0.05 mm³), area (0.5 mm²) and bbox (0.01 mm) agree — a hash splits twins at a rounding boundary. On the
-unique geometries: 0 looser, 20 agree, 7 stricter — every stricter case has a reason; the coverage table (§3a) says which mechanisms the agreement
-rests on (5 rim-on-root / thin wall, 3 knife edges, 3 mixed) — "0 looser" is a statement about those, not about every rule. **W / R validated both ways**: the 0.5 root under a rim flagged at the long lengths,
+**Grouping by geometry first**: four uploads of one tray (OpenSCAD triangle order, an ASCII twin) are ONE data point. `--validate` unions files
+whose face count is equal and whose volume (0.05 mm³), area (0.5 mm²) and bbox (0.01 mm) agree. A hash splits twins at a rounding boundary. On the
+unique geometries: 0 looser, 20 agree, 7 stricter. Every stricter case has a reason. The coverage table (§3a) says which mechanisms the agreement
+rests on: 5 rim-on-root / thin wall, 3 knife edges, 3 mixed. "0 looser" is a statement about those, not about every rule. **W / R validated both ways**: the 0.5 root under a rim flagged at the long lengths,
 the fixed roots (≥ 1.1) and the bodies of record passed at the vendor and here. **Length dependence**: the same 0.4–0.5 root over 40–58 mm passed
 the vendor's checker and flags here (L/t ≥ 10 → 5 mm for a 0.5 root); stricter by design — the part that cracked was built exactly so. **K validated
 both ways** (rail wedges, 36° rail tips and cove lips flag by their tip band; chamfers into ≥ 1.3 walls pass); two 0.04 mm chamfer tips the vendor
@@ -101,8 +103,11 @@ same face at a grazing angle.
    `build_max` / `part_min`; `[K]` with the source named for the rest; `validated_on: []`. 2. `--list` shows it; `--process <row>` on a body of
    record. 3. Kickoff C8 names the row per print target (`print_targets.<t>.dfm_process`). 4. The first verdict → (b). 5. Retro carries the row.
 
-Row fields a new process needs beyond the minimums: `media` (powder / resin / none — rules C and V), `layer` + `skin_min_layers` on a layer process
-(rule Z), `void_min: null` on FDM (the long-slot rule is a media rule), `supports` as the process DEFAULT (the generator passes the body's own setting),
-and a colour-body row (`skin_min_layers: 1`, `supports: none`) when multi-material accents or marks are gated as bodies of their own.
+A new process needs these row fields beyond the minimums:
+- `media` (powder / resin / none), for rules C and V.
+- `layer` + `skin_min_layers` on a layer process, for rule Z.
+- `void_min: null` on FDM. The long-slot rule is a media rule.
+- `supports` as the process DEFAULT. The generator passes the body's own setting.
+- A colour-body row (`skin_min_layers: 1`, `supports: none`) when multi-material accents or marks are gated as bodies of their own.
 
 Dependencies (project venv): `numpy trimesh scipy shapely rtree networkx mapbox-earcut pyyaml`; `matplotlib` for `--render`.
