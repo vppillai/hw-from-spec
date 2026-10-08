@@ -40,6 +40,8 @@ Rules the entry point makes checkable:
   per hand. The kit text gate (§3) treats a bare body id in owner text as a hit.
 - Technician-facing remedies are "report X to the engineer", never a yaml edit or a D-/CC- id. Both board-dummy variants shipped → say which to
   print ("one-piece; two-piece is the fallback"); a check the dummy cannot do (rigid nose vs bezel) is listed as EXCLUDED, not implied.
+- **START_HERE points to the assembly and use guide PDF** (`release-and-cut.md` §8) and to the single-colour projects for a printer without a
+  multi-material unit. A file name states its filament role (`<part>_body_filament1_<colour>.stl`; `release-and-cut.md` §12).
 - Ship what the texts cite: a `faces/` render cited → `faces/` in the kit; census artefacts and `.scad` out of the print folder; duplicate copies
   (caps inside the case kit) byte-identical or absent.
 
@@ -60,7 +62,8 @@ Rules the entry point makes checkable:
 | governance jargon | `D-xx`, `CC-xxx`, `VERIFY_`, owner quotes | not actionable without the repo |
 
 The gate reads the forbidden tokens from the preset (fastener, material, marks option), so a knob change updates the gate with it. Run it over
-START_HERE, every README and print sheet, and the generated ASSEMBLY.md; the run FAILS on a hit; the row is in the census record.
+START_HERE, every print sheet, the generated ASSEMBLY.md and every folder README of the repository (`project-yaml.md` §Layout; in a repository
+README a repo path is allowed, every other class still fails); the run FAILS on a hit; the row is in the census record.
 
 ## 4. Coupon, ONE part, then the plate
 - Every plate carries a sidecar `<plate>.3mf.json` beside it with at least `print_time_s` (int), `filament_g` (float), `objects` (the slicer's
