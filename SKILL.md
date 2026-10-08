@@ -1,6 +1,6 @@
 ---
 name: hw-from-spec
-version: 0.11.10
+version: 0.11.11
 description: Run a hardware project (a PCB, a printed or CNC enclosure, or both — scope chosen at kickoff; contract fab such as JLCPCB) from a written specification to a production cut with an owner-gated, generated-only, blind-reviewed workflow — a kickoff questionnaire that asks every owner decision up front with recommended answers, a zero-warning manufacturability bar, and a retro that folds each project's learnings back into the skill. Use this whenever someone starts a board or enclosure project from a spec, asks to set up gates, a decision log, generators, part verification, a fab DFM mirror, a case pipeline, FEA, blind reviews, a release report or a production cut for one, or resumes such a project, or wants the skill improved from a finished project — even if they only say "new KiCad board", "order this at JLC", "review the layout", "cut the release" or "what did we learn".
 ---
 
@@ -441,8 +441,10 @@ folder `70-release/<rev>/records/`** (the cut yaml's `records_dir`; RELEASE_NOTE
   step 4 is the gate (§13).
 - **Illustrated assembly and use guide** [mech, both] beside the text SOP: `scripts/assembly_guide.py` (authored short yaml + generated step text + one keyed render per
   page from the exported meshes, `--check`): the parts, magnet installation with polarity, loading, closing orientation with the keying feature
-  marked, taking a part out, care. The PDF ships in the release folder beside the drawing; the kit's START_HERE points to it; a cut deliverable
-  (`references/release-and-cut.md` §8).
+  marked, taking a part out, care. Pages are vector pages with real text (selectable, searchable) around embedded line drawings: light fills
+  with black edges from the meshes of record, a recess shown dark by a height split, a section inset where a perspective view hides an
+  arrangement, every number from the design parameters. The PDF ships in the release folder beside the drawing; the kit's START_HERE points
+  to it; a cut deliverable (`references/release-and-cut.md` §8).
 - **The release folder holds copies, named by use** (`references/release-and-cut.md` §12): written by the cut generator, never hand-edited, its
   README the manifest (build date, `git describe`, design values, checks with counts, MD5 + size per file, the procedure); subfolders by what a
   person does with them, files named by filament role, a single-colour variant of every multi-material part [mech, both].
