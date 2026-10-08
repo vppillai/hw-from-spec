@@ -218,11 +218,11 @@ geometry together), per-piece and assembly STEP (OCP/cadquery), `--check` = md5 
 - The render + STL + interference chain runs through the job pool (`references/agent-ops.md` §8): previews regenerated on every run on the fast
   engine; STL exports of record on the preset's `engine:` (the one that passes the mesh gates), cached only on the inputs + engine key with the
   sidecar md5 as a determinism check (`--no-cache` forces); `--render` for geometry of record; kill it early when an owner addition arrives.
-- Never run a case "check" in the working tree if it writes tracked files — the traceability sandbox copies `gen/ + design/` and symlinks the mesh.
-- Print sheets and order sheets list filaments / processes per piece, orientation, supports, post-process, the material rating (UL 94 / Tg from the
+- Never run a case "check" in the working tree if it writes tracked files — the traceability sandbox copies `gen/ + 20-design/` and symlinks the mesh.
+- Print sheets and order sheets list filaments / processes per piece, orientation, supports, post-process, the material rating (UL 94 / HDT from the
   TDS), insert type / bore / temperature per material (from the insert TDS, `dfm-printed-enclosure.md` §1.1), and the insert temperature/time and
   screw torque `[OWNER: …]` placeholders until the insert + torque coupon measured them.
-- Debug dumps under `out/**/scratch/` (gitignored), never the repo root.
+- Debug dumps under `build/**/_check/` (gitignored), never the repo root.
 - The fast engine (`--backend=Manifold` on a snapshot build, `tools.openscad_args`) exports a body in well under a second where the release
   kernel takes minutes: a 360-step sweep and an animation become affordable as PREVIEWS, and the pool's slots go to the mesh checks and the slicer
   (`references/agent-ops.md` §8 items 1 / 6). STL exports of record stay on the preset's `engine:` — the one that passes the mesh gates. Two

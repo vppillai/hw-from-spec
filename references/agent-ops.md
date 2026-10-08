@@ -1,7 +1,7 @@
 # agent-ops.md — running many agents on one hardware repo
 
 ## 1. Ownership
-- One coordinator; workers own disjoint FILES (board agent: `kicad/`, `design/<board>_*.yaml`; case agent: `20-design/case.yaml`, `out/**/case/`; docs
+- One coordinator; workers own disjoint FILES (board agent: `30-board/kicad/`, `20-design/<board>_*.yaml`; case agent: `20-design/case.yaml`, `40-case/`; docs
   agent: named docs). The shared record files (DECISIONS, STATUS, LEARNINGS_LOG, KNOWN_ISSUES) are append-only for everyone and committed right after
   each edit.
 - Hand a worker its record ID (`CC-nnn`) with the task; an ID is reserved only when its row is in HEAD; `grep -c '^| CC-nnn '` immediately before writing.
@@ -40,7 +40,7 @@
 - `--check` gates in the main checkout while others regenerate say nothing about the committed tree: judge on `git archive HEAD` (clone gate).
 - Rows that describe a marker (the nod marker, the release phrase) re-trigger the generator that keys on it: describe indirectly.
 - Every checker is READ-ONLY on the tree: `--check` builds in a temp dir and exports nowhere (a schematic `--check --out /tmp` that still wrote
-  `erc.json` into `out/` replaced the ERC of record with a temp copy's 58 lib-link warnings). `scripts/adopt_gates.sh` fails when
+  `erc.json` into `30-board/layout/` replaced the ERC of record with a temp copy's 58 lib-link warnings). `scripts/adopt_gates.sh` fails when
   `git status --porcelain` differs before/after the gates; the PR-check template ends with the same guard. Every skill script answers `--help` read-only (argparse); a project script must too — a
   script without argparse runs its default WRITE action on `--help`, so until it has one, probe its usage with `sed -n 1,12p` of its docstring.
 

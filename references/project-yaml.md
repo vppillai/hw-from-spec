@@ -61,16 +61,16 @@ tools:
 traceability:
   scratch_links: [lib]                    # symlinked next to the scratch copy of the board dir so ${KIPRJMOD}/../../lib resolves
 fab_dfm:                                  # the board's fab-DFM mirror (references/fab-dfm.md); `dfm:` is read as an alias of this block
-  thresholds: design/dfm_thresholds.json  # the fab's numbers, with source URL + date
-  items: out/dfm_items.json               # written by the project's measurer
+  thresholds: 20-design/dfm_thresholds.json # the fab's numbers, with source URL + date
+  items: 30-board/layout/dfm_items.json         # written by the project's measurer
   accept: 20-design/board.yaml               # yaml with key dfm_accepted: [{check, refs: [..] | {REF: n}, reason, date, evidence}]
-  report: out/dfm.json                    # written by every plain scripts/dfm_check.py run (--check compares); read by release_report section dfm
+  report: 30-board/layout/dfm.json         # written by every plain scripts/dfm_check.py run (--check compares); read by release_report section dfm
   bar: {open: 0, warnings_fail: true, accepted_requires: [reason, date, evidence]}   # the owner's manufacturability bar (SKILL §1.2): an acceptance missing a field is ignored
 print_targets:                            # one entry per print target; scripts/thin_wall_census.py --target <name> reads it — no gate constant lives in a script; `dfm_process` names the 20-design/dfm_processes.yaml row scripts/print_dfm.py gates on
   vendor_mjf:                             # vendor / process / material / wall_gate / void_gate / red_line [checker]; design_margin [owner bar];
     vendor: JLC3DP                        # wedge_band (convention 1.5); tolerance + tolerance_source [vendor sheet, replaced by the first-article spread];
     process: MJF                          # max_bbox_for_rule (the size the length-dependent rule was calibrated at); checker_url + checker_date;
-    material: PA12-HP                     # samples_per_mm2 (census density); post_process; rating {ul94, tg_c, source}; accepted [{class, bbox, reason, date, evidence}]
+    material: PA12-HP                     # samples_per_mm2 (census density); post_process; rating {ul94, hdt_c (HDT at 0.45 MPa, °C), source}; accepted [{class, bbox, reason, date, evidence}]
     wall_gate: 1.2
     void_gate: 1.2
     red_line: 0.5
@@ -83,12 +83,12 @@ print_targets:                            # one entry per print target; scripts/
     checker_date: 2026-09-28
     samples_per_mm2: 10
     post_process: none
-    rating: {ul94: HB, tg_c: 178, source: "<TDS url>"}
+    rating: {ul94: HB, hdt_c: 178, source: "<TDS url>"}   # HDT at 0.45 MPa [K] until read from the TDS; PA12 Tg is ~50 °C, 178 °C is near its melting point
     accepted: []
   home_fdm: {vendor: home, process: FDM, material: PLA, printer: "0.4 nozzle, 0.20 mm", wall_gate: 1.6, rib_gate: 1.2, void_gate: 1.0, red_line: 0.5,
-             design_margin: 0.0, wedge_band: 1.5, tolerance: 0.2, samples_per_mm2: 10, post_process: none, rating: {ul94: unrated, tg_c: 55, source: "<TDS>"}, accepted: []}
+             design_margin: 0.0, wedge_band: 1.5, tolerance: 0.2, samples_per_mm2: 10, post_process: none, rating: {ul94: unrated, hdt_c: 55, source: "<TDS>"}, accepted: []}
 reorg:                                    # scripts/reorg_paths.py — only when the layout changes (decision row first)
-  # Worked example: a project laid out as `docs/<topic>/` + `out/<board>/` moving to the numbered tree. Each row is a file or a WHOLE
+  # Worked example: a project laid out as `docs/<topic>/` + `out/<board>/` moving to the numbered tree. Each row is a file or a WHOLE <!-- legacy-path: ok -->
   # directory; `--apply` runs them longest key first, so a file listed out of a directory leaves before the directory goes, and a
   # directory whose destination already exists is merged file by file. Literals under a moved directory are rewritten with the prefix
   # (`docs/quotes/<date>/mail.txt` -> `60-orders/quotes/<date>/mail.txt`) in every non-frozen tracked text file.
@@ -111,15 +111,15 @@ reorg:                                    # scripts/reorg_paths.py — only when
     docs/release: 70-release/reports                                  # design reports, release notes (collateral and marketing left first)
     docs/reviews: 80-reviews                                          # then one folder per round by hand, the merged file at its root
     kicad: 30-board/kicad
-    out/<board>/layout: 30-board/layout
-    out/<board>/fab/<date>_<md5-8>: 30-board/fab/rev0                 # board_id.txt inside keeps the md5 + commit
-    out/<board>/mechanical/<set>: 40-case/<set>                       # one row per print target; parts/ checks/ pictures/ build/ are split afterwards
+    out/<board>/layout: 30-board/layout  # <!-- legacy-path: ok -->
+    out/<board>/fab/<date>_<md5-8>: 30-board/fab/rev0                 # board_id.txt inside keeps the md5 + commit <!-- legacy-path: ok -->
+    out/<board>/mechanical/<set>: 40-case/<set>                       # one row per print target; parts/ checks/ pictures/ build/ are split afterwards <!-- legacy-path: ok -->
   frozen: [60-orders/quotes, '70-release/*/records']   # moved as whole folders when they are a move key; content never rewritten, never checked;
                                           # spelled by old or new name (both match), `*` = one path segment
   gitignore: ['40-case/*/build/']         # lines appended to .gitignore by --apply (skipped when present): SCAD, logs, slicer scratch, caches
   allow_missing: ['^60-orders/quotes/', '^70-release/rev[0-9]+/']   # regexes of literals allowed to be dangling (dated rows quoting evidence, deliverables named before they exist)
   rewrites_record: 80-reviews/REORG_REWRITES.txt   # written by --apply; read by --proof
-  trim: [out/old_dir]                     # git rm -r (name the tag that keeps them in the decision row)
+  trim: [out/old_dir]                     # git rm -r (name the tag that keeps them in the decision row) <!-- legacy-path: ok -->
   untrack: ['40-case/**/build/*.log']     # git rm --cached, files stay on disk (usually = gitignore)
   skip: [lib/]                            # never touched
   allow_old_files: [80-reviews/REORG_PLAN.md]   # files that legitimately spell the old names (this script and project.yaml are exempt already)
@@ -139,7 +139,7 @@ renders:                                  # scripts/collect_renders.py rules -> 
   - {name: pcb_top, kind: kicad_render, args: ["--side", "top", "--quality", "high", "--background", "opaque"]}
   - {name: pcb_iso, kind: kicad_render, args: ["--side", "top", "--perspective", "--rotate", "-45,0,135"]}
   - {name: panel_top, kind: copy, src: "30-board/fab/{REV}/panel/panel_top.png"}
-  - {name: case_iso, kind: copy, src: "out/case/{CASE_VERSION}/renders/iso.png", sub: case, min_bytes: 2000}
+  - {name: case_iso, kind: copy, src: "40-case/vendor_mjf/pictures/iso.png", sub: case, min_bytes: 2000}
 reports:                                  # scripts/release_report.py; one file per entry under paths.release_dir
   - name: PCB_DESIGN_REPORT
     title: PCB design report
@@ -231,7 +231,7 @@ is this layout. Changing it later is a decision row + a `reorg:` block + `script
 - Which scripts are generators and which are graders: `known_issues`, `traceability`, `release_report`, `collect_renders`, `dfm_check`,
   `assembly_guide` have `--check`; `reorg_paths --check` is a grader (no generator side); `heatmap_count` is a measurer of vendor-map captures (yellow / red outside the legend; exit 1 on any); `thin_wall_check` is a measurer (`--census`, `--pinch`,
   exit 1 on a finding); `print_dfm` is the printability-floor GATE on the mesh (`--process <row> <stl> --out DIR`, exit 1 on FLAG; PURE `--gate DIR`; `--validate`
-  exit 1 on a RULE DEFECT); `scad_lint` is a grader of generated SCAD; `thin_wall_census` is the printed-body design-margin GATE (`<stl> --target <print target> --json out/…/census/<piece>.json`, exit 1 on a
+  exit 1 on a RULE DEFECT); `scad_lint` is a grader of generated SCAD; `thin_wall_census` is the printed-body `wall_gate` GATE (`<stl> --target <print target> --json 40-case/<set>/checks/census/<piece>.json`, exit 1 on a
   WALL / VOID / WEDGE-band / OPPOSING cluster below its gate that no dated `accepted` entry covers) plus a PURE `--gate-dir <census dir>` for
   `gates.adopt` (md5 of the STL beside the record + empty `fails` + every accepted entry still dated with evidence); `skill_retro` reads a
   project's learnings and decisions and drafts the skill's next changes (no --check);

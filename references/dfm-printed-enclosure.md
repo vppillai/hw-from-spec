@@ -24,8 +24,8 @@ seen (a dummy 0.4 mm low). The only exception path is the machine-readable `acce
   Shapeways / Sculpteo / HP direct list 0.6–1.0 for PA12) **[vendor sheet]**; the **checker's yellow line** (JLC3DP heat map: grey ≥ 1.2, yellow
   0.5–1.2, red < 0.5) **[checker]**; and the **owner's bar** (no yellow → design at `wall_gate + design_margin`; `design_margin` ≥ 0.3 — a wall AT the gate read yellow on the vendor's map while the API passed, §13) **[owner bar]**.
   A team at another vendor or without the no-yellow bar designs to a different number; the mechanism (design above the line the checker
-  flags, by a margin the sampling and the process spread need) is what generalises. A 1.2 nominal samples 1.19 on the mesh; the 0.1 margin
-  costs nothing on a 2 mm shell.
+  flags, by a margin the sampling and the process spread need) is what generalises. A 1.2 nominal samples 1.19 on the mesh; the 0.3 margin
+  costs little on a 2 mm shell.
 - **Every parallel-faced wall ≥ `wall_gate`, designed at `wall_gate + design_margin`** **[checker + owner bar]**. "Wall" = any skin whose opposite
   face is within 30° of parallel, whatever the yaml calls it (lip, land, skin, floor, ring, cheek).
 - **Every void ≥ `void_gate`** **[checker]** — the map colours voids too: slots, slits, grooves, boss-to-wall gaps, engraved strokes (every 0.45
@@ -88,7 +88,7 @@ Dyeing adds no dimension; **bead-blast / vapour smoothing removes 0.05–0.15 mm
 post-process is named on the order sheet and on the print target (`print_targets.<t>.post_process`) and is subtracted in the census margin.**
 
 ### 1.3 Material rating and thermal **[vendor sheet + owner bar]**
-An enclosure holding a powered board: state per target on the order sheet **UL 94 rating and Tg / softening point** (PA12 MJF: typically HB;
+An enclosure holding a powered board: state per target on the order sheet **UL 94 rating and HDT at 0.45 MPa** (the `hdt_c` key; PA12 MJF: typically HB, HDT ~175 °C **[K]**, Tg ~50 °C **[physics]**;
 PLA: unrated, softens ~55–60 °C; PETG ~75–80 °C; resins per the TDS), keep vents away from the hot zone, and record the owner's acceptance
 **"engineering sample, not a rated enclosure"** as a decision row (the questionnaire asks it). A hood over a hot module in PLA is a fit mock-up.
 
@@ -115,7 +115,8 @@ the census. *Worked example:* one first article forced this decision; four plate
 
 ## 2. Waivers are not checks — the census is a FAIL gate
 
-The census gates the DESIGN margin per `print_targets.<t>`; the printability FLOOR (walls, roots, knife edges, point contacts, voids, holes,
+The census gates `wall_gate` per `print_targets.<t>` (the checker's line). No script reads `design_margin`. The case generator draws
+walls at `wall_gate + design_margin`, and the owner's six-view heat-map read checks the result (§7 step 4). The printability FLOOR (walls, roots, knife edges, point contacts, voids, holes,
 size — from physics + the cited process minimums, vendor-independent) is `scripts/print_dfm.py --process <row>` on the same mesh before every
 upload, with the verdict → validate → rule-fix → retro loop in `references/print-dfm.md`. Both are PURE adopt gates; neither reads the yaml.
 - A row `KEPT BELOW 1.2 (listed): …` with verdict `None` and yaml numbers is a waiver nobody signed. The cracked lip's row quoted the MALE profile
@@ -128,7 +129,10 @@ upload, with the verdict → validate → rule-fix → retro loop in `references
   across a body through chamfer flanks was labelled "wedge" and swallowed a 1.0 … 1.2 lip and 1.3 slot lands; when the rail went, both surfaced); **walls and voids FAIL below their gates; wedges FAIL when the band of
   surface below the gate is wider than `wedge_band`** (default 1.5 mm — the width from the thin edge to where thickness reaches the gate; a
   chamfer cut into a wall has a band of ~1 mm and no free edge, a 35° free rail flank has ~1.8) unless an `accepted` entry names the backing
-  wall; **the nearest OPPOSING face in ANY direction is gated too**: two faces whose normals oppose within 30° and whose distance is
+  wall. **The band is an axis-aligned measure**: the census takes the second-largest extent of the cluster's axis-aligned bounding box. It is
+  valid only for a straight edge that runs along X, Y or Z. A rotated part inflates it: the same 1.0-wide band reads 1.0 along X and 28.28 at
+  45° in XY (a verifier probe). A ring around a hole reads its diameter (`references/pitfalls.md`, [census/metric]). Re-measure a
+  diagonal or ring wedge FAIL across the edge before you accept or fix it; **the nearest OPPOSING face in ANY direction is gated too**: two faces whose normals oppose within 30° and whose distance is
   below the gate FAIL whether or not a normal ray from one hits the other — the ledge underside 0.5 from a step top, a ring face 0.4 from a wall
   plane, the 0.4 mm root of a rim ring set inboard of its wall: the class the vendor found and the normal-ray census did not (§7.1).
 - **Samples scale with surface area** (`samples_per_mm2`, default 10; 60 000 fixed samples on a 150 mm tray were 1–2 / mm² and a 0.6 × 4 mm slit
@@ -282,7 +286,7 @@ numbers are **[owner bar]** for a 0.4 nozzle at 0.20 mm and live in `print_targe
       return sum(1 for p in getattr(thin, "geoms", [thin]) if p.area > 0.5 * g * g)   # corner slivers ~0.05 g² at a right angle (≤ 0.2 on real glyphs), real gaps are elongated
   ```
   Selftest it against three fixtures before trusting a FAIL row: an `E` at cap 4 bold must FAIL at g = 0.9, a 1.2 mm slot between two bars must pass, a bare concave (L-shaped) corner must count 0.
-- **Colour bodies are their own print target** (`print_targets.home_fdm_colour` in the project.yaml template → process row `home_fdm_04_colour_body`, own STL set, own census). The wall gate is the body's THICKNESS (0.6 = 3 layers). Strokes are gated on the polygon and by print_dfm W. Censused against the host's 1.6 gate a colour body FAILs on itself. **Process each glyph on its own**: close (buffer +g/2 then −g/2, round joins) to fill crotches and the hairline necks of a traced outline. THEN erode by e per side to widen the gaps between glyphs. Do this per glyph, never on the whole word (a closing over the word fuses neighbouring letters). Do NOT close a mark whose negative space defines it (a logo with channels between lobes): erode it instead until the channels are ≥ two line widths. The inter-glyph gap is a row (§8.1 table).
+- **Colour bodies are their own print target** (`print_targets.home_fdm_colour` in the project.yaml template → process row `home_fdm_04_colour_body`, own STL set, own census). The wall gate is the body's THICKNESS: colour layers × layer height (default 2 × 0.20 = 0.4, §8.1; 3 layers = 0.6). Strokes are gated on the polygon and by print_dfm W. Censused against the host's 1.6 gate a colour body FAILs on itself. **Process each glyph on its own**: close (buffer +g/2 then −g/2, round joins) to fill crotches and the hairline necks of a traced outline. THEN erode by e per side to widen the gaps between glyphs. Do this per glyph, never on the whole word (a closing over the word fuses neighbouring letters). Do NOT close a mark whose negative space defines it (a logo with channels between lobes): erode it instead until the channels are ≥ two line widths. The inter-glyph gap is a row (§8.1 table).
 - No rigid bump on a slit tab (it blocks, F ∝ t³); screws + heat-set inserts in ≥ 1.6 boss walls, or magnets (§1.1), instead of snap tabs where the
   arm cannot be long enough.
 - **Fan boss count = fan hole count** (consumer 30 mm fans have 4 holes even when one SKU drawing shows 3); any point set drawn in two places is

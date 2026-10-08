@@ -36,11 +36,11 @@ fab_dfm:                                      # the board's fab-DFM mirror (refe
   report: 30-board/layout/dfm.json                        # written on every plain run; `dfm_check.py --check` compares
   bar: {open: 0, warnings_fail: true, accepted_requires: [reason, date, evidence]}   # zero / zero / no waivers (owner D-01 in a real project)
 print_targets:                                # FIXTURE targets for the smoke run (references/dfm-printed-enclosure.md; the census reads these, never a script constant)
-  vendor_mjf: {vendor: JLC3DP, process: MJF, material: PA12-HP, wall_gate: 1.2, void_gate: 1.2, red_line: 0.5, design_margin: 0.1, wedge_band: 1.5,
+  vendor_mjf: {vendor: JLC3DP, process: MJF, material: PA12-HP, wall_gate: 1.2, void_gate: 1.2, red_line: 0.5, design_margin: 0.3, wedge_band: 1.5,
             tolerance: 0.3, tolerance_source: "vendor sheet, fetch and date it", max_bbox_for_rule: 147, checker_url: "https://jlc3dp.com/", checker_date: 2026-09-28,
-            samples_per_mm2: 10, post_process: none, rating: {ul94: HB, tg_c: 178, source: TDS}, accepted: []}
+            samples_per_mm2: 10, post_process: none, rating: {ul94: HB, hdt_c: 178, source: TDS}, accepted: []}
   home_fdm: {vendor: home, process: FDM, material: PLA, printer: "0.4 nozzle, 0.20 mm", wall_gate: 1.6, rib_gate: 1.2, void_gate: 1.0, red_line: 0.5,
-             design_margin: 0.0, wedge_band: 1.5, tolerance: 0.2, samples_per_mm2: 10, post_process: none, rating: {ul94: unrated, tg_c: 55, source: TDS}, accepted: []}
+             design_margin: 0.0, wedge_band: 1.5, tolerance: 0.2, samples_per_mm2: 10, post_process: none, rating: {ul94: unrated, hdt_c: 55, source: TDS}, accepted: []}
 reorg:                                        # the layout of record; `scripts/reorg_paths.py --check` = no old literal, no dangling docs/ path
   moves: {docs/DECISIONS.md: 90-log/DECISIONS.md, docs/STATUS.md: 90-log/STATUS.md, docs/GATES.md: 90-log/GATES.md,
           docs/BLOCKERS.md: 90-log/BLOCKERS.md, docs/KNOWN_ISSUES.md: 90-log/KNOWN_ISSUES.md, docs/TRACEABILITY.md: 90-log/TRACEABILITY.md,
