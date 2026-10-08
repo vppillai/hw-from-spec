@@ -5,7 +5,7 @@
   scripts/style_lint.py --project ROOT [--max-words N] [--report]            # a project's own texts: every README.md, 90-log/*.md, 60-orders/**/*.md,
                                                                              #   70-release/**/*.md, 50-kits/**/*.md (the skill's output follows the same rules)
   scripts/style_lint.py --selftest
-Exit 1 with one line per hit, 0 when clean, 2 when a file is missing. Hard rules (hits):
+Exit 1 with one line per hit, 0 when clean, 2 when a file or the project root is missing or no file matches. Hard rules (hits):
   1. clutter and Latin: please, very, simply, in order to, utilize, leverage, easily, obviously, of course, note that, etc., e.g., i.e., via,
      and/or, basically, actually, in terms of (Google: no Latin abbreviations, no filler; Zinsser: cut clutter).
   2. sentence length: a prose sentence longer than --max-words (default 40; the target in writing-style.md is 20 for an instruction and 25 for a
@@ -35,7 +35,8 @@ def project_files(root):
     pats = ["**/README.md", "90-log/*.md", "60-orders/**/*.md", "70-release/**/*.md", "50-kits/**/*.md"]
     out = set()
     for p in pats:
-        out |= {f for f in glob.glob(os.path.join(root, p), recursive=True) if "/build/" not in f and "/.git/" not in f and "/vendor/" not in f}
+        out |= {f for f in glob.glob(os.path.join(root, p), recursive=True)
+                if not {"build", "vendor", ".git"} & set(os.path.relpath(f, root).split(os.sep))}   # root-relative: a root under /build/ still lints
     return sorted(out)
 
 
@@ -157,7 +158,13 @@ def selftest():
         assert rc == 1 and "README.md:3" in buf.getvalue() and "MISSING" not in buf.getvalue(), buf.getvalue()
     finally:
         os.chdir(cwd)
-    print("selftest OK (clutter words, the PCB noun via exempt, style: ok marker, fences / tables / front matter skipped, sentence cap on wrapped paragraphs, per-file stats, relative file args)")
+    pr = f"{d}/build/proj"; os.makedirs(f"{pr}/90-log"); os.makedirs(f"{pr}/build"); os.makedirs(f"{pr}/vendor/x")
+    for f in ("90-log/A.md", "build/README.md", "vendor/x/README.md"):
+        open(f"{pr}/{f}", "w").write("Please read the log.\n")
+    assert [os.path.relpath(f, pr) for f in project_files(pr)] == ["90-log/A.md"], project_files(pr)   # a root under /build/ lints; its own build/ and vendor/ do not
+    with contextlib.redirect_stdout(io.StringIO()):
+        assert main(["--project", pr]) == 1 and main(["--project", f"{d}/nonexistent"]) == 2 and main(["--project", f"{d}/references"]) == 2
+    print("selftest OK (clutter words, the PCB noun via exempt, style: ok marker, fences / tables / front matter skipped, sentence cap on wrapped paragraphs, per-file stats, relative file args, --project root-relative filter and exit 2)")
     return 0
 
 
@@ -169,7 +176,11 @@ def main(argv):
     if a.selftest:
         return selftest()
     base = a.project or a.skill
+    if a.project and not os.path.isdir(a.project):
+        print(f"style_lint: project root {a.project} is not a directory"); return 2
     files = [os.path.abspath(f) for f in a.files] or (project_files(a.project) if a.project else default_files(a.skill))
+    if not files:
+        print(f"style_lint: no files to lint under {base}"); return 2
     hits, stats = lint(files, base if not a.files else os.getcwd(), a.max_words)
     if a.report:
         print("file | sentences | >25 | >cap | avg words | passive | will | em-dashes")
