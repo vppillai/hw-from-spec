@@ -1,6 +1,6 @@
 # CHANGELOG — hw-from-spec
 
-## Current state (0.11.13) — read this instead of replaying the entries below
+## Current state (0.11.14) — read this instead of replaying the entries below
 
 - **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
   twelve batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
@@ -16,7 +16,7 @@
   and colour 3MF for the order) and the at-the-gate map rule (`design_margin` ≥ 0.3; the six-view read of §7 step 4 counted by `heatmap_count`).
 - **Scripts** (`project.yaml`-driven, every one with `--selftest`, exit 0 / 1 / 2): `project.py` (reader, scaffold, slots, kickoff --check,
   gates-required, record, env), `known_issues`, `traceability`, `release_report`, `collect_renders`, `assembly_guide`, `reorg_paths`, `dfm_check`,
-  `erc_gate`, `gate_check`, `handoff_header`, `thin_wall_census` (design-margin gate), `print_dfm` (printability-floor gate + `--validate`),
+  `erc_gate`, `gate_check`, `handoff_header`, `thin_wall_census` (`wall_gate` on the mesh; legend boxes with a Z band; accepted clusters re-matched by class and bbox), `print_dfm` (printability-floor gate + `--validate`),
   `thin_wall_check` (quick look + pinch), `heatmap_count` (yellow / red of a vendor map capture, stdlib), `stability` (CoG vs support hull at the worst pose; `improper_placements` = the det +1 row), `scad_lint`, `step2stl`, `arrival_checklist`, `skill_retro` (+ `--apply`), `jobs.sh` (the heavy-job
   pool), `adopt_gates.sh`, `clone_gate.sh`, `doc_voice_lint`, `generic_lint`. Mesh stack: `numpy trimesh scipy shapely rtree networkx
   mapbox-earcut embreex` (the Embree ray engine keeps a census in seconds under 1 GB).
@@ -41,6 +41,51 @@
   (CHANGELOG and docs included; history keeps its measured numbers), a fenced worked example keeps numbers and kinds but never a name, and the
   repo carries no project retro (a retro report is folded, then deleted).
 
+## 0.11.14 — 2026-10-08 — Double-blind review of 0.11.13 applied: measuring scripts, gates, one design margin, the sentence lint that counts sentences
+
+Source: a double-blind review of the frozen 0.11.13 tree (`docs/reviews/blind_review_0.11.13_*`): two Claude Opus reviewers (cold user, domain
+expert), two GitHub Copilot CLI reviewers (GPT-5.6 Terra cold user, GPT-5.4 domain expert), one Opus verifier with record access. 64 findings:
+49 CONFIRMED, 12 PARTLY, 1 ALREADY DECIDED, 2 REFUTED. The 24 REQUIRED rows are applied here; the owner rows stay in `_verified.md`.
+
+### Fixed (scripts)
+- `scripts/style_lint.py` counts SENTENCES: wrapped prose lines join into a paragraph before the split, a hit names the first line, the marker on
+  any line of a sentence exempts it (A-7 / B-9). `--project` filters build / vendor / .git on the root-relative path and exits 2 on a missing root
+  or zero files (A-8). The selftest holds a three-line 92-word sentence that hits and a wrapped 20-word sentence that does not.
+- `scripts/print_dfm.py` rule H (holes) fires on every process row: voids up to max(void limit, `hole_min`); selftest Ø1.0 flags, Ø2.0 passes on
+  the MJF row (B-6).
+- `scripts/heatmap_count.py` reads yellow and red in HSV (stdlib `colorsys`): shaded yellow, amber and shaded red count; on the project's 120
+  captures 25 views change, one body view read 0 / 0 while it held 11 shaded-yellow pixels (B-8).
+- `scripts/thin_wall_census.py`: legend boxes take the print_dfm 6- or 8-value form with its Z band (a sample outside the band is outside the
+  box); a 4- or 5-value box spans every Z and warns; any other length exits 2 (B-4 / B-5). The pure gate re-matches an accepted cluster by class
+  and bbox (1.0 mm), not only by reason / date / evidence (D-1).
+- `scripts/thin_wall_check.py`: the pinch-path floor is an absolute 0.5 mm (`--path-min`), not 5 % of the perimeter (B-27).
+- `evals/run_evals.py` exports `PYTHON`; `scripts/clone_gate.sh` accepts `$PYTHON` then `$PY`, stops early when no interpreter imports yaml, and
+  uses `${TMPDIR:-/tmp}` (A-1 / C-2 / A-20). `scripts/gate_check.py` reads `TBD`, `pending`, `n/a` and any `not yet` form as NOT approved (A-6).
+  `kickoff --check` accepts only a `D-` row as the owner row and flags an A0 answer that differs from `project.scope` (A-5). `now_pages.py`
+  lists every OPEN row in BLOCKED_ON_OWNER (A-18). `scad_lint.py` rejects an unknown flag with exit 2 (A-10). `stability.py` exits 2 without a
+  `limit` (B-34).
+
+### Fixed (text and templates)
+- One `design_margin` (≥ 0.3) across `templates/CENSUS_GATE_ROWS.md`, kickoff D3, `KICKOFF_ANSWERS.md`, the enclosure reference, pitfalls and the
+  smoke yaml; home FDM targets stay at 0.0 (no vendor map) (B-2 / B-33 / D-2). The census gates `wall_gate`; no script reads `design_margin`; the
+  case generator applies it and the owner's heat-map read checks it (B-1). SKILL §1.2 names who enforces each bar item: skill scripts,
+  `kicad-cli`, the project's slicer wrapper, or the owner at the case-order gate (B-24).
+- The wedge `band` is an axis-aligned measure: 1.0 along X reads 28.28 at 45°; a diagonal or ring wedge FAIL is re-measured across the edge (B-3).
+  The colour print target's `wall_gate` is colour layers × layer height (default 0.4) (B-11).
+- Pre-layout `design/` and `out/` paths that survived the 0.11.0 sweep map to the numbered tree; `smoke/run_smoke.sh` fails on a new one and on a
+  design margin under 0.3; a reorg example line carries `<!-- legacy-path: ok -->` (A-12).
+- GATES M1 and Case order list the double-blind drawing round (B-29). `templates/project.yaml` carries `kickoff.sourcing.attrition` and
+  `kickoff.software.posture` (A-13 / B-26). The rating key is `hdt_c` (HDT at 0.45 MPa, the PA12 value tagged [K]), not `tg_c` (B-14). Empty
+  citation fragments in pitfalls are removed (B-32). The datasheet-notes template has no slot (A-4). README runs the kickoff before the copy
+  block, in SKILL §0 order (A-2 / A-15).
+- The skill's prose rewritten to the sentence rules now that the lint counts sentences: 441 sentences over 40 words split across SKILL.md, README,
+  the references and the templates; every number, tag, path, condition and step order kept; a blind meaning review of the diff is in
+  `docs/reviews/` (B-10, the owner's standing rule 'this applies to the skill').
+
+### Owner decisions (open, proposed text in `docs/reviews/blind_review_0.11.13_verified.md`)
+A-9 gate-cell backstop vs the delegation rule; A-11 agent commit identity; B-1 gate the margin itself; B-7 percentile in-box gate; B-13, B-23,
+B-30 one number each; B-24 a pure gate on the vendor API JSON and the six captures.
+
 ## 0.11.13 — 2026-10-08 — style_lint: a file argument resolves against the working directory
 
 Source: CLAUDE.md rule 12 of one project tells the agent to run `scripts/style_lint.py <files>` from the project. A relative path was joined
@@ -64,7 +109,7 @@ ASD-STE100 derived precision rules. Apply Zinsser's four principles: clarity, si
 - `SKILL.md` §0 step 9 and §12, `references/agent-ops.md` §6, `templates/CLAUDE.md` rule 12: the standard applies to the skill's output.
 
 ### Changed
-- The skill's own text rewritten to the rules where the lint tripped: every sentence over 40 words split, every clutter word and Latin
+- The skill's own text rewritten to the rules where the lint tripped: every sentence over 40 words split (CORRECTED in 0.11.14: the 0.11.12 lint measured physical lines, so wrapped sentences were never counted; 441 sentences over 40 words remained and are rewritten in 0.11.14), every clutter word and Latin
   abbreviation gone, in `SKILL.md`, the references and the templates (facts, numbers, paths and tags unchanged).
 
 ## 0.11.11 — 2026-10-08 — The assembly guide as a document: vector pages, line drawings, recesses, section insets, numbers from the parameters
