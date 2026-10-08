@@ -124,8 +124,8 @@ the SOP's companion cell points at it (a pointer, no revision bump).
   with black edges, and it changes the framing. Instead the scene carries PINS: small spheres at the arrow tip and tail (or the dot), fully
   transparent (`color([0, 0, 0, 0])`) in the shaded and flat passes — invisible, yet they still set a `--viewall` framing — and pure colours
   in one more pass with the same camera. The pin centroids (by hue, so shading does not matter) give page coordinates; the page draws a
-  round-capped shaft and a filled head with a white halo, 1 mm wide, so the arrow reads over a dark part or a board's art. One pin
-  hidden by a part is an error (the arrow would start from a wrong place), never a fallback. The crop box includes the pins with room for
+  round-capped shaft and a filled head in one solid colour. No outline or halo around it: a white halo cuts the drawing's own lines and
+  reads as a sticker on the picture. One pin hidden by a part is an error (the arrow would start from a wrong place), never a fallback. The crop box includes the pins with room for
   the head, so an arrow never runs out of the frame.
 - **Every number in the text comes from the design parameters** (the same file the meshes come from): counts, magnet size, the pinch band, the
   recess below a face. The guide reads the parameter file the way the drawing does (a regex over `NAME = value;` lines, derived values by one
