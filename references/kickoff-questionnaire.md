@@ -216,8 +216,11 @@ renders / FEA composites as collateral, an annotated tag** — nothing hand-type
 `[OWNER]` records, analysis index, compliance table) built by one generator into `70-release/<rev>/`, records filed as they happen** —
 `templates/production_cut.yaml`. *Alt:* manufacturing spec + SOP only — for an internal tool with one builder.
 **H3 CI and repository hygiene.** **RECOMMENDED: PR check = the adopt gates, nightly = the case chain selftests, release = the fresh-checkout gate;
-a re-layout + deletion pass at the order through `reorg_paths.py`** — the developer runs the same commands. *Alt:* no CI — the clone gate by hand
-before every tag.
+a re-layout + deletion pass at the order through `reorg_paths.py`; the repository conventions on day 1 (SKILL §0 step 8): one home per product,
+`assets/` for shared inputs, a README in every folder, build output ignored, the release folder written by the cut and named by use with a
+single-colour variant per multi-material part, the order record beside the manufactured files with the release asset's MD5, a clean tree after
+every build** — the developer runs the same commands, and no convention costs a later pass. *Alt:* no CI — the clone gate by hand before every
+tag. *Alt:* conventions added when the owner asks — one restructuring pass per question (six in one project).
 **H4 The feedback loop into the skill.** **RECOMMENDED: every agent appends to `LEARNINGS_LOG.md`; at the production cut `scripts/skill_retro.py`
 drafts the skill's next changes and a retro report goes to the skill repo as a PR** — the skill gets better with each project (SKILL §13). *Alt:*
 no retro — the next project repeats this one's rounds.

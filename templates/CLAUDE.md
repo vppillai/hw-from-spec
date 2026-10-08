@@ -85,8 +85,10 @@ lib/           vendor STEPs, TDS PDFs, hardware drawings (vendor-licensed data n
 70-release/    <rev>/ (the cut)  reports/  collateral/<rev>/  marketing/<rev>/
 80-reviews/    <round>/ (one folder per review round)  REVIEW_HANDOFF
 90-log/        DECISIONS STATUS GATES BLOCKERS KNOWN_ISSUES TRACEABILITY LEARNINGS_LOG ENV — the append logs the generators read and write
+assets/        shared inputs (concept image, logo, font outlines); its README names the product that uses each file
                The tree is the navigation (skill `references/project-yaml.md` §Layout): names are nouns, one current thing per path, records beside
-               what they describe, numbers = the order of the project's life. A re-layout is a decision row + project.yaml `reorg:` +
+               what they describe, numbers = the order of the project's life, one home per product (gen/<product>/, never a mixed tools/), build
+               output ignored and deletable, a README.md in every folder. A re-layout is a decision row + project.yaml `reorg:` +
                `scripts/reorg_paths.py`; frozen records keep the old paths, `--map` reads them
 ```
 

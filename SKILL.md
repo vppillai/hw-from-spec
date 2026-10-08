@@ -1,6 +1,6 @@
 ---
 name: hw-from-spec
-version: 0.11.9
+version: 0.11.10
 description: Run a hardware project (a PCB, a printed or CNC enclosure, or both — scope chosen at kickoff; contract fab such as JLCPCB) from a written specification to a production cut with an owner-gated, generated-only, blind-reviewed workflow — a kickoff questionnaire that asks every owner decision up front with recommended answers, a zero-warning manufacturability bar, and a retro that folds each project's learnings back into the skill. Use this whenever someone starts a board or enclosure project from a spec, asks to set up gates, a decision log, generators, part verification, a fab DFM mirror, a case pipeline, FEA, blind reviews, a release report or a production cut for one, or resumes such a project, or wants the skill improved from a finished project — even if they only say "new KiCad board", "order this at JLC", "review the layout", "cut the release" or "what did we learn".
 ---
 
@@ -65,6 +65,15 @@ reference when you reach that step, not before. Nothing here is specific to one 
 7. **CI (optional, when the repo has a remote)**: `templates/ci/` holds pr-check / nightly / release workflows with `{{PROJECT_*}}` placeholders;
    fill them with the recipe in `templates/ci/README.md` (it copies `setup_linux.sh` / `nightly.sh` / `release_archive.sh` and writes
    `project.env` into the PROJECT-OWNED `ci/`, never under `scripts/` = the submodule; every checkout has `submodules: recursive`), commit under `.github/workflows/`.
+8. **Repository conventions, all on day 1** (kickoff H3 carries them as defaults; `references/project-yaml.md` §Layout rules 5–7,
+   `references/release-and-cut.md` §12–§14). One folder per product and the machinery split the same way (`gen/board/`, `gen/case/`); never one
+   `tools/` folder that mixes products; never a generated CAD file or a build script at the repository root. Shared inputs (concept image, logo,
+   font outlines) in one `assets/` folder whose README names the product that uses each file. Build output gitignored and deletable; each check
+   keeps its scratch under its product's `build/_check/`. A `README.md` in every folder. The release folder written by the cut, named by use, its
+   README the manifest. The order record beside the manufactured files. A clean tree after every build. A project that adopts the skill late
+   does all of it in ONE pass: one project spent six restructuring passes, one per owner question ("why is the release folder not structured",
+   "the files are not identifiable", "there is still a top-level tools folder", "is the version we sent a release asset", "are the order
+   settings backed up", "a README in every folder").
 
 ### 0.1 The kickoff questionnaire — every owner decision up front, with a recommended answer (`references/kickoff-questionnaire.md`)
 
@@ -172,6 +181,10 @@ order. A WARN that is "known" is not a bar; it is either fixed or a dated, evide
 - **Every checker is read-only on the tree.** A `--check` builds in a temp dir and exports nowhere; `scripts/adopt_gates.sh` fails when
   `git status --porcelain` differs before and after the gates, and the PR-check template ends with the same guard (a checker that exports into
   the tree replaces a record). Probe a script's usage from its docstring, never by running it without arguments.
+- **The tree is clean after every build** (`references/release-and-cut.md` §14). A build that rewrites a committed file of record without a design
+  change (a re-saved board file, a stamp) is reverted with `git checkout -- <file>`; the file of record changes only in the commit that changes the
+  record. A dirty tree stamps `-dirty` into every `git describe` a drawing or a manifest prints. Before a release, delete every `build/` folder,
+  regenerate from empty and read `git ls-files` for strays.
 - **Layout changes are generated too.** The docs/ layout the defaults name is in `references/project-yaml.md` §Layout; moving files later is a
   decision row + a `reorg:` block + `scripts/reorg_paths.py --plan → --apply → regenerate → --check → --proof` (zero-loss on two `git ls-files -s`
   dumps); frozen records keep the old paths and `--map` explains them (`references/release-and-cut.md` §9).
@@ -426,8 +439,16 @@ folder `70-release/<rev>/records/`** (the cut yaml's `records_dir`; RELEASE_NOTE
   legends keep a cap hierarchy and the switch-well layout rule of §12, and a print-orientation sheet goes with every order line
   (`references/vendor-review.md` §4); a wall AT the vendor's gate reads yellow — `design_margin` ≥ 0.3 and the six-view read of §7
   step 4 is the gate (§13).
-- **Illustrated assembly guide** [mech, both] beside the text SOP: `scripts/assembly_guide.py` (authored short yaml + generated step text + one keyed render per
-  page, `--check`), registered as a cut deliverable (`references/release-and-cut.md` §8).
+- **Illustrated assembly and use guide** [mech, both] beside the text SOP: `scripts/assembly_guide.py` (authored short yaml + generated step text + one keyed render per
+  page from the exported meshes, `--check`): the parts, magnet installation with polarity, loading, closing orientation with the keying feature
+  marked, taking a part out, care. The PDF ships in the release folder beside the drawing; the kit's START_HERE points to it; a cut deliverable
+  (`references/release-and-cut.md` §8).
+- **The release folder holds copies, named by use** (`references/release-and-cut.md` §12): written by the cut generator, never hand-edited, its
+  README the manifest (build date, `git describe`, design values, checks with counts, MD5 + size per file, the procedure); subfolders by what a
+  person does with them, files named by filament role, a single-colour variant of every multi-material part [mech, both].
+- **The order record sits beside the manufactured files** (`references/release-and-cut.md` §13): every vendor option as set on the order page,
+  the price, the cart line, the uploaded file name + MD5, reproduction steps from the release asset, the delivered batch's deviations; the
+  downloaded release asset's MD5 equals the local file's. CI compares a rebuild with the release archive only on the release tag (§14).
 
 ### 10.1 Before the order ships: the arrival checklist and the spec errata
 - **The arrival / first-article checklist is GENERATED** (copy `templates/20-design/arrival_checklist.yaml` to `20-design/` AT THE ORDER, not on day 1 →
@@ -517,6 +538,7 @@ row. The classifier is a keyword matcher: the report is the input to the change;
 | meshing, solving, caches, reporting | `references/fea-stage.md` |
 | bring-up tool, criteria, codes | `references/software-track.md` |
 | reports, collateral, tag, cut yaml, one-round chain, assembly guide, re-layout | `references/release-and-cut.md` |
+| repository conventions: one folder per product, `assets/`, a README in every folder, build output ignored, release folder by use, order record, clean tree | §0 step 8, `references/project-yaml.md` §Layout, `references/release-and-cut.md` §12–§14 |
 | the fab's review mail after the order, Replace File boundaries, quote-page DFM mechanics | `references/vendor-review.md` |
 | orchestration, git, reviews, read-only checkers, memory / pause points, the resource budget (job pool, measure-audit-change, caching + engine policy, serialized record round, preview vs render, inline vs agent) | `references/agent-ops.md`, `scripts/jobs.sh`, `templates/ci/Makefile` |
 | every recorded pitfall, one line each | `references/pitfalls.md` |

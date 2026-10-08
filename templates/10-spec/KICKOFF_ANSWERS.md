@@ -48,7 +48,7 @@ answered question is a defect; changing an answer is a new D row that supersedes
 | G2 | criteria + codes | {{yaml, owner-approved}} | yes | D-{{nn}} | `kickoff.software.criteria`; test_criteria.yaml header | {{ee,both}}
 | H1 | report set | {{generated reports + notes + tag}} | yes | D-{{nn}} | `kickoff.release.reports`; `reports:` |
 | H2 | production cut | {{full document set}} | yes | D-{{nn}} | `kickoff.release.cut`; production_cut.yaml |
-| H3 | CI / hygiene | {{PR check = adopt gates}} | yes | D-{{nn}} | `kickoff.release.ci`; `templates/ci/` |
+| H3 | CI / hygiene | {{PR check = adopt gates; day-1 repo conventions}} | yes | D-{{nn}} | `kickoff.release.ci`; `templates/ci/` |
 | H4 | feedback loop | {{retro at the cut, PR to the skill}} | yes | D-{{nn}} | `kickoff.release.retro`; `skill.version`; SKILL §13 |
 | I1 | envelope fixed or grows | {{grows, connectors fixed}} | yes | D-{{nn}} | `kickoff.identity.envelope`; SPEC §4 |
 | I2 | branding / look | {{name + logo lock-up, legend grid}} | yes | D-{{nn}} | `kickoff.identity.branding`; SPEC §6 |
