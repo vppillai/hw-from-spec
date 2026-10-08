@@ -1,13 +1,14 @@
 # CHANGELOG — hw-from-spec
 
-## Current state (0.11.8) — read this instead of replaying the entries below
+## Current state (0.11.9) — read this instead of replaying the entries below
 
 - **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
   twelve batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
   (zero errors / zero warnings / no waivers, enforced by scripts), generated-only, the decision log, parts tags [V] / [K] / [K owner-read] / [S],
   blind reviews with a record-reading verifier, layout + fab DFM mirror, the case pipeline with two PURE mesh gates (census margin, print-DFM
   floor), the stability row for anything that stands free (kickoff C12) and the three assembly-model rows (every placement det +1, a fit row per
-  mating pair, an orientation row per one-sided part type — renders are not evidence of buildability), the software track, release cut + production cut + the arrival checklist + spec errata, agent operations with a measured resource budget
+  mating pair, an orientation row per one-sided part type, a fit row pair per degree of freedom — renders are not evidence of buildability),
+  the double-blind drawing round at M1 of a printed part, the software track, release cut + production cut + the arrival checklist + spec errata, agent operations with a measured resource budget
   (measure → audit → change; previews on the fast engine, geometry of record on the engine that passes the mesh gates; caches as determinism checks), the retro,
   the PCBA fab after the order (engineer questions answered on pad-1 positions, the production-file package diffed per layer) and its upfront
   half (`ASSEMBLY_NOTES` in the package, the fab's-eye silk pass, hole sizes in the order remark, arrival rows A-0 / A-5), the fab's second
@@ -36,6 +37,40 @@
 - **Generic by rule**: the skill names no project, part, board, order, account or person — `scripts/generic_lint.py` reads the whole repo
   (CHANGELOG and docs included; history keeps its measured numbers), a fenced worked example keeps numbers and kinds but never a name, and the
   repo carries no project retro (a retro report is folded, then deleted).
+
+## 0.11.9 — 2026-10-08 — Fit-test degrees of freedom, double-blind drawing review, CSG order traps, generator outline test
+
+Source: one two-part FDM case for ten standing boards (Bambu Studio 02.08.02, an OpenSCAD 2026 snapshot) whose 14-row fit test and print DFM
+passed while a double-blind drawing round found a board free to slide 6.6 mm in its slot and ceiling bosses cut away by the cavity; and one
+shipped board whose placed marks sat 1.68 mm outside the outline.
+
+### Added
+- `references/case-pipeline.md` §Interference: fit rows per degree of freedom (shift, lift, the 180° turn of a symmetric part) with a positive
+  and a negative control each; a rib between parts guides, a face across the slot stops; an open pocket probed by a part-tall body (empty) and a
+  thin body under the floor (overlap). §Drawings: the sheet generated from the exported meshes (CAD projection, numbers from the parameter
+  block or one echo run, end points on the linework within 0.03, outer sizes = mesh bbox, REV from `git describe`, clean tree), section planes
+  through plain regions, one numbering convention. §Process rules: CSG construction order (positives after the cavity cut, the pocket through
+  boss and plate; `hull()` lead-in confined to the last 0.4 mm), with mesh acceptance rows.
+- `SKILL.md` §5: the double-blind drawing round (reviewer A with only the sheet + intent, verifier B measuring every claim; VERIFIED / REFUTED /
+  DRAWING DEFECT / JUDGMENT; about one agent-hour) as the M1 round of a printed part beside `case_dfm`; §1 M1 lists it and the DOF rows; §8 the
+  DOF bullet. `workflows/README.md`: the round in the template table.
+- `references/dfm-printed-enclosure.md` §8.5: comb slots straight-walled (2 mm lead-in, mouth ~1.2 wider), pads over staggered slots fill the
+  pitch, neighbour ribs 0.04 narrower. §8.3: `curr_bed_type` from a CLI export is the machine default — set it.
+- `references/pcb-layout-dfm.md` §11: placed art inside the outline by point-in-polygon + distance, a build assertion, and the per-layer Gerber
+  copper bbox inside the Edge.Cuts bbox.
+- `references/agent-ops.md` §4: four parallel blind reviewers on different models with fixed inputs, no edits, measured vs judgment; act first
+  on findings two agents share.
+- `references/pitfalls.md`: [case/fit-dof], [case/csg-order], [case/comb], [case/engine-of-record], [case/seam], [tooling/slicer-project],
+  [layout/art-outside-edge], [review/drawing], [review/orchestration].
+
+### Changed
+- `references/dfm-printed-enclosure.md` §8 seam rule: ONE groove per part, every part's groove on the same assembled corner (two grooves split
+  the seams of mating parts). §8 slicer projects: a project from stock presets starts with an empty `different_settings_to_system`; every
+  override goes into it.
+- `references/case-pipeline.md` §Process rules: a third Manifold sliver construct (straight rib faces meeting an end plane; CGAL one watertight
+  body), and mesh repair afterwards is not a fix.
+- `references/fdm-print-optimisation.md`: asymmetric flush pair (dark→light ~450, light→dark ~160), the pristine colour first in
+  `first_layer_print_sequence`, 5 bottom shells behind a first-layer colour mark.
 
 ## 0.11.8 — 2026-10-08 — Regenerating after an order, and the stock the fab consumed
 
