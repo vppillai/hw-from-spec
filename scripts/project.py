@@ -277,7 +277,7 @@ def kickoff_check(P):
             bad.append(f"{q}: answer `{answer}` differs from project.scope `{P.scope()}`")
         ids = own.findall(drow)
         if SLOT.search(drow) or not ids:
-            bad.append(f"{q}: no owner ({P.get('ids.owner_prefix')}-nn) row id in `{drow}`")
+            bad.append(f"{q}: no D row id (owner prefix {P.get('ids.owner_prefix')}-) in `{drow}`")
         elif dec_ids and not any(i in dec_ids for i in ids):
             bad.append(f"{q}: D row {ids[0]} is not in {P.get('paths.decisions')}")
         for key, scopes in KEY_RE.findall(written):
@@ -411,12 +411,12 @@ def selftest():
     P.cfg.update(kickoff={"answers": "10-spec/KICKOFF_ANSWERS.md", "product_class": "sample"}, board={"layers": 4}, print_targets={"t": {"dfm_process": "x"}}, fab_dfm={"bar": {"open": 0}})
     P.cfg["paths"]["decisions"] = "D.md"; open(f"{d}/D.md", "a").write("| **D-02** | d | **APPROVED** | a | p | r |\n| **D-03** | d | **APPROVED** | b | p | r |\n")
     P.cfg["project"]["scope"] = "ee"
-    bad = kickoff_check(P); assert len(bad) == 3 and "board.thickness_mm" in bad[0] and bad[1].startswith("C8a: no owner (D-nn) row") and bad[2].startswith("D1: answer still a slot"), bad
+    bad = kickoff_check(P); assert len(bad) == 3 and "board.thickness_mm" in bad[0] and bad[1].startswith("C8a: no D row id") and bad[2].startswith("D1: answer still a slot"), bad
     P.cfg["board"]["thickness_mm"] = 1.6; open(f"{d}/10-spec/KICKOFF_ANSWERS.md", "a").write("| E1 | rounds | one | yes | D-99 | `kickoff.verification.rounds` |\n")
     bad = kickoff_check(P); assert any("D-99 is not in" in b for b in bad) and any("kickoff.verification.rounds" in b for b in bad), bad
     open(f"{d}/10-spec/KICKOFF_ANSWERS.md", "a").write("| A0 | scope | mech | yes | D-02 | `project.scope` |\n| E2 | log | agent | yes | CC-001 | `board.layers` |\n")
     bad = kickoff_check(P); assert any(b.startswith("A0: answer `mech` differs from project.scope `ee`") for b in bad), bad
-    assert any(b.startswith("E2: no owner (D-nn) row id") for b in bad), bad                     # an agent id is not the owner's row
+    assert any(b.startswith("E2: no D row id") for b in bad), bad                     # an agent id is not the owner's row
     P.cfg["project"]["scope"] = "mech"; assert not any(b.startswith("A0:") for b in kickoff_check(P)); P.cfg["project"]["scope"] = "ee"
     h = host_facts(); assert h["cores"] >= 1 and h["jobs_max"] >= 1 and h["min_free_gb"] >= 2 and "| Host |" in host_row(h), h
     assert host_row(dict(cores=14, ram_gb=24, jobs_max=3, min_free_gb=3.6)).startswith("| Host | 14 cores, 24 GB RAM")
