@@ -101,6 +101,31 @@ record (marketing look: clean scheme, the ordered colours, legends readable → 
 (geometry md5 of the one scad file named — flatten includes or accept that included files do not move the key, defs, camera, size) so a text edit renders nothing and a case bump re-renders every page (≈ 1 min). Numbers stay in the SOP /
 manufacturing spec (one source); the guide names where the words are. Registered in `production_cut.yaml` as a deliverable with its `--check`;
 the SOP's companion cell points at it (a pointer, no revision bump).
+- **Pages carry real text.** A page is a vector page (SVG or HTML) with the text as text and the picture embedded as a raster; the PDF comes from
+  a vector converter (`rsvg-convert`, a headless browser) and the pages are merged (`pypdf`). A page rasterised whole is rejected on first read:
+  nothing selects, nothing searches, the fonts blur. Layout: a title page (title, subtitle, one-sentence purpose, date + `git describe`, the hero
+  picture, a parts table with quantity and note), then one step per page (numbered badge, title, the picture in a hairline frame, numbered
+  instructions, a grey note, a CAUTION box where a hazard exists, a footer with the document name, page N of M, the revision).
+- **Illustrations are shaded line drawings, not the marketing render.** The marketing look (dark parts on a dark scheme) is low-contrast on paper and
+  on a laptop. Each picture is two passes over the SAME meshes of record: a shaded pass with light part fills (two greys for the two parts, the
+  ordered inlay colour, red for arrows and markers) and a flat pass with every part in one grey; the edges of the flat pass (`FIND_EDGES` over a
+  threshold, grown one pixel) go black over the shaded pass, on white, cropped with a margin, with a warning when the content touches the frame.
+  Mated boards keep their real art mapped on (the showcase's mapping, the same cameras).
+- **A recess in a line drawing reads as a raised outline.** Debossed text, pockets and slots on a coupon come out as hollow outlines on a flat face.
+  Split the mesh by height — `difference(mesh, inner column)` light and `intersection(mesh, inner column)` dark, the column 0.01 below the top
+  face and 1 mm inside the outer walls so the sides stay light — and view it steep enough (about 30 degrees from vertical) that the recess walls
+  vanish; the floors then read dark on the light face, the way the printed part reads.
+- **An arrangement that a perspective view hides gets a section inset.** Alternating slot heights, a lip inside a rim, a notch above a shoulder:
+  ten loaded parts in a perspective view hide the pattern; load a FEW (five of ten, one on its way with an arrow) so the empty slots show the
+  floors, and add an inset: a thin slab (2 mm) `intersection()` through the plain region, ORTHOGRAPHIC, seen square on, parts in their two colours.
+  In a rendered boolean the colour goes OUTSIDE the `intersection()` / `difference()` (a rendered boolean drops its children's colours). The inset
+  sits beside a wide main picture or under a square one, with a short label ("Section across the case"), the position computed from the two sizes.
+- **Every number in the text comes from the design parameters** (the same file the meshes come from): counts, magnet size, the pinch band, the
+  recess below a face. The guide reads the parameter file the way the drawing does (a regex over `NAME = value;` lines, derived values by one
+  `echo()` run); a design change moves the pictures AND the words. Counts are words ("four magnets"), dimensions are digits ("6 x 3 mm").
+  Cameras are the one hand-tuned input: a size change that moves a feature out of frame trips the frame warning, not a wrong number.
+- **Wording for the reader of the part, not the author of the file**: no axis names, no parameter names. "The front", "a rear corner", "the long
+  side", "a high board", "the band above its neighbours" — words a person with the part in hand can follow.
 
 ## 9. Repo re-layout and deletions at the order (`scripts/reorg_paths.py`)
 When the tree is a mess at the order: phase 1 deletions (superseded generated artefacts; git history + tags keep them), phase 2 re-layout after

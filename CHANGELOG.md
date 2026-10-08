@@ -1,6 +1,6 @@
 # CHANGELOG — hw-from-spec
 
-## Current state (0.11.10) — read this instead of replaying the entries below
+## Current state (0.11.11) — read this instead of replaying the entries below
 
 - **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
   twelve batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
@@ -40,6 +40,24 @@
 - **Generic by rule**: the skill names no project, part, board, order, account or person — `scripts/generic_lint.py` reads the whole repo
   (CHANGELOG and docs included; history keeps its measured numbers), a fenced worked example keeps numbers and kinds but never a name, and the
   repo carries no project retro (a retro report is folded, then deleted).
+
+## 0.11.11 — 2026-10-08 — The assembly guide as a document: vector pages, line drawings, recesses, section insets, numbers from the parameters
+
+Source: one printed case whose first guide shipped as one raster per page in a dark marketing look; the owner's first read: "the text is not
+selectable", "very low contrast", then "the coupon rendering is not exact" and "the staggered view is not clear" on pictures built from the right
+meshes, and "if the design changes, do the doc scripts change too?".
+
+### Added
+- `references/release-and-cut.md` §8: pages are vector with real text (SVG / HTML → PDF, merged), a title page with a parts table, one step per
+  page with badge / frame / instructions / note / caution / footer; illustrations are shaded line drawings from two passes over the meshes of
+  record; a recess is shown by a height split of the mesh (dark inside, light skin, inner column 1 mm inside the walls) and a steep view; an
+  arrangement a perspective hides gets a partial load plus an orthographic thin-slab section inset, colour outside the boolean; every number in
+  the text from the design parameters, counts as words and dimensions as digits; wording for the reader with the part in hand.
+- `references/pitfalls.md` documentation: seven dated one-liners (raster pages, marketing renders, the deboss that read raised, the hidden
+  stagger, the boolean that drops colours, hand-typed numbers, axis names).
+
+### Changed
+- `SKILL.md` §10: the guide bullet names the page format, the drawing style, the recess and section rules, and the parameter source.
 
 ## 0.11.10 — 2026-10-08 — Repository layout, folder READMEs, release by use, order records
 
