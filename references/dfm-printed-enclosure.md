@@ -6,23 +6,28 @@ The chain itself is `references/case-pipeline.md`; the post-order review round i
 `scripts/thin_wall_census.py`; the records are `templates/CENSUS_GATE_ROWS.md` (check-table rows) and `templates/DFM_ROUND.md` (one file per
 quote-page session under `60-orders/quotes/<date>/`). SLA is §11, CNC is `references/cnc-enclosure.md`.
 
-**Every number here carries a tag** — the same four as `references/pcb-layout-dfm.md`: **[checker]** = what the vendor's thin-wall map colours
-(the worked example: JLC3DP, on ~150 mm parts); **[vendor sheet: URL, date]** = a published capability or tolerance; **[physics]** = the material;
-**[owner bar]** = the bar the owner set (no yellow on the map, closed rims); **[convention]** = what the scripts rely on. **No number lives in a
-script**: every gate value is read from `project.yaml print_targets.<target>` (`references/project-yaml.md`), and the numbers quoted below are one
-measured project's targets, labelled.
+**Every number here carries a tag**, the same four as `references/pcb-layout-dfm.md`:
+- **[checker]** = what the vendor's thin-wall map colours (the worked example: JLC3DP, on ~150 mm parts).
+- **[vendor sheet: URL, date]** = a published capability or tolerance.
+- **[physics]** = the material.
+- **[owner bar]** = the bar the owner set (no yellow on the map, closed rims).
+- **[convention]** = what the scripts rely on.
+
+**No number lives in a script**: every gate value is read from `project.yaml print_targets.<target>` (`references/project-yaml.md`), and the
+numbers quoted below are one measured project's targets, labelled.
 
 ## 0. The acceptance bar (an owner decision at kickoff; written into the decision row before the first census)
-**0 FAIL / 0 WARN in every check table and in the census of every body · zero slicer warnings · no vendor flag (API read) · no yellow, no red on
-the vendor's heat map · every face rendered and looked at · no waivers.** A WARN is not a verdict: a row either has a threshold (then it is PASS
-or FAIL on a MEASURED value) or it has none (then it is **INFO**, in its own table, no verdict, **with the reason it has no threshold**). "0 FAIL,
+**0 FAIL / 0 WARN in every check table and in the census of every body · zero slicer warnings · no vendor flag (API read). No yellow, no red on
+the vendor's heat map · every face rendered and looked at · no waivers**. A WARN is not a verdict. A row either has a threshold, and then it is
+PASS or FAIL on a MEASURED value. Or it has none, and then it is **INFO**, in its own table, no verdict, **with the reason it has no threshold**. "0 FAIL,
 81 WARN" told the owner nothing and hid the row that cracked the part; the same data as PASS / FAIL + INFO exposed a second defect nobody had
 seen (a dummy 0.4 mm low). The only exception path is the machine-readable `accepted` list (§2) — dated, with the vendor's written evidence.
 
 ## 1. MJF rules (worked example: JLC3DP PA12-HP; checker grey line 1.2 mm)
-- **Three numbers, three sources — never confuse them**: the vendor's **published printable minimum** (JLC review mail: "nylon ≥ 1.0";
-  Shapeways / Sculpteo / HP direct list 0.6–1.0 for PA12) **[vendor sheet]**; the **checker's yellow line** (JLC3DP heat map: grey ≥ 1.2, yellow
-  0.5–1.2, red < 0.5) **[checker]**; and the **owner's bar** (no yellow → design at `wall_gate + design_margin`; `design_margin` ≥ 0.3 — a wall AT the gate read yellow on the vendor's map while the API passed, §13) **[owner bar]**.
+- **Three numbers, three sources — never confuse them**. The first is the vendor's **published printable minimum** (JLC review mail: "nylon ≥ 1.0";
+  Shapeways / Sculpteo / HP direct list 0.6–1.0 for PA12) **[vendor sheet]**. The second is the **checker's yellow line** (JLC3DP heat map: grey
+  ≥ 1.2, yellow 0.5–1.2, red < 0.5) **[checker]**. The third is the **owner's bar** **[owner bar]**: no yellow → design at
+  `wall_gate + design_margin`, with `design_margin` ≥ 0.3. A wall AT the gate read yellow on the vendor's map while the API passed (§13).
   A team at another vendor or without the no-yellow bar designs to a different number; the mechanism (design above the line the checker
   flags, by a margin the sampling and the process spread need) is what generalises. A 1.2 nominal samples 1.19 on the mesh; the 0.3 margin
   costs little on a 2 mm shell.
@@ -33,40 +38,41 @@ seen (a dummy 0.4 mm low). The only exception path is the machine-readable `acce
 - **Engraved text is ALLOWED on MJF** (standard practice: stroke ~0.8–1.0, depth ~0.5 per vendor guides **[vendor sheet]**) **when the stroke ≥
   `void_gate`** — at 1.2 that means cap height ≥ ~6 mm. Under a no-yellow bar with cap 4 (a 0.82 stroke) it does not fit → widen the text, or a
   label carrier (UV-printed plate in a rebate, adhesive label), or raised text on a separate plate. Do not delete legibility the space allows.
-- **No FREE-STANDING wedge** **[checker]**: the map colours RED a thin edge with no wall behind it — 36° rail tips and lips (yellow / red full
-  length), an interior roof cove unioned without tangency (a knife-edge sliver), the 0.01 mm overshoot slab. It leaves GREY a chamfer or 45° ramp
+- **No FREE-STANDING wedge** **[checker]**. The map colours RED a thin edge with no wall behind it. Examples: 36° rail tips and lips (yellow / red
+  full length), an interior roof cove unioned without tangency (a knife-edge sliver), the 0.01 mm overshoot slab. It leaves GREY a chamfer or 45° ramp
   cut INTO a ≥ `wall_gate` wall. **Tangent fillets cut into ≥ gate walls are fine and recommended at stress risers** (they lower the ~1.2× slit-
   root concentration the FEA reference reports) **[physics]**; what went red was a non-tangent cove body and a fillet's exposed thin edge. So:
   chamfers and tangent fillets into walls yes; added free edges, rails, lips, knife edges no — round the tip, give it a ≥ gate flat land, or
   remove the feature.
 - **Snap fits, living hinges, compliant detents: PA12 CAN do them** **[physics]** (E ≈ 1.7 GPa, elongation at break 15–25 %; HP's MJF design
-  guide shows both). What killed them on one vendor-MJF enclosure was (a) the ≥ `void_gate` slit a no-yellow bar demands at JLC3DP, which rarely fits
-  the space budget, and (b) a rigid bump with no arm length (F ∝ t³ — a stiff bump blocks, in PA12 as in PETG). Allowed when the slit ≥ the void
+  guide shows both). Two things killed them on one vendor-MJF enclosure. (a) The ≥ `void_gate` slit a no-yellow bar demands at JLC3DP rarely
+  fits the space budget. (b) A rigid bump had no arm length (F ∝ t³). A stiff bump blocks, in PA12 as in PETG. Allowed when the slit ≥ the void
   gate and the arm is engineered (length, root fillet, FEA); otherwise screws into inserts or magnets (§1.1). On PLA / FDM: screws.
-- **A long thin skin is a wall, never a "feature"** **[owner bar + physics]**: a sub-minimum skin well over 100 mm long **cracked on every part**
-  of one geometry (from the free ends inward; likely causes cooling / depowdering stress on the wedge it carried — not fractographed, see §10).
+- **A long thin skin is a wall, never a "feature"** **[owner bar + physics]**. A sub-minimum skin well over 100 mm long **cracked on every part**
+  of one geometry, from the free ends inward. Likely causes: cooling / depowdering stress on the wedge it carried. The crack was not
+  fractographed (see §10).
   Design consequence: anything spanning > 10 mm is judged at the wall minimum; a knife edge under 10 mm span is a feature — and under the
   no-yellow bar even that gets a flat land.
-- **The vendor's metric is length-dependent** (§7.1) **[checker]**: a rim over a skirt-lap step passed at a third of the part's length and failed at
-  full length with every census clean — calibrate any long-wall profile with full-length probes, never a coupon.
+- **The vendor's metric is length-dependent** (§7.1) **[checker]**. A rim over a skirt-lap step passed at a third of the part's length. It failed
+  at full length with every census clean. Calibrate any long-wall profile with full-length probes, never a coupon.
 - **A feature that cannot be vendor-clean inside its space budget goes; it is not thinned.** A stepped dovetail with 1.2 flats on lip AND tongue
-  needs 2.4 mm of depth; the groove had 2.15 → rail off, screws, plain edges (a wider part with an ENCLOSED pocket rail is the owner's option).
+  needs 2.4 mm of depth. The groove had 2.15 → rail off, screws, plain edges. A wider part with an ENCLOSED pocket rail is the owner's option.
   Thickening one wall moves its neighbours (skirt 1.2 → 1.3 pushed the snap-tab force over its class; fixing that broke the catch minimum):
   **every wall change reruns the whole table, never one row.**
-- **Two owner rules can collide inside one feature** (a legend-plate lip needed inset ≥ 0.6 against a top fillet, its web beside a dish needed
-  inset ≤ 0.45 to stay a "wall"): the way out is honest classification — a plate is a plate, its webs are ribs at the rib gate — never a thinner
-  wall under a friendlier name.
+- **Two owner rules can collide inside one feature**. In one case, a legend-plate lip needed inset ≥ 0.6 against a top fillet. Its web beside a
+  dish needed inset ≤ 0.45 to stay a "wall". The way out is honest classification, never a thinner wall under a friendlier name. A plate is a
+  plate, and its webs are ribs at the rib gate.
 - **Rule drift check.** When the print rule changes (FDM two lines 0.85 → MJF 1.2), re-derive EVERY yaml value set against the superseded rule; a yaml
   comment `>= 0.8` beside a 0.9 wall is the tell.
 - **Overshoots become slabs.** A `+ 0.01` extrude against coplanar-face artefacts is a 0.01 mm slab in the mesh = a RED line on the map. Trim
   the union at the design face (intersection); never exempt "coplanar seam slabs" in a check.
 - **Dimensional tolerance is the vendor's, not ±0.1** **[vendor sheet]**: MJF PA12 is typically ±0.3 mm or ±0.3 % (HP: ±0.2 mm below
   100 mm, worse above — cite the vendor's sheet with URL + date in `print_targets.<t>.tolerance_source`). A 1.3 wall can print 1.0–1.1. "A 1.2
-  nominal prints 1.1 … 1.3" is an **assumption until the first-article caliper table exists** (§10 step 1); the measured spread of every gated wall
-  and bore on the received parts feeds `print_targets.<t>.tolerance` and the design margin — until then the margin row is INFO, not PASS.
-- **Build orientation and anisotropy** **[vendor sheet + physics]**: MJF Z-direction strength is ~10–20 % below XY (HP data — check the
-  vendor's sheet), FDM 30–50 % across layers; ask the vendor for the build orientation / position when the part matters (a cantilever, a boss under
-  screw preload) and record it in `DFM_ROUND.md`. Draft angles: **n/a for MJF / SLA / FDM**; required if the design is ever moulded — say so in the
+  nominal prints 1.1 … 1.3" is an **assumption until the first-article caliper table exists** (§10 step 1). The measured spread of every gated
+  wall and bore on the received parts feeds `print_targets.<t>.tolerance` and the design margin. Until then the margin row is INFO, not PASS.
+- **Build orientation and anisotropy** **[vendor sheet + physics]**. MJF Z-direction strength is ~10–20 % below XY (HP data — check the
+  vendor's sheet). For FDM the figure is 30–50 % across layers. Ask the vendor for the build orientation / position when the part matters (a
+  cantilever, a boss under screw preload). Record it in `DFM_ROUND.md`. Draft angles: **n/a for MJF / SLA / FDM**; required if the design is ever moulded — say so in the
   brief so a reader does not think it was forgotten.
 
 ### 1.1 Retention hardware: inserts, screws, magnets — per material
@@ -79,18 +85,19 @@ seen (a dummy 0.4 mm low). The only exception path is the machine-readable `acce
 
 Retention is a kickoff question (`references/kickoff-questionnaire.md`): screws + inserts (recommended for a part that is opened for service),
 magnets (tool-free, for a hood the technician lifts daily), none (friction lap only — a fit mock-up). Whatever is chosen, **the retention feature
-must exist in the exported mesh of the version ordered** — a blind review found a "retained" hood whose STLs carried no bosses (the check rows had
-read the yaml, not the mesh — every retention row measures the MESH).
+must exist in the exported mesh of the version ordered**. A blind review found a "retained" hood whose STLs carried no bosses. The check rows had
+read the yaml, not the mesh. Every retention row measures the MESH.
 
 ### 1.2 Post-processing effects **[vendor sheet + physics]**
-Dyeing adds no dimension; **bead-blast / vapour smoothing removes 0.05–0.15 mm per surface and rounds edges** — a `wall_gate + 0.1` wall and a
-1.0 legend stroke lose that; SLA post-cure warps thin flat plates; FDM sanding / ironing of a top face flattens raised legends. Rule: **every
+Dyeing adds no dimension. **Bead-blast / vapour smoothing removes 0.05–0.15 mm per surface and rounds edges**. A `wall_gate + 0.1` wall and a
+1.0 legend stroke lose that. SLA post-cure warps thin flat plates. FDM sanding / ironing of a top face flattens raised legends. Rule: **every
 post-process is named on the order sheet and on the print target (`print_targets.<t>.post_process`) and is subtracted in the census margin.**
 
 ### 1.3 Material rating and thermal **[vendor sheet + owner bar]**
-An enclosure holding a powered board: state per target on the order sheet **UL 94 rating and HDT at 0.45 MPa** (the `hdt_c` key; PA12 MJF: typically HB, HDT ~175 °C **[K]**, Tg ~50 °C **[physics]**;
-PLA: unrated, softens ~55–60 °C; PETG ~75–80 °C; resins per the TDS), keep vents away from the hot zone, and record the owner's acceptance
-**"engineering sample, not a rated enclosure"** as a decision row (the questionnaire asks it). A hood over a hot module in PLA is a fit mock-up.
+An enclosure holding a powered board: state per target on the order sheet **UL 94 rating and HDT at 0.45 MPa** (the `hdt_c` key). PA12 MJF:
+typically HB, HDT ~175 °C **[K]**, Tg ~50 °C **[physics]**. PLA: unrated, softens ~55–60 °C. PETG: ~75–80 °C. Resins: per the TDS. Keep vents
+away from the hot zone. Record the owner's acceptance **"engineering sample, not a rated enclosure"** as a decision row (the questionnaire asks
+it). A hood over a hot module in PLA is a fit mock-up.
 
 ### 1.4 Tolerance stack **[convention]**
 The interference check proves 0 mm³ overlap on NOMINAL meshes. Add a **worst-case clearance row per mating pair**: nominal clearance −
@@ -100,8 +107,9 @@ base block: FDM holes shrink ~0.1–0.3, MJF ±0.3, SLA ~0.1 — the coupon deci
 
 ### 1.5 One-sided parts on BOTH sides of a symmetric assembly — a parts-list decision, before the first plate **[convention]**
 A symmetric assembly built from identical parts places a part on its other side by turning it over (a proper rotation). That works only while
-the part has no ONE-SIDED feature: integral pegs or bosses on one face, a slot that opens one way, a flat or working face that must point at a
-mate, an outline that is not symmetric about the turn-over axis and must face a fixed direction. Turned over, such a part points its feature
+the part has no ONE-SIDED feature. A one-sided feature is any of these: integral pegs or bosses on one face, a slot that opens one way, a flat
+or working face that must point at a mate. An outline that is not symmetric about the turn-over axis and must face a fixed direction is one too.
+Turned over, such a part points its feature
 inward where the other side needs it outward; drawn with the feature outward on both sides, the model is a MIRROR (det −1, `case-pipeline.md`
 §Assembly model) and no process can make it. The parts list settles it, one row per part type with a one-sided feature, before the first plate:
 
@@ -122,29 +130,31 @@ upload, with the verdict → validate → rule-fix → retro loop in `references
 - A row `KEPT BELOW 1.2 (listed): …` with verdict `None` and yaml numbers is a waiver nobody signed. The cracked lip's row quoted the MALE profile
   (tip / neck); the female hinge (parting line − groove roof = 0.88) was never a measured quantity. **Every thin feature gets a measured number from
   the MESH (not the yaml), a span and a class (wall / void / wedge / opposing).**
-- **The ray-cast census is a FAIL gate per print preset** (`scripts/thin_wall_census.py --target <t>`, rows `templates/CENSUS_GATE_ROWS.md`):
-  inward rays = wall thickness, outward rays = void width; clusters below `gate − 0.05` (**convention**: at the gate itself the nominal 1.2 walls
-  sampled 1.19 join every region into one 145 mm cluster); each sample classified by the angle between the sample face and the hit face (< 30°
-  = wall, ≥ 30° = wedge — the 30° is a **convention**, not calibrated) and **the two classes clustered separately** (one mixed cluster that chained
-  across a body through chamfer flanks was labelled "wedge" and swallowed a 1.0 … 1.2 lip and 1.3 slot lands; when the rail went, both surfaced); **walls and voids FAIL below their gates; wedges FAIL when the band of
-  surface below the gate is wider than `wedge_band`** (default 1.5 mm — the width from the thin edge to where thickness reaches the gate; a
-  chamfer cut into a wall has a band of ~1 mm and no free edge, a 35° free rail flank has ~1.8) unless an `accepted` entry names the backing
-  wall. **The band is an axis-aligned measure**: the census takes the second-largest extent of the cluster's axis-aligned bounding box. It is
+- **The ray-cast census is a FAIL gate per print preset** (`scripts/thin_wall_census.py --target <t>`, rows `templates/CENSUS_GATE_ROWS.md`).
+  Inward rays = wall thickness, outward rays = void width. The census clusters samples below `gate − 0.05`. The 0.05 is a **convention**: at the
+  gate itself the nominal 1.2 walls sampled 1.19, and every region joined into one 145 mm cluster. Each sample is classified by the angle between
+  the sample face and the hit face: < 30° = wall, ≥ 30° = wedge. The 30° is a **convention**, not calibrated. **The two classes are clustered
+  separately**. One mixed cluster that chained across a body through chamfer flanks was labelled "wedge" and swallowed a 1.0 … 1.2 lip and 1.3
+  slot lands. When the rail went, both surfaced. **Walls and voids FAIL below their gates. Wedges FAIL when the band of surface below the gate is
+  wider than `wedge_band`** (default 1.5 mm), unless an `accepted` entry names the backing wall. The band is the width from the thin edge to where
+  thickness reaches the gate. A chamfer cut into a wall has a band of ~1 mm and no free edge. A 35° free rail flank has ~1.8.
+  **The band is an axis-aligned measure**: the census takes the second-largest extent of the cluster's axis-aligned bounding box. It is
   valid only for a straight edge that runs along X, Y or Z. A rotated part inflates it: the same 1.0-wide band reads 1.0 along X and 28.28 at
   45° in XY (a verifier probe). A ring around a hole reads its diameter (`references/pitfalls.md`, [census/metric]). Re-measure a
-  diagonal or ring wedge FAIL across the edge before you accept or fix it; **the nearest OPPOSING face in ANY direction is gated too**: two faces whose normals oppose within 30° and whose distance is
-  below the gate FAIL whether or not a normal ray from one hits the other — the ledge underside 0.5 from a step top, a ring face 0.4 from a wall
-  plane, the 0.4 mm root of a rim ring set inboard of its wall: the class the vendor found and the normal-ray census did not (§7.1).
+  diagonal or ring wedge FAIL across the edge before you accept or fix it. **The nearest OPPOSING face in ANY direction is gated too**. Two faces
+  whose normals oppose within 30° and whose distance is below the gate FAIL whether or not a normal ray from one hits the other. Examples: the
+  ledge underside 0.5 from a step top, a ring face 0.4 from a wall plane, the 0.4 mm root of a rim ring set inboard of its wall. That is the class
+  the vendor found and the normal-ray census did not (§7.1).
 - **Samples scale with surface area** (`samples_per_mm2`, default 10; 60 000 fixed samples on a 150 mm tray were 1–2 / mm² and a 0.6 × 4 mm slit
   gets a handful). **Recall is selftested**: a plate with one 0.8 mm rib and one 0.6 mm slit must produce one WALL FAIL and one VOID FAIL.
-- **The NOISE-FLOOR row** (it measures false positives, not recall — it is not the vendor's colouring reproduced): fraction of
-  wall-class surface below `gate − 0.05` and of void-facing surface below it, equal to the floor measured on a known-good primitive (a plate +
-  boss + hole at the gate + margin: 0.00 % / 0.00 %). **Known blind spots** of the census, listed here so nobody calls it complete: bbox-scale
-  effects of the vendor's own resolution (§7.1), contacts under 0.05 mm (`thin_wall_check.py --pinch`), and anything a *slicer* adds (supports
-  on visible faces are read from the g-code, §8).
-- **The `accepted` list** (`print_targets.<t>.accepted`) mirrors the board's `dfm_accepted`: entries `{class, bbox, reason, date, evidence}`
-  — a FAIL cluster whose bbox lies inside an entry's bbox (1 mm tolerance) with the same class is machine-matched every run and listed as
-  ACCEPTED (with the entry's evidence path: the vendor's written acceptance, a first-article measurement); an entry without date / reason /
+- **The NOISE-FLOOR row** measures false positives, not recall. It is not the vendor's colouring reproduced. The row reads the fraction of
+  wall-class surface below `gate − 0.05` and of void-facing surface below it. That fraction is equal to the floor measured on a known-good
+  primitive (a plate + boss + hole at the gate + margin: 0.00 % / 0.00 %). **Known blind spots** of the census are listed here so nobody calls it
+  complete. They are bbox-scale effects of the vendor's own resolution (§7.1), contacts under 0.05 mm (`thin_wall_check.py --pinch`), and
+  anything a *slicer* adds. Supports on visible faces are read from the g-code (§8).
+- **The `accepted` list** (`print_targets.<t>.accepted`) mirrors the board's `dfm_accepted`: entries `{class, bbox, reason, date, evidence}`.
+  A FAIL cluster whose bbox lies inside an entry's bbox (1 mm tolerance) with the same class is machine-matched every run. It is listed as
+  ACCEPTED with the entry's evidence path: the vendor's written acceptance, a first-article measurement. An entry without date / reason /
   evidence does not count. Nothing else moves a FAIL.
 - **A PURE gate in the adopt list**: the census JSON in `checks/census/` beside the set's `parts/` carries the STL md5 and the FAIL list; `thin_wall_census.py --gate-dir <dir>`
   proves md5 = the committed STL and 0 unaccepted FAIL without recomputing. It re-matches every accepted FAIL by class and bbox (1 mm tolerance) against the current yaml.
@@ -192,85 +202,87 @@ Every rim and wall reads CLOSED on the single part: no through-slot, notch, key 
    verdict class downgrades to "page popover + screenshot", the round is NOT YET until the API read is restored or the owner accepts the weaker
    evidence in a D row. **Capability-page snapshot** once per round: PDF / print of the vendor's published design rules with the date, so the
    numbers in `print_targets` can be re-derived when the site changes.
-3. **The flag is computed at UPLOAD and does not depend on the process / material chosen on the line.** Setting the material (Edit dialog SAVED —
-   form state, not a cart) is still done first: it gives the price and the legend of the material's heat map; the record names the material on the
-   line and **the quote price per body** before reading anything. Changing the material never flips `thinWall`. The page defaults to a resin.
+3. **The flag is computed at UPLOAD and does not depend on the process / material chosen on the line**. Still set the material first (Edit dialog
+   SAVED — form state, not a cart). It gives the price and the legend of the material's heat map. The record names the material on the line and
+   **the quote price per body** before reading anything. Changing the material never flips `thinWall`. The page defaults to a resin.
 4. **Open the heat map on every face** even when `thinWall` is false. Take six captures per body: the origin view, three 90° azimuth drags (a horizontal drag of canvas-height/2 px is 180°), and both poles (±canvas-height/2 vertical, from the origin). `scripts/heatmap_count.py` on the six captures must print 0 / 0 (yellow / red in the model area: the legend column and the tool-bar strip are skipped). It reads each pixel in HSV, so shaded faces and amber count too. Record **the legend thresholds as displayed
    that day** — the census turns a colour into a number.
-5. **Save screenshots named `<piece>_<round>_<md5-8>_<material>_heatmap_<face>.png`** plus `quote_page_<round>_flags.png`, keep the uploaded STL
-   beside them, and write `templates/DFM_ROUND.md` into `60-orders/quotes/<date>/` with the API fields, the browser / UA / signed-in state per body.
+5. **Save screenshots named `<piece>_<round>_<md5-8>_<material>_heatmap_<face>.png`** plus `quote_page_<round>_flags.png`. Keep the uploaded STL
+   beside them. Write `templates/DFM_ROUND.md` into `60-orders/quotes/<date>/` with the API fields, the browser / UA / signed-in state per body.
 6. **When a verdict flips between two uploads, diff the meshes before touching the generator**: the r3 tray read RED where the r2 tray had passed —
    same 4088 triangles, every vertex within 7.7e-6 mm. The real difference was a premature DOM read (step 2).
 7. **A coordinator verifies a worker's "no flag" claim itself** (re-request the API for the md5 in the record) before a decision row says PASS.
 
 ### 7.1 The vendor's thin-wall metric is LENGTH-DEPENDENT — calibrate with probes, in one round
-A ray-cast census can read nothing under the gate on a body the vendor's checker colours RED along its long walls: the trip is a profile whose
-opposing faces never overlap (a rim set above a lap step with an inward undercut), and **the same profile passes short and fails long** — a
-checker with bbox-relative resolution smears a near-threshold feature on a larger body. Consequences: (a) the margin a long wall needs scales
-with the LARGEST bbox dimension, not with the wall's own length; (b) a probe must match the body's bbox in every axis (a full-length but shallower
-probe reads finer); (c) ANY near-threshold feature on a larger next part can flip, not only the one found. Record the size the rule was calibrated
+A ray-cast census can read nothing under the gate on a body the vendor's checker colours RED along its long walls. The trip is a profile whose
+opposing faces never overlap (a rim set above a lap step with an inward undercut). **The same profile passes short and fails long**: a
+checker with bbox-relative resolution smears a near-threshold feature on a larger body. Consequences: (a) The margin a long wall needs scales
+with the LARGEST bbox dimension, not with the wall's own length. (b) A probe must match the body's bbox in every axis (a full-length but shallower
+probe reads finer). (c) ANY near-threshold feature on a larger next part can flip, not only the one found. Record the size the rule was calibrated
 at in `print_targets.<t>.max_bbox_for_rule`; test the hypothesis once with the same profile in a taller / wider box.
 - **The probe method (converges in ONE quote-page round, ~2 h):**
   1. *Localise*: cut the FAILING body of record (the archived md5 file) into capped slabs with `trimesh.intersections.slice_mesh_plane(mesh, n, o,
-     cap=True)` — front / middle / rear thirds, then two thirds and the full length — upload each ALONE, read the API. The slice that first turns
+     cap=True)`. Cut front / middle / rear thirds, then two thirds and the full length. Upload each ALONE and read the API. The slice that first turns
      `true` localises the feature AND shows the length threshold.
-  2. *Isolate*: plain-profile probes with OpenSCAD — one 2-D `polygon()` of the wall section extruded to **a short length AND to the full part
-     length**, a closed box with ≥ gate end walls, no bosses, **one knob per probe** (`-D`): as-is, rim flush, wall +, undercut filled. Upload each alone.
-  3. *Decide*: the first knob whose FULL-LENGTH probe reads false and whose geometry the mating part tolerates becomes the yaml change; the census
-     gets the rule as a named row; the probe folder (`60-orders/quotes/<date>/<round>/probe/` with `.scad`, `.stl`, PNGs and a probe table) is the
+  2. *Isolate*: build plain-profile probes with OpenSCAD. Each is one 2-D `polygon()` of the wall section extruded to **a short length AND to the
+     full part length**. Each probe is a closed box with ≥ gate end walls and no bosses. Use **one knob per probe** (`-D`): as-is, rim flush,
+     wall +, undercut filled. Upload each alone.
+  3. *Decide*: the first knob whose FULL-LENGTH probe reads false and whose geometry the mating part tolerates becomes the yaml change. The census
+     gets the rule as a named row. The probe folder (`60-orders/quotes/<date>/<round>/probe/` with `.scad`, `.stl`, PNGs and a probe table) is the
      evidence. A scaled-down copy of the body is not informative (every wall scales); a short probe that passes proves nothing about the full length.
   4. *Record*: the probe table names the method, every probe with its knob and verdict, the rule adopted, and the API re-verification of every body.
 
 <!-- worked example: begin (2026) — the one fenced example of this reference; the rules above are the generic form -->
 Worked example (JLC3DP MJF PA12 checker, a 147 mm tray): three ray-cast censuses (60 k … 400 k samples) found nothing under 1.37 mm on a tray the
-checker read RED along both long walls; the trip was a rim 1.4 mm above a skirt-lap step with a 0.9 mm inward undercut; the identical profile
-passed at 48 mm and failed at 88 and 147 mm. Calibrated rule at this checker and ~150 mm: a rim above a skirt-lap step ≥ 2.0 mm (1.4 fails; 2.0
-passes with the step and the undercut kept) OR the undercut filled so the inner wall runs straight to the rim top (then 1.25 … 1.3 above the step
-passed on the full tray, the mating skirt still registering on the kept step, partner overlap 0 mm³). Stayed grey: plain 2.0 walls and floors,
+checker read RED along both long walls. The trip was a rim 1.4 mm above a skirt-lap step with a 0.9 mm inward undercut. The identical profile
+passed at 48 mm and failed at 88 and 147 mm. Calibrated rule at this checker and ~150 mm: a rim above a skirt-lap step ≥ 2.0 mm, OR the undercut
+filled so the inner wall runs straight to the rim top. A 1.4 rim fails. A 2.0 rim passes with the step and the undercut kept. With the
+undercut filled, 1.25 … 1.3 above the step passed on the full tray. The mating skirt still registered on the kept step, partner overlap 0 mm³. Stayed grey: plain 2.0 walls and floors,
 boss rings, chamfers cut into ≥ 1.2 walls, 45° dish ramps. The probes were 40 mm and full-length extrusions with one knob each.
 <!-- worked example: end -->
 
 ### 7.2 Canonical STL and the geometry signature **[convention]**
 OpenSCAD 2021.01 writes the same CGAL geometry in a different triangle order on every export (three exports = three md5s); trimesh's exporter
 writes run-dependent NORMALS for identical vertices. Write the binary STL yourself: round vertices, rotate each triangle to its smallest vertex,
-sort triangles, recompute normals from the float32 vertices, 50-byte records — prove idempotence AND equality on a copy from another run before
-calling a hash "the geometry". The census gate, the vendor uploads and the production cut key on that md5. **Beside the md5 record a geometry
-signature** (volume, area, bbox, facet count, rounded to 1e-3): two STLs that differ by a 1e-6 vertex jitter are "different geometry" to
-the md5 and identical to the signature — a flipped verdict on "identical" geometry is diagnosed in one line instead of a mesh diff.
-**Gate watertightness AFTER canonicalisation, on the file that is recorded**: a canonicaliser that drops zero-area slivers can open the mesh (a
-sliver of 1e-5 mm² can be the only face joining two near-coincident vertices) — snap the sliver's closest vertex pair first, then drop what
-collapsed; a body without slivers keeps its bytes. Record the md5 of the canonical file, never of the raw export.
+sort triangles, recompute normals from the float32 vertices, 50-byte records. Prove idempotence AND equality on a copy from another run before
+you call a hash "the geometry". The census gate, the vendor uploads and the production cut key on that md5. **Beside the md5 record a geometry
+signature** (volume, area, bbox, facet count, rounded to 1e-3). Two STLs that differ by a 1e-6 vertex jitter are "different geometry" to
+the md5 and identical to the signature. A flipped verdict on "identical" geometry is diagnosed in one line instead of a mesh diff.
+**Gate watertightness AFTER canonicalisation, on the file that is recorded**. A canonicaliser that drops zero-area slivers can open the mesh: a
+sliver of 1e-5 mm² can be the only face joining two near-coincident vertices. Snap the sliver's closest vertex pair first, then drop what
+collapsed. A body without slivers keeps its bytes. Record the md5 of the canonical file, never of the raw export.
 
 ## 8. FDM at home (a desktop printer with a 0.4 nozzle at 0.20 mm layers, PLA / PETG, Bambu Studio 02.08 as the slicer) — printer-first preset
-A census that passes on paper is not a print: the FDM preset had 0 FAIL and failed as a product (bad finish, supports on visible faces, illegible
-text, 3 bosses under a 4-hole fan, a detent that blocked the slide, a raw board mesh that wrecked the print). Rules enforced as FAIL rows — the
+A census that passes on paper is not a print. The FDM preset had 0 FAIL and failed as a product. The failures: bad finish, supports on visible
+faces, illegible text, 3 bosses under a 4-hole fan, a detent that blocked the slide, a raw board mesh that wrecked the print. Rules enforced as FAIL rows — the
 numbers are **[owner bar]** for a 0.4 nozzle at 0.20 mm and live in `print_targets.home_fdm`:
-- Every EXTERNAL face on the bed, vertical, or a clean top — **asserted from the sliced g-code in the 3MF** (`; FEATURE: Support` extrusions
-  outside the outer-wall hull = a scar on a visible face), not only from the mesh's down-facing analysis; visible bridges ≤ 10 mm; interior
-  support area stated per body.
+- Every EXTERNAL face is on the bed, vertical, or a clean top. This is **asserted from the sliced g-code in the 3MF** (`; FEATURE: Support`
+  extrusions outside the outer-wall hull = a scar on a visible face), not only from the mesh's down-facing analysis. Visible bridges ≤ 10 mm.
+  Interior support area is stated per body.
 - **Walls ≥ 1.6** (4 perimeters; a two-line 0.85 skirt / rim / tab is a FAIL), ribs ≥ 1.2, voids ≥ 1.0 (a 0.4 nozzle clears a 1.0 slot);
   **minimum feature = 2 × line width** (0.8–0.9 at 0.42 line) **[physics]**.
-- **Elephant foot**: the first 2–3 layers flare 0.1–0.15 mm on a textured plate at 55 °C — a 0.30 lap clearance loses that at the seam;
-  chamfer the bottom edge 0.3–0.5 × 45° on mating skirts or use the slicer's elephant-foot compensation (0.1), recorded on the print sheet.
+- **Elephant foot**: the first 2–3 layers flare 0.1–0.15 mm on a textured plate at 55 °C. A 0.30 lap clearance loses that at the seam.
+  Chamfer the bottom edge 0.3–0.5 × 45° on mating skirts, or use the slicer's elephant-foot compensation (0.1). Record the choice on the print sheet.
 - **Hole shrink**: vertical holes print 0.1–0.3 mm under nominal **[physics]** — compensate in the preset's `fits` block (per-preset, coupon-decided)
-  or ream; state which on the print sheet. **Measured 2026-10-02 (the worked-example desktop printer: 0.4 nozzle, 0.20 mm, PLA, 4 walls — the only recorded verdict so far;
-  holes read ~0.15–0.2 under nominal):** Ø5 round hole +0.3 = free pivot without wobble; D6 (flat 1.0) socket +0.2 = snug light press, +0.3 falls
-  out; a 3 mm plate in a slot: +0.1 snug lap, +0.0 push-fit that stays on when shaken, +0.3 falls off; Ø5 press cap: hole +0.0 goes on by thumb
-  and holds, −0.15 would not go on any peg. So on this printer press fits sit at ZERO nominal clearance and running fits at +0.2…+0.3; another
-  printer / filament re-measures with the coupon, never inherits these.
+  or ream; state which on the print sheet. **Measured 2026-10-02** on the worked-example desktop printer (0.4 nozzle, 0.20 mm, PLA, 4 walls).
+  It is the only recorded verdict so far. Holes read ~0.15–0.2 under nominal. Results: Ø5 round hole +0.3 = free pivot without wobble. D6
+  (flat 1.0) socket +0.2 = snug light press, +0.3 falls out. A 3 mm plate in a slot: +0.1 snug lap, +0.0 push-fit that stays on when shaken,
+  +0.3 falls off. Ø5 press cap: hole +0.0 goes on by thumb and holds, −0.15 would not go on any peg. So on this printer press fits sit at ZERO
+  nominal clearance and running fits at +0.2…+0.3. Another printer / filament re-measures with the coupon, never inherits these.
 - **Seam placement**: the seam is set to the rear / a hidden edge in the slicer project (recorded key), never on a legend face. On a body whose
-  vertical corners are all fillets an `aligned` seam wanders from layer to layer **[K]**; cut a V groove (0.7 mm square section turned 45°, full
-  height) down ONE hidden vertical corner per part — the aligned seam snaps into the groove on every layer and the groove reads as a design
+  vertical corners are all fillets, an `aligned` seam wanders from layer to layer **[K]**. Cut a V groove (0.7 mm square section turned 45°, full
+  height) down ONE hidden vertical corner per part. The aligned seam snaps into the groove on every layer, and the groove reads as a design
   line. Two grooves per part split the choice: one part's seam took one groove, its mate's the other, and the seams did not form one line
   **[K]**. Put each part's groove on the SAME corner of the assembly. Proof from the g-code: `fdm-print-optimisation.md` §3 seam row.
 - **Layer anisotropy**: a tab or boss loaded across layers is 30–50 % weaker; boss walls shear along layers — orient bosses so the load is in-plane
   where possible, and read the FEA with the anisotropy factor.
 - **Legends RAISED**: **cap ≥ 5.1 / stroke ≥ 0.9 / AIR GAP between strokes ≥ 0.9** / height 0.6 on a face-up top (a 0.4-deep, 0.45-wide debossed void at cap 2.2 is illegible on a 0.4
-  nozzle). The earlier rule (cap 4, stroke 1.0, lands 0.45) is withdrawn for raised text: on the worked-example printer (0.4 nozzle / 0.20 / PLA) the printer CLOSED every
-  0.5–0.6 mm air gap between raised 0.6 mm strokes (the counters of E / B / S / 8 at cap 4 bold, 2026-10-02). An air gap is two 0.42 perimeters
+  nozzle). The earlier rule (cap 4, stroke 1.0, lands 0.45) is withdrawn for raised text. On the worked-example printer (0.4 nozzle / 0.20 /
+  PLA), the printer CLOSED every 0.5–0.6 mm air gap between raised 0.6 mm strokes. These were the counters of E / B / S / 8 at cap 4 bold,
+  2026-10-02. An air gap is two 0.42 perimeters
   plus margin = 0.9, the same as a stroke; a Latin capital is three strokes and two gaps, so cap ≥ 5.1 (a closed "4" counter needs cap ≥ 5.6).
-  Font by measurement at the cap: at cap 5.2 / pad 0.08 Avenir Next Demi Bold was the only one of 24 macOS system fonts with every gap ≥ 0.9 AND
-  every stroke ≥ 0.9 inside 5.7 mm of height; DIN Alternate Bold / Helvetica / Arial / Verdana bold fail on gaps. Pad (outline offset) trades
+  Font by measurement at the cap. At cap 5.2 / pad 0.08, Avenir Next Demi Bold was the only one of 24 macOS system fonts with every gap ≥ 0.9 AND
+  every stroke ≥ 0.9 inside 5.7 mm of height. DIN Alternate Bold / Helvetica / Arial / Verdana bold fail on gaps. Pad (outline offset) trades
   stroke for gap one-to-one. Keep it ≤ 0.1 and pick the weight in the font instead. Raised text cannot print face-down. A face-down face gets a flush colour body (§8.1 option b), never a deboss (its recess ceiling is a bridge underside). A fit filter keeps a legend only where it
   fits its land and LISTS what it dropped.
 - **Legend geometry, not font choice, meets the void gate**: every font's crotches (A K N W) and counters (e 4 R) fall below 1.0 at a cap that fits a 10–12 mm band. CLOSE the glyph polygons at the void gate after placement (buffer +g/2 then −g/2, ROUND joins, `quad_segs` 16). A mitre closing leaves spikes at acute corners that the mesh reads as sub-gate voids (0.04–0.3 mm at letter corners **[K]**). A dilate–erode pair with round joins restores convex corners exactly. Gate the inter-letter gap as a row. On a curved band set letters one by one along the band's offset curve anchored by POLAR ANGLE (nearest-point anchoring lands on a lobe when the waist is concave). The census's opposing-face rows honour legend lands like its wall and void rows (`--boxes` → `--box-min`): a raised stroke inside its land is two faces a stroke apart, not a thin wall. Example: a bold sans at cap 7, pad 0.5, spacing 1.6, closing 1.0 — 0 census FAIL.
@@ -291,90 +303,93 @@ numbers are **[owner bar]** for a 0.4 nozzle at 0.20 mm and live in `print_targe
   arm cannot be long enough.
 - **Fan boss count = fan hole count** (consumer 30 mm fans have 4 holes even when one SKU drawing shows 3); any point set drawn in two places is
   passed to the SCAD as ONE vector.
-- Hood ROOF-DOWN with no supports: a roof recess printed roof-down is a ceiling → drop it; **put the roof on the bed by `rotate([180,0,0])`, never
-  `mirror()`** — a mirror flips handedness and every asymmetric mark prints backwards; check the export against the board-frame mesh with a
+- Hood ROOF-DOWN with no supports: a roof recess printed roof-down is a ceiling → drop it. **Put the roof on the bed by `rotate([180,0,0])`, never
+  `mirror()`**. A mirror flips handedness and every asymmetric mark prints backwards. Check the export against the board-frame mesh with a
   proper-vs-improper rigid-match row.
-- **Test coupons BEFORE the part** (15–25 min prints, generated from the SAME yaml numbers and SCAD modules): text strokes × caps in the real font
-  (raised face-up, debossed face-up, debossed face-down), wall thicknesses, mating clearances, **an insert + screw coupon (three bosses: install,
-  torque to failure, record)**; the numbers they decide are a yaml parameter block. Ship the coupons in every kit.
-- **Coupons are self-documenting**: every test coupon and every variant on a bracket plate carries its own
-  identifier and the value it tests ON the part — DEBOSSED text with the number (for example `W1.6 R0.20`, `WALL 1.6`, `CLR 0.30`; raised text only
-  for the colour-path word of a coupon that also tests colour, next bullet), on an ironed top face or a face-up plate, debossed: cap ≥ 4 mm, stroke
-  ≥ 0.45, lands ≥ 0.45 between glyphs; raised: cap ≥ 5.1, stroke ≥ 0.9, AIR GAP ≥ 0.9 (all measured, FAIL-gated; the raised numbers are the
-  2026-10-02 rule above — the coupon of record passes the same bar as the part; each legend BOX carries its own gate — `references/print-dfm.md`,
-  legend boxes — so a debossed label and a raised colour word on one coupon are gated apart),
-  never on a bridge underside or a deep inner wall. A coupon the user has to look up in a README to identify is a coupon that gets mixed up on
+- **Test coupons BEFORE the part** (15–25 min prints, generated from the SAME yaml numbers and SCAD modules). The coupons cover text strokes ×
+  caps in the real font (raised face-up, debossed face-up, debossed face-down), wall thicknesses, mating clearances, and **an insert + screw
+  coupon (three bosses: install, torque to failure, record)**. The numbers they decide are a yaml parameter block. Ship the coupons in every kit.
+- **Coupons are self-documenting**: every test coupon and every variant on a bracket plate carries its own identifier and the value it tests
+  ON the part. Use DEBOSSED text with the number (for example `W1.6 R0.20`, `WALL 1.6`, `CLR 0.30`). Raised text is only for the colour-path
+  word of a coupon that also tests colour (next bullet). Put the text on an ironed top face or a face-up plate. Debossed: cap ≥ 4 mm, stroke
+  ≥ 0.45, lands ≥ 0.45 between glyphs. Raised: cap ≥ 5.1, stroke ≥ 0.9, AIR GAP ≥ 0.9. All are measured and FAIL-gated. The raised numbers are
+  the 2026-10-02 rule above: the coupon of record passes the same bar as the part. Each legend BOX carries its own gate (`references/print-dfm.md`,
+  legend boxes), so a debossed label and a raised colour word on one coupon are gated apart. Never put the text on a bridge underside or a deep
+  inner wall. A coupon the user has to look up in a README to identify is a coupon that gets mixed up on
   the bench; the slicer's object names are gone the moment the part comes off the plate. The marker is generated from the same yaml value it
   tests, so it cannot disagree with the geometry. **A variant too small to carry text is marked by SIZE** (caps at outer Ø 9 / 10 / 11, sliders at
-  ski length 28 / 31 / 34 — they sort on the bench by eye): a 2 mm cap ring has no room for a deboss and the census would fail one.
+  ski length 28 / 31 / 34). They sort on the bench by eye. A 2 mm cap ring has no room for a deboss, and the census would fail one.
 - **Bracket the KNOB, not the mating feature.** A coupon that prints one production hole and three pegs (4.9 / 5.0 / 5.1) only answers when the
-  production hole is inside the bracket; on the worked example's first coupon plate the cap hole (−0.15) and the slider slot (+0.3) were both outside it and the plate
-  could only say "none" — a second plate was needed (2026-10-02). For every fit knob the coupon prints **three variants OF THE PART THAT CARRIES
-  THE KNOB** (three caps with three holes, three sliders with three slots) tried on ONE production-size mating feature; **centre the bracket on
-  zero nominal clearance for press / push fits** while the printer's hole shrink is unknown (here it was ~0.15–0.2; a −0.15 hole became ~0.3 real
-  interference). The winner is written into `fits.*` and the production part follows it.
-- **Coupon labels are ALWAYS debossed — unless the coupon also tests colour (a mark / AMS coupon), and then ONE short raised word in the
-  second colour proves the colour path while the label values stay debossed.** A raised label in a second filament costs the purge, not its
-  own weight: on one coupon plate 0.4 g of letters cost 3.9 g of the second colour and 8 filament changes, where debossed values cost nothing.
+  production hole is inside the bracket. On the worked example's first coupon plate, the cap hole (−0.15) and the slider slot (+0.3) were both
+  outside it. The plate could only say "none", and a second plate was needed (2026-10-02). For every fit knob the coupon prints **three variants
+  OF THE PART THAT CARRIES THE KNOB** (three caps with three holes, three sliders with three slots). They are tried on ONE production-size mating
+  feature. **Centre the bracket on zero nominal clearance for press / push fits** while the printer's hole shrink is unknown. Here it was
+  ~0.15–0.2, and a −0.15 hole became ~0.3 real interference. The winner is written into `fits.*` and the production part follows it.
+- **Coupon labels are ALWAYS debossed — unless the coupon also tests colour (a mark / AMS coupon). Then ONE short raised word in the
+  second colour proves the colour path while the label values stay debossed**. A raised label in a second filament costs the purge, not its
+  own weight. On one coupon plate 0.4 g of letters cost 3.9 g of the second colour and 8 filament changes, where debossed values cost nothing.
   The one colour-path word is 3 changes and ~1 g; the kit text says which plate carries it (owner rule, 2026-10-01).
 - **Nothing that moves may sweep a raised feature.** A crank arm set on the face that carried the raised legends scraped the letters and
-  jammed on the first print; every render had shown it clear because the gap to the FLAT face was fine. Raised text, bosses and lugs are
+  jammed on the first print. Every render had shown it clear because the gap to the FLAT face was fine. Raised text, bosses and lugs are
   bodies in the clearance check like any other: sweep every moving part against them (`case-pipeline.md` §Interference), and put legends on a
   face nothing crosses. On a display mechanism the operating side is the side AWAY from the viewing window: a hand turning a crank in front
   of the window hides what the window is for — 2026-10-01.
 - **Board dummy, never the raw CAD mesh** (sheet metal, 0402s, 0.1 mm pins are unprintable): slab + holes + solid envelopes + fins at printable
-  thickness, in the board frame, bbox stated against the mesh of record. **Two versions, both kept**: the two-piece glue version (a scribed locator
-  ring 0.6 × 0.2 OUTSIDE the tall part's footprint locates it without a pocket — a compensating plinth lifts an overhang off the bed = a
-  floating-region warning) AND the **one-piece version**: cage / sink fused to the slab at FINAL dimensions; a nose that overhangs the board edge
-  stands on a **break-away shim** (worked example: a 1.2 mm block on the bed, inset 0.5 from the nose sides, 0.6 clear of the board edge, joined
-  through 8 posts 1.2 × 1.2 across a 0.4 mm two-layer perforation gap; the shim snaps off in one piece). **Say in the README that the shim looks
+  thickness, in the board frame, bbox stated against the mesh of record. **Two versions, both kept**. The first is the two-piece glue version. A
+  scribed locator ring 0.6 × 0.2 OUTSIDE the tall part's footprint locates it without a pocket. A compensating plinth lifts an overhang off the
+  bed = a floating-region warning. The second is the **one-piece version**: cage / sink fused to the slab at FINAL dimensions. A nose that
+  overhangs the board edge stands on a **break-away shim**. Worked example: a 1.2 mm block on the bed, inset 0.5 from the nose sides, 0.6 clear of
+  the board edge. It is joined through 8 posts 1.2 × 1.2 across a 0.4 mm two-layer perforation gap. The shim snaps off in one piece. **Say in the README that the shim looks
   like a "PCB lip" and comes off.** Verify one-piece vs two-piece by **section symmetric difference = 0 mm²** at several Z and both bboxes against
   the envelope of record. Model compressible envelopes (EMI springs) at the compressed width or the dummy jams the bezel.
-- **Slicer projects with every setting embedded** (Bambu Studio 02.08 specifics, labelled): flatten the system presets (`inherits` chains), give
-  the project preset ITS OWN NAME and list the differing keys in `different_settings_to_system` (a project naming a system preset with that list
-  empty is reconciled back to system values when the GUI opens it — supports OFF → "floating regions"). A project built from stock presets
+- **Slicer projects with every setting embedded** (Bambu Studio 02.08 specifics, labelled). Flatten the system presets (`inherits` chains). Give
+  the project preset ITS OWN NAME, and list the differing keys in `different_settings_to_system`. A project naming a system preset with that list
+  empty is reconciled back to system values when the GUI opens it: supports OFF → "floating regions". A project built from stock presets
   starts with that list EMPTY: add every override key to it, or the GUI shows the system value. Open with File → Open Project, never
   Import. Slice every object ALONE headless; **a floating-region warning is a build FAIL**. Auto-orient every non-text piece and bake the rotation
   into the STL. One material knob (PLA / PETG) read by the 3MF builder, the print sheets and every README, with the material caveat printed
   (§1.3). **A generator that refuses to overwrite its artefact on a failed run leaves the OLD 3MF on disk while the sidecar describes the new
-  one** — the analysis must read the file it names (md5 in the sidecar checked before any forensics).
+  one**. The analysis must read the file it names: check the md5 in the sidecar before any forensics.
 - Hand over ONE kit folder: case pieces + coupons + BOTH board dummies (each with its 3MF) + every project file + READMEs **+ a generated
-  `START_HERE.md`** (print order with the project-file names, assembly sequence, numeric report-back with a recipient) and the **kit text gate**
-  over every emitted text — `references/print-kit.md`; a moved folder keeps a `README_MOVED.md` pointer; a stale kit folder is named for deletion
-  in the record.
+  `START_HERE.md`** (print order with the project-file names, assembly sequence, numeric report-back with a recipient). The handover includes
+  the **kit text gate** over every emitted text (`references/print-kit.md`). A moved folder keeps a `README_MOVED.md` pointer. A stale kit folder
+  is named for deletion in the record.
 
 ### 8.1 Brand marks / logos on FDM parts — an OWNER choice at kickoff (questionnaire C9)
 The finish of a mark is decided by WHICH FACE carries it and HOW that face is built, not by the slicer profile. Two options are first-class
 (owner: "ironed surface and bottom ams are both viable options"); pick one per product, or ship both as plates when the printer has an AMS:
 - **(a) TOP-face feature under ironing.** The mark is a deboss 0.6 deep (= 3 whole layers at 0.20, measured on the mesh) or a raised body 0.6
-  high on a face that is a TOP face of the print, and the plate profile irons **ALL top surfaces: `ironing_type: top` — never `topmost`**
-  (`topmost` irons only the highest face and skips the recess floor, which recreates the texture mismatch the option exists to avoid).
+  high on a face that is a TOP face of the print. The plate profile irons **ALL top surfaces: `ironing_type: top` — never `topmost`**.
+  `topmost` irons only the highest face and skips the recess floor. That recreates the texture mismatch the option exists to avoid.
   **Top shell ≥ recess depth + 1.0** (worked example: `top_shell_layers 7` = 1.4 under a 0.6 recess) so no sparse infill shows through the
   recess floor; floor and face are then both topmost solid surfaces built by the same pass. **Orient the part so the marked face IS a top
   face**: a cap prints mouth down (blind pocket rising from the bed, flange on the bed, the closed end = the marked top face, §8.2); a plate
   prints face-up. The mark is read directly, not mirrored. Cost: one filament, ironing adds ~5 min on a small plate.
-- **(b) BOTTOM-face flush AMS colour body in the bed layers.** The marked face goes ON THE BED and the mark is a separate solid body in the second
-  filament occupying the first N layers of that face — flush, no recess, no bridge, no ironing: both colours are bed contact and the colour
-  boundary is a first-layer perimeter in XY, the crispest mark FDM can make. **The mark is mirrored in the model** (proved by a render from −Z
+- **(b) BOTTOM-face flush AMS colour body in the bed layers.** The marked face goes ON THE BED. The mark is a separate solid body in the second
+  filament occupying the first N layers of that face. It is flush, with no recess, no bridge and no ironing. Both colours are bed contact, and the
+  colour boundary is a first-layer perimeter in XY, the crispest mark FDM can make. **The mark is mirrored in the model** (proved by a render from −Z
   against the artwork as drawn). **Default 2 layers = 0.4** (a dark mark on a dark body is opaque at two layers; only layer 1 is ever seen);
   **3 layers for a light mark on a dark body**. Cost = 2 filament changes per 2 colour layers + purge (worked example: the third layer = +2
-  swaps, +0.66 g purge, +3 min); it scales with the coloured layer count, not with the mark area — keep the count a knob, slice every variant.
-- **NEVER:** a **bed-face deboss** (the recess ceiling is a bridge underside — strands beside a glossy bed-contact face: the "webbing" people
-  remember on debossed logos); a **vertical-wall deboss** (stair-steps every horizontal edge at the layer height); **webs / discs / closing
-  fillets that alter the artwork** to satisfy a land rule (they read as dimples — fix the rule set to the artwork, never the artwork to the rule
-  set: point contacts stay point contacts and fuse over one line width, which is the artwork's own look).
-- **The mark must sit on a bed face and there is no AMS → a separate face-up printed PLATE glued into a keyed rebate** (worked example: plate
-  41 × 22 × 1.6, rebate 0.4 deep + 0.2/side clearance leaving ≥ the wall gate of roof, one chamfered corner = rotation key, glued chamfer to
-  chamfer). A bed-face rebate on a roof-down body is a bridge ceiling even when hidden: **split any rebate span > 10 mm with full-height lands
-  that double as glue lands** (worked example: 22.4 mm split by two 2.0 lands into three 6.1 mm bridges) instead of filing a covered-face
-  exemption — an unsplit span sags into the rebate and rocks the plate.
+  swaps, +0.66 g purge, +3 min). The cost scales with the coloured layer count, not with the mark area. Keep the count a knob, and slice every
+  variant.
+- **NEVER:**
+  - a **bed-face deboss**. The recess ceiling is a bridge underside: strands beside a glossy bed-contact face, the "webbing" people remember
+    on debossed logos.
+  - a **vertical-wall deboss**. It stair-steps every horizontal edge at the layer height.
+  - **webs / discs / closing fillets that alter the artwork** to satisfy a land rule. They read as dimples. Fix the rule set to the artwork,
+    never the artwork to the rule set. Point contacts stay point contacts and fuse over one line width, which is the artwork's own look.
+- **The mark must sit on a bed face and there is no AMS → a separate face-up printed PLATE glued into a keyed rebate**. Worked example: plate
+  41 × 22 × 1.6, rebate 0.4 deep + 0.2/side clearance leaving ≥ the wall gate of roof. One chamfered corner = rotation key, glued chamfer to
+  chamfer. A bed-face rebate on a roof-down body is a bridge ceiling even when hidden. **Split any rebate span > 10 mm with full-height lands
+  that double as glue lands** (worked example: 22.4 mm split by two 2.0 lands into three 6.1 mm bridges). Do this instead of filing a
+  covered-face exemption. An unsplit span sags into the rebate and rocks the plate.
 - **All marks on one product share the reader orientation of the legends** — rotate, never mirror; prove each with a render against the
   artwork as drawn (proper-vs-improper rigid-match row: proper ≈ 0, mirror ≫ 0). "Apply the rule to the other marks too" is an AUDIT, not a
   patch: list EVERY instance of the feature class across every body and preset, state each verdict in a FAIL-gated row, then change.
 
-**Mark geometry rows (FAIL-gated; measured on the same 2D polygon the CAD imports and on the exported mesh).** "Minimum gap" of a filled mark is
-ill-posed (a chord through a boundary point is ~0; the medial axis reaches every convex vertex with width → 0; hull minus ink adds slivers) —
-measure the FAILURE MODE instead:
+**Mark geometry rows (FAIL-gated; measured on the same 2D polygon the CAD imports and on the exported mesh)**. "Minimum gap" of a filled mark is
+ill-posed. A chord through a boundary point is ~0. The medial axis reaches every convex vertex with width → 0. Hull minus ink adds slivers.
+Measure the FAILURE MODE instead:
 
 | Row | Gate | Failure it guards |
 |---|---|---|
@@ -396,12 +411,12 @@ the geometry rows guarantee the rest — the report says which is which.
 ### 8.2 Dust caps / protective covers (a cap for a cabled pluggable module as the example)
 - **No through-hole may open into the protected cavity** — a lanyard hole is a dust path. Tether = an **external lug outside the cavity**,
   support-free: standing on the bed, hole axis vertical, wall around the hole ≥ the wall gate (1.6) outboard and inboard to the mouth.
-- **Print MOUTH DOWN**: the lip flange flat on the bed, mouth chamfer ≤ 45°, **ribs / crush beads start ≥ 1.0 above the bed** so elephant foot
-  never widens a fit surface, the pocket tip face is the ONLY bridge (≤ 10 mm; sag lands in the tip gap); profile: elephant-foot compensation
+- **Print MOUTH DOWN**: the lip flange flat on the bed, mouth chamfer ≤ 45°. **Ribs / crush beads start ≥ 1.0 above the bed** so elephant foot
+  never widens a fit surface. The pocket tip face is the ONLY bridge (≤ 10 mm; sag lands in the tip gap). Profile: elephant-foot compensation
   0.15 + 0.5 mm first-layer lines, thin-wall detection on for the mouth rim, thick bridges off. FAIL rows: chamfer angle, lip footprint = the
   full lip (vertex extents), rib start Z, bridge span, material under the mark (§8.1).
 - The pocket corner radius comes from the mating part's DRAWING, not a print rule of thumb (a module corner R 0.15 is clipped by a pocket
-  R > 0.66); ribs bear on the faces the drawing shows SOLID (a pluggable module is open at its bottom leading edge and recessed on top).
+  R > 0.66). Ribs bear on the faces the drawing shows SOLID (a pluggable module is open at its bottom leading edge and recessed on top).
 - The README states the first-print knobs, one per print (fit clearance OR rib proud), with the expected calliper readings.
 
 Slicer-level knobs (purge into infill, flush calibration, prime tower, wall loops / sequence, infill, modifier meshes, EF / XY compensation, seam,
@@ -411,14 +426,14 @@ ironing, fuzzy skin, per-object overrides) and how each is PROVEN from the g-cod
 - `sparse_infill_density: 100%` is **rejected by the validator (rc -18 "Invalid parameter value(s)")** with any pattern; 90 % passes. Force a
   solid column with `top_shell_layers` / `bottom_shell_layers` (or their thickness keys) instead.
 - A **two-filament slice with the prime tower on SEGFAULTS (rc -11 / 133, no result.json, log ends "no filament colors found in projects")**
-  unless every filament profile carries `filament_colour`: write **one filament JSON per slot with its colour** (or `--filament-colour
-  '#RRGGBB;#RRGGBB'`, undocumented in `--help`). One filament, or two without the tower, slice fine. Bisect a crash or a rejected 3MF on the
+  unless every filament profile carries `filament_colour`. Write **one filament JSON per slot with its colour**, or pass `--filament-colour
+  '#RRGGBB;#RRGGBB'` (undocumented in `--help`). One filament, or two without the tower, slice fine. Bisect a crash or a rejected 3MF on the
   temp inputs (5 s per run), one variable / key group per run, before touching the generator.
 - **Key the filament slots by ROLE, not by colour name**: `filaments: {structure: {name: white, hex: "#FFFFFF"}, kinematics: {…}, accent: {…},
-  legend: {…}}` in the yaml, the slicer filament map, the profile file names, the expected-hex rows and the kit prose all read the name and hex
-  through the role; a palette change is then a yaml-only edit. In the worked example the owner had no black, then the grey spool was too small, and each
-  change touched 11 files because colour names were the keys everywhere (2026-10-02). Match roles to SPOOL SIZE: the structure role takes ~60 %
-  of the grams and needs a full spool, an accent (~5 %) fits a small one — the kickoff colour question asks which spools are full and which are
+  legend: {…}}` in the yaml. The yaml, the slicer filament map, the profile file names, the expected-hex rows and the kit prose all read the
+  name and hex through the role. A palette change is then a yaml-only edit. In the worked example the owner had no black, then the grey spool was too small, and each
+  change touched 11 files because colour names were the keys everywhere (2026-10-02). Match roles to SPOOL SIZE. The structure role takes ~60 %
+  of the grams and needs a full spool. An accent (~5 %) fits a small one. The kickoff colour question asks which spools are full and which are
   small (questionnaire C5).
 - **Multi-material = ONE multi-part object with a per-part `extruder`.** The CLI has no flag for it but loads a Bambu-style 3MF (the source
   project's `write_ams_3mf`; copy the package layout from a file Studio exported, ids are global):
@@ -442,82 +457,83 @@ ironing, fuzzy skin, per-object overrides) and how each is PROVEN from the g-cod
   --assemble --arrange 0` — same colour requirement. The CLI slices this file; the GUI also needs `Metadata/project_settings.config`, which the
   CLI round-trip of the next bullet supplies.
 - **The GUI rejects what the CLI accepts — let the CLI write the project** (02.08.02, 2026-10-06 **[K]**). The GUI's project-config loader
-  (`ConfigBase::load_from_json`) throws on ANY option key it does not know; the GUI then reports "The 3mf file has invalid config, load geometry
-  data only" and, when the file is tagged as a Bambu project, "The file does not contain any geometry data". The CLI tolerates the same keys.
+  (`ConfigBase::load_from_json`) throws on ANY option key it does not know. The GUI then reports "The 3mf file has invalid config, load geometry
+  data only". When the file is tagged as a Bambu project, it reports "The file does not contain any geometry data". The CLI tolerates the same keys.
   Robust route: write a plain 3MF (geometry + `model_settings.config` with the per-part extruder, NO `Application` tag), then `BambuStudio
   --load-settings "machine.json;process.json" --load-filaments "f1.json;f2.json" --export-3mf out.3mf --outputdir DIR plain.3mf`. Facts: the
-  export path is `outputdir + "/" + the --export-3mf value` — pass a BARE file name (an absolute path is concatenated and fails "Unable to open
-  the file"); machine and process presets are SEPARATE files (one merged JSON fails "process not compatible with printer"); the caller flattens
-  every `inherits` chain (the CLI applies `--load-settings` files literally — an unflattened machine file slices with a 200 × 200 bed and a
-  generic start g-code); `--export-settings` output is NOT flattened either, so it is no `project_settings` source. After the export patch two
-  things only: `filament_colour` (the CLI writes one default colour) and the **flush matrix size** — the CLI export carries a 4 × 4
-  `flush_volumes_matrix` and an 8-entry `flush_volumes_vector` for two filaments on a P-series printer, and a CLI `--slice` of that file fails
-  "Flush volumes matrix do not match to the correct size!"; GUI-saved projects carry n × n and 2n — patch to n × n / 2n.
+  export path is `outputdir + "/" + the --export-3mf value`. Pass a BARE file name: an absolute path is concatenated and fails "Unable to open
+  the file". Machine and process presets are SEPARATE files: one merged JSON fails "process not compatible with printer". The caller flattens
+  every `inherits` chain. The CLI applies `--load-settings` files literally: an unflattened machine file slices with a 200 × 200 bed and a
+  generic start g-code. `--export-settings` output is NOT flattened either, so it is no `project_settings` source. After the export, patch two
+  things only: `filament_colour` (the CLI writes one default colour) and the **flush matrix size**. The CLI export carries a 4 × 4
+  `flush_volumes_matrix` and an 8-entry `flush_volumes_vector` for two filaments on a P-series printer. A CLI `--slice` of that file fails
+  "Flush volumes matrix do not match to the correct size!". GUI-saved projects carry n × n and 2n. Patch to n × n / 2n.
 - **Report filament per colour and purge per plate**: per-filament grams from `Metadata/slice_info.config`, filament changes from the g-code
-  (`M620 S..A`). Purge + tower mass is NOT in the header — derive it as used − (part volume × density) **only for a SOLID part** (the 2–3 layer
-  colour mark); a 20 % infill body gives a negative "purge" — report the mark filament's share and say the body's cannot be separated.
+  (`M620 S..A`). Purge + tower mass is NOT in the header. Derive it as used − (part volume × density) **only for a SOLID part** (the 2–3 layer
+  colour mark). A 20 % infill body gives a negative "purge". Report the mark filament's share, and say the body's cannot be separated.
 - The CLI takes the same STL path N times as N objects (`--arrange 1`) — a "four caps" plate needs no multi-body STL; the object count comes
   from the CLI's `objects` list, not from the (deduplicated) inputs.
 - `different_settings_to_system` lists only keys whose value differs from the flattened system preset: a project value equal to the system
   default is embedded but not listed — prove a setting from the embedded value, not from the list.
 - `curr_bed_type` in a CLI export is the machine default (Cool Plate, 35 °C bed, on a printer fitted with a PEI plate, 02.08.02 **[K]**): set it
   to the plate in use and read it back from the project.
-- **Arranger vs pre-placement**: the arranger nests CONCAVE outlines (triangles with windows) into each other and the slice aborts with
-  "gcode path conflicts" — pre-place such plates (your own shelf packing, `--arrange 0`); a self-placed MULTI-colour plate collides with the fixed
+- **Arranger vs pre-placement**: the arranger nests CONCAVE outlines (triangles with windows) into each other, and the slice aborts with
+  "gcode path conflicts". Pre-place such plates (your own shelf packing, `--arrange 0`). A self-placed MULTI-colour plate collides with the fixed
   wipe-tower position, so plates with filament changes stay on `--arrange 1`. `result.json` lists no objects for a pre-placed plate — the kit table
   falls back to the input object list. Count the filament changes (`M620`) against the DESIGNED number per plate (one legend = its colour layers × changes), not only report them.
 - State per plate in the kit README: minutes, grams per filament, filament changes, purge — ironing adds ~5 min on a small plate; each extra
   coloured layer adds swaps + purge + minutes.
 
 ### 8.4 Glued plates in rebates on a bed face
-- **The lands are the datum, the bridged strips sit one layer BELOW them.** A plate whose grooves rest on the land tops while its underside
+- **The lands are the datum, the bridged strips sit one layer BELOW them**. A plate whose grooves rest on the land tops while its underside
   touches the bridge ceilings stands on the sag humps (0.1..0.3 at a 6 mm span) and rocks. Strip ceiling = land top − `sag_gap` (0.2 = one layer)
-  under the part, so sag cannot lift the plate; FAIL rows: seat datum (gap 0.20), proud height (1.2), **working clearance after elephant-foot
+  under the part, so sag cannot lift the plate. FAIL rows: seat datum (gap 0.20), proud height (1.2), **working clearance after elephant-foot
   compensation on BOTH parts ≥ 0.1** (0.3 − 2 × 0.1 EF … measured on the meshes, not the yaml).
 - **Clearance for a glued plate: 0.3 per side** (CA fills; 0.2 was a 0.0..0.1 working fit after EF). **Widen the PLATE's clearance by shrinking
   the plate, never by widening the rebate**: the rebate lip to the roof fillet is a census wall — +0.1 per side took a 1.6 lip to 1.53 = FAIL. The
   rebate footprint stays where the census approved it; the plate shrinks by 0.2 per side.
-- If deepening the strips would thin the roof under the span below the wall gate (1.4 under 6 × 41 mm), **thin the PLATE instead** (1.6 → 1.4
-  keeps proud 1.2 and the skin over a groove = the rib floor 1.2). No waiver: the equivalent geometry with the same datum logic.
+- If deepening the strips would thin the roof under the span below the wall gate (1.4 under 6 × 41 mm), **thin the PLATE instead**. A 1.6 → 1.4
+  plate keeps proud 1.2, and the skin over a groove = the rib floor 1.2. No waiver: the equivalent geometry with the same datum logic.
 - One chamfered corner = the rotation key; "a rotated plate stands on the corner — do not force" is on the sheet; CA on the lands only.
 
 ### 8.5 Snug-fit features (crush ribs, press lips, combs) and the 45° limit
-- **Comb slots are straight-walled** **[K]**: a full-height taper on comb ribs leaves the nominal slot width only at the floor (a 1.7 slot read
-  2.7 at the rib top) while the fit coupon has straight slots, so the coupon proves a different fit. Straight slot walls, a short lead-in
+- **Comb slots are straight-walled** **[K]**. A full-height taper on comb ribs leaves the nominal slot width only at the floor (a 1.7 slot read
+  2.7 at the rib top). The fit coupon has straight slots, so the coupon proves a different fit. Straight slot walls, a short lead-in
   (2 mm), a mouth about 1.2 wider than the slot.
 - **Pads over staggered slots fill the whole pitch**: a pad shorter than the pitch leaves a wedge void against the tapered teeth (print DFM
   rule V fires at 0.02–0.4 mm **[K]**).
 - Ribs in one plane that would share a face with a neighbour are made 0.04 narrower than it: no shared face, no sliver (the flush-face bullet below).
-- **Ship a bracket plate, let the owner pick after one print**: the fit knob at three values (rib proud 0.20 / 0.25 / 0.30), one object each,
-  **each a copy of the part that carries the knob** (§8 "Bracket the KNOB"), named by its value in the 3MF (or by its size when too small for text); START_HERE: bracket → coupon → plate (`references/print-kit.md` §4). An **interference-window row per variant**:
-  rib-to-rib vs the mating part's tolerance (its drawing, for example ± 0.1) AND the print tolerance (± 0.15) → per-side interference nominal ± 0.125; a
+- **Ship a bracket plate, let the owner pick after one print**: the fit knob at three values (rib proud 0.20 / 0.25 / 0.30), one object each.
+  **Each is a copy of the part that carries the knob** (§8 "Bracket the KNOB"). Each is named by its value in the 3MF, or by its size when too
+  small for text. START_HERE: bracket → coupon → plate (`references/print-kit.md` §4). An **interference-window row per variant**:
+  rib-to-rib vs the mating part's tolerance (its drawing, for example ± 0.1) AND the print tolerance (± 0.15) → per-side interference nominal ± 0.125. A
   window that reaches 0 or a knife edge at either end is a FAIL, not a note.
-- **A face at exactly 45.0° is AT the overhang limit, not under it**, and the same face changes class with the orientation: a lip cone faces UP
+- **A face at exactly 45.0° is AT the overhang limit, not under it**. The same face changes class with the orientation. A lip cone faces UP
   on the mouth-down cap (harmless) and DOWN on the closed-end-down AMS cap (a visible overhang). **Orientation-dependent knob** (`lip.cone_deg_ams`
   50 where it is an overhang, 45 where it is not) plus a **measured steepest-overhang row per print orientation** (bridges and the deliberate side
   debosses excluded). A rib lead-in taper scales with the rib height (a fixed 0.30 taper on a 0.30 rib was exactly 45.0°).
 - **Watertight row per exported STL** and a `legend_edge` margin for raised legend items (§ print-kit.md §5): a slicer drops or fills a
   non-manifold sliver silently and still says "clean". **Flush faces make slivers** (OpenSCAD Manifold exports, print-DFM rule M fires
-  **[K]**): a unioned solid whose face lies IN the plane of a neighbour's face (a pillar's outer face in the plane of a lip's end face, a rib
-  that ends exactly on a wall face, a face through a fillet's tangent point) exports zero-area triangles and T-junctions (trimesh `split`
-  reports extra "bodies" of 1–2 faces, zero area). Fixes: overlap every union INTO its neighbour by 0.01 — never past a design face (the slab
-  of §1 "Overshoots become slabs"); build an upper block as ONE solid and cut the cavity through shell and block in ONE `difference()` so every
-  inner face is one face; no face through a tangent point. Acceptance: 1 body and `watertight = true` after trimesh `split`.
+  **[K]**). A unioned solid whose face lies IN the plane of a neighbour's face exports zero-area triangles and T-junctions. Examples: a pillar's
+  outer face in the plane of a lip's end face, a rib that ends exactly on a wall face, a face through a fillet's tangent point. The trimesh
+  `split` reports extra "bodies" of 1–2 faces, zero area. Fixes: overlap every union INTO its neighbour by 0.01, never past a design face (the
+  slab of §1 "Overshoots become slabs"). Build an upper block as ONE solid, and cut the cavity through shell and block in ONE `difference()` so
+  every inner face is one face. Put no face through a tangent point. Acceptance: 1 body and `watertight = true` after trimesh `split`.
 
 ## 9. Two versions from one yaml (vendor MJF + home FDM)
-Presets `base + overrides` deep-merged before any module reads the yaml (`references/case-pipeline.md` §Presets); the geometry may differ wherever
-the printer needs it (split legend plate, raised legends, 1.6 walls, screws or magnets) while the envelope, bezel and windows stay shared —
-**fit clearances are NOT shared numbers** (§1.4): every mating dimension is a per-preset `fits` knob, the coupon decides each. Every
+Presets are `base + overrides`, deep-merged before any module reads the yaml (`references/case-pipeline.md` §Presets). The geometry may differ
+wherever the printer needs it (split legend plate, raised legends, 1.6 walls, screws or magnets) while the envelope, bezel and windows stay
+shared. **Fit clearances are NOT shared numbers** (§1.4): every mating dimension is a per-preset `fits` knob, and the coupon decides each. Every
 variant-only generator line sits behind **hook tokens that expand to the ORIGINAL text for the other presets**, and the variant gets **its own
-version key** (`presets.<p>.version`). **A hook that references a variable the preset never defines expands to NOTHING** — no error, a body
-exported with the feature missing (a hood shipped a day without counterbores): every hook variable is asserted defined per preset, and every
-check row reads the MESH, not the yaml. **Duplicate yaml keys are gated**: PyYAML keeps the LAST of two duplicate keys silently (`body_rail:
-{enabled: false}` followed by `body_rail: {land: …}` re-enabled a rail the README said was off) — load every design yaml through a
+version key** (`presets.<p>.version`). **A hook that references a variable the preset never defines expands to NOTHING**. There is no error, and
+the body is exported with the feature missing (a hood shipped a day without counterbores). Every hook variable is asserted defined per preset, and
+every check row reads the MESH, not the yaml. **Duplicate yaml keys are gated**: PyYAML keeps the LAST of two duplicate keys silently.
+`body_rail: {enabled: false}` followed by `body_rail: {land: …}` re-enabled a rail the README said was off. Load every design yaml through a
 duplicate-aware SafeLoader and fail on a duplicate. Prove byte identity before committing: `Case(base).scad() == git show HEAD:<scad>`.
 
 - **The home preset (`home_fdm`) mirrors every vendor DFM decision the same day** (owner: "once that closes apply those findings to the home
-  version as well"): rails off, key off, closed rims, undercut filled, feet concentric, hood on screws or magnets — applied to the home preset in
-  the SAME yaml with its own version key and a comment naming the vendor round that decided it. Its gate is its own census (`print_targets.home_fdm`)
+  version as well"). The decisions: rails off, key off, closed rims, undercut filled, feet concentric, hood on screws or magnets. They are
+  applied to the home preset in the SAME yaml, with its own version key and a comment naming the vendor round that decided it. Its gate is its own census (`print_targets.home_fdm`)
   + the slicer log clean on every plate. A vendor-only fix is a divergence the two-units-must-mate check proves harmless (partner overlap 0 mm³).
 
 ## 10. Post-mortem pattern (when the vendor reports cracked / deformed parts)
@@ -540,83 +556,83 @@ duplicate-aware SafeLoader and fail on a duplicate. Prove byte identity before c
    | a designed feature the checker coloured and the round accepted | | ours: "that is our file, please ship" |
    | a designed asymmetry read as a defect | | ours: render + order-sheet line |
 
-4. **Reply template** (the owner sends it; wording lives in `templates/VENDOR_REVIEW_RECORD.md` §3): facts (order, line, file md5), what we
-   measured (numbers, photos), what we changed (new md5, what moved), what we ask (ship as is / reprint at our cost / reprint at the vendor's cost /
-   credit), what we do NOT accept. Never claim a printing defect for a designed feature; a goodwill credit is the owner's call.
-5. **Apply the learning design-wide, not to the failed feature**: census every body of every preset, re-derive every value set against the old
-   rule, turn every waiver row into a measured row, render every face, then the vendor's own DFM on every replacement body — and only then a new
-   order. Expect ~12 full builds for the first design-wide pass; commit after each.
+4. **Reply template** (the owner sends it; wording lives in `templates/VENDOR_REVIEW_RECORD.md` §3). It holds facts (order, line, file md5),
+   what we measured (numbers, photos), and what we changed (new md5, what moved). It also holds what we ask (ship as is / reprint at our cost /
+   reprint at the vendor's cost / credit) and what we do NOT accept. Never claim a printing defect for a designed feature; a goodwill credit is the owner's call.
+5. **Apply the learning design-wide, not to the failed feature**. Census every body of every preset. Re-derive every value set against the old
+   rule. Turn every waiver row into a measured row. Render every face. Then run the vendor's own DFM on every replacement body, and only then
+   place a new order. Expect ~12 full builds for the first design-wide pass; commit after each.
 
 ## 11. SLA (resin) rule set (JLC3DP 8000 / 9600 resins as the example — verify live) **[vendor sheet + physics]**
 - **Two minimums, two meanings**: the quote page's Edit dialog refuses a PART smaller than 2 mm in its thinnest overall dimension (a
   plate); the review mail asks for **walls ≥ 0.8** ("resin ≥ 0.8"). Design walls at 1.0 (0.8 + margin), plates ≥ 2 mm thick, and record both
   numbers in `print_targets.<sla target>` with the page and mail as sources.
 - **Minimum feature / emboss 0.3–0.5, engraved stroke ≥ 0.4, hole Ø ≥ 0.5** (vendor guides); a point contact (0.01 mm) is a broken part: `--pinch`.
-- **Hollow bodies need drain holes** (≥ 2 × Ø3 at the lowest print point) or the part traps resin and cups; a large flat face parallel to the
-  plate causes **cupping / suction** — orient at 10–20° or accept the support scars on that face (the vendor decides orientation; ask and record).
+- **Hollow bodies need drain holes** (≥ 2 × Ø3 at the lowest print point) or the part traps resin and cups. A large flat face parallel to the
+  plate causes **cupping / suction**. Orient at 10–20° or accept the support scars on that face. The vendor decides orientation: ask and record.
 - **Supports** land on the down-facing faces the vendor chooses: state the visible faces on the order sheet ("no supports on the top face")
   and accept a scar elsewhere.
-- **Post-cure warp**: thin flat plates (< 2 mm, > 40 mm span) warp 0.2–0.5 mm after UV post-cure — rib them or accept; **UV yellowing** of clear
-  resin within weeks in daylight; **brittleness**: the standard 8000 / 9600 class resins are stiff and brittle (elongation a few %) — no snap
-  fits, no press fits, no thin cantilevers; the inlay plate that arrived "in pieces" was point-contact geometry in a brittle resin.
+- **Post-cure warp**: thin flat plates (< 2 mm, > 40 mm span) warp 0.2–0.5 mm after UV post-cure. Rib them or accept. **UV yellowing** of clear
+  resin within weeks in daylight. **Brittleness**: the standard 8000 / 9600 class resins are stiff and brittle (elongation a few %). No snap
+  fits, no press fits, no thin cantilevers. The inlay plate that arrived "in pieces" was point-contact geometry in a brittle resin.
 - Colour / dye adds a day; the material rating (§1.3) per the TDS — most standard resins are unrated and soften < 60 °C.
 
 ## 12. Full-colour / multi-material inserts (worked example: a full-colour MJF line beside a dyed MJF body) **[design + vendor form]**
 - **The insert is the whole functional face, not a label plate in a rebate**: the UI skin together with the blocks that hang from it (a finger
-  dish, a channel) becomes one coloured part; the host keeps a **frame ≥ gate** around the opening, a **lip ≥ gate × ≥ gate** under the insert's
-  edges (trimmed `clearance` clear of the hanging blocks), any roof / pillar tops at the Z of the insert's underside (so the insert's top
-  face comes out flush), and a **sill** where the host must close a feature the insert leaves open. Gap 0.3 per side self-centres a ±0.3
+  dish, a channel) becomes one coloured part. The host keeps a **frame ≥ gate** around the opening and a **lip ≥ gate × ≥ gate** under the
+  insert's edges (trimmed `clearance` clear of the hanging blocks). It also keeps any roof / pillar tops at the Z of the insert's underside (so
+  the insert's top face comes out flush), and a **sill** where the host must close a feature the insert leaves open. Gap 0.3 per side self-centres a ±0.3
   process; a block that hangs through the opening is the anti-rotation key. Glue = pin-head dabs on the lands, never on the block or
   the edges; press flat with the mating part; dry-fit every unit first.
-- **Budget the insert's edge before drawing it**: between a fixed insert feature (a slot over a switch) and a fixed host feature (a seat for the
-  mating cover) the edge needs host wall ≥ gate + glue gap + insert land ≥ gate (2.7 mm on a 1.2 process). When the span is shorter, the host
-  carries the wall and the insert's features **run out through its edge** (an open-ended dish, a U-notched slot / hole facing the host wall
-  across the gap) — a sub-gate land is never the answer. One slit line at the host's foot is clean; a 1.0 land is yellow.
-- **Files**: the FUSED body (colour has no geometry) is what the vendor's analyser, the six-view map and the census see; the **colour 3MF** is
-  the order file — and it is **ONE shell per file**: a 3MF with one `<object>` per colour (the earlier recipe) was refused at file review as
-  "multiple shells which cannot be merged automatically — each file could only support 1 part (shell)" **[vendor form, measured]**; flush colour
+- **Budget the insert's edge before drawing it**. Take a fixed insert feature (a slot over a switch) and a fixed host feature (a seat for the
+  mating cover). Between them the edge needs host wall ≥ gate + glue gap + insert land ≥ gate (2.7 mm on a 1.2 process). When the span is
+  shorter, the host carries the wall, and the insert's features **run out through its edge** (an open-ended dish, a U-notched slot / hole facing
+  the host wall across the gap). A sub-gate land is never the answer. One slit line at the host's foot is clean; a 1.0 land is yellow.
+- **Files**: the FUSED body (colour has no geometry) is what the vendor's analyser, the six-view map and the census see. The **colour 3MF** is
+  the order file, and it is **ONE shell per file**. A 3MF with one `<object>` per colour (the earlier recipe) was refused at file review as
+  "multiple shells which cannot be merged automatically — each file could only support 1 part (shell)" **[vendor form, measured]**. Flush colour
   bodies share faces with the base and never overlap it, so nothing merges them. The colour rides on the TRIANGLES of one watertight mesh (3MF
-  core `<basematerials>`, per-triangle `pid` / `p1`). Export it from the CAD's colour-tagged union — OpenSCAD snapshot (worked example):
-  `--backend Manifold -o x.3mf -O export-3mf/color-mode=model -O export-3mf/material-type=basematerial`; the union keeps the coplanar top
-  triangles of a flush colour body with their own colour, so the body's "ink depth" is irrelevant to the vendor (colour is a surface property) and
-  the colour-split bodies need not exist as files. Make it a record: strip the random `p:UUID` and the `CreationDate` (the only non-deterministic
-  bytes), drop the unused default material, fixed zip timestamps; gate rows per file: **shells = 1, watertight, every colour on ≥ 1 triangle,
-  volume = the fused body the vendor analysed** (±0.5 %). Route the insert through the inlay path (export + census of the fused body + its order
+  core `<basematerials>`, per-triangle `pid` / `p1`). Export it from the CAD's colour-tagged union. OpenSCAD snapshot (worked example):
+  `--backend Manifold -o x.3mf -O export-3mf/color-mode=model -O export-3mf/material-type=basematerial`. The union keeps the coplanar top
+  triangles of a flush colour body with their own colour. So the body's "ink depth" is irrelevant to the vendor (colour is a surface property),
+  and the colour-split bodies need not exist as files. Make it a record: strip the random `p:UUID` and the `CreationDate` (the only
+  non-deterministic bytes), drop the unused default material, and fix the zip timestamps. Gate rows per file: **shells = 1, watertight, every
+  colour on ≥ 1 triangle, volume = the fused body the vendor analysed** (±0.5 %). Route the insert through the inlay path (export + census of the fused body + its order
   line + its own face renders). Legends are flush colour bodies at a cap the vendor's smallest-text answer allows — ask the vendor's FILE rule and
   smallest text before ordering, not after (a refused file costs a day of a 14-day build).
-- **Full-colour line facts (worked example, verify live)**: a minimum BOUNDING BOX of 2 × 2 × 10 mm enforced at the form ("unavailable ... Min:
-  2x2x10mm") — a 1.5 mm plate is refused however large its face while a 6 cm³ part with 1.3 walls is accepted, so the "2 mm" on the material page
-  is (at least) a part-size rule; the colour material's HDT (80 °C) makes it a room-side cosmetic part only; a full-colour line sets the WHOLE
-  quote's build time (14 days against 3); the colour "black" is printed, the body material is through-dyed — judge the tone on arrival with the
-  fallback designed (the same insert in the body material with debossed legends).
-- **A pocket deepened on one face lives over whatever is cut from the other face** (a plate pocket over magnet pockets: 2.9 − 2.1 = 0.8; the census read 0.91); a
-  pad under such a pocket stops at the inner wall faces (it met the side vent slots) and starts where it fuses with the neighbouring bosses
-  (0.3–0.5 behind a boss is a void); a chamfered pad outline meets the wall at a knife angle — plain rectangle.
-- **One legend cap for every label flattens the type hierarchy** (labels / captions / identity) the base design had, and the owner reads the
-  face as "all too big and cluttered" (3.0 caps in 4 mm rows leave 1 mm of air): keep `cap` and an identity `cap_id` in the legend block. A cap
-  CHANGE re-admits labels the fit filter had dropped silently (port names, a subtitle, a field label), and the ones placed for the host FACE hang
-  over the INSERT's edge (the insert is a clearance narrower per side): the builder reads the PIECE's land, never the face's, and the
+- **Full-colour line facts (worked example, verify live)**: a minimum BOUNDING BOX of 2 × 2 × 10 mm is enforced at the form ("unavailable ...
+  Min: 2x2x10mm"). A 1.5 mm plate is refused however large its face, while a 6 cm³ part with 1.3 walls is accepted. So the "2 mm" on the
+  material page is (at least) a part-size rule. The colour material's HDT (80 °C) makes it a room-side cosmetic part only. A full-colour line
+  sets the WHOLE quote's build time (14 days against 3). The colour "black" is printed; the body material is through-dyed. Judge the tone on
+  arrival with the fallback designed (the same insert in the body material with debossed legends).
+- **A pocket deepened on one face lives over whatever is cut from the other face** (a plate pocket over magnet pockets: 2.9 − 2.1 = 0.8; the
+  census read 0.91). A pad under such a pocket stops at the inner wall faces (it met the side vent slots) and starts where it fuses with the
+  neighbouring bosses (0.3–0.5 behind a boss is a void). A chamfered pad outline meets the wall at a knife angle: use a plain rectangle.
+- **One legend cap for every label flattens the type hierarchy** (labels / captions / identity) the base design had. The owner reads the
+  face as "all too big and cluttered" (3.0 caps in 4 mm rows leave 1 mm of air). Keep `cap` and an identity `cap_id` in the legend block. A cap
+  CHANGE re-admits labels the fit filter had dropped silently (port names, a subtitle, a field label). The ones placed for the host FACE hang
+  over the INSERT's edge (the insert is a clearance narrower per side). The builder reads the PIECE's land, never the face's. The
   "dropped for lack of land" list is read after every cap change.
 - **Switch-well layout rule (colour legends; the floor beside a slot end is ~4.5 mm)**: position words in TWO common columns in line with the
-  slot (left words right-aligned at slot x0 − gap, right words left-aligned at slot x1 + gap + a triangle's width where a default marker sits),
-  ONE cap per row = the largest in `cap_pos … cap_pos_min` (1.9 → 1.6) that fits BOTH words; when a word fits nowhere beside the slot, BOTH
-  words go in the band ahead of the slot over their own ends and the name caption is dropped (`AUTO | MAN` is the function); the first slot has
-  no band ahead of it and no caption. Never a rotated column of stacked words (it reads as one word). A marker legend reads in the marker's
+  slot. Left words are right-aligned at slot x0 − gap. Right words are left-aligned at slot x1 + gap + a triangle's width where a default marker
+  sits. Use ONE cap per row = the largest in `cap_pos … cap_pos_min` (1.9 → 1.6) that fits BOTH words. When a word fits nowhere beside the slot,
+  BOTH words go in the band ahead of the slot over their own ends, and the name caption is dropped (`AUTO | MAN` is the function). The first slot
+  has no band ahead of it and no caption. Never a rotated column of stacked words (it reads as one word). A marker legend reads in the marker's
   direction (`▸ = DEFAULT`, never `= START ▸`). Prototype a layout change by editing the item rows of the SCAD of record in a scratch copy
-  (sizes / positions only, rendered from inside the output folder so relative imports resolve) and show a before / after sheet in the reader's
-  orientation — owner rounds then cost minutes and the builder changes once, after the pick.
-- **A debossed logotype never passes a 1.2 land rule at any width** (the letters kiss or run 0.2–0.6 apart; the gaps scale with the cap, the
-  land does not): the mark alone, eroded by the gate/2, passes; a logotype is a colour body or a plate.
+  (sizes / positions only, rendered from inside the output folder so relative imports resolve). Show a before / after sheet in the reader's
+  orientation. Owner rounds then cost minutes, and the builder changes once, after the pick.
+- **A debossed logotype never passes a 1.2 land rule at any width**. The letters kiss or run 0.2–0.6 apart: the gaps scale with the cap, the
+  land does not. The mark alone, eroded by the gate/2, passes. A logotype is a colour body or a plate.
 
 ## 13. The vendor's map at the gate, and the metrics that over-read **[measured]**
-- A wall designed EXACTLY at the vendor's gate reads yellow on its heat map although the API passes (a 2.0 sole with a 0.8 deboss = 1.20 left
-  came back yellow at `design_margin` 0): set `design_margin` ≥ 0.3 (§0; worked example: a 0.4 pad on the hidden side → 1.6) and keep the
+- A wall designed EXACTLY at the vendor's gate reads yellow on its heat map although the API passes. A 2.0 sole with a 0.8 deboss = 1.20 left
+  came back yellow at `design_margin` 0. Set `design_margin` ≥ 0.3 (§0; worked example: a 0.4 pad on the hidden side → 1.6). Keep the
   six-view map read of §7 step 4 as the gate, not the API flag.
-- The nearest-opposing-sample metric (the one that mimics the vendor's map) flags **convex steps** as thin walls — a lip top 0.3 behind a band's
-  rear face, a sill end 0.3 beside a strip's inner face, a pad edge 0.55 from a slot end — and the FDM support heuristic merges coplanar
+- The nearest-opposing-sample metric (the one that mimics the vendor's map) flags **convex steps** as thin walls. Examples: a lip top 0.3 behind
+  a band's rear face, a sill end 0.3 beside a strip's inner face, a pad edge 0.55 from a slot end. The FDM support heuristic merges coplanar
   interior and in-wall faces into one "outer" cluster. Before changing geometry, **slice the mesh** (a plane section with `trimesh`) and read
-  the faces; then remove the step (start the strip where the band starts, make the sill full width, move the pad front to a feature-free span)
-  rather than thinning anything. The support-contact row is informational on a powder process.
-- **Odd-one-out pass** on every repeated feature of a visible face (three identical blind holes and one through notch at the fourth corner, the
-  fan's lead exit, is the worked example): draw the symmetric pattern (four identical holes; the vendor part uses three) and put the odd feature
-  on a centre line under the part that hides it.
+  the faces. Then remove the step rather than thinning anything: start the strip where the band starts, make the sill full width, move the pad
+  front to a feature-free span. The support-contact row is informational on a powder process.
+- **Odd-one-out pass** on every repeated feature of a visible face. Worked example: three identical blind holes and one through notch at the
+  fourth corner, the fan's lead exit. Draw the symmetric pattern (four identical holes; the vendor part uses three). Put the odd feature on a
+  centre line under the part that hides it.
