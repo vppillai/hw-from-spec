@@ -15,15 +15,18 @@
       rail flank a wide one), and OPPOSING faces — the nearest face with an opposing normal in ANY direction (a ledge underside beside a step top,
       the root of a rim ring set inboard of its wall: invisible to normal rays, coloured by the vendor). A FAIL cluster passes only when an
       `accepted` entry {class, bbox, reason, date, evidence} covers it (bbox ± 1 mm, same class, all three text fields present).
-      A cluster mostly inside a --boxes rectangle (legend lands, [[x0, y0, x1, y1], ...]) gates at --box-min instead — wall, void AND opposing-face rows;
-      a box with a fifth value [x0, y0, x1, y1, gate] gates at its own value (a debossed label's 0.45 beside raised 0.9 strokes on one part).
+      A cluster mostly inside a --boxes box gates at --box-min instead — wall, void AND opposing-face rows. A box is the print_dfm
+      3-D tuple [x0, y0, z0, x1, y1, z1] or [x0, y0, z0, x1, y1, z1, land_min, void_min]: a sample outside its Z band is not in the box,
+      and the trailing pair gates walls / voids at the box's own values (a debossed label's 0.45 beside raised 0.9 strokes on one part).
+      The legacy 2-D [x0, y0, x1, y1] and [x0, y0, x1, y1, gate] span every Z and print a WARNING; any other length exits 2.
       Samples default to --samples-per-mm2 x surface area (a fixed count under-samples a large part). Prints the rows, writes --json, exit 1 on
       any unaccepted FAIL. Needs numpy + trimesh + scipy at run time.
   scripts/thin_wall_census.py --gate-dir DIR [DIR ...]
       PURE gate for the adopt list (recomputes nothing; exit 1 on any problem): every DIR/*.json (written by --json) must verify its `sig`
       (hand-edited = FAIL), carry this VERSION, name an STL whose md5 equals `stl_md5`, carry an empty `fails` list, and every `accepted_fails`
-      entry must still carry reason / date / evidence AND still be present in `print_targets.<record.target>.accepted` of the current
-      project.yaml (an acceptance deleted from the yaml un-passes the body — "re-asserted every run"). Every STL of the record set under DIR's
+      entry must still carry reason / date / evidence AND match an entry of `print_targets.<record.target>.accepted` in the current
+      project.yaml by the same reason / date / evidence, the same class and a bbox that still covers the record's cluster bbox (± ACC_TOL)
+      (an acceptance deleted, re-classed or narrowed in the yaml un-passes the body — "re-asserted every run"). Every STL of the record set under DIR's
       parent (`<set>/parts/*.stl` when DIR is `<set>/checks/census`, else the sibling `stl/`, and the `paths.mech_record` glob) needs a same-md5
       census record (blind review 0.8.0 F5).
   scripts/thin_wall_census.py --selftest
@@ -89,24 +92,47 @@ def grid_groups(points, cell):
     return list(groups.values())
 
 
+def norm_boxes(boxes, warn=True):
+    """--boxes entries -> (x0, y0, z0, x1, y1, z1, wall_gate, void_gate) tuples (gates None when the box carries none).
+    6 / 8 values = the print_dfm 3-D box (+ land_min, void_min); 4 / 5 values = the legacy 2-D box (+ one gate for both), spanning every Z.
+    Any other length exits 2: an 8-tuple read as a 5-tuple once took z0 for x1 and y1 for the gate (review 0.11.13 B-5)."""
+    out = []
+    for b in boxes or []:
+        b = [float(v) for v in b]
+        if len(b) in (4, 5):
+            if warn:
+                print(f"WARNING thin_wall_census: legacy 2-D box {b} spans every Z (it exempts the wall under the legend); write the print_dfm 3-D box", file=sys.stderr)
+            g = b[4] if len(b) == 5 else None; b = [b[0], b[1], -math.inf, b[2], b[3], math.inf, g, g]
+        elif len(b) == 6:
+            b = b + [None, None]
+        elif len(b) != 8:
+            print(f"thin_wall_census: box {b} has {len(b)} values; expected [x0, y0, z0, x1, y1, z1] or [x0, y0, z0, x1, y1, z1, land_min, void_min] (legacy [x0, y0, x1, y1(, gate)])", file=sys.stderr); sys.exit(2)
+        out.append(tuple(min(b[i], b[i + 3]) for i in range(3)) + tuple(max(b[i], b[i + 3]) for i in range(3)) + tuple(b[6:]))
+    return out
+
+
+def _inside(p, b):
+    return all(b[i] <= p[i] <= b[i + 3] for i in range(3))
+
+
 def in_box_frac(points, boxes):
     if not boxes or not points:
         return 0.0
-    return sum(any(b[0] <= p[0] <= b[2] and b[1] <= p[1] <= b[3] for b in boxes) for p in points) / len(points)
+    return sum(any(_inside(p, b) for b in boxes) for p in points) / len(points)
 
 
-def box_gate(points, boxes):
-    """the own gate of the --boxes entry holding most of the cluster ([x0, y0, x1, y1, gate]); None when it carries none"""
+def box_gate(points, boxes, k=6):
+    """the own gate of the box holding most of the cluster (k = 6 wall, 7 void); None when it carries none. Boxes come from norm_boxes."""
     best, n_best = None, 0
     for b in boxes or []:
-        n = sum(b[0] <= p[0] <= b[2] and b[1] <= p[1] <= b[3] for p in points)
+        n = sum(_inside(p, b) for p in points)
         if n > n_best:
             best, n_best = b, n
-    return float(best[4]) if best is not None and len(best) > 4 else None
+    return float(best[k]) if best is not None and best[k] is not None else None
 
 
-def _own(pp, boxes):
-    g = box_gate(pp, boxes)
+def _own(pp, boxes, k=6):
+    g = box_gate(pp, boxes, k)
     return {"box_gate": g} if g is not None else {}        # absent unless a box carries a gate: records of plain boxes stay byte-identical
 
 
@@ -139,7 +165,7 @@ def void_rows(points, gaps, cell=3.0, boxes=None):
         pp = [points[i] for i in idx]; gg = sorted(gaps[i] for i in idx)
         lo, hi, ext = _extent(pp)
         rows.append(dict(n=len(idx), gmin=round(gg[0], 3), gmed=round(gg[len(gg) // 2], 2), span=round(ext[0], 1),
-                         bbox=[round(x, 1) for x in lo + hi], in_box_frac=round(in_box_frac(pp, boxes), 2), **_own(pp, boxes)))
+                         bbox=[round(x, 1) for x in lo + hi], in_box_frac=round(in_box_frac(pp, boxes), 2), **_own(pp, boxes, 7)))
     rows.sort(key=lambda r: -r["n"])
     return rows
 
@@ -152,7 +178,7 @@ def opp_rows(points, dists, kinds, cell=3.0, boxes=None):
         kind = "void" if sum(kinds[i] for i in idx) * 2 > len(idx) else "wall"
         lo, hi, ext = _extent(pp)
         rows.append(dict(n=len(idx), dmin=round(dd[0], 3), dmed=round(dd[len(dd) // 2], 2), kind=kind, span=round(ext[0], 1),
-                         bbox=[round(x, 1) for x in lo + hi], in_box_frac=round(in_box_frac(pp, boxes), 2), **_own(pp, boxes)))
+                         bbox=[round(x, 1) for x in lo + hi], in_box_frac=round(in_box_frac(pp, boxes), 2), **_own(pp, boxes, 7 if kind == "void" else 6)))
     rows.sort(key=lambda r: -r["n"])
     return rows
 
@@ -175,7 +201,7 @@ def gate_rows(clusters, voids, gate, void_gate, box_min=None, wedge_band=None, o
 
     def emit(cls, bbox, text):
         a = accepted_entry(cls, bbox, accepted)
-        (acc if a else fails).append(text if not a else dict(fail=text, reason=a["reason"], date=a["date"], evidence=a["evidence"]))
+        (acc if a else fails).append(text if not a else dict(fail=text, reason=a["reason"], date=a["date"], evidence=a["evidence"], **{"class": cls}, bbox=bbox))
     for c in clusters:
         g = (c.get("box_gate") or box_min) if (box_min is not None and c["in_box_frac"] >= 0.5) else gate
         if c["cls"] == "wall":
@@ -264,8 +290,10 @@ def pure_gate(dirs):
             for a in r.get("accepted_fails") or []:
                 if not all(str(a.get(k, "")).strip() for k in ("reason", "date", "evidence")):
                     bad.append(f"{jp}: accepted entry without reason / date / evidence: {a.get('fail', '?')[:80]}")
-                elif cur is not None and not any(all(str(x.get(k)) == str(a.get(k)) for k in ("reason", "date", "evidence")) for x in cur):
-                    bad.append(f"{jp}: accepted entry no longer in print_targets.{r['target']}.accepted ({a.get('fail', '?')[:60]}) — the acceptance was withdrawn; the FAIL stands, rerun")
+                elif cur is not None and not (a.get("class") and len(a.get("bbox") or []) == 6):
+                    bad.append(f"{jp}: accepted entry without class / bbox ({a.get('fail', '?')[:60]}) — written before 0.11.14, rerun the census")
+                elif cur is not None and not accepted_entry(a["class"], a["bbox"], [x for x in cur if all(str(x.get(k)) == str(a.get(k)) for k in ("reason", "date", "evidence"))]):
+                    bad.append(f"{jp}: accepted entry no longer in print_targets.{r['target']}.accepted with its class and a bbox covering {a['bbox']} ({a.get('fail', '?')[:60]}) — the acceptance was withdrawn or moved; the FAIL stands, rerun")
         set_root = os.path.dirname(parts_dir(d))
         stls = set(glob.glob(os.path.join(parts_dir(d), "*.stl")))
         if P and P.get("paths.mech_record"):
@@ -349,6 +377,7 @@ def opposing_faces(m, pts, nrm, fid, radius, np):
 def census(stl, samples, gate, void_gate, cell, self_hit, red, boxes, box_min, out_json, wedge_band=None, density=None, accepted=None,
            target=None, seed=0):
     np, trimesh = need("numpy", "trimesh", "scipy")[:2]
+    boxes = norm_boxes(boxes)
     np.random.seed(seed)                                                                  # trimesh < 4 reads the global seed
     m = trimesh.load(stl, force="mesh")
     area = float(m.area)
@@ -433,17 +462,33 @@ def selftest():
     assert gate_rows(rows, [], 1.2, 1.2, accepted=[dict(acc[0], **{"class": "void"})])[0], "class must match"
     assert gate_rows(rows, [], 1.2, 1.2, accepted=[dict(acc[0], bbox=[0, 0, 0, 10, 10, 1])])[0], "the entry bbox must cover the cluster"
     # legend boxes: a 1.0 raised stroke inside a box gates at box_min
-    boxed = cluster_rows(plate, [1.0] * 900, [0.0] * 900, boxes=[[-1, -1, 31, 31]])
+    boxed = cluster_rows(plate, [1.0] * 900, [0.0] * 900, boxes=norm_boxes([[-1, -1, 31, 31]], warn=False))
     assert boxed[0]["in_box_frac"] == 1.0 and gate_rows(boxed, [], 1.6, 1.0, box_min=1.0)[0] == [] and gate_rows(boxed, [], 1.6, 1.0)[0], "legend land rule"
     assert "box_gate" not in boxed[0], "a plain box adds no key (records stay byte-identical)"
     # a box's own gate (fifth value) wins over --box-min: a 1.0 stroke in a 0.45 box passes under box-min 1.6, the plain box fails
-    own = cluster_rows(plate, [1.0] * 900, [0.0] * 900, boxes=[[-1, -1, 31, 31, 0.45]])
+    own = cluster_rows(plate, [1.0] * 900, [0.0] * 900, boxes=norm_boxes([[-1, -1, 31, 31, 0.45]], warn=False))
     assert own[0]["box_gate"] == 0.45 and gate_rows(own, [], 1.6, 1.0, box_min=1.6)[0] == [] and gate_rows(boxed, [], 1.6, 1.0, box_min=1.6)[0], "a box's own gate"
-    vown = void_rows([(10.0, 10.0, 6.3)], [0.5], boxes=[[0, 0, 30, 30, 0.45]])
-    assert gate_rows([], vown, 1.6, 1.0, box_min=0.9)[0] == [] and gate_rows([], void_rows([(10.0, 10.0, 6.3)], [0.5], boxes=[[0, 0, 30, 30]]), 1.6, 1.0, box_min=0.9)[0], "void rows honour the box's own gate"
+    vown = void_rows([(10.0, 10.0, 6.3)], [0.5], boxes=norm_boxes([[0, 0, 30, 30, 0.45]], warn=False))
+    assert gate_rows([], vown, 1.6, 1.0, box_min=0.9)[0] == [] and gate_rows([], void_rows([(10.0, 10.0, 6.3)], [0.5], boxes=norm_boxes([[0, 0, 30, 30]], warn=False)), 1.6, 1.0, box_min=0.9)[0], "void rows honour the box's own gate"
     # an opposing-face pair inside a legend land gates at box_min too (a 1.3 raised stroke is two faces 1.3 apart, not a thin wall)
-    lopp = opp_rows([(10.0, 10.0, 6.3), (10.0, 11.3, 6.3)], [1.3, 1.3], [0, 0], boxes=[[0, 0, 30, 30]])
+    lopp = opp_rows([(10.0, 10.0, 6.3), (10.0, 11.3, 6.3)], [1.3, 1.3], [0, 0], boxes=norm_boxes([[0, 0, 30, 30]], warn=False))
     assert gate_rows([], [], 1.6, 1.0, box_min=1.0, opps=lopp)[0] == [] and gate_rows([], [], 1.6, 1.0, opps=lopp)[0], "legend land rule applies to opposing-face rows"
+    # 3-D boxes (review 0.11.13 B-4 / B-5): a 1.0 host wall (30 x 30, XZ plane) under an 18 mm debossed label box in the top 5 mm FAILs the 1.6 wall
+    # gate (the box's Z band holds 1/6 of the wall); the legacy 2-D box of the same footprint spans every Z and exempts it (the defect, kept as legacy)
+    hw = [(x * 1.0, 0.0, z * 1.0) for x in range(30) for z in range(30)]
+    lab = cluster_rows(hw, [1.0] * 900, [0.0] * 900, boxes=norm_boxes([[0, -1, 25, 18, 1, 30, 0.45, 0.45]]))
+    assert lab[0]["in_box_frac"] < 0.5 and any(f.startswith("WALL 1.00") for f in gate_rows(lab, [], 1.6, 1.0, box_min=0.9)[0]), ("host wall under a label box FAILs", lab[0])
+    leg = cluster_rows(hw, [1.0] * 900, [0.0] * 900, boxes=norm_boxes([[0, -1, 18, 1, 0.45]], warn=False))
+    assert leg[0]["in_box_frac"] >= 0.5 and gate_rows(leg, [], 1.6, 1.0, box_min=0.9)[0] == [], "a legacy 2-D box spans every Z"
+    b8 = norm_boxes([[0, -1, 0, 30, 1, 30, 0.9, 0.45]])
+    assert cluster_rows(hw, [1.0] * 900, [0.0] * 900, boxes=b8)[0]["box_gate"] == 0.9 and void_rows(hw[:2], [0.5, 0.5], boxes=b8)[0]["box_gate"] == 0.45, "an 8-tuple: land_min gates walls, void_min voids"
+    import contextlib, io
+    try:
+        with contextlib.redirect_stderr(io.StringIO()) as err:
+            norm_boxes([[0, 0, 0, 1, 1, 1, 0.9]])
+        raise AssertionError("a 7-tuple must exit 2")
+    except SystemExit as e:
+        assert e.code == 2 and "has 7 values; expected [x0, y0, z0, x1, y1, z1]" in err.getvalue(), err.getvalue()
     assert histogram([0.1, 1.19, 5.0, math.inf])["1.0-1.2"] == 1 and histogram([math.inf])["2.0-inf"] == 1
     # the pure gate: matching md5 + no fails passes; a wrong md5, a FAIL list, an undated acceptance, a tampered record, a withdrawn acceptance
     # and an uncensused STL of the record set are named (review 0.8.0 F5 / F28)
@@ -452,7 +497,7 @@ def selftest():
         stl = os.path.join(d, "stl", "p_body.stl"); open(stl, "wb").write(b"solid p\nendsolid p\n"); C = os.path.join(d, "census")
         def put(rec, name="p.json"):
             rec = dict(rec); rec["sig"] = record_sig(rec, VERSION); json.dump(rec, open(os.path.join(C, name), "w"))
-        acc = dict(fail="WALL 0.9", reason="r", date="2026-01-01", evidence="e")
+        acc = dict(fail="WALL 0.9", reason="r", date="2026-01-01", evidence="e", bbox=[0.2, 0.2, 0.2, 0.8, 0.8, 0.8], **{"class": "wall"})
         good = dict(version=VERSION, stl=stl, stl_md5=md5_of(stl), target="t", fails=[], accepted_fails=[acc]); put(good)
         assert pure_gate([C]) == [], pure_gate([C])
         put(dict(good, stl_md5="0" * 32)); assert any("STL of record" in b for b in pure_gate([C]))
@@ -487,7 +532,14 @@ def selftest():
             assert any("withdrawn" in b for b in pure_gate([C])), "an acceptance deleted from the yaml un-passes the body"
             t = target_settings("t", os.path.join(d, "project.yaml"))
             assert t["gate"] == 1.2 and t["wedge_band"] == 1.5 and t["density"] == 10 and t["accepted"] == [], t
-    msg = "selftest OK (pure core: wall / wedge classification, wedge band, opposing rows, accepted matching, void + legend-box gating, pure --gate-dir incl. signature / withdrawn acceptance / uncensused STL / foreign-tree path, target settings"
+            # D-1: the same reason / date / evidence with a moved bbox or another class does not cover the record's cluster
+            for e in ("{class: wall, bbox: [5,5,5,6,6,6]", "{class: void, bbox: [0,0,0,1,1,1]"):
+                open(os.path.join(d, "project.yaml"), "w").write("paths: {mech_record: 'stl/*.stl'}\nprint_targets: {t: {wall_gate: 1.2, void_gate: 1.2, red_line: 0.5, wedge_band: 1.5, samples_per_mm2: 10, accepted: [" + e + ", reason: r, date: 2026-01-01, evidence: e}]}}\n")
+                assert any("withdrawn or moved" in b for b in pure_gate([C])), ("a moved bbox / another class is a gate problem", e, pure_gate([C]))
+            put(dict(good, accepted_fails=[dict(fail="WALL 0.9", reason="r", date="2026-01-01", evidence="e")]))
+            assert any("without class / bbox" in b for b in pure_gate([C])), "a pre-0.11.14 accepted entry asks for a rerun"
+            put(good)
+    msg = "selftest OK (pure core: wall / wedge classification, wedge band, opposing rows, accepted matching, void + legend-box gating, 3-D boxes (host wall under a label box FAILs, legacy 2-D spans Z, 8-tuple gates, bad length exits 2), pure --gate-dir incl. signature / withdrawn or moved acceptance / uncensused STL / foreign-tree path, target settings"
     try:
         import numpy, trimesh, scipy, shapely  # noqa: F401
     except ImportError:
