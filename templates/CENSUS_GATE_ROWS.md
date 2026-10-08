@@ -1,11 +1,11 @@
 # census_gate — check-table rows every printed body carries (`references/dfm-printed-enclosure.md` §2; measurer `scripts/thin_wall_census.py`)
 
 One block per exported body per print preset, emitted by the case generator's check function from the census JSON (`--json`), never typed. Columns
-are the project's check table (`# | group | item | value | limit | status | note`); `status` is **OK / FAIL only** — a row with no threshold goes to
+are the project's check table (`# | group | item | value | limit | status | note`). `status` is **OK / FAIL only**. A row with no threshold goes to
 the INFO table (§6 of the reference) **and states why it has no threshold**. Every number comes from `project.yaml print_targets.<target>`
-(`references/project-yaml.md`): `{{GATE}}` = `wall_gate` (worked example: JLC3DP checker 1.2, home FDM 0.4 nozzle 1.6), `{{MARGIN}}` =
-`design_margin` (owner bar, ≥ 0.3), `{{VGATE}}` = `void_gate` (1.2 / 1.0), `{{RED}}` = `red_line` (0.5), `{{BAND}}` = `wedge_band` (1.5, convention),
-`{{THR}}` = `{{GATE}} − 0.05` (clustering convention), `{{TOL}}` = `tolerance` (the vendor's published figure until first-article measured).
+(`references/project-yaml.md`). `{{GATE}}` = `wall_gate` (worked example: JLC3DP checker 1.2, home FDM 0.4 nozzle 1.6). `{{MARGIN}}` =
+`design_margin` (owner bar, ≥ 0.3). `{{VGATE}}` = `void_gate` (1.2 / 1.0). `{{RED}}` = `red_line` (0.5). `{{BAND}}` = `wedge_band` (1.5, convention).
+`{{THR}}` = `{{GATE}} − 0.05` (clustering convention). `{{TOL}}` = `tolerance` (the vendor's published figure until first-article measured).
 
 | # | group | item | value | limit | status | note |
 |---|---|---|---|---|---|---|
@@ -24,12 +24,12 @@ the INFO table (§6 of the reference) **and states why it has no threshold**. Ev
 | n | fit | {{PIECE}} ↔ {{PARTNER}}: worst-case clearance = nominal {{NOM}} − (case ±{{TOL}} + board ±0.2 + {{OTHER}}) | {{WORST}} | >= 0 | OK/FAIL | nominal-only interference (0 mm³) passes designs that bind at worst case; tolerances from `print_targets` + the board outline; fits are per-preset knobs |
 | n | faces | {{PIECE}}: six orthographic face renders (top, sole, front, back, left, right) written to `{{FACES_DIR}}` | {{N_FACES}} | 6 | OK/FAIL | the visual review reads every face a technician or the vendor will photograph |
 
-INFO table (no threshold — each row says why): `WALL-class surface in the band {{GATE}}..{{GATE}}+0.3` (no threshold until the first-article
-caliper table gives the process spread; the vendor's published tolerance is ±{{TOL}}, so a {{GATE}}+{{MARGIN}} wall may print below the gate —
-this row is INFO, not "PASS by design"); `build orientation` (vendor's choice, recorded when answered); `post-process` (`{{POST}}`, subtracted in
-the margin); `material rating` (UL 94 / HDT at 0.45 MPa from the TDS, printed on the order sheet).
+INFO table (no threshold — each row says why). `WALL-class surface in the band {{GATE}}..{{GATE}}+0.3`: no threshold until the first-article
+caliper table gives the process spread. The vendor's published tolerance is ±{{TOL}}, so a {{GATE}}+{{MARGIN}} wall may print below the gate.
+This row is INFO, not "PASS by design". `build orientation`: vendor's choice, recorded when answered. `post-process`: `{{POST}}`, subtracted in
+the margin. `material rating`: UL 94 / HDT at 0.45 MPa from the TDS, printed on the order sheet.
 
-Adopt-list lines (PURE gates, recompute nothing): `"$PY scripts/thin_wall_census.py --gate-dir 40-case/<set>/checks/census"` — every
-`<piece>.json` must carry `stl_md5` = md5 of the committed `stl/<piece>.stl` beside it and an empty `fails` list (accepted clusters live in
-`accepted_fails` with their entry) — AND `"$PY scripts/print_dfm.py --gate 40-case/<set>/checks/dfm"` (the printability floor, `references/print-dfm.md`);
-`scripts/project.py gates-required` demands both once the STL set exists.
+Adopt-list lines (PURE gates, recompute nothing): `"$PY scripts/thin_wall_census.py --gate-dir 40-case/<set>/checks/census"`. For this line, every
+`<piece>.json` must carry `stl_md5` = md5 of the committed `stl/<piece>.stl` beside it and an empty `fails` list. Accepted clusters live in
+`accepted_fails` with their entry. The second line is `"$PY scripts/print_dfm.py --gate 40-case/<set>/checks/dfm"` (the printability floor,
+`references/print-dfm.md`). `scripts/project.py gates-required` demands both once the STL set exists.

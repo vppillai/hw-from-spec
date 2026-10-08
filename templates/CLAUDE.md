@@ -12,12 +12,12 @@ written specification, for fabrication and assembly at {{FAB}}. Humans review at
 2. **Never change a specified value, part, topology or pin assignment silently.** Write the proposal to `90-log/DECISIONS.md` with the reason, mark it
    OPEN, ask the owner. Apply only after approval (or when the spec delegates the choice); an operating gate may ship as an optional flag that warns.
 3. **Every VERIFY item is closed by reading the primary datasheet** before the part is drawn. A VERIFY item is a spec value or claim that rests
-   on a datasheet or standard nobody has read yet (definition: skill `SKILL.md` §4); they are listed in 10-spec/SPEC.md (tag `VERIFY`) or `20-design/VERIFY.md`,
-   and closed by a `10-spec/datasheet_notes/<part>.md` row (page/section) or a `90-log/BLOCKERS.md` row.
+   on a datasheet or standard nobody has read yet. The definition is in skill `SKILL.md` §4. The items are listed in 10-spec/SPEC.md (tag `VERIFY`)
+   or `20-design/VERIFY.md`. A `10-spec/datasheet_notes/<part>.md` row (page/section) or a `90-log/BLOCKERS.md` row closes an item.
 4. **Stop at gates.** The gate table is `90-log/GATES.md` (G0 SPEC → G1 schematic → G2 layout → board order), one review round before each. {{ee}}
 4. **Stop at gates.** The gate table is `90-log/GATES.md` (G0 mechanical spec → M1 geometry → M2 first article → case order), one review round before each. {{mech}}
 4. **Stop at gates.** The gate table is `90-log/GATES.md` (G0 → G1 → G2 → board order + case order), one review round before each. {{both}}
-   Do not start the next phase's CAD before the owner writes the approval into `90-log/GATES.md` — a generator for the next phase calls
+   Do not start the next phase's CAD before the owner writes the approval into `90-log/GATES.md`. A generator for the next phase calls
    `scripts/gate_check.py <gate>` and refuses while it says NOT approved. **Agents never write approval cells or the release line** — they ask (skill
    `SKILL.md` §1.1) and wait; a chat approval is quoted verbatim under the table, the cell stays the owner's. Never quote the release phrase in prose.
 5. **Everything is generated, nothing is hand-edited.** CAD files, reports and indexes come from `gen/` scripts reading `20-design/*.yaml`. A review
@@ -26,20 +26,20 @@ written specification, for fabrication and assembly at {{FAB}}. Humans review at
 6. **{{SHEET_AND_REFDES_CONVENTION}}** (for example one generated sheet file per instance; refdes = sheet × 100 + n). {{ee,both}}
 6. **{{GEOMETRY_CONVENTION}}** (for example one module per piece, presets `base + overrides` deep-merged, a version key per preset, canonical STL export). {{mech}}
 7. **Validate after every generation:** ERC/DRC through the CAD CLI with all severities, zero errors (`references/schematic-phase.md` §2 has the {{ee,both}}
-   command); `scripts/erc_gate.py 30-board/layout/erc.json` green — a warning passes only through an entry of `20-design/erc_accept.yaml` naming its {{ee,both}}
-   decision row (no prose waivers; a GUI exclusion is a hidden waiver and fails). {{ee,both}}
-7. **Validate after every generation:** census `--gate-dir` 0 unaccepted FAIL on every body of every preset, `print_dfm.py --process <row>` PASS on {{mech}}
-   every body before any upload (`--gate` in the adopt list; a vendor verdict → `dfm_verdicts.yaml` → `--validate`, a RULE DEFECT fixes the rule), {{mech}}
+   command). `scripts/erc_gate.py 30-board/layout/erc.json` is green. A warning passes only through an entry of `20-design/erc_accept.yaml` naming its {{ee,both}}
+   decision row. No prose waivers: a GUI exclusion is a hidden waiver and fails. {{ee,both}}
+7. **Validate after every generation:** census `--gate-dir` 0 unaccepted FAIL on every body of every preset. `print_dfm.py --process <row>` PASS on {{mech}}
+   every body before any upload. `--gate` is in the adopt list. A vendor verdict → `dfm_verdicts.yaml` → `--validate`, and a RULE DEFECT fixes the rule. {{mech}}
    `thin_wall_check.py --pinch` on every mark-shaped body, `scad_lint.py` on every generated SCAD, slicer log 0 warnings, every face rendered and {{mech}}
    looked at (`references/dfm-printed-enclosure.md`, `references/print-dfm.md`). {{mech}}
 8. **Blind reviews are really blind.** Reviewers get the frozen worktree and the hand-off only — never each other's output, never the author's
    reasoning. Verify BLOCKER/MAJOR adversarially, merge in `80-reviews/`.
-9. **Fab constraints are hard:** {{FAB_CONSTRAINTS}}. **The manufacturability bar is zero / zero / no waivers** (owner row {{D-BAR}}), enforced by scripts:
-   board — assembly sides, minimum package, link parts, excluded package families, parts on the verified list, fab code field on every fitted part, {{ee,both}}
-   DNP marked and excluded from BOM/CPL, the fab's DFM checker mirrored in-repo (`20-design/dfm_thresholds.json`, `scripts/dfm_check.py`); DRC 0 errors / {{ee,both}}
-   0 warnings and fab DFM 0 open at either of the fab's grades unless a dated `dfm_accepted` entry with vendor evidence (`references/pcb-layout-dfm.md`). {{ee,both}}
-   printed enclosure — wall / void / red gates, tolerance and rating per print target (`project.yaml print_targets`, never in a script); census 0 {{mech,both}}
-   unaccepted FAIL, `print_dfm.py` PASS, slicer log clean, vendor checker no flag by API read; CNC — vendor DFM clean (`references/dfm-printed-enclosure.md`). {{mech,both}}
+9. **Fab constraints are hard:** {{FAB_CONSTRAINTS}}. **The manufacturability bar is zero / zero / no waivers** (owner row {{D-BAR}}). Scripts enforce it.
+   Board: assembly sides, minimum package, link parts, excluded package families, parts on the verified list. Fab code field on every fitted part, {{ee,both}}
+   DNP marked and excluded from BOM/CPL. The fab's DFM checker is mirrored in-repo (`20-design/dfm_thresholds.json`, `scripts/dfm_check.py`). DRC 0 errors / {{ee,both}}
+   0 warnings and fab DFM 0 open at either of the fab's grades. The exception is a dated `dfm_accepted` entry with vendor evidence (`references/pcb-layout-dfm.md`). {{ee,both}}
+   Printed enclosure: wall / void / red gates, tolerance and rating per print target (`project.yaml print_targets`, never in a script). Census 0 {{mech,both}}
+   unaccepted FAIL, `print_dfm.py` PASS, slicer log clean, vendor checker no flag by API read. CNC: vendor DFM clean (`references/dfm-printed-enclosure.md`). {{mech,both}}
 10. **Say what you don't know.** If a datasheet, drawing or page cannot be fetched, mark the item BLOCKED in `90-log/BLOCKERS.md` and continue elsewhere.
 11. **Capture learnings.** Before your final commit, append every non-obvious learning as a dated, domain-tagged line to `90-log/LEARNINGS_LOG.md`.
 12. **Write to the standard.** Every README, record, kit text, vendor reply and chat report follows the skill's `references/writing-style.md`: Google developer style, ASD-STE100 sentences (one instruction per sentence, at most 20 words), Zinsser's clarity, simplicity, brevity and humanity. `scripts/style_lint.py --project .` checks the written files before a gate.
@@ -52,14 +52,14 @@ written specification, for fabrication and assembly at {{FAB}}. Humans review at
   the host; `make <target>`), never directly — the "Agent operations" block below (`references/agent-ops.md` §8).
 
 ## Agent operations
-- **Heavy jobs only through `scripts/jobs.sh`** (geometry kernel, slicer, headless browser, chains, FEA, `make check`): slot pool = {{JOBS_POOL}}
-  (cores // 4), memory floor {{MIN_FREE_GB}} GB, load gate = cores, `nice`; the generators and the Makefile route through it — never a bare
-  geometry / slicer / chain call, never a `--jobs` above the pool. Numbers from `scripts/project.py env` (the ENV.md host row).
+- **Heavy jobs only through `scripts/jobs.sh`** (geometry kernel, slicer, headless browser, chains, FEA, `make check`). Slot pool = {{JOBS_POOL}}
+  (cores // 4), memory floor {{MIN_FREE_GB}} GB, load gate = cores, `nice`. The generators and the Makefile route through it. Never use a bare
+  geometry / slicer / chain call. Never set a `--jobs` above the pool. Numbers from `scripts/project.py env` (the ENV.md host row).
 - **At most {{JOBS_POOL}} agents writing or running chains at once**; readers are free. Stacked per-tool pools panic the host.
 - **One record round per batch** (`make record-round`, locked), after the last generator of the batch — never one per commit.
-- **Caching policy:** previews regenerate every run (the fast engine, seconds); STL exports of record stay on the preset's `engine:` (the one that
-  passes the mesh gates), cached only on the inputs + engine key, and the sidecar md5 is a determinism check on every export (`--no-cache`
-  forces; drift under an unchanged key = FAIL). Cache only the slicer / PDF / index steps, each behind its `--check`; slice incrementally by default.
+- **Caching policy:** previews regenerate every run (the fast engine, seconds). STL exports of record stay on the preset's `engine:`, the one that
+  passes the mesh gates. They are cached only on the inputs + engine key. The sidecar md5 is a determinism check on every export. `--no-cache`
+  forces the export, and drift under an unchanged key = FAIL. Cache only the slicer / PDF / index steps, each behind its `--check`; slice incrementally by default.
 - **One-knob changes are inline edits** (a yaml value, a sidecar row, a text cell): no chain re-run for a value no generator reads; run the
   generator whose `--check` says STALE, nothing more.
 

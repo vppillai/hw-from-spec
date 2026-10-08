@@ -197,8 +197,8 @@ gen/  scripts/  tools/  lib/  Makefile  CLAUDE.md        the machinery; gen/ and
 ```
 Seven rules make the tree the navigation; the first four name it, the last three keep it usable from any folder:
 - **Names are nouns a technician knows.** No hash and no date names a folder at the top of a tree; a revision is `rev0`, a kit is its print target;
-  the hash lives inside (`board_id.txt`, `RENDERS.md`, `MANIFEST`). Two exceptions, both inside their folder, never at the top: `40-case/dfm_validation/`
-  keeps the labelled STLs under their hashes (the vendor verdicts are keyed on them) and `60-orders/quotes/<date>/` keeps the fab's evidence under the
+  the hash lives inside (`board_id.txt`, `RENDERS.md`, `MANIFEST`). Two exceptions exist, both inside their folder, never at the top. `40-case/dfm_validation/`
+  keeps the labelled STLs under their hashes, because the vendor verdicts are keyed on them. `60-orders/quotes/<date>/` keeps the fab's evidence under the
   day it was captured (frozen, never rewritten).
 - **One current thing per path.** Superseded kits, cuts and case versions are not kept beside the current one; git history holds them.
 - **Records sit next to what they describe.** A part's census and DFM verdict are in `checks/` beside its STL, never in a parallel tree.
@@ -210,8 +210,8 @@ Seven rules make the tree the navigation; the first four name it, the last three
 - **Build output is ignored and deletable.** Every build writes under its product's `build/` (`40-case/<set>/build/`, or one `build/<product>/`
   root that mirrors the sources); `.gitignore` covers it. Each check keeps its scratch under `build/…/_check/`. Deleting every `build/` and
   regenerating from empty gives the same tracked tree, and `git ls-files` then lists no stray (`release-and-cut.md` §14).
-- **A README in every folder.** Each `README.md` answers "what is this folder and how do I use it" without the top README: a table of the files
-  or subfolders with their purpose, the prerequisites, the commands, the outputs, each procedure as numbered steps, the design switches as a
+- **A README in every folder.** Each `README.md` answers "what is this folder and how do I use it" without the top README. It holds a table of the files
+  or subfolders with their purpose, the prerequisites, the commands, the outputs, each procedure as numbered steps, and the design switches as a
   table. The top README is a map (folder | what it holds | link), a quick start and one status line; details live in the folder READMEs.
   Voice: second person, present tense, sentence-case headings, task-oriented, UI labels in bold, code in code font; short sentences, one
   instruction per sentence, one meaning per word; no word that does no work. The kit text gate (`print-kit.md` §3) reads every README; repo paths are allowed there.
@@ -229,13 +229,14 @@ is this layout. Changing it later is a decision row + a `reorg:` block + `script
 - Shell gate commands run with cwd = repo root (or the archive) and `$PY` set; write them root-relative. `$PY` is the first interpreter that
   imports `yaml` among `$PYTHON`, the project `.venv`, the skill's `.venv`, `python3` (printed at the top of every run).
 - Which scripts are generators and which are graders: `known_issues`, `traceability`, `release_report`, `collect_renders`, `dfm_check`,
-  `assembly_guide` have `--check`; `reorg_paths --check` is a grader (no generator side); `heatmap_count` is a measurer of vendor-map captures (yellow / red outside the legend; exit 1 on any); `thin_wall_check` is a measurer (`--census`, `--pinch`,
-  exit 1 on a finding); `print_dfm` is the printability-floor GATE on the mesh (`--process <row> <stl> --out DIR`, exit 1 on FLAG; PURE `--gate DIR`; `--validate`
-  exit 1 on a RULE DEFECT); `scad_lint` is a grader of generated SCAD; `thin_wall_census` is the printed-body `wall_gate` GATE (`<stl> --target <print target> --json 40-case/<set>/checks/census/<piece>.json`, exit 1 on a
-  WALL / VOID / WEDGE-band / OPPOSING cluster below its gate that no dated `accepted` entry covers) plus a PURE `--gate-dir <census dir>` for
-  `gates.adopt` (md5 of the STL beside the record + empty `fails` + every accepted entry still dated with evidence); `skill_retro` reads a
-  project's learnings and decisions and drafts the skill's next changes (no --check);
-  `handoff_header.py` prints a header (nothing to check); `project.py` is the reader (+ `scope`, `record` = the record label and md5 per scope,
+  `assembly_guide` have `--check`. `reorg_paths --check` is a grader (no generator side). `heatmap_count` is a measurer of vendor-map captures
+  (yellow / red outside the legend; exit 1 on any). `thin_wall_check` is a measurer (`--census`, `--pinch`, exit 1 on a finding). `print_dfm` is
+  the printability-floor GATE on the mesh (`--process <row> <stl> --out DIR`, exit 1 on FLAG; PURE `--gate DIR`; `--validate` exit 1 on a RULE DEFECT).
+  `scad_lint` is a grader of generated SCAD. `thin_wall_census` is the printed-body `wall_gate` GATE:
+  `<stl> --target <print target> --json 40-case/<set>/checks/census/<piece>.json`. It exits 1 on a WALL / VOID / WEDGE-band / OPPOSING cluster
+  below its gate that no dated `accepted` entry covers. It also has a PURE `--gate-dir <census dir>` for `gates.adopt` (md5 of the STL beside the
+  record + empty `fails` + every accepted entry still dated with evidence). `skill_retro` reads a project's learnings and decisions and drafts the
+  skill's next changes (no --check). `handoff_header.py` prints a header (nothing to check). `project.py` is the reader (+ `scope`, `record` = the record label and md5 per scope,
   `scaffold --scope` = the one write it does: resolving template scope tags in place on copied files).
 - **Record md5 per scope** (`Project.record_md5()`; used by `release_report` identity, `collect_renders` folder, `handoff_header`, the cut id):
   ee / both → md5 of the board file's raw bytes; mech → the `paths.mech_record` set. MISSING (None) until the artefact exists.

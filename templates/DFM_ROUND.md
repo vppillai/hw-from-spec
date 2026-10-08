@@ -3,8 +3,8 @@
 Quote page only: nothing saved to an account, carted, agreed or paid (`references/vendor-review.md` §1). **Owner consent to upload the design
 to {{VENDOR}}: decision row {{D-nn}} (quoted: "{{OWNER_WORDS}}"); vendor terms read {{DATE}} at {{TERMS_URL}}.** Owner signed in: {{YES/NO}}
 (the DFM read needs no login); uploads by {{AGENT}}; browser / UA: {{BROWSER}}. Files here: `<piece>_<version><round>_<md5-8>.stl` (the exact bytes
-uploaded, canonical STL), `<md5-8>_analyze.json` (the RAW API response with URL, timestamp, headers), `<piece>_<round>_<md5-8>_<material>_heatmap_<face>.png`,
-`quote_page_<round>_flags.png`, `capability_page_{{DATE}}.pdf` (the vendor's published design rules as they read today), `probe/` (if §5 was needed).
+uploaded, canonical STL) and `<md5-8>_analyze.json` (the RAW API response with URL, timestamp, headers). The folder also holds `<piece>_<round>_<md5-8>_<material>_heatmap_<face>.png`,
+`quote_page_<round>_flags.png`, `capability_page_{{DATE}}.pdf` (the vendor's published design rules as they read today), and `probe/` (if §5 was needed).
 One STL per page session, page reloaded between uploads. **Verdict = the vendor's analysis API response, read when its parse is complete —
 `{{VERDICT_API}}` (JLC3DP: `getFileAnalyzeResult` at `parseStatus == 2`, `modelAnalysisVO.thinWall`); a page reading before that is not a verdict.**
 The flag is computed at upload and does not depend on the material chosen on the line. **Site-changed branch**: endpoint or field missing today → BLOCKERS row {{B-nn}}, verdict class = "page popover +
@@ -34,10 +34,10 @@ same body: confirm both reads were API reads at parseStatus 2, then compare the 
 | {{PIECE}} | `{{TARGET}}` | {{N}} / 0 / {{INFO}} (+{{NEW_INFO}}: {{WHY}}) | PASS ({{MD5_8}}) | 0 / 0 / 0 / 0 | {{N_ACC}} ({{IDS}}) | {{WF}} / {{VF}} % (floor {{NF}}) | {{N_PAIRS}} ≥ 0 | {{SPREAD}} | 6 |
 
 ## 4. Verdict of the round
-**{{PASS / NOT YET}}** — acceptance bar: every body no flag (API read) + no yellow / red under the material of the order, 0 unaccepted FAIL in the
-tables and census, zero slicer warnings (home build), every face looked at, no waivers. Bodies of record after the round: {{PIECE}} `{{MD5_8}}`, …
-**Material rating per target on the order sheet**: {{TARGET}} = {{MATERIAL}}, UL 94 {{RATING}}, HDT (0.45 MPa) {{HDT}} °C (TDS {{URL}}, {{DATE}});
-owner's "engineering sample, not a rated enclosure" row: {{D-nn}}. **Build orientation** (asked / answered / n.a.): {{ORIENTATION}}.
+**{{PASS / NOT YET}}** — acceptance bar: every body no flag (API read) + no yellow / red under the material of the order. The bar also needs 0 unaccepted FAIL in the
+tables and census, zero slicer warnings (home build), every face looked at, and no waivers. Bodies of record after the round: {{PIECE}} `{{MD5_8}}`, …
+**Material rating per target on the order sheet**: {{TARGET}} = {{MATERIAL}}, UL 94 {{RATING}}, HDT (0.45 MPa) {{HDT}} °C (TDS {{URL}}, {{DATE}}).
+Owner's "engineering sample, not a rated enclosure" row: {{D-nn}}. **Build orientation** (asked / answered / n.a.): {{ORIENTATION}}.
 **Post-process** named: {{POST}}. Owner items: {{NONE / LIST}}. Decision row: {{CC-nnn}} (APPLIED / OPEN). Not done: {{LIST}}.
 
 ## 5. Probes (only when a body is flagged and the census finds nothing — `probe/PROBES.md` carries the full table; summary here)

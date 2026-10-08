@@ -1,10 +1,10 @@
 # RELEASE_NOTES — {{PROJECT}} rev {{REV}} ({{DATE}})
 
-> **State at this release (generated facts):** record `{{BOARD_PATH_OR_STL_SET}}` md5 `{{MD5}}` (`scripts/project.py record`; content signature `{{SIG}}`),
+> **State at this release (generated facts):** record `{{BOARD_PATH_OR_STL_SET}}` md5 `{{MD5}}`,
 > package `{{PACKAGE_DIR}}`, {{ee,both}}
 > case `{{CASE_VERSION}}`, {{mech,both}}
-> decisions md5 `{{DECISIONS_MD5}}`, tag `{{TAG}}`. Every number below names the file it was read from; a value a
-> concurrent agent is still producing is written `[FINAL: …]` rather than copied early.
+> decisions md5 `{{DECISIONS_MD5}}`, tag `{{TAG}}`. `scripts/project.py record` gives the record md5 and the content signature `{{SIG}}`.
+> Every number below names the file it was read from; a value a concurrent agent is still producing is written `[FINAL: …]` rather than copied early.
 
 ## What this is
 {{two paragraphs: purpose, form factor, what is in the box}}
