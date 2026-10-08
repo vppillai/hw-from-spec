@@ -137,7 +137,10 @@ def selftest():
         bad = improper_placements([("ok_I", I), ("mirror", flat_mirror), ("turned", flat_turned), ("turn90", turn90), ("scaled", scaled)])
         assert [b[0] for b in bad] == ["mirror", "scaled"] and bad[0][1] == -1.0 and bad[1][1] == 8.0, bad
         assert improper_placements([]) == []
-    print("selftest OK (volume centroid of transformed bodies with densities — not the area centroid, open mesh refused; support margin inside / outside / degenerate; sweep worst pose; improper placements: mirror and scale flagged, turn-over and 90° pass)")
+        js = os.path.join(d, "s.json"); spec = {"items": [[p1, I, 1.0]], "poses": [["a", None, [[-10, -10, 10, 10]]]]}
+        json.dump(spec, open(js, "w")); assert main(["stability.py", js]) == 2, "a spec without limit must not default to 0"
+        json.dump(dict(spec, limit=2.0), open(js, "w")); assert main(["stability.py", js]) == 0
+    print("selftest OK (volume centroid of transformed bodies with densities — not the area centroid, open mesh refused; support margin inside / outside / degenerate; sweep worst pose; improper placements: mirror and scale flagged, turn-over and 90° pass; a json spec without limit = 2)")
     return 0
 
 
@@ -145,9 +148,11 @@ def main(argv):
     if "--selftest" in argv:
         return selftest()
     if len(argv) == 2 and argv[1].endswith(".json"):
-        # {"items": [[stl, M, rho], ...], "poses": [[label, [x, y], [[x0,y0,x1,y1], ...]], ...]} -> margins
+        # {"items": [[stl, M, rho], ...], "poses": [[label, [x, y], [[x0,y0,x1,y1], ...]], ...], "limit": mm} -> margins (limit required)
         from shapely.geometry import box
         spec = json.load(open(argv[1]))
+        if "limit" not in spec:
+            print(f"stability: {argv[1]} has no `limit` (the minimum margin in mm the CHECKS row states); add it"); return 2
         bad = improper_placements([(i[0], i[1]) for i in spec["items"]])
         if bad:
             print("FAIL: placements that are not proper rotations (a mirror cannot be printed): " + ", ".join(f"{l} det {d}" for l, d in bad)); return 1
@@ -156,7 +161,7 @@ def main(argv):
         print(f"cog {['%.2f' % v for v in c]} mass {mass:.1f} g; worst margin {worst:.2f} mm at pose {lab}")
         for r in rows:
             print(" ", *r)
-        return 0 if worst >= float(spec.get("limit", 0.0)) else 1
+        return 0 if worst >= float(spec["limit"]) else 1
     print(__doc__); return 2
 
 
