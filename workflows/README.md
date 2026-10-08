@@ -10,6 +10,7 @@ subagents in the order of the phases (Review → Verify → Merge) — the blind
 | `blind-deep-review.js` | **one review round** (SKILL §5: the unit every gate needs) before a gate / an order; `{{ROLE_SET}}` = `spec` for the G0 round (10-spec/SPEC.md is the artefact), `board` later in ee / both (incl. the `case_dfm` role), `mech` for M1 / M2 / case order in mech scope | roles × (1 in-session + 2 external) → verifier per role → merge with REQUIRED / OWNER / DOCUMENT / ACCEPT + verdict |
 | `delta-audit.js` | after a bounded change | same, filtered to the affected roles, briefed with the round's CLAIMS, merged against the previous audit item by item |
 | `routing-inspection.js` | routed copper | tile every layer ≥ 40 px/mm → two blind inspectors (the external one sees ONLY the tiles) → merge to a fix list |
+| (no template) double-blind drawing round | M1 of a printed part (SKILL §5) | reviewer A with ONLY the sheet + a one-paragraph intent → verifier B measures every claim on the meshes (VERIFIED / REFUTED / DRAWING DEFECT / JUDGMENT) → merge |
 | `silk-audit-verify.js` | silk after a design change | audit → fix through yaml (copper signature unchanged) → blind visual verify A/B → merge + fix → re-verify |
 
 ## Instantiate

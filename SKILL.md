@@ -1,6 +1,6 @@
 ---
 name: hw-from-spec
-version: 0.11.8
+version: 0.11.9
 description: Run a hardware project (a PCB, a printed or CNC enclosure, or both — scope chosen at kickoff; contract fab such as JLCPCB) from a written specification to a production cut with an owner-gated, generated-only, blind-reviewed workflow — a kickoff questionnaire that asks every owner decision up front with recommended answers, a zero-warning manufacturability bar, and a retro that folds each project's learnings back into the skill. Use this whenever someone starts a board or enclosure project from a spec, asks to set up gates, a decision log, generators, part verification, a fab DFM mirror, a case pipeline, FEA, blind reviews, a release report or a production cut for one, or resumes such a project, or wants the skill improved from a finished project — even if they only say "new KiCad board", "order this at JLC", "review the layout", "cut the release" or "what did we learn".
 ---
 
@@ -92,8 +92,8 @@ re-asked, and a later change is a superseding D row (rule 2).
   owner's click) → **release cut** → **production cut**. No case gates, no print DFM.
 - **mech**: **G0** mechanical spec approved (envelope, interfaces, materials, print / CNC target, fit inputs — a board STEP / mesh or dimensions,
   each tagged [V] or [K]) → **M1** geometry approved (every body generated from `20-design/case.yaml`, six face renders read, clearance rows ≥ 0
-  against the fit input of record, census + pinch + slicer clean, vendor DFM clean by API read, hardware [V], `case_dfm` + mechanical-intent
-  round merged) → **M2** first article / fit print approved (caliper table, coupons, mating part fitted; a deviation is a yaml knob → new case
+  against the fit input of record, a fit row pair per degree of freedom, census + pinch + slicer clean, vendor DFM clean by API read,
+  hardware [V], `case_dfm` + mechanical-intent round merged, the double-blind drawing round merged) → **M2** first article / fit print approved (caliper table, coupons, mating part fitted; a deviation is a yaml knob → new case
   version → M1 re-run) → **case order** (owner's click) → **release cut** → **production cut**. The record id is the STL set's md5
   (`scripts/project.py record`, `paths.mech_record`), never a board md5.
 - **both**: the ee chain with the case pipeline (§8) hanging off G2 and the **case order** gate beside the board order, as before.
@@ -251,6 +251,13 @@ changed specialties only). `{{EXTERNAL_MODELS}}` needs at least two distinct mod
 closed rims, retention present in the mesh); its verifier re-runs `scripts/thin_wall_census.py --target <t>` on the frozen worktree's STLs and
 compares with the census JSON of record. Required before the case order (`templates/90-log/GATES.md`).
 
+**The double-blind drawing round** [mech, both] (the M1 round for a printed part, beside `case_dfm`): the drawing sheet is generated from the
+exported meshes with its self-checks (`references/case-pipeline.md` §Drawings). Reviewer A gets ONLY the sheet and a one-paragraph design
+intent, and reports what the sheet says the part does and where it cannot. Verifier B measures every claim of A on the meshes of record and
+classes each **VERIFIED / REFUTED / DRAWING DEFECT / JUDGMENT**. Cost: about one agent-hour. On a case with 14 passing fit rows and a clean print
+DFM one round found two design defects (a board free to slide along its slot, bosses removed by the cavity cut) and a dozen drawing defects;
+a design defect becomes a fit or mesh row before the fix (`references/case-pipeline.md` §Interference, §Process rules).
+
 **The G0 round (spec review)** uses `blind-deep-review.js` with `{{ROLE_SET}}` = `spec`: four roles — spec coherence (requirements, interfaces,
 numbers that must agree, the VERIFY list), parts and sourcing (every named part fetchable live, tags, alternates, stock for the run; in mech
 scope the hardware lines), mechanical intent (envelope, connectors, case concept, thermal; in mech scope also the fit input's provenance and
@@ -304,6 +311,9 @@ FEA: Gmsh + scikit-fem; fTetWild for CGAL STLs; caches keyed on content; compact
   mate direction through the real placements, within a stated tolerance (≤ 1°); (3) an ORIENTATION row per part type with a one-sided feature
   (slot opening, peg direction, a face that must point at its mate or the ground). A whole side drawn mirrored, every mating flat 180° off its
   socket and an inverted one-sided part each survived days of renders and a per-side 2D sweep; the rows catch them in seconds.
+- **Fit rows per degree of freedom.** A fit test at nominal positions proves nothing about the directions a part moves in: per part, one row
+  pair per degree of freedom (each shift, lift, the 180° turn of a symmetric part) — moved less than the play is empty, moved more overlaps
+  its stop (`references/case-pipeline.md` §Interference).
 - **Point contacts.** Before any mark-shaped body or pocket (inlay plate, badge, deboss) run `scripts/thin_wall_check.py --pinch <stl>`: a traced
   outline of touching shapes pinches to 0.01 mm and the part arrives as lobes; a wall census cannot see it. Bridge with web discs clipped to the
   outline's closing, add the neck row, keep the components = 1 row (`references/case-pipeline.md` §Point contacts).

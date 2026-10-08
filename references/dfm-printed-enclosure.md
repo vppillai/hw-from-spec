@@ -256,8 +256,9 @@ numbers are **[owner bar]** for a 0.4 nozzle at 0.20 mm and live in `print_targe
   printer / filament re-measures with the coupon, never inherits these.
 - **Seam placement**: the seam is set to the rear / a hidden edge in the slicer project (recorded key), never on a legend face. On a body whose
   vertical corners are all fillets an `aligned` seam wanders from layer to layer **[K]**; cut a V groove (0.7 mm square section turned 45°, full
-  height) down one or two hidden vertical corners — the aligned seam snaps into the groove on every layer and the groove reads as a design
-  line. Proof from the g-code: `fdm-print-optimisation.md` §3 seam row.
+  height) down ONE hidden vertical corner per part — the aligned seam snaps into the groove on every layer and the groove reads as a design
+  line. Two grooves per part split the choice: one part's seam took one groove, its mate's the other, and the seams did not form one line
+  **[K]**. Put each part's groove on the SAME corner of the assembly. Proof from the g-code: `fdm-print-optimisation.md` §3 seam row.
 - **Layer anisotropy**: a tab or boss loaded across layers is 30–50 % weaker; boss walls shear along layers — orient bosses so the load is in-plane
   where possible, and read the FEA with the anisotropy factor.
 - **Legends RAISED**: **cap ≥ 5.1 / stroke ≥ 0.9 / AIR GAP between strokes ≥ 0.9** / height 0.6 on a face-up top (a 0.4-deep, 0.45-wide debossed void at cap 2.2 is illegible on a 0.4
@@ -327,7 +328,8 @@ numbers are **[owner bar]** for a 0.4 nozzle at 0.20 mm and live in `print_targe
   the envelope of record. Model compressible envelopes (EMI springs) at the compressed width or the dummy jams the bezel.
 - **Slicer projects with every setting embedded** (Bambu Studio 02.08 specifics, labelled): flatten the system presets (`inherits` chains), give
   the project preset ITS OWN NAME and list the differing keys in `different_settings_to_system` (a project naming a system preset with that list
-  empty is reconciled back to system values when the GUI opens it — supports OFF → "floating regions"). Open with File → Open Project, never
+  empty is reconciled back to system values when the GUI opens it — supports OFF → "floating regions"). A project built from stock presets
+  starts with that list EMPTY: add every override key to it, or the GUI shows the system value. Open with File → Open Project, never
   Import. Slice every object ALONE headless; **a floating-region warning is a build FAIL**. Auto-orient every non-text piece and bake the rotation
   into the STL. One material knob (PLA / PETG) read by the 3MF builder, the print sheets and every README, with the material caveat printed
   (§1.3). **A generator that refuses to overwrite its artefact on a failed run leaves the OLD 3MF on disk while the sidecar describes the new
@@ -454,6 +456,8 @@ ironing, fuzzy skin, per-object overrides) and how each is PROVEN from the g-cod
   from the CLI's `objects` list, not from the (deduplicated) inputs.
 - `different_settings_to_system` lists only keys whose value differs from the flattened system preset: a project value equal to the system
   default is embedded but not listed — prove a setting from the embedded value, not from the list.
+- `curr_bed_type` in a CLI export is the machine default (Cool Plate, 35 °C bed, on a printer fitted with a PEI plate, 02.08.02 **[K]**): set it
+  to the plate in use and read it back from the project.
 - **Arranger vs pre-placement**: the arranger nests CONCAVE outlines (triangles with windows) into each other and the slice aborts with
   "gcode path conflicts" — pre-place such plates (your own shelf packing, `--arrange 0`); a self-placed MULTI-colour plate collides with the fixed
   wipe-tower position, so plates with filament changes stay on `--arrange 1`. `result.json` lists no objects for a pre-placed plate — the kit table
@@ -473,7 +477,13 @@ ironing, fuzzy skin, per-object overrides) and how each is PROVEN from the g-cod
   keeps proud 1.2 and the skin over a groove = the rib floor 1.2). No waiver: the equivalent geometry with the same datum logic.
 - One chamfered corner = the rotation key; "a rotated plate stands on the corner — do not force" is on the sheet; CA on the lands only.
 
-### 8.5 Snug-fit features (crush ribs, press lips) and the 45° limit
+### 8.5 Snug-fit features (crush ribs, press lips, combs) and the 45° limit
+- **Comb slots are straight-walled** **[K]**: a full-height taper on comb ribs leaves the nominal slot width only at the floor (a 1.7 slot read
+  2.7 at the rib top) while the fit coupon has straight slots, so the coupon proves a different fit. Straight slot walls, a short lead-in
+  (2 mm), a mouth about 1.2 wider than the slot.
+- **Pads over staggered slots fill the whole pitch**: a pad shorter than the pitch leaves a wedge void against the tapered teeth (print DFM
+  rule V fires at 0.02–0.4 mm **[K]**).
+- Ribs in one plane that would share a face with a neighbour are made 0.04 narrower than it: no shared face, no sliver (the flush-face bullet below).
 - **Ship a bracket plate, let the owner pick after one print**: the fit knob at three values (rib proud 0.20 / 0.25 / 0.30), one object each,
   **each a copy of the part that carries the knob** (§8 "Bracket the KNOB"), named by its value in the 3MF (or by its size when too small for text); START_HERE: bracket → coupon → plate (`references/print-kit.md` §4). An **interference-window row per variant**:
   rib-to-rib vs the mating part's tolerance (its drawing, e.g. ± 0.1) AND the print tolerance (± 0.15) → per-side interference nominal ± 0.125; a
