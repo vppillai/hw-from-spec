@@ -359,34 +359,37 @@ numbers are **[owner bar]** for a 0.4 nozzle at 0.20 mm and live in `print_targe
 The finish of a mark is decided by WHICH FACE carries it and HOW that face is built, not by the slicer profile. Two options are first-class
 (owner: "ironed surface and bottom ams are both viable options"); pick one per product, or ship both as plates when the printer has an AMS:
 - **(a) TOP-face feature under ironing.** The mark is a deboss 0.6 deep (= 3 whole layers at 0.20, measured on the mesh) or a raised body 0.6
-  high on a face that is a TOP face of the print, and the plate profile irons **ALL top surfaces: `ironing_type: top` — never `topmost`**
-  (`topmost` irons only the highest face and skips the recess floor, which recreates the texture mismatch the option exists to avoid).
+  high on a face that is a TOP face of the print. The plate profile irons **ALL top surfaces: `ironing_type: top` — never `topmost`**.
+  `topmost` irons only the highest face and skips the recess floor. That recreates the texture mismatch the option exists to avoid.
   **Top shell ≥ recess depth + 1.0** (worked example: `top_shell_layers 7` = 1.4 under a 0.6 recess) so no sparse infill shows through the
   recess floor; floor and face are then both topmost solid surfaces built by the same pass. **Orient the part so the marked face IS a top
   face**: a cap prints mouth down (blind pocket rising from the bed, flange on the bed, the closed end = the marked top face, §8.2); a plate
   prints face-up. The mark is read directly, not mirrored. Cost: one filament, ironing adds ~5 min on a small plate.
-- **(b) BOTTOM-face flush AMS colour body in the bed layers.** The marked face goes ON THE BED and the mark is a separate solid body in the second
-  filament occupying the first N layers of that face — flush, no recess, no bridge, no ironing: both colours are bed contact and the colour
-  boundary is a first-layer perimeter in XY, the crispest mark FDM can make. **The mark is mirrored in the model** (proved by a render from −Z
+- **(b) BOTTOM-face flush AMS colour body in the bed layers.** The marked face goes ON THE BED. The mark is a separate solid body in the second
+  filament occupying the first N layers of that face. It is flush, with no recess, no bridge and no ironing. Both colours are bed contact, and the
+  colour boundary is a first-layer perimeter in XY, the crispest mark FDM can make. **The mark is mirrored in the model** (proved by a render from −Z
   against the artwork as drawn). **Default 2 layers = 0.4** (a dark mark on a dark body is opaque at two layers; only layer 1 is ever seen);
   **3 layers for a light mark on a dark body**. Cost = 2 filament changes per 2 colour layers + purge (worked example: the third layer = +2
-  swaps, +0.66 g purge, +3 min); it scales with the coloured layer count, not with the mark area — keep the count a knob, slice every variant.
-- **NEVER:** a **bed-face deboss** (the recess ceiling is a bridge underside — strands beside a glossy bed-contact face: the "webbing" people
-  remember on debossed logos); a **vertical-wall deboss** (stair-steps every horizontal edge at the layer height); **webs / discs / closing
-  fillets that alter the artwork** to satisfy a land rule (they read as dimples — fix the rule set to the artwork, never the artwork to the rule
-  set: point contacts stay point contacts and fuse over one line width, which is the artwork's own look).
-- **The mark must sit on a bed face and there is no AMS → a separate face-up printed PLATE glued into a keyed rebate** (worked example: plate
-  41 × 22 × 1.6, rebate 0.4 deep + 0.2/side clearance leaving ≥ the wall gate of roof, one chamfered corner = rotation key, glued chamfer to
-  chamfer). A bed-face rebate on a roof-down body is a bridge ceiling even when hidden: **split any rebate span > 10 mm with full-height lands
-  that double as glue lands** (worked example: 22.4 mm split by two 2.0 lands into three 6.1 mm bridges) instead of filing a covered-face
-  exemption — an unsplit span sags into the rebate and rocks the plate.
+  swaps, +0.66 g purge, +3 min). The cost scales with the coloured layer count, not with the mark area. Keep the count a knob, and slice every
+  variant.
+- **NEVER:**
+  - a **bed-face deboss**. The recess ceiling is a bridge underside: strands beside a glossy bed-contact face, the "webbing" people remember
+    on debossed logos.
+  - a **vertical-wall deboss**. It stair-steps every horizontal edge at the layer height.
+  - **webs / discs / closing fillets that alter the artwork** to satisfy a land rule. They read as dimples. Fix the rule set to the artwork,
+    never the artwork to the rule set. Point contacts stay point contacts and fuse over one line width, which is the artwork's own look.
+- **The mark must sit on a bed face and there is no AMS → a separate face-up printed PLATE glued into a keyed rebate**. Worked example: plate
+  41 × 22 × 1.6, rebate 0.4 deep + 0.2/side clearance leaving ≥ the wall gate of roof. One chamfered corner = rotation key, glued chamfer to
+  chamfer. A bed-face rebate on a roof-down body is a bridge ceiling even when hidden. **Split any rebate span > 10 mm with full-height lands
+  that double as glue lands** (worked example: 22.4 mm split by two 2.0 lands into three 6.1 mm bridges). Do this instead of filing a
+  covered-face exemption. An unsplit span sags into the rebate and rocks the plate.
 - **All marks on one product share the reader orientation of the legends** — rotate, never mirror; prove each with a render against the
   artwork as drawn (proper-vs-improper rigid-match row: proper ≈ 0, mirror ≫ 0). "Apply the rule to the other marks too" is an AUDIT, not a
   patch: list EVERY instance of the feature class across every body and preset, state each verdict in a FAIL-gated row, then change.
 
-**Mark geometry rows (FAIL-gated; measured on the same 2D polygon the CAD imports and on the exported mesh).** "Minimum gap" of a filled mark is
-ill-posed (a chord through a boundary point is ~0; the medial axis reaches every convex vertex with width → 0; hull minus ink adds slivers) —
-measure the FAILURE MODE instead:
+**Mark geometry rows (FAIL-gated; measured on the same 2D polygon the CAD imports and on the exported mesh)**. "Minimum gap" of a filled mark is
+ill-posed. A chord through a boundary point is ~0. The medial axis reaches every convex vertex with width → 0. Hull minus ink adds slivers.
+Measure the FAILURE MODE instead:
 
 | Row | Gate | Failure it guards |
 |---|---|---|
@@ -408,12 +411,12 @@ the geometry rows guarantee the rest — the report says which is which.
 ### 8.2 Dust caps / protective covers (a cap for a cabled pluggable module as the example)
 - **No through-hole may open into the protected cavity** — a lanyard hole is a dust path. Tether = an **external lug outside the cavity**,
   support-free: standing on the bed, hole axis vertical, wall around the hole ≥ the wall gate (1.6) outboard and inboard to the mouth.
-- **Print MOUTH DOWN**: the lip flange flat on the bed, mouth chamfer ≤ 45°, **ribs / crush beads start ≥ 1.0 above the bed** so elephant foot
-  never widens a fit surface, the pocket tip face is the ONLY bridge (≤ 10 mm; sag lands in the tip gap); profile: elephant-foot compensation
+- **Print MOUTH DOWN**: the lip flange flat on the bed, mouth chamfer ≤ 45°. **Ribs / crush beads start ≥ 1.0 above the bed** so elephant foot
+  never widens a fit surface. The pocket tip face is the ONLY bridge (≤ 10 mm; sag lands in the tip gap). Profile: elephant-foot compensation
   0.15 + 0.5 mm first-layer lines, thin-wall detection on for the mouth rim, thick bridges off. FAIL rows: chamfer angle, lip footprint = the
   full lip (vertex extents), rib start Z, bridge span, material under the mark (§8.1).
 - The pocket corner radius comes from the mating part's DRAWING, not a print rule of thumb (a module corner R 0.15 is clipped by a pocket
-  R > 0.66); ribs bear on the faces the drawing shows SOLID (a pluggable module is open at its bottom leading edge and recessed on top).
+  R > 0.66). Ribs bear on the faces the drawing shows SOLID (a pluggable module is open at its bottom leading edge and recessed on top).
 - The README states the first-print knobs, one per print (fit clearance OR rib proud), with the expected calliper readings.
 
 Slicer-level knobs (purge into infill, flush calibration, prime tower, wall loops / sequence, infill, modifier meshes, EF / XY compensation, seam,
@@ -423,14 +426,14 @@ ironing, fuzzy skin, per-object overrides) and how each is PROVEN from the g-cod
 - `sparse_infill_density: 100%` is **rejected by the validator (rc -18 "Invalid parameter value(s)")** with any pattern; 90 % passes. Force a
   solid column with `top_shell_layers` / `bottom_shell_layers` (or their thickness keys) instead.
 - A **two-filament slice with the prime tower on SEGFAULTS (rc -11 / 133, no result.json, log ends "no filament colors found in projects")**
-  unless every filament profile carries `filament_colour`: write **one filament JSON per slot with its colour** (or `--filament-colour
-  '#RRGGBB;#RRGGBB'`, undocumented in `--help`). One filament, or two without the tower, slice fine. Bisect a crash or a rejected 3MF on the
+  unless every filament profile carries `filament_colour`. Write **one filament JSON per slot with its colour**, or pass `--filament-colour
+  '#RRGGBB;#RRGGBB'` (undocumented in `--help`). One filament, or two without the tower, slice fine. Bisect a crash or a rejected 3MF on the
   temp inputs (5 s per run), one variable / key group per run, before touching the generator.
 - **Key the filament slots by ROLE, not by colour name**: `filaments: {structure: {name: white, hex: "#FFFFFF"}, kinematics: {…}, accent: {…},
-  legend: {…}}` in the yaml, the slicer filament map, the profile file names, the expected-hex rows and the kit prose all read the name and hex
-  through the role; a palette change is then a yaml-only edit. In the worked example the owner had no black, then the grey spool was too small, and each
-  change touched 11 files because colour names were the keys everywhere (2026-10-02). Match roles to SPOOL SIZE: the structure role takes ~60 %
-  of the grams and needs a full spool, an accent (~5 %) fits a small one — the kickoff colour question asks which spools are full and which are
+  legend: {…}}` in the yaml. The yaml, the slicer filament map, the profile file names, the expected-hex rows and the kit prose all read the
+  name and hex through the role. A palette change is then a yaml-only edit. In the worked example the owner had no black, then the grey spool was too small, and each
+  change touched 11 files because colour names were the keys everywhere (2026-10-02). Match roles to SPOOL SIZE. The structure role takes ~60 %
+  of the grams and needs a full spool. An accent (~5 %) fits a small one. The kickoff colour question asks which spools are full and which are
   small (questionnaire C5).
 - **Multi-material = ONE multi-part object with a per-part `extruder`.** The CLI has no flag for it but loads a Bambu-style 3MF (the source
   project's `write_ams_3mf`; copy the package layout from a file Studio exported, ids are global):
@@ -454,48 +457,48 @@ ironing, fuzzy skin, per-object overrides) and how each is PROVEN from the g-cod
   --assemble --arrange 0` — same colour requirement. The CLI slices this file; the GUI also needs `Metadata/project_settings.config`, which the
   CLI round-trip of the next bullet supplies.
 - **The GUI rejects what the CLI accepts — let the CLI write the project** (02.08.02, 2026-10-06 **[K]**). The GUI's project-config loader
-  (`ConfigBase::load_from_json`) throws on ANY option key it does not know; the GUI then reports "The 3mf file has invalid config, load geometry
-  data only" and, when the file is tagged as a Bambu project, "The file does not contain any geometry data". The CLI tolerates the same keys.
+  (`ConfigBase::load_from_json`) throws on ANY option key it does not know. The GUI then reports "The 3mf file has invalid config, load geometry
+  data only". When the file is tagged as a Bambu project, it reports "The file does not contain any geometry data". The CLI tolerates the same keys.
   Robust route: write a plain 3MF (geometry + `model_settings.config` with the per-part extruder, NO `Application` tag), then `BambuStudio
   --load-settings "machine.json;process.json" --load-filaments "f1.json;f2.json" --export-3mf out.3mf --outputdir DIR plain.3mf`. Facts: the
-  export path is `outputdir + "/" + the --export-3mf value` — pass a BARE file name (an absolute path is concatenated and fails "Unable to open
-  the file"); machine and process presets are SEPARATE files (one merged JSON fails "process not compatible with printer"); the caller flattens
-  every `inherits` chain (the CLI applies `--load-settings` files literally — an unflattened machine file slices with a 200 × 200 bed and a
-  generic start g-code); `--export-settings` output is NOT flattened either, so it is no `project_settings` source. After the export patch two
-  things only: `filament_colour` (the CLI writes one default colour) and the **flush matrix size** — the CLI export carries a 4 × 4
-  `flush_volumes_matrix` and an 8-entry `flush_volumes_vector` for two filaments on a P-series printer, and a CLI `--slice` of that file fails
-  "Flush volumes matrix do not match to the correct size!"; GUI-saved projects carry n × n and 2n — patch to n × n / 2n.
+  export path is `outputdir + "/" + the --export-3mf value`. Pass a BARE file name: an absolute path is concatenated and fails "Unable to open
+  the file". Machine and process presets are SEPARATE files: one merged JSON fails "process not compatible with printer". The caller flattens
+  every `inherits` chain. The CLI applies `--load-settings` files literally: an unflattened machine file slices with a 200 × 200 bed and a
+  generic start g-code. `--export-settings` output is NOT flattened either, so it is no `project_settings` source. After the export, patch two
+  things only: `filament_colour` (the CLI writes one default colour) and the **flush matrix size**. The CLI export carries a 4 × 4
+  `flush_volumes_matrix` and an 8-entry `flush_volumes_vector` for two filaments on a P-series printer. A CLI `--slice` of that file fails
+  "Flush volumes matrix do not match to the correct size!". GUI-saved projects carry n × n and 2n. Patch to n × n / 2n.
 - **Report filament per colour and purge per plate**: per-filament grams from `Metadata/slice_info.config`, filament changes from the g-code
-  (`M620 S..A`). Purge + tower mass is NOT in the header — derive it as used − (part volume × density) **only for a SOLID part** (the 2–3 layer
-  colour mark); a 20 % infill body gives a negative "purge" — report the mark filament's share and say the body's cannot be separated.
+  (`M620 S..A`). Purge + tower mass is NOT in the header. Derive it as used − (part volume × density) **only for a SOLID part** (the 2–3 layer
+  colour mark). A 20 % infill body gives a negative "purge". Report the mark filament's share, and say the body's cannot be separated.
 - The CLI takes the same STL path N times as N objects (`--arrange 1`) — a "four caps" plate needs no multi-body STL; the object count comes
   from the CLI's `objects` list, not from the (deduplicated) inputs.
 - `different_settings_to_system` lists only keys whose value differs from the flattened system preset: a project value equal to the system
   default is embedded but not listed — prove a setting from the embedded value, not from the list.
 - `curr_bed_type` in a CLI export is the machine default (Cool Plate, 35 °C bed, on a printer fitted with a PEI plate, 02.08.02 **[K]**): set it
   to the plate in use and read it back from the project.
-- **Arranger vs pre-placement**: the arranger nests CONCAVE outlines (triangles with windows) into each other and the slice aborts with
-  "gcode path conflicts" — pre-place such plates (your own shelf packing, `--arrange 0`); a self-placed MULTI-colour plate collides with the fixed
+- **Arranger vs pre-placement**: the arranger nests CONCAVE outlines (triangles with windows) into each other, and the slice aborts with
+  "gcode path conflicts". Pre-place such plates (your own shelf packing, `--arrange 0`). A self-placed MULTI-colour plate collides with the fixed
   wipe-tower position, so plates with filament changes stay on `--arrange 1`. `result.json` lists no objects for a pre-placed plate — the kit table
   falls back to the input object list. Count the filament changes (`M620`) against the DESIGNED number per plate (one legend = its colour layers × changes), not only report them.
 - State per plate in the kit README: minutes, grams per filament, filament changes, purge — ironing adds ~5 min on a small plate; each extra
   coloured layer adds swaps + purge + minutes.
 
 ### 8.4 Glued plates in rebates on a bed face
-- **The lands are the datum, the bridged strips sit one layer BELOW them.** A plate whose grooves rest on the land tops while its underside
+- **The lands are the datum, the bridged strips sit one layer BELOW them**. A plate whose grooves rest on the land tops while its underside
   touches the bridge ceilings stands on the sag humps (0.1..0.3 at a 6 mm span) and rocks. Strip ceiling = land top − `sag_gap` (0.2 = one layer)
-  under the part, so sag cannot lift the plate; FAIL rows: seat datum (gap 0.20), proud height (1.2), **working clearance after elephant-foot
+  under the part, so sag cannot lift the plate. FAIL rows: seat datum (gap 0.20), proud height (1.2), **working clearance after elephant-foot
   compensation on BOTH parts ≥ 0.1** (0.3 − 2 × 0.1 EF … measured on the meshes, not the yaml).
 - **Clearance for a glued plate: 0.3 per side** (CA fills; 0.2 was a 0.0..0.1 working fit after EF). **Widen the PLATE's clearance by shrinking
   the plate, never by widening the rebate**: the rebate lip to the roof fillet is a census wall — +0.1 per side took a 1.6 lip to 1.53 = FAIL. The
   rebate footprint stays where the census approved it; the plate shrinks by 0.2 per side.
-- If deepening the strips would thin the roof under the span below the wall gate (1.4 under 6 × 41 mm), **thin the PLATE instead** (1.6 → 1.4
-  keeps proud 1.2 and the skin over a groove = the rib floor 1.2). No waiver: the equivalent geometry with the same datum logic.
+- If deepening the strips would thin the roof under the span below the wall gate (1.4 under 6 × 41 mm), **thin the PLATE instead**. A 1.6 → 1.4
+  plate keeps proud 1.2, and the skin over a groove = the rib floor 1.2. No waiver: the equivalent geometry with the same datum logic.
 - One chamfered corner = the rotation key; "a rotated plate stands on the corner — do not force" is on the sheet; CA on the lands only.
 
 ### 8.5 Snug-fit features (crush ribs, press lips, combs) and the 45° limit
-- **Comb slots are straight-walled** **[K]**: a full-height taper on comb ribs leaves the nominal slot width only at the floor (a 1.7 slot read
-  2.7 at the rib top) while the fit coupon has straight slots, so the coupon proves a different fit. Straight slot walls, a short lead-in
+- **Comb slots are straight-walled** **[K]**. A full-height taper on comb ribs leaves the nominal slot width only at the floor (a 1.7 slot read
+  2.7 at the rib top). The fit coupon has straight slots, so the coupon proves a different fit. Straight slot walls, a short lead-in
   (2 mm), a mouth about 1.2 wider than the slot.
 - **Pads over staggered slots fill the whole pitch**: a pad shorter than the pitch leaves a wedge void against the tapered teeth (print DFM
   rule V fires at 0.02–0.4 mm **[K]**).
