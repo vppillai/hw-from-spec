@@ -362,6 +362,13 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - Every mention of a retired string across live docs after a design change: grep, not memory; logs and reviews keep stale words on purpose.
 - A NOTES-only schematic regen is cheap to prove harmless: `<nets>` block md5 identical; project file restored from HEAD — docs/silk.
 - An illustrated assembly guide is generated, not drawn: authored short yaml + the SOP generator's step text + one keyed render per page; numbers stay in the SOP (one source).
+- A guide whose pages are one raster each is rejected on first read ("the text is not selectable"); pages are vector with real text and the pictures embedded — 2026-10-08 [docs/guide].
+- Marketing renders (dark parts, dark scheme) in a guide read as low-contrast mush on paper; a shaded line drawing (light fills + black edges from a flat-colour pass of the same meshes) reads at any size — 2026-10-08 [docs/guide].
+- A debossed coupon in a line drawing read as raised stencil outlines ("the rendering is not exact") while the mesh was right: the recess floors need a dark fill (height split of the mesh) and a steep view — 2026-10-08 [docs/guide].
+- Ten loaded boards in a perspective view hid the alternating slot heights ("the staggered view is not clear"): five boards in, one on its way, plus an orthographic thin-slab section inset — 2026-10-08 [docs/guide].
+- A rendered `intersection()` / `difference()` drops the colours of its children (the slab came out in the default colour): `color()` goes outside the boolean — 2026-10-08 [tooling/openscad].
+- Guide text with hand-typed numbers ("four magnets", "8 mm band") drifts from the design on the next parameter change; the words read the parameter file the pictures are built from — 2026-10-08 [docs/guide].
+- Axis names and parameter names in a guide step ("+y end", "STAGGER") mean nothing to the person holding the part; front / rear corner / long side / high board — 2026-10-08 [docs/guide].
 - A hand-written SOP that copies a generated seed inherits the seed's stale number three revisions later: cite the seed's file + md5, or generate the block — 2026-09-22 [docs/seeds].
 - "Software of record = `git log -1 -- tools/`" moves the stamp in seven documents on a README fix: stamp the md5 of the files that matter — 2026-09-22 [docs/provenance].
 - Markdown → PDF for a document set with wide tables and Ω / ≤ / ✓: a headless browser + CSS beat the installed TeX; `overflow-wrap: anywhere` breaks part numbers mid-word — 2026-09-22 [tooling/pdf].
