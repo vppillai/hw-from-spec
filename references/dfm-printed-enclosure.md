@@ -147,7 +147,7 @@ upload, with the verdict → validate → rule-fix → retro loop in `references
   ACCEPTED (with the entry's evidence path: the vendor's written acceptance, a first-article measurement); an entry without date / reason /
   evidence does not count. Nothing else moves a FAIL.
 - **A PURE gate in the adopt list**: the census JSON in `checks/census/` beside the set's `parts/` carries the STL md5 and the FAIL list; `thin_wall_census.py --gate-dir <dir>`
-  proves md5 = the committed STL and 0 unaccepted FAIL without recomputing.
+  proves md5 = the committed STL and 0 unaccepted FAIL without recomputing. It re-matches every accepted FAIL by class and bbox (1 mm tolerance) against the current yaml.
 - Give EVERY preset its FAIL rows on day 1 (the home preset got them after the order; the vendor preset after the crack).
 - Legend lands between debossed strokes are deboss-deep features judged at the red band (`red_line`) and "inside the hull of the lands it
   touches", not "inside one land" (a block of strings merges into one cluster).
@@ -195,7 +195,7 @@ Every rim and wall reads CLOSED on the single part: no through-slot, notch, key 
 3. **The flag is computed at UPLOAD and does not depend on the process / material chosen on the line.** Setting the material (Edit dialog SAVED —
    form state, not a cart) is still done first: it gives the price and the legend of the material's heat map; the record names the material on the
    line and **the quote price per body** before reading anything. Changing the material never flips `thinWall`. The page defaults to a resin.
-4. **Open the heat map on every face** even when `thinWall` is false. Take six captures per body: the origin view, three 90° azimuth drags (a horizontal drag of canvas-height/2 px is 180°), and both poles (±canvas-height/2 vertical, from the origin). `scripts/heatmap_count.py` on the six captures must print 0 / 0 (yellow / red in the model area: the legend column and the tool-bar strip are skipped). Record **the legend thresholds as displayed
+4. **Open the heat map on every face** even when `thinWall` is false. Take six captures per body: the origin view, three 90° azimuth drags (a horizontal drag of canvas-height/2 px is 180°), and both poles (±canvas-height/2 vertical, from the origin). `scripts/heatmap_count.py` on the six captures must print 0 / 0 (yellow / red in the model area: the legend column and the tool-bar strip are skipped). It reads each pixel in HSV, so shaded faces and amber count too. Record **the legend thresholds as displayed
    that day** — the census turns a colour into a number.
 5. **Save screenshots named `<piece>_<round>_<md5-8>_<material>_heatmap_<face>.png`** plus `quote_page_<round>_flags.png`, keep the uploaded STL
    beside them, and write `templates/DFM_ROUND.md` into `60-orders/quotes/<date>/` with the API fields, the browser / UA / signed-in state per body.
