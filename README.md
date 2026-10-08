@@ -1,7 +1,7 @@
 # hw-from-spec
 
-A Claude Code skill that takes a board, an enclosure, or both from a written spec to a production cut:
-owner-gated phases, generated-only artefacts, a zero-warning manufacturability bar, blind reviews with
+A Claude Code skill that takes a board, an enclosure, or both from a written spec to a production cut.
+It brings owner-gated phases, generated-only artefacts, a zero-warning manufacturability bar, blind reviews with
 a record-reading verifier, and a retro that folds every project's learnings back into the skill.
 
 `version 0.11.13` · MIT · `SKILL.md` is the procedure; everything else is reference, template or tool.
@@ -41,8 +41,8 @@ Exit 0 = PASS, 1 = FLAG with one line per rule (measured | limit | where | fix):
 - A manufacturability bar enforced by scripts, not prose: DRC 0 / 0 / 0, fab DFM 0 open, printed
   enclosure census 0 unaccepted FAIL + print DFM PASS, vendor checker no flag by API read.
 - A vendor-independent print DFM check on the mesh before every upload, validated against the
-  vendors' verdicts (a vendor flag we pass = a rule defect); build rules for PCB and MJF / FDM / SLA /
-  CNC enclosures tagged checker / fab capability / physics / owner choice; slicer knobs with a proof row each.
+  vendors' verdicts. A vendor flag we pass = a rule defect. Build rules for PCB and MJF / FDM / SLA /
+  CNC enclosures, tagged checker / fab capability / physics / owner choice. Slicer knobs with a proof row each.
 - Generic `project.yaml`-driven scripts (every one with `--selftest` and a read-only `--check`) for the
   records, gates, release and production cut, the arrival checklist, the job pool and the retro.
 - Blind-review workflow templates with a record-reading verifier; a two-minute dry run (`smoke/`) that
@@ -112,9 +112,9 @@ vendor/hw-from-spec/smoke/run_smoke.sh
 Run the kickoff questionnaire first (`SKILL.md` §0.1, `references/kickoff-questionnaire.md`). Its A0 answer sets the scope
 of the copy block in step 4. Write the other answers into the records after the copy.
 
-4. Copy the templates and resolve the scope (`T` is the templates folder); `project.py slots` counts
-the unfilled `{{…}}` slots per file — CLAUDE.md / project.yaml / records now, SPEC + KICKOFF_ANSWERS
-after the kickoff and the spec; 0 before the G0 ask:
+4. Copy the templates and resolve the scope. `T` is the templates folder. `project.py slots` counts
+the unfilled `{{…}}` slots per file. Fill CLAUDE.md / project.yaml / records now, and SPEC + KICKOFF_ANSWERS
+after the kickoff and the spec. The count is 0 before the G0 ask:
 
 ```sh
 A0=both                                  # your kickoff A0 answer: ee | mech | both
@@ -143,14 +143,14 @@ host row), first records, adopt gates, then G0. Fill slots that sit inside a pat
 (`30-board/kicad/sensor/sensor.kicad_pcb`). `templates/20-design/arrival_checklist.yaml` is copied at the order, never on day 1 (SKILL §10.1; its `--check` line joins the gates the same commit). Scripts find `project.yaml` by walking up from the
 cwd (or `HWFS_PROJECT=…`); the shell gates print which interpreter they use. Never put the submodule
 AT `scripts/`. Project-specific generators (schematic builder, placement, routing, export, fab
-package, panel, silk, case, drawings, FEA measurer, the kit writers: kit_facts, slicer wrapper, START_HERE, the Downloads mirror) stay in the project's `gen/`, read constants
-through `scripts/project.py`, and join `gates.adopt` with their `--selftest` and `--check`.
+package, panel, silk, case, drawings, FEA measurer, the kit writers: kit_facts, slicer wrapper, START_HERE, the Downloads mirror) stay in the project's `gen/`.
+They read constants through `scripts/project.py` and join `gates.adopt` with their `--selftest` and `--check`.
 
 ## Fast, safe iterations
 
 Three tiers, three existing commands. **Inner** — `scripts/iteration_gate.sh [-- <command> ...]` — runs the
-changed generator's read-only `--check` and its direct grader: the project's standing set from
-`gates.iteration.inner` plus this change's commands after `--`; it refuses an empty set and fails if a
+changed generator's read-only `--check` and its direct grader. The set is the project's standing set from
+`gates.iteration.inner` plus this change's commands after `--`. It refuses an empty set and fails if a
 command writes the tree. **Standard** — `make gates` (`scripts/adopt_gates.sh --no-clone`) — the whole
 check set before a delta audit. **Release** — `make check` (`scripts/adopt_gates.sh`) — with the
 fresh-archive clone gate, before a gate, order, or cut. All three are read-only on the tree and heavy
@@ -158,20 +158,20 @@ commands take the host pool, so the fast path cannot silently stand in for a rel
 
 ## The kickoff questionnaire
 
-Before the spec is read, the agent asks the scope (A0), then every decision class that scope needs —
+Before the spec is read, the agent asks the scope (A0). Then it asks every decision class that scope needs:
 product, PCB build, enclosure architecture, the manufacturability bar, verification, bought parts,
-software, release, identity, slicer optimisation — in up to twelve `AskUserQuestion` batches of at
-most four, each question with a marked RECOMMENDED answer and the alternatives' consequences. Answers
+software, release, identity, slicer optimisation. It asks in up to twelve `AskUserQuestion` batches of at
+most four. Each question has a marked RECOMMENDED answer and the alternatives' consequences. Answers
 become owner rows in `DECISIONS.md`, values in `project.yaml` (`project.py kickoff --check` proves they
 landed) and `10-spec/KICKOFF_ANSWERS.md`. Detail: `references/kickoff-questionnaire.md`, `SKILL.md` §0.1.
 
 ## The retro loop
 
 After a production cut, `scripts/skill_retro.py --project <root>` reads the project's learnings log
-and decision log, lists what the skill does not carry yet, and drafts the CHANGELOG entry, the
+and decision log. It lists what the skill does not carry yet. It drafts the CHANGELOG entry, the
 reference patches, the evals and the questionnaire questions for the next version
-(`docs/retro/<project>_<date>.md`, deleted once folded: the repo carries no project retro); `--apply` folds the mechanical part (pitfalls lines, new process
-rows, a CHANGELOG stub), the rest stays a draft a maintainer reads. The project pins the skill version
+in `docs/retro/<project>_<date>.md`. The draft is deleted once folded, because the repo carries no project retro. `--apply` folds the mechanical part (pitfalls lines, new process
+rows, a CHANGELOG stub). The rest stays a draft a maintainer reads. The project pins the skill version
 it ran in `project.yaml skill: {repo, commit, version}`. Detail: `SKILL.md` §13.
 
 ## Versioning, licence, contributing

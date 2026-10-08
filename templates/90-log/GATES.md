@@ -4,20 +4,20 @@
 
 The owner writes the approval cells and the release line; **agents never write either** — they ask (skill `SKILL.md` §1.1) and wait. A valid
 approval cell reads `<owner name>, <YYYY-MM-DD>, <what was approved: SPEC rev / schematic commit / board md5-8 / case version + record md5-8 (the case gates)>`; an empty cell is
-`_not yet approved_`. The release reports read this file and stay DRAFT until the owner writes the release phrase (the words named by
-`markers.release_regex` in project.yaml — do not quote them in prose anywhere in this file) **into the Release row's approval cell** and commits it
-as `project.owner` (`scripts/gate_check.py --release` reads the cell and the line's git author; `scripts/gate_check.py <gate>` reads a gate cell — the
-next phase's generators refuse to run while it says NOT approved). A chat approval is quoted verbatim (date/time) under the table; the cell stays the owner's.
+`_not yet approved_`. The release reports read this file and stay DRAFT until the owner writes the release phrase
+**into the Release row's approval cell** and commits it as `project.owner`. The release phrase is the words named by `markers.release_regex` in
+project.yaml. Do not quote them in prose anywhere in this file. `scripts/gate_check.py --release` reads the cell and the line's git author.
+`scripts/gate_check.py <gate>` reads a gate cell. The next phase's generators refuse to run while it says NOT approved. A chat approval is quoted verbatim (date/time) under the table; the cell stays the owner's.
 
 **One review round** (skill `SKILL.md` §5) = for every role of the round's role set, one in-session reviewer + two external models of a second
-model family (or the in-session fallback, said so in the merge), one verifier with record access per role, one merged report in
-`80-reviews/<round>_merged.md`. Every gate below needs one.
+model family. The in-session fallback may stand in for the external models, and the merge says so. Each role also gets one verifier with record access.
+The round produces one merged report in `80-reviews/<round>_merged.md`. Every gate below needs one.
 
-**The manufacturability bar** (owner decision {{D-BAR}} from the kickoff questionnaire; default = zero / zero / no waivers), enforced by scripts:
-board — CAD DRC 0 errors / 0 unconnected / **0 warnings**, fab DFM mirror **0 open at either of the fab's grades** (for example Danger / Warning) unless a dated `dfm_accepted` entry with {{ee,both}}
-reason and vendor evidence names the refdes; ERC `scripts/erc_gate.py` green. {{ee,both}}
-printed enclosure — census **0 unaccepted FAIL** per body per preset, `print_dfm.py` PASS on every body, zero slicer warnings, vendor checker {{mech,both}}
-**no flag by API read**, no yellow / red on the heat map; CNC — vendor DFM clean. {{mech,both}}
+**The manufacturability bar** is owner decision {{D-BAR}} from the kickoff questionnaire (default = zero / zero / no waivers). Scripts enforce it.
+Board: CAD DRC 0 errors / 0 unconnected / **0 warnings**. Fab DFM mirror **0 open at either of the fab's grades** (for example Danger / Warning), unless a dated `dfm_accepted` entry with {{ee,both}}
+reason and vendor evidence names the refdes. ERC `scripts/erc_gate.py` green. {{ee,both}}
+Printed enclosure: census **0 unaccepted FAIL** per body per preset, `print_dfm.py` PASS on every body, zero slicer warnings, vendor checker {{mech,both}}
+**no flag by API read**, no yellow / red on the heat map. CNC: vendor DFM clean. {{mech,both}}
 A waiver is a dated decision row plus a machine-readable accept entry the gate re-reads every run, never prose.
 
 | Gate | Meaning | Prerequisites | Owner approval (name, date, revision approved) |
