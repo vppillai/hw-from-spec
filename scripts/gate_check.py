@@ -17,7 +17,7 @@ import os, re, subprocess, sys
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 from project import Project, split_row  # noqa: E402
 
-EMPTY = re.compile(r"^\s*(_not yet (approved|written)_|-|—)?\s*$", re.I)
+EMPTY = re.compile(r"^[\s_*]*(not[\s_]+yet(?![a-z]).*|tbd|pending|n/a|-|—)?[\s_*]*$", re.I)   # a placeholder is not an approval
 
 
 def gate_rows(text):
@@ -128,7 +128,9 @@ def selftest():
     P.cfg["project"]["owner"] = "owner@example.com"; assert check_release(P) == 0, "a plain string owner (email) matches too"
     P.cfg["project"]["owner"] = None; assert check_release(P) == 1, "no owner named = no release"
     assert release_cell(Project(f"{d}/project.yaml"), rows) is None and gate_cell(rows, "G1").startswith("Owner Person")
-    print("selftest OK (cells not prose, empty markers, release cell + git author = owner, agent author refused, uncommitted refused, missing owner refused)")
+    for ph in ("TBD", "pending", "Pending", "not yet approved", "Not yet", "_not yet approved_", "not_yet_approved", "**TBD**", "n/a", "", "—"):
+        assert gate_cell(f"| **G2** | pcb | x | {ph} |\n", "G2") is None, f"placeholder {ph!r} read as approved"
+    print("selftest OK (cells not prose, empty markers and placeholders (TBD, pending, not yet), release cell + git author = owner, agent author refused, uncommitted refused, missing owner refused)")
     return 0
 
 
