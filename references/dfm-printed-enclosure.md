@@ -503,36 +503,37 @@ ironing, fuzzy skin, per-object overrides) and how each is PROVEN from the g-cod
 - **Pads over staggered slots fill the whole pitch**: a pad shorter than the pitch leaves a wedge void against the tapered teeth (print DFM
   rule V fires at 0.02–0.4 mm **[K]**).
 - Ribs in one plane that would share a face with a neighbour are made 0.04 narrower than it: no shared face, no sliver (the flush-face bullet below).
-- **Ship a bracket plate, let the owner pick after one print**: the fit knob at three values (rib proud 0.20 / 0.25 / 0.30), one object each,
-  **each a copy of the part that carries the knob** (§8 "Bracket the KNOB"), named by its value in the 3MF (or by its size when too small for text); START_HERE: bracket → coupon → plate (`references/print-kit.md` §4). An **interference-window row per variant**:
-  rib-to-rib vs the mating part's tolerance (its drawing, for example ± 0.1) AND the print tolerance (± 0.15) → per-side interference nominal ± 0.125; a
+- **Ship a bracket plate, let the owner pick after one print**: the fit knob at three values (rib proud 0.20 / 0.25 / 0.30), one object each.
+  **Each is a copy of the part that carries the knob** (§8 "Bracket the KNOB"). Each is named by its value in the 3MF, or by its size when too
+  small for text. START_HERE: bracket → coupon → plate (`references/print-kit.md` §4). An **interference-window row per variant**:
+  rib-to-rib vs the mating part's tolerance (its drawing, for example ± 0.1) AND the print tolerance (± 0.15) → per-side interference nominal ± 0.125. A
   window that reaches 0 or a knife edge at either end is a FAIL, not a note.
-- **A face at exactly 45.0° is AT the overhang limit, not under it**, and the same face changes class with the orientation: a lip cone faces UP
+- **A face at exactly 45.0° is AT the overhang limit, not under it**. The same face changes class with the orientation. A lip cone faces UP
   on the mouth-down cap (harmless) and DOWN on the closed-end-down AMS cap (a visible overhang). **Orientation-dependent knob** (`lip.cone_deg_ams`
   50 where it is an overhang, 45 where it is not) plus a **measured steepest-overhang row per print orientation** (bridges and the deliberate side
   debosses excluded). A rib lead-in taper scales with the rib height (a fixed 0.30 taper on a 0.30 rib was exactly 45.0°).
 - **Watertight row per exported STL** and a `legend_edge` margin for raised legend items (§ print-kit.md §5): a slicer drops or fills a
   non-manifold sliver silently and still says "clean". **Flush faces make slivers** (OpenSCAD Manifold exports, print-DFM rule M fires
-  **[K]**): a unioned solid whose face lies IN the plane of a neighbour's face (a pillar's outer face in the plane of a lip's end face, a rib
-  that ends exactly on a wall face, a face through a fillet's tangent point) exports zero-area triangles and T-junctions (trimesh `split`
-  reports extra "bodies" of 1–2 faces, zero area). Fixes: overlap every union INTO its neighbour by 0.01 — never past a design face (the slab
-  of §1 "Overshoots become slabs"); build an upper block as ONE solid and cut the cavity through shell and block in ONE `difference()` so every
-  inner face is one face; no face through a tangent point. Acceptance: 1 body and `watertight = true` after trimesh `split`.
+  **[K]**). A unioned solid whose face lies IN the plane of a neighbour's face exports zero-area triangles and T-junctions. Examples: a pillar's
+  outer face in the plane of a lip's end face, a rib that ends exactly on a wall face, a face through a fillet's tangent point. The trimesh
+  `split` reports extra "bodies" of 1–2 faces, zero area. Fixes: overlap every union INTO its neighbour by 0.01, never past a design face (the
+  slab of §1 "Overshoots become slabs"). Build an upper block as ONE solid, and cut the cavity through shell and block in ONE `difference()` so
+  every inner face is one face. Put no face through a tangent point. Acceptance: 1 body and `watertight = true` after trimesh `split`.
 
 ## 9. Two versions from one yaml (vendor MJF + home FDM)
-Presets `base + overrides` deep-merged before any module reads the yaml (`references/case-pipeline.md` §Presets); the geometry may differ wherever
-the printer needs it (split legend plate, raised legends, 1.6 walls, screws or magnets) while the envelope, bezel and windows stay shared —
-**fit clearances are NOT shared numbers** (§1.4): every mating dimension is a per-preset `fits` knob, the coupon decides each. Every
+Presets are `base + overrides`, deep-merged before any module reads the yaml (`references/case-pipeline.md` §Presets). The geometry may differ
+wherever the printer needs it (split legend plate, raised legends, 1.6 walls, screws or magnets) while the envelope, bezel and windows stay
+shared. **Fit clearances are NOT shared numbers** (§1.4): every mating dimension is a per-preset `fits` knob, and the coupon decides each. Every
 variant-only generator line sits behind **hook tokens that expand to the ORIGINAL text for the other presets**, and the variant gets **its own
-version key** (`presets.<p>.version`). **A hook that references a variable the preset never defines expands to NOTHING** — no error, a body
-exported with the feature missing (a hood shipped a day without counterbores): every hook variable is asserted defined per preset, and every
-check row reads the MESH, not the yaml. **Duplicate yaml keys are gated**: PyYAML keeps the LAST of two duplicate keys silently (`body_rail:
-{enabled: false}` followed by `body_rail: {land: …}` re-enabled a rail the README said was off) — load every design yaml through a
+version key** (`presets.<p>.version`). **A hook that references a variable the preset never defines expands to NOTHING**. There is no error, and
+the body is exported with the feature missing (a hood shipped a day without counterbores). Every hook variable is asserted defined per preset, and
+every check row reads the MESH, not the yaml. **Duplicate yaml keys are gated**: PyYAML keeps the LAST of two duplicate keys silently.
+`body_rail: {enabled: false}` followed by `body_rail: {land: …}` re-enabled a rail the README said was off. Load every design yaml through a
 duplicate-aware SafeLoader and fail on a duplicate. Prove byte identity before committing: `Case(base).scad() == git show HEAD:<scad>`.
 
 - **The home preset (`home_fdm`) mirrors every vendor DFM decision the same day** (owner: "once that closes apply those findings to the home
-  version as well"): rails off, key off, closed rims, undercut filled, feet concentric, hood on screws or magnets — applied to the home preset in
-  the SAME yaml with its own version key and a comment naming the vendor round that decided it. Its gate is its own census (`print_targets.home_fdm`)
+  version as well"). The decisions: rails off, key off, closed rims, undercut filled, feet concentric, hood on screws or magnets. They are
+  applied to the home preset in the SAME yaml, with its own version key and a comment naming the vendor round that decided it. Its gate is its own census (`print_targets.home_fdm`)
   + the slicer log clean on every plate. A vendor-only fix is a divergence the two-units-must-mate check proves harmless (partner overlap 0 mm³).
 
 ## 10. Post-mortem pattern (when the vendor reports cracked / deformed parts)
@@ -555,83 +556,83 @@ duplicate-aware SafeLoader and fail on a duplicate. Prove byte identity before c
    | a designed feature the checker coloured and the round accepted | | ours: "that is our file, please ship" |
    | a designed asymmetry read as a defect | | ours: render + order-sheet line |
 
-4. **Reply template** (the owner sends it; wording lives in `templates/VENDOR_REVIEW_RECORD.md` §3): facts (order, line, file md5), what we
-   measured (numbers, photos), what we changed (new md5, what moved), what we ask (ship as is / reprint at our cost / reprint at the vendor's cost /
-   credit), what we do NOT accept. Never claim a printing defect for a designed feature; a goodwill credit is the owner's call.
-5. **Apply the learning design-wide, not to the failed feature**: census every body of every preset, re-derive every value set against the old
-   rule, turn every waiver row into a measured row, render every face, then the vendor's own DFM on every replacement body — and only then a new
-   order. Expect ~12 full builds for the first design-wide pass; commit after each.
+4. **Reply template** (the owner sends it; wording lives in `templates/VENDOR_REVIEW_RECORD.md` §3). It holds facts (order, line, file md5),
+   what we measured (numbers, photos), and what we changed (new md5, what moved). It also holds what we ask (ship as is / reprint at our cost /
+   reprint at the vendor's cost / credit) and what we do NOT accept. Never claim a printing defect for a designed feature; a goodwill credit is the owner's call.
+5. **Apply the learning design-wide, not to the failed feature**. Census every body of every preset. Re-derive every value set against the old
+   rule. Turn every waiver row into a measured row. Render every face. Then run the vendor's own DFM on every replacement body, and only then
+   place a new order. Expect ~12 full builds for the first design-wide pass; commit after each.
 
 ## 11. SLA (resin) rule set (JLC3DP 8000 / 9600 resins as the example — verify live) **[vendor sheet + physics]**
 - **Two minimums, two meanings**: the quote page's Edit dialog refuses a PART smaller than 2 mm in its thinnest overall dimension (a
   plate); the review mail asks for **walls ≥ 0.8** ("resin ≥ 0.8"). Design walls at 1.0 (0.8 + margin), plates ≥ 2 mm thick, and record both
   numbers in `print_targets.<sla target>` with the page and mail as sources.
 - **Minimum feature / emboss 0.3–0.5, engraved stroke ≥ 0.4, hole Ø ≥ 0.5** (vendor guides); a point contact (0.01 mm) is a broken part: `--pinch`.
-- **Hollow bodies need drain holes** (≥ 2 × Ø3 at the lowest print point) or the part traps resin and cups; a large flat face parallel to the
-  plate causes **cupping / suction** — orient at 10–20° or accept the support scars on that face (the vendor decides orientation; ask and record).
+- **Hollow bodies need drain holes** (≥ 2 × Ø3 at the lowest print point) or the part traps resin and cups. A large flat face parallel to the
+  plate causes **cupping / suction**. Orient at 10–20° or accept the support scars on that face. The vendor decides orientation: ask and record.
 - **Supports** land on the down-facing faces the vendor chooses: state the visible faces on the order sheet ("no supports on the top face")
   and accept a scar elsewhere.
-- **Post-cure warp**: thin flat plates (< 2 mm, > 40 mm span) warp 0.2–0.5 mm after UV post-cure — rib them or accept; **UV yellowing** of clear
-  resin within weeks in daylight; **brittleness**: the standard 8000 / 9600 class resins are stiff and brittle (elongation a few %) — no snap
-  fits, no press fits, no thin cantilevers; the inlay plate that arrived "in pieces" was point-contact geometry in a brittle resin.
+- **Post-cure warp**: thin flat plates (< 2 mm, > 40 mm span) warp 0.2–0.5 mm after UV post-cure. Rib them or accept. **UV yellowing** of clear
+  resin within weeks in daylight. **Brittleness**: the standard 8000 / 9600 class resins are stiff and brittle (elongation a few %). No snap
+  fits, no press fits, no thin cantilevers. The inlay plate that arrived "in pieces" was point-contact geometry in a brittle resin.
 - Colour / dye adds a day; the material rating (§1.3) per the TDS — most standard resins are unrated and soften < 60 °C.
 
 ## 12. Full-colour / multi-material inserts (worked example: a full-colour MJF line beside a dyed MJF body) **[design + vendor form]**
 - **The insert is the whole functional face, not a label plate in a rebate**: the UI skin together with the blocks that hang from it (a finger
-  dish, a channel) becomes one coloured part; the host keeps a **frame ≥ gate** around the opening, a **lip ≥ gate × ≥ gate** under the insert's
-  edges (trimmed `clearance` clear of the hanging blocks), any roof / pillar tops at the Z of the insert's underside (so the insert's top
-  face comes out flush), and a **sill** where the host must close a feature the insert leaves open. Gap 0.3 per side self-centres a ±0.3
+  dish, a channel) becomes one coloured part. The host keeps a **frame ≥ gate** around the opening and a **lip ≥ gate × ≥ gate** under the
+  insert's edges (trimmed `clearance` clear of the hanging blocks). It also keeps any roof / pillar tops at the Z of the insert's underside (so
+  the insert's top face comes out flush), and a **sill** where the host must close a feature the insert leaves open. Gap 0.3 per side self-centres a ±0.3
   process; a block that hangs through the opening is the anti-rotation key. Glue = pin-head dabs on the lands, never on the block or
   the edges; press flat with the mating part; dry-fit every unit first.
-- **Budget the insert's edge before drawing it**: between a fixed insert feature (a slot over a switch) and a fixed host feature (a seat for the
-  mating cover) the edge needs host wall ≥ gate + glue gap + insert land ≥ gate (2.7 mm on a 1.2 process). When the span is shorter, the host
-  carries the wall and the insert's features **run out through its edge** (an open-ended dish, a U-notched slot / hole facing the host wall
-  across the gap) — a sub-gate land is never the answer. One slit line at the host's foot is clean; a 1.0 land is yellow.
-- **Files**: the FUSED body (colour has no geometry) is what the vendor's analyser, the six-view map and the census see; the **colour 3MF** is
-  the order file — and it is **ONE shell per file**: a 3MF with one `<object>` per colour (the earlier recipe) was refused at file review as
-  "multiple shells which cannot be merged automatically — each file could only support 1 part (shell)" **[vendor form, measured]**; flush colour
+- **Budget the insert's edge before drawing it**. Take a fixed insert feature (a slot over a switch) and a fixed host feature (a seat for the
+  mating cover). Between them the edge needs host wall ≥ gate + glue gap + insert land ≥ gate (2.7 mm on a 1.2 process). When the span is
+  shorter, the host carries the wall, and the insert's features **run out through its edge** (an open-ended dish, a U-notched slot / hole facing
+  the host wall across the gap). A sub-gate land is never the answer. One slit line at the host's foot is clean; a 1.0 land is yellow.
+- **Files**: the FUSED body (colour has no geometry) is what the vendor's analyser, the six-view map and the census see. The **colour 3MF** is
+  the order file, and it is **ONE shell per file**. A 3MF with one `<object>` per colour (the earlier recipe) was refused at file review as
+  "multiple shells which cannot be merged automatically — each file could only support 1 part (shell)" **[vendor form, measured]**. Flush colour
   bodies share faces with the base and never overlap it, so nothing merges them. The colour rides on the TRIANGLES of one watertight mesh (3MF
-  core `<basematerials>`, per-triangle `pid` / `p1`). Export it from the CAD's colour-tagged union — OpenSCAD snapshot (worked example):
-  `--backend Manifold -o x.3mf -O export-3mf/color-mode=model -O export-3mf/material-type=basematerial`; the union keeps the coplanar top
-  triangles of a flush colour body with their own colour, so the body's "ink depth" is irrelevant to the vendor (colour is a surface property) and
-  the colour-split bodies need not exist as files. Make it a record: strip the random `p:UUID` and the `CreationDate` (the only non-deterministic
-  bytes), drop the unused default material, fixed zip timestamps; gate rows per file: **shells = 1, watertight, every colour on ≥ 1 triangle,
-  volume = the fused body the vendor analysed** (±0.5 %). Route the insert through the inlay path (export + census of the fused body + its order
+  core `<basematerials>`, per-triangle `pid` / `p1`). Export it from the CAD's colour-tagged union. OpenSCAD snapshot (worked example):
+  `--backend Manifold -o x.3mf -O export-3mf/color-mode=model -O export-3mf/material-type=basematerial`. The union keeps the coplanar top
+  triangles of a flush colour body with their own colour. So the body's "ink depth" is irrelevant to the vendor (colour is a surface property),
+  and the colour-split bodies need not exist as files. Make it a record: strip the random `p:UUID` and the `CreationDate` (the only
+  non-deterministic bytes), drop the unused default material, and fix the zip timestamps. Gate rows per file: **shells = 1, watertight, every
+  colour on ≥ 1 triangle, volume = the fused body the vendor analysed** (±0.5 %). Route the insert through the inlay path (export + census of the fused body + its order
   line + its own face renders). Legends are flush colour bodies at a cap the vendor's smallest-text answer allows — ask the vendor's FILE rule and
   smallest text before ordering, not after (a refused file costs a day of a 14-day build).
-- **Full-colour line facts (worked example, verify live)**: a minimum BOUNDING BOX of 2 × 2 × 10 mm enforced at the form ("unavailable ... Min:
-  2x2x10mm") — a 1.5 mm plate is refused however large its face while a 6 cm³ part with 1.3 walls is accepted, so the "2 mm" on the material page
-  is (at least) a part-size rule; the colour material's HDT (80 °C) makes it a room-side cosmetic part only; a full-colour line sets the WHOLE
-  quote's build time (14 days against 3); the colour "black" is printed, the body material is through-dyed — judge the tone on arrival with the
-  fallback designed (the same insert in the body material with debossed legends).
-- **A pocket deepened on one face lives over whatever is cut from the other face** (a plate pocket over magnet pockets: 2.9 − 2.1 = 0.8; the census read 0.91); a
-  pad under such a pocket stops at the inner wall faces (it met the side vent slots) and starts where it fuses with the neighbouring bosses
-  (0.3–0.5 behind a boss is a void); a chamfered pad outline meets the wall at a knife angle — plain rectangle.
-- **One legend cap for every label flattens the type hierarchy** (labels / captions / identity) the base design had, and the owner reads the
-  face as "all too big and cluttered" (3.0 caps in 4 mm rows leave 1 mm of air): keep `cap` and an identity `cap_id` in the legend block. A cap
-  CHANGE re-admits labels the fit filter had dropped silently (port names, a subtitle, a field label), and the ones placed for the host FACE hang
-  over the INSERT's edge (the insert is a clearance narrower per side): the builder reads the PIECE's land, never the face's, and the
+- **Full-colour line facts (worked example, verify live)**: a minimum BOUNDING BOX of 2 × 2 × 10 mm is enforced at the form ("unavailable ...
+  Min: 2x2x10mm"). A 1.5 mm plate is refused however large its face, while a 6 cm³ part with 1.3 walls is accepted. So the "2 mm" on the
+  material page is (at least) a part-size rule. The colour material's HDT (80 °C) makes it a room-side cosmetic part only. A full-colour line
+  sets the WHOLE quote's build time (14 days against 3). The colour "black" is printed; the body material is through-dyed. Judge the tone on
+  arrival with the fallback designed (the same insert in the body material with debossed legends).
+- **A pocket deepened on one face lives over whatever is cut from the other face** (a plate pocket over magnet pockets: 2.9 − 2.1 = 0.8; the
+  census read 0.91). A pad under such a pocket stops at the inner wall faces (it met the side vent slots) and starts where it fuses with the
+  neighbouring bosses (0.3–0.5 behind a boss is a void). A chamfered pad outline meets the wall at a knife angle: use a plain rectangle.
+- **One legend cap for every label flattens the type hierarchy** (labels / captions / identity) the base design had. The owner reads the
+  face as "all too big and cluttered" (3.0 caps in 4 mm rows leave 1 mm of air). Keep `cap` and an identity `cap_id` in the legend block. A cap
+  CHANGE re-admits labels the fit filter had dropped silently (port names, a subtitle, a field label). The ones placed for the host FACE hang
+  over the INSERT's edge (the insert is a clearance narrower per side). The builder reads the PIECE's land, never the face's. The
   "dropped for lack of land" list is read after every cap change.
 - **Switch-well layout rule (colour legends; the floor beside a slot end is ~4.5 mm)**: position words in TWO common columns in line with the
-  slot (left words right-aligned at slot x0 − gap, right words left-aligned at slot x1 + gap + a triangle's width where a default marker sits),
-  ONE cap per row = the largest in `cap_pos … cap_pos_min` (1.9 → 1.6) that fits BOTH words; when a word fits nowhere beside the slot, BOTH
-  words go in the band ahead of the slot over their own ends and the name caption is dropped (`AUTO | MAN` is the function); the first slot has
-  no band ahead of it and no caption. Never a rotated column of stacked words (it reads as one word). A marker legend reads in the marker's
+  slot. Left words are right-aligned at slot x0 − gap. Right words are left-aligned at slot x1 + gap + a triangle's width where a default marker
+  sits. Use ONE cap per row = the largest in `cap_pos … cap_pos_min` (1.9 → 1.6) that fits BOTH words. When a word fits nowhere beside the slot,
+  BOTH words go in the band ahead of the slot over their own ends, and the name caption is dropped (`AUTO | MAN` is the function). The first slot
+  has no band ahead of it and no caption. Never a rotated column of stacked words (it reads as one word). A marker legend reads in the marker's
   direction (`▸ = DEFAULT`, never `= START ▸`). Prototype a layout change by editing the item rows of the SCAD of record in a scratch copy
-  (sizes / positions only, rendered from inside the output folder so relative imports resolve) and show a before / after sheet in the reader's
-  orientation — owner rounds then cost minutes and the builder changes once, after the pick.
-- **A debossed logotype never passes a 1.2 land rule at any width** (the letters kiss or run 0.2–0.6 apart; the gaps scale with the cap, the
-  land does not): the mark alone, eroded by the gate/2, passes; a logotype is a colour body or a plate.
+  (sizes / positions only, rendered from inside the output folder so relative imports resolve). Show a before / after sheet in the reader's
+  orientation. Owner rounds then cost minutes, and the builder changes once, after the pick.
+- **A debossed logotype never passes a 1.2 land rule at any width**. The letters kiss or run 0.2–0.6 apart: the gaps scale with the cap, the
+  land does not. The mark alone, eroded by the gate/2, passes. A logotype is a colour body or a plate.
 
 ## 13. The vendor's map at the gate, and the metrics that over-read **[measured]**
-- A wall designed EXACTLY at the vendor's gate reads yellow on its heat map although the API passes (a 2.0 sole with a 0.8 deboss = 1.20 left
-  came back yellow at `design_margin` 0): set `design_margin` ≥ 0.3 (§0; worked example: a 0.4 pad on the hidden side → 1.6) and keep the
+- A wall designed EXACTLY at the vendor's gate reads yellow on its heat map although the API passes. A 2.0 sole with a 0.8 deboss = 1.20 left
+  came back yellow at `design_margin` 0. Set `design_margin` ≥ 0.3 (§0; worked example: a 0.4 pad on the hidden side → 1.6). Keep the
   six-view map read of §7 step 4 as the gate, not the API flag.
-- The nearest-opposing-sample metric (the one that mimics the vendor's map) flags **convex steps** as thin walls — a lip top 0.3 behind a band's
-  rear face, a sill end 0.3 beside a strip's inner face, a pad edge 0.55 from a slot end — and the FDM support heuristic merges coplanar
+- The nearest-opposing-sample metric (the one that mimics the vendor's map) flags **convex steps** as thin walls. Examples: a lip top 0.3 behind
+  a band's rear face, a sill end 0.3 beside a strip's inner face, a pad edge 0.55 from a slot end. The FDM support heuristic merges coplanar
   interior and in-wall faces into one "outer" cluster. Before changing geometry, **slice the mesh** (a plane section with `trimesh`) and read
-  the faces; then remove the step (start the strip where the band starts, make the sill full width, move the pad front to a feature-free span)
-  rather than thinning anything. The support-contact row is informational on a powder process.
-- **Odd-one-out pass** on every repeated feature of a visible face (three identical blind holes and one through notch at the fourth corner, the
-  fan's lead exit, is the worked example): draw the symmetric pattern (four identical holes; the vendor part uses three) and put the odd feature
-  on a centre line under the part that hides it.
+  the faces. Then remove the step rather than thinning anything: start the strip where the band starts, make the sill full width, move the pad
+  front to a feature-free span. The support-contact row is informational on a powder process.
+- **Odd-one-out pass** on every repeated feature of a visible face. Worked example: three identical blind holes and one through notch at the
+  fourth corner, the fan's lead exit. Draw the symmetric pattern (four identical holes; the vendor part uses three). Put the odd feature on a
+  centre line under the part that hides it.
