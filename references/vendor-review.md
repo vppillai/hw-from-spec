@@ -99,6 +99,18 @@ drafts it into the record.
   release production on the picture that shows the change. The inline images in a reply thread are often YOUR OWN pictures quoted back —
   compare their md5 against your attachments before analysing anything; the fab's new content is in the attachments of the latest mail. Once
   the blocking item is settled, re-ask the skipped confirmations (hole tolerances) "for our records — production does not need to wait".
+- **Round 4 — the order-history "Confirm Parts Placement" step.** After the mails the fab adds an *Action Required* item on the order with a
+  silent timer ("confirm within 2d23h, or your order will be produced directly") — no mail announces it, so check Order History after every
+  engineer reply. Its viewer (`/smt/dfm-result?...&confirmFile=1`) shows the engineer-adjusted placement, a designator table with the polarity
+  flag and a DFM column, and the form ("Yes, please proceed" / "No, modification needed" + Submit). The data behind it is the fab's engineering
+  file (`downloadHandleWeldFile?fileType=Smt_Hw_Bom_Merge` → `designator_info[].top/bottom[]`, `oc` = your CPL row, `ec` = the engineer's row).
+  Do this before any picture: assert `oc` == your CPL and the fab codes == your BOM for every designator, then diff `ec` against `oc` — it names
+  every change (worked example: 56 passives turned 180°, package-origin shifts on two connectors and five switches, library-zero 90° deltas on a
+  SOT-23-6 and an LQFP). A polarity fix can land in the fab's package mapping with `ec == oc`, so the picture stays the proof: calibrate the
+  fab's snapshot on the mounting holes (five Ø3.2 holes fitted → 0.1 px residual; the board-colour bounding box sat half a pad off), draw your
+  pad 1 over their marks for every polarity-flagged part, and read pad-1 meaning from the footprint (vendor SMA diode footprints: pad 1 = anode,
+  bar at pad 2; KiCad SOD / LED footprints: pad 1 = cathode). The agent opens the viewer read-only and files the record; the owner selects and
+  submits. Afterwards the deltas go into the rotation table (`pcb-layout-dfm.md` §10) so the next order of these packages needs no round at all.
 
 ## 6. The fab's production-file package ("please review the production file")
 The package the fab sends back is its CAM output, not your upload: production Gerbers (often inch 2.6, one file per layer plus drill map, rout

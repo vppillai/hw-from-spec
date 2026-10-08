@@ -104,6 +104,9 @@
 - **The coordinator verifies a subagent's claim independently before it becomes a decision row.** Two "vendor: no flag" claims were premature DOM
   reads; re-requesting the vendor's analysis API for the md5 in the record flipped them (`references/dfm-printed-enclosure.md` §7). A claim of PASS
   names its evidence (API field, file md5, log line) or it is a claim, not a result.
+- **The DevTools-driven browser is its own profile, signed out of everything.** Before any account page (orders, quotes, placement
+  confirmation) the owner signs in on that browser's tab once per session; the agent never types credentials and says so when it lands on a
+  login page. The user-centre pages of some sites hang the screenshot bridge — read them through the page's text and its data requests instead.
 - **Browser sessions are shared state.** The DevTools-driven browser can be restarted or re-used by another agent between two of your turns: page
   ids, tabs and the signed-in state are then gone. Re-list the pages, re-derive the id, re-check the sign-in (a fresh tab on the account URL) before
   every upload / read — never act on a page id from an earlier turn.
