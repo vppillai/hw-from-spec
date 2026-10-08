@@ -21,14 +21,16 @@ Everything downstream is keyed on the record md5 (`scripts/project.py record`: t
 chain only after the last board-touching workflow of the round (a silk-only merge changes the md5 and orphans everything).
 
 ### 3.1 The one-round record chain (production cut) and the fixed-point pass
-Generated records read each other, so the LAST round has an order, not a digest (skill scripts in `code`, the project's own generators in
-*italics* — a project without one skips that step):
-`known_issues` → *order sheet / package notes* → `collect_renders` (the reports hash its index) → `release_report` → `traceability` → `release_report`
-(the matrix's report rows flip with the reports' freshness and the report quotes the matrix line: dependent writer, matrix, dependent writer again)
-→ `now_pages` (the five answers of `00-now/` read the gates, decisions, status, blockers, the arrival yaml and the kit sidecars) → *analysis_index* → *render_pdf* (its PDF source md5s) → *production_cut build* LAST (the manifest stamps what the PDF renderer and the collector
-wrote) → commit. Afterwards only the pure `--check`s; a `clone_gate.sh --regen` run AFTER the build makes the cut STALE although the reports are
-content-identical (`production_cut --check` compares md5s, `release_report --check` strips the volatile lines) — a confirming regen copy-back is
-discarded with `git checkout` once its diff is timestamp-only.
+Generated records read each other, so the LAST round has an order, not a digest. Skill scripts are in `code`; the project's own generators are in
+*italics*, and a project without one skips that step. The order:
+`known_issues` → *order sheet / package notes* → `collect_renders` (the reports hash its index) → `release_report` → `traceability` →
+`release_report`. The second `release_report` run exists because the matrix's report rows flip with the reports' freshness and the report
+quotes the matrix line: dependent writer, matrix, dependent writer again. Then `now_pages` → *analysis_index* → *render_pdf* (its PDF source
+md5s) → *production_cut build* LAST → commit. `now_pages` writes the five answers of `00-now/`; they read the gates, decisions, status,
+blockers, the arrival yaml and the kit sidecars. The build is LAST because the manifest stamps what the PDF renderer and the collector wrote.
+Afterwards run only the pure `--check`s. A `clone_gate.sh --regen` run AFTER the build makes the cut STALE although the reports are
+content-identical: `production_cut --check` compares md5s, and `release_report --check` strips the volatile lines. Discard a confirming regen
+copy-back with `git checkout` once its diff is timestamp-only.
 - **Fixed point** = run the round twice and diff; "nothing changed" is judged after stripping the volatile cascade (`Generated` → the document's
   md5 → every stamp of that md5 → `Tool commit`), not the timestamp lines alone. Count non-volatile lines per artefact (0); discard round two.
 - Registering a NEW deliverable flips a manifest status the analysis index reads: that round is two passes by construction — plan for it.
@@ -41,8 +43,9 @@ discarded with `git checkout` once its diff is timestamp-only.
   every consumer of the version string is re-run in the bump.
 
 ## 4. Collateral (`scripts/collect_renders.py`)
-`collateral/<rev>/renders/` (RENDERS.md's first row names the record md5): CAD 3-D renders (opaque background, named by what the picture shows, each fixed view checked by eye once), panel
-preview, silk PNGs, case renders, FEA composites, drawing PDFs, fab-viewer captures carrying the md5. Freshness key = source md5 + full argument
+`collateral/<rev>/renders/` holds CAD 3-D renders, panel preview, silk PNGs, case renders, FEA composites, drawing PDFs, and fab-viewer
+captures carrying the md5. RENDERS.md's first row names the record md5. A CAD render has an opaque background and is named by what the
+picture shows; each fixed view is checked by eye once. Freshness key = source md5 + full argument
 string; case items keyed on the case version; index with md5 + grade; orphans listed, never deleted; PNGs ≤ 2400 px; size budget per set.
 Quotes and captures the fab produced live under `60-orders/quotes/<date>/`, never inside a regenerable package (a rebuild wipes the folder).
 
@@ -55,37 +58,40 @@ Annotated tag (`<board>-rev<n>-order`, later `…-production-cut`) with the boar
 orderable state and does not substitute for the owner's gate cells.
 
 ## 7. Production cut (`templates/production_cut.yaml` → one generator)
-- One command builds `<production_dir>/<rev>/` (`70-release/rev0/`; `{rev}` = `project.revision`, `{md5}` = the record md5 — both expand in the
-  yaml, the folder carries the revision and the hash sits inside): MANIFEST.json/.md (md5 + bytes + source + board/case/decisions md5 + tool commit + CAD CLI version),
-  STATUS.md (banner, package of record, per-artefact disposition OF-RECORD / STALE / MISSING / WAIVED, OPEN census, the owner line quoted),
-  the documents listed in the yaml.
+- One command builds `<production_dir>/<rev>/` (`70-release/rev0/`). `{rev}` = `project.revision` and `{md5}` = the record md5; both expand
+  in the yaml. The folder carries the revision, and the hash sits inside. The folder holds MANIFEST.json/.md (md5 + bytes + source +
+  board/case/decisions md5 + tool commit + CAD CLI version), STATUS.md, and the documents listed in the yaml. STATUS.md carries the banner,
+  the package of record, the per-artefact disposition (OF-RECORD / STALE / MISSING / WAIVED), the OPEN census, and the owner line quoted.
 - Deliverable row: `id, doc_id, title, kind (generated | hand-written | template | collected), path (glob ok), check (the owner generator's --check),
   inputs (md5-stamped), required (true | release), owner_placeholders (allowed | forbidden)`.
-- Templates (records: photos, press logs, insert temperature/time, torque, the first-article caliper table, test results, calibration, order
-  screenshots) are written ONCE with `[OWNER: …]` fields, never overwritten, never filled by an agent; the manifest counts the placeholders; a
-  RELEASED cut fails `--check` on a placeholder in a `forbidden` document. **The one records folder is `70-release/<rev>/records/`**
+- Templates for records (photos, press logs, insert temperature/time, torque, the first-article caliper table, test results, calibration,
+  order screenshots) are written ONCE with `[OWNER: …]` fields, never overwritten, never filled by an agent. The manifest counts the
+  placeholders. A RELEASED cut fails `--check` on a placeholder in a `forbidden` document. **The one records folder is `70-release/<rev>/records/`**
   (`records_dir` in the cut yaml; RELEASE_NOTES and the "capture now" list point there — never a second home under `70-release/reports/`).
-- **Labelling and regulatory marks are a DFM item**: the manufacturing spec names where the serial / model label, any claimed CE / FCC / WEEE mark
-  and warning icons sit on the enclosure (a recess label + 1 mm each side, a flat land, reading orientation), what carries them (label carrier,
-  engraving ≥ the void gate, UV print) and what is NOT claimed (no DoC); the case yaml carries the recess.
-- **Packaging, shipping, storage** (one paragraph in the manufacturing spec): ESD bag for the assembled unit; printed parts wrapped or in card
-  (MJF parts ship loose and scuff, SLA plates warp in a hot van); PA12 moisture uptake before insert installation (dry 4 h at 80 °C or install
-  within a day of unpacking); PLA storage below 40 °C; magnets kept paired and away from the boards.
-- Document set (contents checklists live in the project's plan): product manual, developer manual (guards + overrides with record trail),
-  technician manual (reason-code table generated from the code list, set equality asserted), manufacturing specification (order-form values from the
-  package's ORDER_PARAMETERS, acceptance classes with standard revisions), assembly SOP (photos per step, fixture use, measured values), incoming
-  inspection SOP (criteria file by name + sha256), analysis index (every report: source md5, of-record grade, disposition ACCEPTED / WAIVED-id /
-  OPEN-CC / SUPERSEDED; OPEN without a CC row is an error), compliance statements evidence-bound (RoHS table from live supplier pages fetched at cut
-  time; no declaration of conformity claimed).
+- **Labelling and regulatory marks are a DFM item**. The manufacturing spec names where the serial / model label, any claimed CE / FCC / WEEE
+  mark and warning icons sit on the enclosure (a recess label + 1 mm each side, a flat land, reading orientation). It names what carries them
+  (label carrier, engraving ≥ the void gate, UV print) and what is NOT claimed (no DoC). The case yaml carries the recess.
+- **Packaging, shipping, storage** (one paragraph in the manufacturing spec). ESD bag for the assembled unit. Printed parts wrapped or in
+  card (MJF parts ship loose and scuff, SLA plates warp in a hot van). PA12 moisture uptake before insert installation: dry 4 h at 80 °C or
+  install within a day of unpacking. PLA storage below 40 °C. Magnets kept paired and away from the boards.
+- Document set (contents checklists live in the project's plan): product manual, developer manual, technician manual, manufacturing
+  specification, assembly SOP, incoming inspection SOP, analysis index, and compliance statements. The developer manual carries guards +
+  overrides with record trail. The technician manual carries a reason-code table generated from the code list, set equality asserted. The
+  manufacturing specification carries order-form values from the package's ORDER_PARAMETERS and acceptance classes with standard revisions.
+  The assembly SOP carries photos per step, fixture use and measured values. The incoming inspection SOP names the criteria file by name +
+  sha256. The analysis index lists every report: source md5, of-record grade, disposition ACCEPTED / WAIVED-id / OPEN-CC / SUPERSEDED. OPEN
+  without a CC row is an error. The compliance statements are evidence-bound: a RoHS table from live supplier pages fetched at cut time, and
+  no declaration of conformity claimed.
 - Standards cited from memory carry a VERIFY tag until checked against the primary text; a RELEASED cut may not carry a VERIFY tag in a normative
   statement (`grep VERIFY` is the check).
 - Requirement family for the deliverables gets its own prefix after a prefix census of the spec (a collision happened once).
 - Retention: the cut folder, the fab package of record and the records folder are kept; superseded packages are dropped when every consumer selects
   by md5 and the evidence lives outside them.
 - **The home-FDM print kit is a deliverable row** (`kind: generated`, `check` = the kit text gate + the mirror md5 list): `START_HERE.md`, print
-  sheets named for their `.3mf`, READMEs, sidecars, the generated ASSEMBLY.md — all from the knobs (`references/print-kit.md`). A kit text that
-  carries `None` / `nan` / a `{name}` brace, a repo path, a dead file reference or a token of a feature the preset disables (snap tab / screws
-  under `fastener: magnets`, PETG under PLA) fails the cut like a placeholder in a `forbidden` document. The ASSEMBLY / QA prose is generated from
+  sheets named for their `.3mf`, READMEs, sidecars, the generated ASSEMBLY.md — all from the knobs (`references/print-kit.md`). A kit text
+  fails the cut like a placeholder in a `forbidden` document when it carries `None` / `nan` / a `{name}` brace, a repo path or a dead file
+  reference. A token of a feature the preset disables fails it the same way (snap tab / screws under `fastener: magnets`, PETG under PLA).
+  The ASSEMBLY / QA prose is generated from
   the preset like the geometry (a hand-kept SOP said "0 magnets, PETG, snap tabs" three fastener changes later).
 - A PLACED order's package is frozen: notes may be re-derived (`--refresh-notes`), fab files / panel / board_id never rebuilt; its stock gate reads
   the frozen order-day records (`references/fab-dfm.md` §8).
@@ -95,29 +101,34 @@ orderable state and does not substitute for the owner's gate cells.
 ## 8. Illustrated assembly and use guide (`scripts/assembly_guide.py`)
 Beside the text SOP, a picture per step, rendered from the exported meshes of record. Pages, in order: the parts, magnet installation with
 polarity (`print-kit.md` §2), loading, closing orientation with the keying feature marked, taking a part out, care. The PDF ships in the release
-folder beside the drawing (§12); the kit's START_HERE points to it. Inputs: authored SHORT yaml (parts / tools / check / camera per step, fixed pages before and after), generated
-step text (the case generator's `### Step N - title (T s)` + paragraph → the first two sentences), one clean render per page from the geometry of
-record (marketing look: clean scheme, the ordered colours, legends readable → cameras on the side the legend is laid out for), keyed on
-(geometry md5 of the one scad file named — flatten includes or accept that included files do not move the key, defs, camera, size) so a text edit renders nothing and a case bump re-renders every page (≈ 1 min). Numbers stay in the SOP /
+folder beside the drawing (§12); the kit's START_HERE points to it. The inputs are three. First, an authored SHORT yaml (parts / tools /
+check / camera per step, fixed pages before and after). Second, generated step text: the case generator's `### Step N - title (T s)` +
+paragraph → the first two sentences. Third, one clean render per page from the geometry of record. The render has the marketing look: clean
+scheme, the ordered colours, legends readable → cameras on the side the legend is laid out for. The render is keyed on the geometry md5 of
+the one scad file named, defs, camera, and size. For that md5, flatten includes or accept that included files do not move the key. A text
+edit then renders nothing, and a case bump re-renders every page (≈ 1 min). Numbers stay in the SOP /
 manufacturing spec (one source); the guide names where the words are. Registered in `production_cut.yaml` as a deliverable with its `--check`;
 the SOP's companion cell points at it (a pointer, no revision bump).
-- **Pages carry real text.** A page is a vector page (SVG or HTML) with the text as text and the picture embedded as a raster; the PDF comes from
-  a vector converter (`rsvg-convert`, a headless browser) and the pages are merged (`pypdf`). A page rasterised whole is rejected on first read:
-  nothing selects, nothing searches, the fonts blur. Layout: a title page (title, subtitle, one-sentence purpose, date + `git describe`, the hero
-  picture, a parts table with quantity and note), then one step per page (numbered badge, title, the picture in a hairline frame, numbered
-  instructions, a grey note, a CAUTION box where a hazard exists, a footer with the document name, page N of M, the revision).
+- **Pages carry real text.** A page is a vector page (SVG or HTML) with the text as text and the picture embedded as a raster. The PDF
+  comes from a vector converter (`rsvg-convert`, a headless browser), and `pypdf` merges the pages. A page rasterised whole is rejected on
+  first read: nothing selects, nothing searches, the fonts blur. Layout: a title page, then one step per page. The title page has the title,
+  subtitle, one-sentence purpose, date + `git describe`, the hero picture, and a parts table with quantity and note. A step page has a
+  numbered badge, title, the picture in a hairline frame, numbered instructions, a grey note, and a CAUTION box where a hazard exists. Its
+  footer carries the document name, page N of M, and the revision.
 - **Illustrations are shaded line drawings, not the marketing render.** The marketing look (dark parts on a dark scheme) is low-contrast on paper and
-  on a laptop. Each picture is two passes over the SAME meshes of record: a shaded pass with light part fills (two greys for the two parts, the
-  ordered inlay colour, red for arrows and markers) and a flat pass with every part in one grey; the edges of the flat pass (`FIND_EDGES` over a
-  threshold, grown one pixel) go black over the shaded pass, on white, cropped with a margin, with a warning when the content touches the frame.
+  on a laptop. Each picture is two passes over the SAME meshes of record. The shaded pass has light part fills: two greys for the two parts,
+  the ordered inlay colour, red for arrows and markers. The flat pass has every part in one grey. The edges of the flat pass (`FIND_EDGES`
+  over a threshold, grown one pixel) go black over the shaded pass, on white. The picture is cropped with a margin, with a warning when the
+  content touches the frame.
   Mated boards keep their real art mapped on (the showcase's mapping, the same cameras).
 - **A recess in a line drawing reads as a raised outline.** Debossed text, pockets and slots on a coupon come out as hollow outlines on a flat face.
-  Split the mesh by height — `difference(mesh, inner column)` light and `intersection(mesh, inner column)` dark, the column 0.01 below the top
-  face and 1 mm inside the outer walls so the sides stay light — and view it steep enough (about 30 degrees from vertical) that the recess walls
-  vanish; the floors then read dark on the light face, the way the printed part reads.
-- **An arrangement that a perspective view hides gets a section inset.** Alternating slot heights, a lip inside a rim, a notch above a shoulder:
-  ten loaded parts in a perspective view hide the pattern; load a FEW (five of ten, one on its way with an arrow) so the empty slots show the
-  floors, and add an inset: a thin slab (2 mm) `intersection()` through the plain region, ORTHOGRAPHIC, seen square on, parts in their two colours.
+  Split the mesh by height: `difference(mesh, inner column)` light and `intersection(mesh, inner column)` dark. Put the column 0.01 below the
+  top face and 1 mm inside the outer walls, so the sides stay light. View it steep enough (about 30 degrees from vertical) that the recess
+  walls vanish. The floors then read dark on the light face, the way the printed part reads.
+- **An arrangement that a perspective view hides gets a section inset.** Alternating slot heights, a lip inside a rim, a notch above a
+  shoulder: ten loaded parts in a perspective view hide the pattern. Load a FEW (five of ten, one on its way with an arrow) so the empty
+  slots show the floors. Add an inset: a thin slab (2 mm) `intersection()` through the plain region, ORTHOGRAPHIC, seen square on, parts in
+  their two colours.
   In a rendered boolean the colour goes OUTSIDE the `intersection()` / `difference()` (a rendered boolean drops its children's colours). The inset
   sits beside a wide main picture or under a square one, with a short label ("Section across the case"), the position computed from the two sizes.
 - **Every number in the text comes from the design parameters** (the same file the meshes come from): counts, magnet size, the pinch band, the
@@ -130,37 +141,41 @@ the SOP's companion cell points at it (a pointer, no revision bump).
 ## 9. Repo re-layout and deletions at the order (`scripts/reorg_paths.py`)
 When the tree is a mess at the order: phase 1 deletions (superseded generated artefacts; git history + tags keep them), phase 2 re-layout after
 the owner sees the proposed tree. Method: decision row → `reorg:` block → `--plan` → `git ls-files -s` BEFORE → `--apply` → regenerate every
-generated file that embeds paths (never edit them) → `--check` 0 findings → AFTER dump → `--proof BEFORE AFTER REWRITES` (every blob at its mapped
-path with the same sha, or in the rewrite list) → gates → tag. Frozen records keep the old paths (`--map` reads them); an uploaded package's
-generator-owned notes are re-derived, its fab files never rebuilt. URLs into the repo are not rewritten (grep `blob/.*/<old>` by hand). Before a deletion: grep basenames AND exact paths, separate live citations
-(gen/, 20-design/, CI, live docs) from record citations (DECISIONS / STATUS / merged reviews) — treating records as blockers freezes the tree; a
-traceability `exists` check on a file that leaves the tree becomes `git show <tag>:<path> | grep -qF '<same string>'`, nothing weakened.
+generated file that embeds paths (never edit them) → `--check` 0 findings. Then: AFTER dump → `--proof BEFORE AFTER REWRITES` → gates → tag.
+The proof finds every blob at its mapped path with the same sha, or in the rewrite list. Frozen records keep the old paths (`--map` reads
+them); an uploaded package's generator-owned notes are re-derived, its fab files never rebuilt. URLs into the repo are not rewritten (grep
+`blob/.*/<old>` by hand). Before a deletion, grep basenames AND exact paths. Separate live citations (gen/, 20-design/, CI, live docs) from
+record citations (DECISIONS / STATUS / merged reviews); treating records as blockers freezes the tree. A traceability `exists` check on a file
+that leaves the tree becomes `git show <tag>:<path> | grep -qF '<same string>'`, nothing weakened.
 
 ## 10. The arrival / first-article checklist (`scripts/arrival_checklist.py`) — written at the order, closed as the parts arrive
 `20-design/arrival_checklist.yaml` (`templates/20-design/arrival_checklist.yaml`) → `60-orders/ARRIVAL_CHECKLIST_<rev>.md`; `--check` joins `gates.adopt`
-the moment the yaml exists (`project.py gates-required`), the markdown is a cut deliverable (`production_cut.yaml` REC-002). Sections in the order of
-the day: **before shipment** (the fab's assembly photos: polarity vs silk, the critical connector's seating, holes that must stay open — a paid
-"confirm production file / placement" option is not guaranteed to raise a dialog, so the photo confirmation is the one human look), **bench checks in
-gate order** (each row names the instrument / net / expected value, what to do on FAIL, and what it `opens`: nothing is powered or plugged before
-the row that opens it is DONE), **software gates before the first high-power step** (each with the commit that closed it), **case first article**
-(the caliper table that replaces the vendor's tolerance, fit by hand, retention cycles, coupons read by their printed text), **owner decisions still
-OPEN** with the measurement that resolves each (the bracket-print fit knob → `kickoff.enclosure.fit_result`; SPEC errata rows). The rows come from
+the moment the yaml exists (`project.py gates-required`), the markdown is a cut deliverable (`production_cut.yaml` REC-002). The sections
+follow the order of the day. **before shipment**: the fab's assembly photos (polarity vs silk, the critical connector's seating, holes that
+must stay open). A paid "confirm production file / placement" option is not guaranteed to raise a dialog, so the photo confirmation is the one
+human look. **bench checks in gate order**: each row names the instrument / net / expected value, what to do on FAIL, and what it `opens`.
+Nothing is powered or plugged before the row that opens it is DONE. **software gates before the first high-power step**, each with the commit
+that closed it. **case first article**: the caliper table that replaces the vendor's tolerance, fit by hand, retention cycles, coupons read by
+their printed text. **owner decisions still OPEN**, with the measurement that resolves each (the bracket-print fit knob →
+`kickoff.enclosure.fit_result`; SPEC errata rows). The rows come from
 the merged blind reviews ("what the boards decide" = the CONFIRMED items whose closure is a bench step) and the OPEN decision rows — written BEFORE
 the parts arrive, never reconstructed afterwards. Every row carries `status` (TODO / DONE <date> / N/A / APPLIED <date> while the owner's veto
 window is open) and `evidence`; the script refuses a DONE without evidence, a duplicate id, a status outside the grammar. Closing a row = yaml edit,
 regenerate, commit.
 
 ## 11. A frozen SPEC gets an errata file, never an edit (`templates/10-spec/SPEC_ERRATA.md`)
-`10-spec/SPEC_ERRATA.md`: one E-row per deviation of the design of record from the frozen text — the SPEC text, the design of record, the
-decision that made the change, where the evidence lives, Status OPEN (owner) → APPROVED <date> → FOLDED <rev> when the next SPEC revision's change
-log cites it; a rejected row is struck through with the reason. It records changes already decided (rule 2); it changes nothing. Readers: the
-blind-review verifier (a deviation already here is ALREADY DECIDED), the arrival checklist §E (OPEN rows with their trigger), the next spec author.
+`10-spec/SPEC_ERRATA.md` holds one E-row per deviation of the design of record from the frozen text. A row carries the SPEC text, the design
+of record, the decision that made the change, and where the evidence lives. Its Status runs OPEN (owner) → APPROVED <date> → FOLDED <rev>
+when the next SPEC revision's change log cites it. A rejected row is struck through with the reason. It records changes already decided
+(rule 2); it changes nothing. Readers: the blind-review verifier (a deviation already here is ALREADY DECIDED), the arrival checklist §E
+(OPEN rows with their trigger), the next spec author.
 
 ## 12. The release folder: copies, named by use, written by the cut
 - `70-release/<rev>/` (one subfolder per product in both scope: `board/`, `case/`) holds only copies of build outputs. Nothing in it is
   hand-edited. The cut generator (§7) writes every file and the folder's `README.md`.
-- The README is the manifest a person reads (MANIFEST.json stays the machine copy): the build date and `git describe`, the design values read
-  from the parameter block, each check that passed with its count, the MD5 and size of every file, the print or order procedure as numbered steps.
+- The README is the manifest a person reads; MANIFEST.json stays the machine copy. The README carries the build date and `git describe`, the
+  design values read from the parameter block, each check that passed with its count, and the MD5 and size of every file. It also carries the
+  print or order procedure as numbered steps.
 - Name each subfolder by what a person does with it, never by file type: `<slicer>-projects/multi-colour/`, `<slicer>-projects/single-colour/`,
   `stl-for-other-slicers/`. A `meshes/` folder beside the slicer projects was not understood by the owner **[K]**.
 - File names state the filament role: `<part>_body_filament1_<colour>.stl`, `<part>_inlay_filament2_<colour>.stl`, `<part>_single_colour.stl`.
