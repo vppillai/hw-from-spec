@@ -1,15 +1,16 @@
 # 10-spec/SPEC.md — {{PROJECT}} rev {{SPEC_REV}} ({{DATE}}) — the artefact at G0
 
-Every requirement has an ID (`R-<family><nn>`: E electrical, M mechanical, P parts, S silk/UX, T test, W software; run `grep -o 'R-[A-Z]*' -r docs`
-before choosing a new family — a prefix collision happened once), a measurable statement, and a `VERIFY` tag where the value rests on a
-datasheet, drawing or standard nobody has read yet (skill `SKILL.md` §4; each is closed in `10-spec/datasheet_notes/<part>.md` or BLOCKED).
+Every requirement has an ID, a measurable statement, and a `VERIFY` tag where the value rests on a datasheet, drawing or standard nobody has
+read yet (skill `SKILL.md` §4). The ID is `R-<family><nn>`: E electrical, M mechanical, P parts, S silk/UX, T test, W software. Run
+`grep -o 'R-[A-Z]*' -r docs` before you choose a new family, because a prefix collision happened once. Each `VERIFY` item is closed in
+`10-spec/datasheet_notes/<part>.md` or BLOCKED.
 Numbers that must agree between sections are cross-referenced by ID, never repeated. Owner choices from the kickoff questionnaire are cited
 by their D row, not re-stated.
 
 ## 1. Purpose and product class
 {{one paragraph: what it is, who uses it, engineering sample / product; D row for the product class}}
 
-Scope {{SCOPE}} (kickoff A0): the sections of the other scopes were dropped by `scripts/project.py scaffold --scope`; in mech scope the
+Scope {{SCOPE}} (kickoff A0): `scripts/project.py scaffold --scope` dropped the sections of the other scopes. In mech scope the
 fit input (a board STEP / mesh or dimensions) is a row in §4 tagged [V] (measured / vendor drawing) or [K] (owner-stated, unverified).
 
 ## 2. Interfaces (connectors, buses, power in / out)

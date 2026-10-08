@@ -37,9 +37,9 @@ no_connect: [U1.7]
 labels: {…}  notes: |               # sheet NOTES block (same five items as the root)
 ```
 
-Rules the generator enforces (each a `--selftest` case): every fitted part has a `Confidence` of V or N/A (`[K]` refuses — `references/part-verification.md`);
-value ↔ MPN ↔ fab code agree; every pin is connected or explicitly no-connect; refdes unique across sheets after the prefix; the symbol fields
-are copied to the footprint as hidden properties (schematic ↔ board parity); UUIDs rewritten deterministically so `--check` is byte-stable; a
+Rules the generator enforces (each a `--selftest` case): every fitted part has a `Confidence` of V or N/A (`[K]` refuses — `references/part-verification.md`).
+Value ↔ MPN ↔ fab code agree. Every pin is connected or explicitly no-connect. Refdes are unique across sheets after the prefix. The symbol fields
+are copied to the footprint as hidden properties (schematic ↔ board parity). UUIDs are rewritten deterministically so `--check` is byte-stable. A
 sheet instantiated twice is two generated sheet FILES (some CAD CLIs mishandle one file instantiated twice). Never rewrite a project file
 another generator owns without re-reading and merging its part (`references/pitfalls.md` tooling/gates).
 
@@ -61,8 +61,8 @@ feeds the `netlist_net` checks of `scripts/traceability.py`.
 
 A "map" is any table in the spec or in `20-design/` that says which pin, address or connector position carries what: an MCU / bridge GPIO map, an
 I²C address map, a connector pinout, a switch/strap table, a test-point map. **Map checks** = a project script (`gen/check_maps.py --check`) that
-reads every map and the exported netlist and asserts both directions: every map row is present in the netlist as written (net name on that pin;
-address on that device), and every relevant netlist net appears in exactly one map. Output `30-board/layout/check_maps.md` (one table per map: row,
+reads every map and the exported netlist. It asserts both directions. Every map row is present in the netlist as written (net name on that pin;
+address on that device). Every relevant netlist net appears in exactly one map. Output `30-board/layout/check_maps.md` (one table per map: row,
 netlist evidence, OK/FAIL) — a G1 prerequisite in `90-log/GATES.md` and a `gates.adopt` line. A map row the spec names but the design does not
 implement is a CC row (rule 2), not a silent omission.
 
