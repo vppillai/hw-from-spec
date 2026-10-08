@@ -1,6 +1,6 @@
 # CHANGELOG — hw-from-spec
 
-## Current state (0.11.9) — read this instead of replaying the entries below
+## Current state (0.11.10) — read this instead of replaying the entries below
 
 - **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
   twelve batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
@@ -23,7 +23,10 @@
 - **Layout** (`references/project-yaml.md` §Layout): ten numbered folders in the order of the project's life — `00-now` (five generated answer
   pages) `10-spec` `20-design` `30-board` `40-case` `50-kits` `60-orders` `70-release` `80-reviews` `90-log` — plus the machinery (`gen/ scripts/
   tools/ lib/ Makefile CLAUDE.md`). Names are nouns (a revision is `rev0`, a kit is its print target, the hash lives inside the folder), one current
-  thing per path, records beside what they describe; every path is a `paths:` key with these defaults; the templates folder mirrors the tree.
+  thing per path, records beside what they describe, one home per product (never a mixed `tools/`), shared inputs in `assets/`, build output
+  ignored and deletable, a README in every folder; every path is a `paths:` key with these defaults; the templates folder mirrors the tree.
+  The release folder holds copies named by use, its README the manifest; the order record sits beside the manufactured files; the tree is clean
+  after every build (SKILL §0 step 8, `references/release-and-cut.md` §12–§14).
 - **Templates**: CLAUDE.md, project.yaml (kickoff / board / print_targets / fab_dfm / arrival_checklist / host), SPEC + VERIFY + SPEC_ERRATA,
   the governance records, PARTS_VERIFICATION + PROCUREMENT, TEST_PLAN, REVIEW_HANDOFF, DFM_ROUND, VENDOR_REVIEW_RECORD, CENSUS_GATE_ROWS,
   design/{traceability, erc_accept, dfm_processes, arrival_checklist}.yaml, production_cut.yaml, datasheet note, G1 pack, CI workflows + Makefile.
@@ -37,6 +40,31 @@
 - **Generic by rule**: the skill names no project, part, board, order, account or person — `scripts/generic_lint.py` reads the whole repo
   (CHANGELOG and docs included; history keeps its measured numbers), a fenced worked example keeps numbers and kinds but never a name, and the
   repo carries no project retro (a retro report is folded, then deleted).
+
+## 0.11.10 — 2026-10-08 — Repository layout, folder READMEs, release by use, order records
+
+Source: one project with a board and a printed case that adopted the skill late and spent six restructuring passes, one per owner question,
+on the layout, the release folder, the file names, the order record and the READMEs. The point: do all of it on day 1.
+
+### Added
+- `SKILL.md` §0 step 8: the repository conventions as one day-1 step (one home per product, `assets/`, a README in every folder, build output
+  ignored, release folder by use, order record, clean tree) with the six owner questions that each cost a pass. §2: the clean-tree rule. §10:
+  the release folder and the order record bullets. Where-to-look: one row.
+- `references/release-and-cut.md` §12: the release folder holds copies only, written by the cut; its README is the manifest (build date,
+  `git describe`, design values, checks with counts, MD5 + size per file, procedure); subfolders by use, files by filament role, a single-colour
+  variant of every multi-material part, test prints as single-colour projects; a CLI-written slicer project's MD5 moves every run, so geometry
+  identity comes from the mesh checks. §13: the order record (every option as set on the order page, price, cart line, uploaded file + MD5,
+  reproduction from the release asset, batch deviations; downloaded asset MD5 = local MD5). §14: restore rewritten files of record after a
+  non-release build, rebuild from empty before a release, CI compare gated on the release tag.
+
+### Changed
+- `references/project-yaml.md` §Layout: `assets/` in the tree; `gen/` and `tools/` split per product; three new rules (one home per product,
+  build output ignored and deletable, a README in every folder with its content and voice). The old "no README is needed" sentence is gone.
+- `references/release-and-cut.md` §8 and `SKILL.md` §10: the illustrated guide is an assembly and use guide (parts, magnets with polarity,
+  loading, closing orientation with the keying feature, taking a part out, care), a PDF in the release folder beside the drawing.
+- `references/print-kit.md` §1: START_HERE points to the guide PDF and the single-colour projects; §3: the kit text gate reads every folder README.
+- `references/kickoff-questionnaire.md` H3 and `templates/10-spec/KICKOFF_ANSWERS.md`: the day-1 conventions are the recommended default.
+- `templates/CLAUDE.md` layout block: `assets/`, one home per product, build output ignored, a README in every folder.
 
 ## 0.11.9 — 2026-10-08 — Fit-test degrees of freedom, double-blind drawing review, CSG order traps, generator outline test
 
