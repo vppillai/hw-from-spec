@@ -130,29 +130,31 @@ upload, with the verdict → validate → rule-fix → retro loop in `references
 - A row `KEPT BELOW 1.2 (listed): …` with verdict `None` and yaml numbers is a waiver nobody signed. The cracked lip's row quoted the MALE profile
   (tip / neck); the female hinge (parting line − groove roof = 0.88) was never a measured quantity. **Every thin feature gets a measured number from
   the MESH (not the yaml), a span and a class (wall / void / wedge / opposing).**
-- **The ray-cast census is a FAIL gate per print preset** (`scripts/thin_wall_census.py --target <t>`, rows `templates/CENSUS_GATE_ROWS.md`):
-  inward rays = wall thickness, outward rays = void width; clusters below `gate − 0.05` (**convention**: at the gate itself the nominal 1.2 walls
-  sampled 1.19 join every region into one 145 mm cluster); each sample classified by the angle between the sample face and the hit face (< 30°
-  = wall, ≥ 30° = wedge — the 30° is a **convention**, not calibrated) and **the two classes clustered separately** (one mixed cluster that chained
-  across a body through chamfer flanks was labelled "wedge" and swallowed a 1.0 … 1.2 lip and 1.3 slot lands; when the rail went, both surfaced); **walls and voids FAIL below their gates; wedges FAIL when the band of
-  surface below the gate is wider than `wedge_band`** (default 1.5 mm — the width from the thin edge to where thickness reaches the gate; a
-  chamfer cut into a wall has a band of ~1 mm and no free edge, a 35° free rail flank has ~1.8) unless an `accepted` entry names the backing
-  wall. **The band is an axis-aligned measure**: the census takes the second-largest extent of the cluster's axis-aligned bounding box. It is
+- **The ray-cast census is a FAIL gate per print preset** (`scripts/thin_wall_census.py --target <t>`, rows `templates/CENSUS_GATE_ROWS.md`).
+  Inward rays = wall thickness, outward rays = void width. The census clusters samples below `gate − 0.05`. The 0.05 is a **convention**: at the
+  gate itself the nominal 1.2 walls sampled 1.19, and every region joined into one 145 mm cluster. Each sample is classified by the angle between
+  the sample face and the hit face: < 30° = wall, ≥ 30° = wedge. The 30° is a **convention**, not calibrated. **The two classes are clustered
+  separately**. One mixed cluster that chained across a body through chamfer flanks was labelled "wedge" and swallowed a 1.0 … 1.2 lip and 1.3
+  slot lands. When the rail went, both surfaced. **Walls and voids FAIL below their gates. Wedges FAIL when the band of surface below the gate is
+  wider than `wedge_band`** (default 1.5 mm), unless an `accepted` entry names the backing wall. The band is the width from the thin edge to where
+  thickness reaches the gate. A chamfer cut into a wall has a band of ~1 mm and no free edge. A 35° free rail flank has ~1.8.
+  **The band is an axis-aligned measure**: the census takes the second-largest extent of the cluster's axis-aligned bounding box. It is
   valid only for a straight edge that runs along X, Y or Z. A rotated part inflates it: the same 1.0-wide band reads 1.0 along X and 28.28 at
   45° in XY (a verifier probe). A ring around a hole reads its diameter (`references/pitfalls.md`, [census/metric]). Re-measure a
-  diagonal or ring wedge FAIL across the edge before you accept or fix it; **the nearest OPPOSING face in ANY direction is gated too**: two faces whose normals oppose within 30° and whose distance is
-  below the gate FAIL whether or not a normal ray from one hits the other — the ledge underside 0.5 from a step top, a ring face 0.4 from a wall
-  plane, the 0.4 mm root of a rim ring set inboard of its wall: the class the vendor found and the normal-ray census did not (§7.1).
+  diagonal or ring wedge FAIL across the edge before you accept or fix it. **The nearest OPPOSING face in ANY direction is gated too**. Two faces
+  whose normals oppose within 30° and whose distance is below the gate FAIL whether or not a normal ray from one hits the other. Examples: the
+  ledge underside 0.5 from a step top, a ring face 0.4 from a wall plane, the 0.4 mm root of a rim ring set inboard of its wall. That is the class
+  the vendor found and the normal-ray census did not (§7.1).
 - **Samples scale with surface area** (`samples_per_mm2`, default 10; 60 000 fixed samples on a 150 mm tray were 1–2 / mm² and a 0.6 × 4 mm slit
   gets a handful). **Recall is selftested**: a plate with one 0.8 mm rib and one 0.6 mm slit must produce one WALL FAIL and one VOID FAIL.
-- **The NOISE-FLOOR row** (it measures false positives, not recall — it is not the vendor's colouring reproduced): fraction of
-  wall-class surface below `gate − 0.05` and of void-facing surface below it, equal to the floor measured on a known-good primitive (a plate +
-  boss + hole at the gate + margin: 0.00 % / 0.00 %). **Known blind spots** of the census, listed here so nobody calls it complete: bbox-scale
-  effects of the vendor's own resolution (§7.1), contacts under 0.05 mm (`thin_wall_check.py --pinch`), and anything a *slicer* adds (supports
-  on visible faces are read from the g-code, §8).
-- **The `accepted` list** (`print_targets.<t>.accepted`) mirrors the board's `dfm_accepted`: entries `{class, bbox, reason, date, evidence}`
-  — a FAIL cluster whose bbox lies inside an entry's bbox (1 mm tolerance) with the same class is machine-matched every run and listed as
-  ACCEPTED (with the entry's evidence path: the vendor's written acceptance, a first-article measurement); an entry without date / reason /
+- **The NOISE-FLOOR row** measures false positives, not recall. It is not the vendor's colouring reproduced. The row reads the fraction of
+  wall-class surface below `gate − 0.05` and of void-facing surface below it. That fraction is equal to the floor measured on a known-good
+  primitive (a plate + boss + hole at the gate + margin: 0.00 % / 0.00 %). **Known blind spots** of the census are listed here so nobody calls it
+  complete. They are bbox-scale effects of the vendor's own resolution (§7.1), contacts under 0.05 mm (`thin_wall_check.py --pinch`), and
+  anything a *slicer* adds. Supports on visible faces are read from the g-code (§8).
+- **The `accepted` list** (`print_targets.<t>.accepted`) mirrors the board's `dfm_accepted`: entries `{class, bbox, reason, date, evidence}`.
+  A FAIL cluster whose bbox lies inside an entry's bbox (1 mm tolerance) with the same class is machine-matched every run. It is listed as
+  ACCEPTED with the entry's evidence path: the vendor's written acceptance, a first-article measurement. An entry without date / reason /
   evidence does not count. Nothing else moves a FAIL.
 - **A PURE gate in the adopt list**: the census JSON in `checks/census/` beside the set's `parts/` carries the STL md5 and the FAIL list; `thin_wall_census.py --gate-dir <dir>`
   proves md5 = the committed STL and 0 unaccepted FAIL without recomputing. It re-matches every accepted FAIL by class and bbox (1 mm tolerance) against the current yaml.
@@ -200,62 +202,63 @@ Every rim and wall reads CLOSED on the single part: no through-slot, notch, key 
    verdict class downgrades to "page popover + screenshot", the round is NOT YET until the API read is restored or the owner accepts the weaker
    evidence in a D row. **Capability-page snapshot** once per round: PDF / print of the vendor's published design rules with the date, so the
    numbers in `print_targets` can be re-derived when the site changes.
-3. **The flag is computed at UPLOAD and does not depend on the process / material chosen on the line.** Setting the material (Edit dialog SAVED —
-   form state, not a cart) is still done first: it gives the price and the legend of the material's heat map; the record names the material on the
-   line and **the quote price per body** before reading anything. Changing the material never flips `thinWall`. The page defaults to a resin.
+3. **The flag is computed at UPLOAD and does not depend on the process / material chosen on the line**. Still set the material first (Edit dialog
+   SAVED — form state, not a cart). It gives the price and the legend of the material's heat map. The record names the material on the line and
+   **the quote price per body** before reading anything. Changing the material never flips `thinWall`. The page defaults to a resin.
 4. **Open the heat map on every face** even when `thinWall` is false. Take six captures per body: the origin view, three 90° azimuth drags (a horizontal drag of canvas-height/2 px is 180°), and both poles (±canvas-height/2 vertical, from the origin). `scripts/heatmap_count.py` on the six captures must print 0 / 0 (yellow / red in the model area: the legend column and the tool-bar strip are skipped). It reads each pixel in HSV, so shaded faces and amber count too. Record **the legend thresholds as displayed
    that day** — the census turns a colour into a number.
-5. **Save screenshots named `<piece>_<round>_<md5-8>_<material>_heatmap_<face>.png`** plus `quote_page_<round>_flags.png`, keep the uploaded STL
-   beside them, and write `templates/DFM_ROUND.md` into `60-orders/quotes/<date>/` with the API fields, the browser / UA / signed-in state per body.
+5. **Save screenshots named `<piece>_<round>_<md5-8>_<material>_heatmap_<face>.png`** plus `quote_page_<round>_flags.png`. Keep the uploaded STL
+   beside them. Write `templates/DFM_ROUND.md` into `60-orders/quotes/<date>/` with the API fields, the browser / UA / signed-in state per body.
 6. **When a verdict flips between two uploads, diff the meshes before touching the generator**: the r3 tray read RED where the r2 tray had passed —
    same 4088 triangles, every vertex within 7.7e-6 mm. The real difference was a premature DOM read (step 2).
 7. **A coordinator verifies a worker's "no flag" claim itself** (re-request the API for the md5 in the record) before a decision row says PASS.
 
 ### 7.1 The vendor's thin-wall metric is LENGTH-DEPENDENT — calibrate with probes, in one round
-A ray-cast census can read nothing under the gate on a body the vendor's checker colours RED along its long walls: the trip is a profile whose
-opposing faces never overlap (a rim set above a lap step with an inward undercut), and **the same profile passes short and fails long** — a
-checker with bbox-relative resolution smears a near-threshold feature on a larger body. Consequences: (a) the margin a long wall needs scales
-with the LARGEST bbox dimension, not with the wall's own length; (b) a probe must match the body's bbox in every axis (a full-length but shallower
-probe reads finer); (c) ANY near-threshold feature on a larger next part can flip, not only the one found. Record the size the rule was calibrated
+A ray-cast census can read nothing under the gate on a body the vendor's checker colours RED along its long walls. The trip is a profile whose
+opposing faces never overlap (a rim set above a lap step with an inward undercut). **The same profile passes short and fails long**: a
+checker with bbox-relative resolution smears a near-threshold feature on a larger body. Consequences: (a) The margin a long wall needs scales
+with the LARGEST bbox dimension, not with the wall's own length. (b) A probe must match the body's bbox in every axis (a full-length but shallower
+probe reads finer). (c) ANY near-threshold feature on a larger next part can flip, not only the one found. Record the size the rule was calibrated
 at in `print_targets.<t>.max_bbox_for_rule`; test the hypothesis once with the same profile in a taller / wider box.
 - **The probe method (converges in ONE quote-page round, ~2 h):**
   1. *Localise*: cut the FAILING body of record (the archived md5 file) into capped slabs with `trimesh.intersections.slice_mesh_plane(mesh, n, o,
-     cap=True)` — front / middle / rear thirds, then two thirds and the full length — upload each ALONE, read the API. The slice that first turns
+     cap=True)`. Cut front / middle / rear thirds, then two thirds and the full length. Upload each ALONE and read the API. The slice that first turns
      `true` localises the feature AND shows the length threshold.
-  2. *Isolate*: plain-profile probes with OpenSCAD — one 2-D `polygon()` of the wall section extruded to **a short length AND to the full part
-     length**, a closed box with ≥ gate end walls, no bosses, **one knob per probe** (`-D`): as-is, rim flush, wall +, undercut filled. Upload each alone.
-  3. *Decide*: the first knob whose FULL-LENGTH probe reads false and whose geometry the mating part tolerates becomes the yaml change; the census
-     gets the rule as a named row; the probe folder (`60-orders/quotes/<date>/<round>/probe/` with `.scad`, `.stl`, PNGs and a probe table) is the
+  2. *Isolate*: build plain-profile probes with OpenSCAD. Each is one 2-D `polygon()` of the wall section extruded to **a short length AND to the
+     full part length**. Each probe is a closed box with ≥ gate end walls and no bosses. Use **one knob per probe** (`-D`): as-is, rim flush,
+     wall +, undercut filled. Upload each alone.
+  3. *Decide*: the first knob whose FULL-LENGTH probe reads false and whose geometry the mating part tolerates becomes the yaml change. The census
+     gets the rule as a named row. The probe folder (`60-orders/quotes/<date>/<round>/probe/` with `.scad`, `.stl`, PNGs and a probe table) is the
      evidence. A scaled-down copy of the body is not informative (every wall scales); a short probe that passes proves nothing about the full length.
   4. *Record*: the probe table names the method, every probe with its knob and verdict, the rule adopted, and the API re-verification of every body.
 
 <!-- worked example: begin (2026) — the one fenced example of this reference; the rules above are the generic form -->
 Worked example (JLC3DP MJF PA12 checker, a 147 mm tray): three ray-cast censuses (60 k … 400 k samples) found nothing under 1.37 mm on a tray the
-checker read RED along both long walls; the trip was a rim 1.4 mm above a skirt-lap step with a 0.9 mm inward undercut; the identical profile
-passed at 48 mm and failed at 88 and 147 mm. Calibrated rule at this checker and ~150 mm: a rim above a skirt-lap step ≥ 2.0 mm (1.4 fails; 2.0
-passes with the step and the undercut kept) OR the undercut filled so the inner wall runs straight to the rim top (then 1.25 … 1.3 above the step
-passed on the full tray, the mating skirt still registering on the kept step, partner overlap 0 mm³). Stayed grey: plain 2.0 walls and floors,
+checker read RED along both long walls. The trip was a rim 1.4 mm above a skirt-lap step with a 0.9 mm inward undercut. The identical profile
+passed at 48 mm and failed at 88 and 147 mm. Calibrated rule at this checker and ~150 mm: a rim above a skirt-lap step ≥ 2.0 mm, OR the undercut
+filled so the inner wall runs straight to the rim top. A 1.4 rim fails. A 2.0 rim passes with the step and the undercut kept. With the
+undercut filled, 1.25 … 1.3 above the step passed on the full tray. The mating skirt still registered on the kept step, partner overlap 0 mm³. Stayed grey: plain 2.0 walls and floors,
 boss rings, chamfers cut into ≥ 1.2 walls, 45° dish ramps. The probes were 40 mm and full-length extrusions with one knob each.
 <!-- worked example: end -->
 
 ### 7.2 Canonical STL and the geometry signature **[convention]**
 OpenSCAD 2021.01 writes the same CGAL geometry in a different triangle order on every export (three exports = three md5s); trimesh's exporter
 writes run-dependent NORMALS for identical vertices. Write the binary STL yourself: round vertices, rotate each triangle to its smallest vertex,
-sort triangles, recompute normals from the float32 vertices, 50-byte records — prove idempotence AND equality on a copy from another run before
-calling a hash "the geometry". The census gate, the vendor uploads and the production cut key on that md5. **Beside the md5 record a geometry
-signature** (volume, area, bbox, facet count, rounded to 1e-3): two STLs that differ by a 1e-6 vertex jitter are "different geometry" to
-the md5 and identical to the signature — a flipped verdict on "identical" geometry is diagnosed in one line instead of a mesh diff.
-**Gate watertightness AFTER canonicalisation, on the file that is recorded**: a canonicaliser that drops zero-area slivers can open the mesh (a
-sliver of 1e-5 mm² can be the only face joining two near-coincident vertices) — snap the sliver's closest vertex pair first, then drop what
-collapsed; a body without slivers keeps its bytes. Record the md5 of the canonical file, never of the raw export.
+sort triangles, recompute normals from the float32 vertices, 50-byte records. Prove idempotence AND equality on a copy from another run before
+you call a hash "the geometry". The census gate, the vendor uploads and the production cut key on that md5. **Beside the md5 record a geometry
+signature** (volume, area, bbox, facet count, rounded to 1e-3). Two STLs that differ by a 1e-6 vertex jitter are "different geometry" to
+the md5 and identical to the signature. A flipped verdict on "identical" geometry is diagnosed in one line instead of a mesh diff.
+**Gate watertightness AFTER canonicalisation, on the file that is recorded**. A canonicaliser that drops zero-area slivers can open the mesh: a
+sliver of 1e-5 mm² can be the only face joining two near-coincident vertices. Snap the sliver's closest vertex pair first, then drop what
+collapsed. A body without slivers keeps its bytes. Record the md5 of the canonical file, never of the raw export.
 
 ## 8. FDM at home (a desktop printer with a 0.4 nozzle at 0.20 mm layers, PLA / PETG, Bambu Studio 02.08 as the slicer) — printer-first preset
-A census that passes on paper is not a print: the FDM preset had 0 FAIL and failed as a product (bad finish, supports on visible faces, illegible
-text, 3 bosses under a 4-hole fan, a detent that blocked the slide, a raw board mesh that wrecked the print). Rules enforced as FAIL rows — the
+A census that passes on paper is not a print. The FDM preset had 0 FAIL and failed as a product. The failures: bad finish, supports on visible
+faces, illegible text, 3 bosses under a 4-hole fan, a detent that blocked the slide, a raw board mesh that wrecked the print. Rules enforced as FAIL rows — the
 numbers are **[owner bar]** for a 0.4 nozzle at 0.20 mm and live in `print_targets.home_fdm`:
-- Every EXTERNAL face on the bed, vertical, or a clean top — **asserted from the sliced g-code in the 3MF** (`; FEATURE: Support` extrusions
-  outside the outer-wall hull = a scar on a visible face), not only from the mesh's down-facing analysis; visible bridges ≤ 10 mm; interior
-  support area stated per body.
+- Every EXTERNAL face is on the bed, vertical, or a clean top. This is **asserted from the sliced g-code in the 3MF** (`; FEATURE: Support`
+  extrusions outside the outer-wall hull = a scar on a visible face), not only from the mesh's down-facing analysis. Visible bridges ≤ 10 mm.
+  Interior support area is stated per body.
 - **Walls ≥ 1.6** (4 perimeters; a two-line 0.85 skirt / rim / tab is a FAIL), ribs ≥ 1.2, voids ≥ 1.0 (a 0.4 nozzle clears a 1.0 slot);
   **minimum feature = 2 × line width** (0.8–0.9 at 0.42 line) **[physics]**.
 - **Elephant foot**: the first 2–3 layers flare 0.1–0.15 mm on a textured plate at 55 °C — a 0.30 lap clearance loses that at the seam;
