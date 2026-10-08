@@ -1,19 +1,20 @@
 # kickoff-questionnaire.md — every owner decision a board and / or enclosure project needs, asked UP FRONT with a recommended answer
 
-Owner's words (2026-09-28): *"the skill should ask all questions upfront … the questions must come with required recommendations that the user
-can select."* The decision classes below are mined from one complete project's owner rows (85 D rows, 200+ agent rows); each question carries a
+Owner's words (2026-09-28): *"the skill should ask all questions upfront … the questions must come with required recommendations that the user can
+select"*. The decision classes below are mined from one complete project's owner rows (85 D rows, 200+ agent rows). Each question carries a
 **RECOMMENDED** answer (marked) and two or three alternatives with their one-line consequence. The agent asks them in the batches of §0 with the
-`AskUserQuestion` tool (≤ 4 questions per call, ≤ 4 options per question; the recommended answer listed first and labelled; **"accept every
-recommended answer of this batch" is the FIRST option of the batch's FIRST question** — so that question carries at most two alternatives, the
-others at most three; a question with more alternatives folds the rare ones into one "other (named in the reason)" option), records every answer in `10-spec/KICKOFF_ANSWERS.md` (`templates/10-spec/KICKOFF_ANSWERS.md`), writes
-one owner row per answer into `90-log/DECISIONS.md` (D rows, the owner's words quoted; a recommended default the owner accepted reads
-`accepted recommended`), copies the machine-readable values into `project.yaml` (`kickoff`, `board`, `fab_dfm.bar`, `print_targets`) and a
-traceability entry per row — **all before any CAD**. A question the owner defers is a D row `OPEN` and blocks the phase that needs it, never a
-silent assumption (rule 2). Re-asking an answered question is a defect; changing an answer is a new D row that supersedes the old one.
+`AskUserQuestion` tool. One call holds ≤ 4 questions, and one question holds ≤ 4 options. The recommended answer is listed first and labelled.
+**"accept every recommended answer of this batch" is the FIRST option of the batch's FIRST question**. So that question carries at most two
+alternatives, and the others carry at most three. A question with more alternatives folds the rare ones into one "other (named in the reason)" option.
+The agent records every answer in `10-spec/KICKOFF_ANSWERS.md` (`templates/10-spec/KICKOFF_ANSWERS.md`). It writes one owner row per answer into
+`90-log/DECISIONS.md` (D rows, the owner's words quoted). A recommended default the owner accepted reads `accepted recommended`. It copies the
+machine-readable values into `project.yaml` (`kickoff`, `board`, `fab_dfm.bar`, `print_targets`), and it writes a traceability entry per row. The
+agent does all of this **before any CAD**. A question the owner defers is a D row `OPEN` and blocks the phase that needs it, never a silent assumption
+(rule 2). Re-asking an answered question is a defect; changing an answer is a new D row that supersedes the old one.
 
-**Scope first (A0).** Every question below carries the scopes it applies to — `[ee, both]`, `[mech, both]` or none (= every scope). A0 is
-asked alone before batch 1; from then on a question outside the scope is **not asked** (its KICKOFF_ANSWERS row reads `n/a (scope)`) and a
-batch with no applicable question is skipped — a mech-only owner never sees via-in-pad, an ee-only owner never sees retention or brand marks.
+**Scope first (A0).** Every question below carries the scopes it applies to — `[ee, both]`, `[mech, both]` or none (= every scope). A0 is asked alone
+before batch 1. From then on a question outside the scope is **not asked** (its KICKOFF_ANSWERS row reads `n/a (scope)`). A batch with no applicable
+question is skipped. A mech-only owner never sees via-in-pad, and an ee-only owner never sees retention or brand marks.
 
 ## 0. Batches (ask in this order; one AskUserQuestion call per batch)
 | Batch | Questions | Scopes | Needed before |
@@ -34,13 +35,13 @@ batch with no applicable question is skipped — a mech-only owner never sees vi
 Twelve batches (0–11), none above four questions; a batch whose questions are all out of scope is skipped.
 
 ## A0. Scope (asked first, alone)
-**A0 Project scope.** **RECOMMENDED: what the brief implies — `both` when a board is being designed AND will be housed** (today's full flow:
-G0 → G1 → G2 → board order, the case gates hanging off G2). *Alt:* `ee` — PCB / PCBA only: schematic, layout, fab DFM, parts, software track
-optional; skips batches 4–5, C9, D3, E3, every case gate and the print DFM; no `print_targets`, no `case_yaml`. *Alt:* `mech` — enclosure /
-printed / CNC parts only, from a mechanical brief or an imported board envelope / STEP: case pipeline, print DFM, vendor quotes, kits; gates
-G0 (mechanical spec) → M1 geometry → M2 first article → case order; skips batches 2–3, G1–G2, I3, KiCad / ERC / DRC / fab DFM, the
-electronics parts seed (hardware — inserts, magnets, feet, screws — is still verified [V]); the record id is the STL set's md5
-(`scripts/project.py record`), not a board md5. Written to `project.scope`; the templates are resolved with `scripts/project.py scaffold --scope`.
+**A0 Project scope.** **RECOMMENDED: what the brief implies — `both` when a board is being designed AND will be housed** (today's full flow: G0 → G1 →
+G2 → board order, the case gates hanging off G2). *Alt:* `ee` — PCB / PCBA only: schematic, layout, fab DFM, parts, software track optional. It skips
+batches 4–5, C9, D3, E3, every case gate and the print DFM; no `print_targets`, no `case_yaml`. *Alt:* `mech` — enclosure / printed / CNC parts only,
+from a mechanical brief or an imported board envelope / STEP: case pipeline, print DFM, vendor quotes, kits. Its gates are G0 (mechanical spec) → M1
+geometry → M2 first article → case order. It skips batches 2–3, G1–G2, I3, KiCad / ERC / DRC / fab DFM and the electronics parts seed. Hardware
+(inserts, magnets, feet, screws) is still verified [V]. The record id is the STL set's md5 (`scripts/project.py record`), not a board md5. Written to
+`project.scope`; the templates are resolved with `scripts/project.py scaffold --scope`.
 
 ## A. Product, process, material, quantity
 **A1 Product class.** **RECOMMENDED: engineering sample / internal tool** — no regulatory claim, compliance = a RoHS table fetched at cut time,
@@ -53,12 +54,12 @@ by the fab, hand assembly out, a fixture per press-fit step, a second DFM round 
 **A3 Board fab and assembly vendor** [ee, both]. **RECOMMENDED: one contract fab with its own DFM viewer and parts library (JLCPCB-class)** — the DFM mirror
 copies its viewer, every part [V] on its library, two-sided assembly available. *Alt:* fab + separate assembler — two DFM sets, a stencil / paste
 spec you own, consigned parts. *Alt:* prototype fab only, hand assembly — no CPL / rotation work, no basic-part policy.
-**A4 Enclosure process and material (per target)** [mech, both]. **RECOMMENDED: two targets — a print service MJF PA12 build of record + a home FDM (PLA /
-PETG, 0.4 nozzle) mirror** — the vendor part is premium and rated HB, the home part is the fit / assembly mock-up and every vendor DFM decision is
-mirrored the same day. *Alt:* MJF only — no coupons before the first quote, every fit answered by the vendor round. *Alt:* FDM only — an engineering
-sample; every legend raised; ≥ 1.6 walls. *Alt:* another process, named in the reason — SLA resin (smoother, brittle, walls ≥ 0.8 / parts ≥ 2 mm,
-drain holes, post-cure warp, no snap or press fits; `references/dfm-printed-enclosure.md` §11) or CNC aluminium (corner radii, threads, anodising
-build-up, 5–10× the price; `references/cnc-enclosure.md`). Four options: the AskUserQuestion limit.
+**A4 Enclosure process and material (per target)** [mech, both]. **RECOMMENDED: two targets — a print service MJF PA12 build of record + a home FDM
+(PLA / PETG, 0.4 nozzle) mirror**. The vendor part is premium and rated HB. The home part is the fit / assembly mock-up, and every vendor DFM
+decision is mirrored the same day. *Alt:* MJF only — no coupons before the first quote, every fit answered by the vendor round. *Alt:* FDM only — an
+engineering sample; every legend raised; ≥ 1.6 walls. *Alt:* another process, named in the reason. One is SLA resin (smoother, brittle, walls ≥ 0.8 /
+parts ≥ 2 mm, drain holes, post-cure warp, no snap or press fits; `references/dfm-printed-enclosure.md` §11). The other is CNC aluminium (corner
+radii, threads, anodising build-up, 5–10× the price; `references/cnc-enclosure.md`). Four options: the AskUserQuestion limit.
 
 ## B. PCB build (`references/pcb-layout-dfm.md`)
 **B1 Layers and thickness** [ee, both]. **RECOMMENDED: 4 layers, 1.6 mm, the fab's default stack-up template named in the yaml** — a solid GND plane under
@@ -82,13 +83,13 @@ rework, 20–30 % more area.
 **B6 Assembly sides** [ee, both]. **RECOMMENDED: SMT on both sides, THT and press-fit hand-installed** — 30–40 % smaller board; the fab's Standard tier,
 fixture bands for press-fit rows, per-side height limits in the yaml. *Alt:* top-only — Economic tier, flat bottom for press-fit backing, a larger
 board and case. *Alt:* fab installs THT too — +1 day and a per-joint fee, unused PTH stay solder-free.
-**B7 Test points and self-documenting silk** [ee, both]. **RECOMMENDED: one test point per rail and per bus line the bring-up tool reads, ≥ 1.0 mm pads in a
-labelled field; every switch, jumper, header and test point carries a silk label with its meaning; pin-1 / polarity marks on every polarised part**
-— the technician needs no drawing. *Alt:* probe on component pads — no TP area; no repeatable fixture. *Alt:* edge connector for a bed-of-nails —
-for 100+ units.
-**B8 Panel and fiducials** [ee, both]. **RECOMMENDED: single boards ≥ 70 mm per side, or a customer panel with rails on the long edges + mouse bites when a
-side is narrower; 3 fiducials per assembled side** — the fab's Standard tier needs rails and fiducials; V-cut only when copper is ≥ 0.40 mm from
-the line. *Alt:* panel by the fab — its rails land on the short edges (connector ends). *Alt:* no panel, Economic tier — only for top-only boards
+**B7 Test points and self-documenting silk** [ee, both]. **RECOMMENDED: one test point per rail and per bus line the bring-up tool reads, ≥ 1.0 mm
+pads in a labelled field. Every switch, jumper, header and test point carries a silk label with its meaning. Pin-1 / polarity marks on every polarised
+part** — the technician needs no drawing. *Alt:* probe on component pads — no TP area; no repeatable fixture. *Alt:* edge connector for a bed-of-nails
+— for 100+ units.
+**B8 Panel and fiducials** [ee, both]. **RECOMMENDED: single boards ≥ 70 mm per side, or a customer panel with rails on the long edges + mouse bites
+when a side is narrower. Three fiducials per assembled side** — the fab's Standard tier needs rails and fiducials. V-cut only when copper is ≥ 0.40 mm
+from the line. *Alt:* panel by the fab — its rails land on the short edges (connector ends). *Alt:* no panel, Economic tier — only for top-only boards
 ≥ the tier's minimum size.
 
 ## C. Enclosure architecture (`references/dfm-printed-enclosure.md`, `references/case-pipeline.md`)
@@ -100,11 +101,11 @@ assembly time.
 serviceable, coupon-measurable torque, works in PA12 and PLA. *Alt:* magnets — tool-free, Ø6 × 3 N42/N45 pairs, pocket + 0.4 glued (MJF) /
 + 0.1 press (PLA), polarity keyed by an asymmetric boss, ≤ 80 °C; pull force vs gap on the row. *Alt:* none (friction lap) — fit mock-up only.
 *Alt:* snap fits — possible in PA12 with a slit ≥ the void gate and an engineered arm; rarely fits a no-yellow bar's space budget; never in PLA.
-**Owner inputs (a symmetric assembly built from identical parts, C1–C2):** list every part type with a ONE-SIDED feature (integral pegs or bosses
-on one face, a one-way slot, a face that must point at its mate, an outline that must face a fixed direction) and decide per type — symmetric
-about its turn-over axis (turn over) / a mirror body for the other hand (its own mark, its own plate) / the feature on a separate pin
-(`dfm-printed-enclosure.md` §1.5, the decision-row table). One decision row, before the first plate; a one-sided part drawn on both sides without
-this row is a mirror in the assembly model and a reprint at first article.
+**Owner inputs (a symmetric assembly built from identical parts, C1–C2):** list every part type with a ONE-SIDED feature. Such a feature is integral
+pegs or bosses on one face, a one-way slot, a face that must point at its mate, or an outline that must face a fixed direction. Decide per type:
+symmetric about its turn-over axis (turn over) / a mirror body for the other hand (its own mark, its own plate) / the feature on a separate pin. The
+options are in `dfm-printed-enclosure.md` §1.5, the decision-row table. One decision row, before the first plate. A one-sided part drawn on both sides
+without this row is a mirror in the assembly model and a reprint at first article.
 **C3 Coupling / stacking between units** [mech, both]. **RECOMMENDED: none** — closed rims, no open grooves. *Alt:* enclosed pocket rail in a wider part —
 allowed under the closed-rim bar; +2.4 mm width. *Alt:* external clip / bracket — a separate part, no change to the case walls.
 **C4 Feet and mounting** [mech, both]. **RECOMMENDED: 4 adhesive flat-top feet in shallow concentric pockets (no counterbore through the pocket floor), PSA
@@ -116,9 +117,10 @@ operating side (crank, lever, knob) is the side away from the window** — the h
 for text; raised legends on the home FDM plate; one engraved mark only where its stroke ≥ the void gate** — legible on every process. *Alt:*
 engraved text everywhere — cap ≥ ~6 mm at a 1.2 void gate, else yellow / red. *Alt:* inlay / badge plate — premium, a pinch check on the outline,
 a second material. *Alt:* two-tone print (MJF dyed + resin plate, FDM colour bands) — colour on top faces in one Z band per part.
-**Owner inputs (colour):** the palette as ROLES (structure / kinematics / accent / legend → a colour name + hex each, the yaml's only colour
-keys) and **the spool inventory — which colours are on a FULL spool and which on a small one**: the structure role takes ~60 % of the grams and
-needs a full spool, an accent (~5 %) fits a small spool (a worked example's first palette died twice on spool size — `dfm-printed-enclosure.md` §8.3).
+**Owner inputs (colour):** the palette as ROLES (structure / kinematics / accent / legend → a colour name + hex each, the yaml's only colour keys).
+The owner also gives **the spool inventory — which colours are on a FULL spool and which on a small one**. The structure role takes ~60 % of the grams
+and needs a full spool. An accent (~5 %) fits a small spool. A worked example's first palette died twice on spool size (`dfm-printed-enclosure.md`
+§8.3).
 **C6 Fan, vents, thermal** [mech, both]. **RECOMMENDED: passive vents sized from the thermal case; a fan only when the FEA / thermal case says so, bosses =
 fan-hole count, recess dropped when the hood prints roof-down** — fewer parts. *Alt:* fan fitted — a 5 V rail, a connector, a fan header row on
 the board, an acoustic note. *Alt:* sealed — a heat path through a metal plate; the FEA thermal case is mandatory.
@@ -128,51 +130,53 @@ piece or a clear resin part.
 **C8 Two print targets and their fits** [mech, both]. **RECOMMENDED: one yaml, presets `base + overrides`, every fit clearance a per-preset knob decided by a
 coupon, every vendor DFM decision mirrored into `home_fdm` the same day** — two versions, one geometry of record. *Alt:* vendor target only — no
 mock-up before the order. *Alt:* separate generators — divergence nobody diffs.
-**C8a — which `20-design/dfm_processes.yaml` row each target gates on** (`print_targets.<t>.dfm_process`; `references/print-dfm.md`). Selectable rows of
-the shipped table: `jlc_mjf_pa12` · `jlc_sla_9600` · `jlc_fdm` · `xometry_mjf_pa12` · `protolabs_mjf_pa12` · `home_fdm_04` (`hp_mjf_guide` is BLOCKED
-until its page is fetched). **RECOMMENDED: the vendor's own row for the vendor target + `home_fdm_04` for `home_fdm`.** *Alt:* a vendor not in the
-table — ONE new row with its published minimums `[V]` (URL + date) and `validated_on: []` before the first upload; the retro carries it to the skill.
+**C8a — which `20-design/dfm_processes.yaml` row each target gates on** (`print_targets.<t>.dfm_process`; `references/print-dfm.md`). Selectable rows
+of the shipped table: `jlc_mjf_pa12` · `jlc_sla_9600` · `jlc_fdm` · `xometry_mjf_pa12` · `protolabs_mjf_pa12` · `home_fdm_04` (`hp_mjf_guide` is
+BLOCKED until its page is fetched). **RECOMMENDED: the vendor's own row for the vendor target + `home_fdm_04` for `home_fdm`**. *Alt:* a vendor not in
+the table — ONE new row with its published minimums `[V]` (URL + date) and `validated_on: []` before the first upload. The retro carries it to the
+skill.
 
 **C9 Brand marks / logos on FDM parts** [mech, both] (`references/dfm-printed-enclosure.md` §8.1). **RECOMMENDED: a TOP-face feature (deboss or raised
-0.6 = 3 layers) under `ironing_type: top` (never `topmost`), top shell ≥ recess + 1.0, the part oriented so the marked face is a top face, one
-mark coupon first on the plate** — one filament, one ironing pass builds face and mark alike. *Alt:* a flush AMS colour body in the bed layers —
-marked face on the bed, mark mirrored in the model, 2 layers (0.4) for a dark mark / 3 for a light one on a dark body; the crispest boundary and a
-second colour, at 2 filament changes per 2 layers + purge; needs an AMS. *Alt:* both, as two plates in the kit — the owner picks by eye on the
-first print. *Alt:* a face-up printed plate glued into a keyed rebate (spans > 10 mm split by glue lands) when the mark must sit on a bed face
-without an AMS. *Never:* a bed-face deboss (bridge-ceiling "webbing"), a vertical-wall deboss (stair-steps), webs / discs that alter the artwork.
+0.6 = 3 layers) under `ironing_type: top` (never `topmost`), top shell ≥ recess + 1.0. The part oriented so the marked face is a top face. One mark
+coupon first on the plate** — one filament, one ironing pass builds face and mark alike. *Alt:* a flush AMS colour body in the bed layers. The marked
+face is on the bed, and the mark is mirrored in the model. Use 2 layers (0.4) for a dark mark / 3 for a light one on a dark body. This gives the
+crispest boundary and a second colour, at 2 filament changes per 2 layers + purge. It needs an AMS. *Alt:* both, as two plates in the kit — the owner
+picks by eye on the first print. *Alt:* a face-up printed plate glued into a keyed rebate (spans > 10 mm split by glue lands) when the mark must sit
+on a bed face without an AMS. *Never:* a bed-face deboss (bridge-ceiling "webbing"), a vertical-wall deboss (stair-steps), webs / discs that alter the
+artwork.
 
 **C10 Print kit hand-over and snug fits** [mech, both] (`references/print-kit.md`). **RECOMMENDED: a generated `START_HERE.md` (print order with the
-project-file names, assembly sequence, numeric report-back) with the report-back recipient named here; every kit text from the knobs through the
-kit text gate; snug-fit features (crush ribs, press lips) ship as a bracket plate at three values and the owner picks the knob after the first
-print** — the technician needs no repo, the irreversible steps (magnets, CA) are instructed. *Alt:* READMEs only — the technician reconstructs the
-order from the sheets. *Alt:* the engineer picks the fit value from the tolerance row alone — no bracket, one reprint if it binds.
+project-file names, assembly sequence, numeric report-back) with the report-back recipient named here. Every kit text from the knobs through the kit
+text gate. Snug-fit features (crush ribs, press lips) ship as a bracket plate at three values, and the owner picks the knob after the first print**.
+The technician needs no repo, and the irreversible steps (magnets, CA) are instructed. *Alt:* READMEs only — the technician reconstructs the order
+from the sheets. *Alt:* the engineer picks the fit value from the tolerance row alone — no bracket, one reprint if it binds.
 **Owner inputs:** the recipient for the report-back (a chat, a name); who decides the fit knob after the bracket print (RECOMMENDED: the owner).
-The picked value has a landing key, `kickoff.enclosure.fit_result` ("pending: bracket print" until the print; the arrival checklist row E-FIT closes
-it, SKILL §10.1) — an answer that is "the owner picks after a print" is still an answer with a home, not a loose end.
+The picked value has a landing key, `kickoff.enclosure.fit_result`. It reads "pending: bracket print" until the print; the arrival checklist row E-FIT
+closes it (SKILL §10.1). An answer that is "the owner picks after a print" is still an answer with a home, not a loose end.
 
 **C11 Slicer optimisation target** [mech, both] (`references/fdm-print-optimisation.md` §4). **RECOMMENDED: minimal waste** — colour changes grouped
-low in one Z band, `flush_into_infill` / `flush_into_support` on bodies whose changes sit above the first infill layer (a 2-layer bed-face mark
-gains nothing — stated per plate), flush volumes calibrated per filament pair, prime tower off on single-filament plates, purge grams reported
-per plate against the chute-only slice. *Alt:* strength — 4–5 walls, gyroid / cubic 20–25 %, modifier meshes at 100 % around inserts / bosses /
-magnet pockets, orientation by load. *Alt:* surface — inner/outer/inner walls, seam at the back, `ironing_type: top` on marked faces, Arachne,
-precise outer wall. *Alt:* speed — 3 walls, 10 % gyroid, no ironing. Every knob set is in the plate yaml and proven from the g-code (`purge_g`,
-`tower_g`, `wall_loops` read back); written to `kickoff.enclosure.optimise`.
+low in one Z band. `flush_into_infill` / `flush_into_support` on bodies whose changes sit above the first infill layer (a 2-layer bed-face mark gains
+nothing — stated per plate). Flush volumes calibrated per filament pair, prime tower off on single-filament plates, purge grams reported per plate
+against the chute-only slice. *Alt:* strength — 4–5 walls, gyroid / cubic 20–25 %, modifier meshes at 100 % around inserts / bosses / magnet pockets,
+orientation by load. *Alt:* surface — inner/outer/inner walls, seam at the back, `ironing_type: top` on marked faces, Arachne, precise outer wall.
+*Alt:* speed — 3 walls, 10 % gyroid, no ironing. Every knob set is in the plate yaml and proven from the g-code (`purge_g`, `tower_g`, `wall_loops`
+read back); written to `kickoff.enclosure.optimise`.
 
-**C12 Does the piece stand free?** [mech, both] (`references/case-pipeline.md` §Stability). **RECOMMENDED: yes if it rests on a desk, floor or hand without
-being held — then a CoG-vs-support-polygon row at the worst pose is a gate (margin ≥ 2 mm or a stated value), computed from the STL set with
-an infill factor per body**; *Alt:* fixed (wall-mounted, screwed, clamped) — a mounting-strength row instead; *Alt:* hand-held — no row.
-Written to `kickoff.enclosure.stands_free` and the generator's stability row.
+**C12 Does the piece stand free?** [mech, both] (`references/case-pipeline.md` §Stability). **RECOMMENDED: yes if it rests on a desk, floor or hand
+without being held. Then a CoG-vs-support-polygon row at the worst pose is a gate (margin ≥ 2 mm or a stated value), computed from the STL set with an
+infill factor per body**. *Alt:* fixed (wall-mounted, screwed, clamped) — a mounting-strength row instead. *Alt:* hand-held — no row. Written to
+`kickoff.enclosure.stands_free` and the generator's stability row.
 
 ## D. The manufacturability bar (SKILL §1.2) — the owner confirms the default explicitly
-**D1 The bar.** **RECOMMENDED: zero errors, zero warnings, no waivers** — board: DRC 0 / 0 / 0 warnings, fab DFM 0 Danger / 0 Warning; printed
-enclosure: census 0 unaccepted FAIL, slicer log clean, vendor checker no flag by API read, no yellow / red; CNC: vendor DFM clean; recorded as
-`fab_dfm.bar` and the print targets' `accepted: []`. *Alt:* warnings allowed with a dated acceptance carrying vendor evidence — the checker
-re-asserts each one every run; the merge lists every acceptance added per round. *Alt:* vendor-clean only (no own mirror) — one lost quote round
-per surprise; not recommended.
-**D2 What may be waived (default: nothing).** **RECOMMENDED: nothing — an item is fixed through the generator, or a dated `accepted` / `dfm_accepted`
-entry with the vendor's written acceptance is the only exception, per refdes / per cluster, listed in the merge.** *Alt:* a named class waived
-(for example the fab's "sharp trace corner" presence check) — one decision row per class with the vendor's statement. *Alt:* prose waivers — forbidden
-(a waived sub-minimum lip cracked on every part of one order).
+**D1 The bar.** **RECOMMENDED: zero errors, zero warnings, no waivers**. Board: DRC 0 / 0 / 0 warnings, fab DFM 0 Danger / 0 Warning. Printed
+enclosure: census 0 unaccepted FAIL, slicer log clean, vendor checker no flag by API read, no yellow / red. CNC: vendor DFM clean. The bar is recorded
+as `fab_dfm.bar` and the print targets' `accepted: []`. *Alt:* warnings allowed with a dated acceptance carrying vendor evidence — the checker
+re-asserts each one every run; the merge lists every acceptance added per round. *Alt:* vendor-clean only (no own mirror) — one lost quote round per
+surprise; not recommended.
+**D2 What may be waived (default: nothing).** **RECOMMENDED: nothing. An item is fixed through the generator. Otherwise a dated `accepted` /
+`dfm_accepted` entry with the vendor's written acceptance is the only exception, per refdes / per cluster, listed in the merge**. *Alt:* a named class
+waived (for example the fab's "sharp trace corner" presence check) — one decision row per class with the vendor's statement. *Alt:* prose waivers —
+forbidden (a waived sub-minimum lip cracked on every part of one order).
 **D3 Design margin and tolerance source per target** [mech, both]. **RECOMMENDED: walls at the checker's line + 0.3 (`design_margin` ≥ 0.3), first-article caliper table
 replaces the vendor's published tolerance after the first order, INFO until then** — no "PASS by design". A wall at the line read yellow on
 the vendor's map while the API passed (`references/dfm-printed-enclosure.md` §13). *Alt:* + 0.1 — lighter; the vendor map reads yellow near the
@@ -188,16 +192,16 @@ only at release — the sole with the off-centre pockets HAD been rendered and n
 **E3 Coupons, dummies, first article** [mech, both]. **RECOMMENDED: FDM coupons (text, walls, fits, insert + torque) and a board dummy (two-piece AND one-piece)
 before the first case print; a first-article caliper table on every received part** — the fit numbers become yaml knobs. *Alt:* order the case
 and measure — one vendor round per surprise. *Alt:* coupons at the vendor too — 1 week and a quote per coupon; the probe method is cheaper.
-**E4 Vendor DFM before the order and FEA.** **RECOMMENDED: the fab's own DFM viewer on board AND panel, the print service's checker read from its
-analysis API per body, both filed with raw evidence before any order; FEA on the case (torsion, drop, boss load, thermal) and the board (press-fit,
-side load) with the owner accepting any WARN by row** — the gates in `templates/90-log/GATES.md`. *Alt:* vendor DFM only after ordering — the vendor's
-review mail becomes the review. *Alt:* no FEA — for a lab jig only.
+**E4 Vendor DFM before the order and FEA.** **RECOMMENDED: the fab's own DFM viewer on board AND panel, and the print service's checker read from its
+analysis API per body. Both are filed with raw evidence before any order. FEA on the case (torsion, drop, boss load, thermal) and the board
+(press-fit, side load), with the owner accepting any WARN by row** — the gates in `templates/90-log/GATES.md`. *Alt:* vendor DFM only after ordering —
+the vendor's review mail becomes the review. *Alt:* no FEA — for a lab jig only.
 
 ## F. Bought parts (`references/part-verification.md`)
-**F1 Acceptable verification sources.** **RECOMMENDED: the fab's parts library API + page for electronics ([V] only after a live fetch this
-session); the manufacturer's product page + PDF TDS for hardware; plain-HTML dealers for price / stock; snippet-only numbers stay [K]** — never an
-invented number. *Alt:* distributor pages the owner opens logged in (McMaster, Digi-Key, Mouser are login- or bot-walled) — a BLOCKERS row per part
-with the exact URL for the owner. *Alt:* owner-supplied part list taken as [V] — only with the owner's fetch date and URL on each row.
+**F1 Acceptable verification sources.** **RECOMMENDED: the fab's parts library API + page for electronics ([V] only after a live fetch this session).
+The manufacturer's product page + PDF TDS for hardware. Plain-HTML dealers for price / stock. Snippet-only numbers stay [K]** — never an invented
+number. *Alt:* distributor pages the owner opens logged in (McMaster, Digi-Key, Mouser are login- or bot-walled) — a BLOCKERS row per part with the
+exact URL for the owner. *Alt:* owner-supplied part list taken as [V] — only with the owner's fetch date and URL on each row.
 **F2 Stock policy and alternates.** **RECOMMENDED: stock ≥ qty × boards × 1.2 for every code, ≥ 1 000 for jellybeans, an `Alt_MPN` verified for
 every extended part, frozen `stock_snapshot.json` once the order is PLACED** — the morning-after shelf never grades a placed order. *Alt:* "> 0"
 gate — a stock of 4 passed a 5-board run once. *Alt:* global sourcing / consignment for a named part — +2–3 weeks, inspection fees, a row per part.
@@ -214,33 +218,32 @@ revision.
 **H1 Report set.** **RECOMMENDED: PCB + case design reports generated (DRAFT until the owner's line), release notes with a source per number, the
 renders / FEA composites as collateral, an annotated tag** — nothing hand-typed. *Alt:* release notes only — no traceability matrix.
 **H2 Production cut.** **RECOMMENDED: the full document set (manuals, manufacturing spec incl. material rating and label placement, SOPs with
-`[OWNER]` records, analysis index, compliance table) built by one generator into `70-release/<rev>/`, records filed as they happen** —
+`[OWNER]` records, analysis index, compliance table) built by one generator into `70-release/<rev>/`. Records filed as they happen** —
 `templates/production_cut.yaml`. *Alt:* manufacturing spec + SOP only — for an internal tool with one builder.
-**H3 CI and repository hygiene.** **RECOMMENDED: PR check = the adopt gates, nightly = the case chain selftests, release = the fresh-checkout gate;
-a re-layout + deletion pass at the order through `reorg_paths.py`; the repository conventions on day 1 (SKILL §0 step 8): one home per product,
-`assets/` for shared inputs, a README in every folder, build output ignored, the release folder written by the cut and named by use with a
-single-colour variant per multi-material part, the order record beside the manufactured files with the release asset's MD5, a clean tree after
-every build** — the developer runs the same commands, and no convention costs a later pass. *Alt:* no CI — the clone gate by hand before every
-tag. *Alt:* conventions added when the owner asks — one restructuring pass per question (six in one project).
-**H4 The feedback loop into the skill.** **RECOMMENDED: every agent appends to `LEARNINGS_LOG.md`; at the production cut `scripts/skill_retro.py`
-drafts the skill's next changes and a retro report goes to the skill repo as a PR** — the skill gets better with each project (SKILL §13). *Alt:*
-no retro — the next project repeats this one's rounds.
+**H3 CI and repository hygiene.** **RECOMMENDED: PR check = the adopt gates, nightly = the case chain selftests, release = the fresh-checkout gate. A
+re-layout + deletion pass at the order through `reorg_paths.py`. The repository conventions on day 1 (SKILL §0 step 8): one home per product,
+`assets/` for shared inputs, a README in every folder, build output ignored. More day-1 conventions: the release folder written by the cut and named
+by use, with a single-colour variant per multi-material part. The order record beside the manufactured files with the release asset's MD5, and a clean
+tree after every build** — the developer runs the same commands, and no convention costs a later pass. *Alt:* no CI — the clone gate by hand before
+every tag. *Alt:* conventions added when the owner asks — one restructuring pass per question (six in one project).
+**H4 The feedback loop into the skill.** **RECOMMENDED: every agent appends to `LEARNINGS_LOG.md`. At the production cut `scripts/skill_retro.py`
+drafts the skill's next changes, and a retro report goes to the skill repo as a PR** — the skill gets better with each project (SKILL §13). *Alt:* no
+retro — the next project repeats this one's rounds.
 
 ## I. Identity, envelope, delegation (the owner rows that recur in every project and no earlier batch asks)
 **I1 Envelope: fixed or grows.** **RECOMMENDED: the board grows as routing needs, the case follows; connector positions and the form-factor
 class are fixed** — clean routing beats a millimetre. *Alt:* envelope fixed by a mating part (a cage, a rail, a pocket) — a routing budget
 per iteration and a decision row when it is missed. *Alt:* smallest possible — expect two placement iterations per connector.
-**I2 Branding, look and identity.** **RECOMMENDED: product name + logo lock-up as one designed block on the silk and on the case (label
-carrier or gold copper artwork), a consistent legend grid, no exposed copper except designed artwork, the order number hidden** — a product, not a
-coupon. *Alt:* engineering look — refdes everywhere, no logo, cheapest. *Alt:* premium finish (black mask, anodised, two-tone) — the B4 / A4
-consequences apply.
+**I2 Branding, look and identity.** **RECOMMENDED: product name + logo lock-up as one designed block on the silk and on the case (label carrier or
+gold copper artwork). A consistent legend grid, no exposed copper except designed artwork, the order number hidden** — a product, not a coupon. *Alt:*
+engineering look — refdes everywhere, no logo, cheapest. *Alt:* premium finish (black mask, anodised, two-tone) — the B4 / A4 consequences apply.
 **I3 Debug and service access** [ee, both]. **RECOMMENDED: a simple wire header + cuttable straps for the debug path, reachable with the hood off; no
 vendor-specific pod connector exposed by the case** — one keyed header, one manual page. *Alt:* a dedicated debug connector in the wall — a
 window, a tolerance stack row, a light-pipe-class part. *Alt:* none — the board is programmed in the fixture only.
-**I4 Delegation while the owner is offline.** **RECOMMENDED: "go with the recommended option" applies to every OPEN agent proposal below a
-named class (parts alternates, copper rules, case fits); spec values, gate cells, orders and payments never** — quoted in a D row, checked at
-every pause point. *Alt:* nothing delegated — the agent stops at every OPEN row. *Alt:* full delegation for a bounded window — the record quotes the
-window and lists every action taken.
+**I4 Delegation while the owner is offline.** **RECOMMENDED: "go with the recommended option" applies to every OPEN agent proposal below a named class
+(parts alternates, copper rules, case fits). Spec values, gate cells, orders and payments never** — quoted in a D row, checked at every pause point.
+*Alt:* nothing delegated — the agent stops at every OPEN row. *Alt:* full delegation for a bounded window — the record quotes the window and lists
+every action taken.
 
 ## What the answers write
 | Answer | `project.yaml` | Other records |
