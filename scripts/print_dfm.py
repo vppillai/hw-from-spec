@@ -458,7 +458,10 @@ def analyse(path, process, n_s=None, seed=0, boxes=None, out_dir=None, piece=Non
         e = np.sort(np.linalg.eigvalsh(np.cov(nrm[s].T)))[::-1]
         return round(float(e[1] / e[0]), 2) if e[0] > 1e-9 else 0.0
     vlim = max(dmin, vmin_) if vmin_ else dmin
-    voids = regions(pts, g, g < np.where(land, thr_d, vlim), link, a_per, lambda s: dict(cls="void", red_frac=round(float((g[s] < dmin).mean()), 2), roundness=roundness(s), in_land=round(float(land[s].mean()), 2)))
+    vinfo = lambda s: dict(cls="void", red_frac=round(float((g[s] < dmin).mean()), 2), roundness=roundness(s), in_land=round(float(land[s].mean()), 2))
+    voids = regions(pts, g, g < np.where(land, thr_d, vlim), link, a_per, vinfo)
+    hlim = max(vlim, hmin)                                                       # rule H reads up to hole_min on every row (0.11.14 B-6: MJF void_min 0.8 < hole_min 1.5 left H blind)
+    hvoids = voids if hlim <= vlim else regions(pts, g, g < np.where(land, thr_d, hlim), link, a_per, vinfo)
     Vd = [r for r in voids if r["vmed"] < dmin and not inland(r) and not sliver(r)]
     Vs = [r for r in voids if vmin_ and r not in Vd and not inland(r) and r["extent"] >= S * vmin_]
     row("V void / slot", f"{len(voids)} void region(s) narrower than {vlim}: {len(Vd)} below detail_min {dmin}" + (f", {len(Vs)} long slots (>= {S * vmin_} mm)" if vmin_ else " (no long-slot rule: FDM has no media to clear)"),
@@ -466,8 +469,8 @@ def analyse(path, process, n_s=None, seed=0, boxes=None, out_dir=None, piece=Non
         ("a void narrower than the smallest detail closes (the walls fuse); a long slot narrower than void_min does not clear its powder / resin" if vmin_ else
          "FDM: a void narrower than one line width (detail_min) is closed by the line's squish / the slicer's gap fill — it must be printed as a GAP between two extrusions, and a gap under one line is not; a slot wider than one line is two walls with air between, nothing to clear"),
         f"widen the stroke / slit to >= {dmin}" + (f" (a long slot to >= {vmin_})" if vmin_ else "") + " or drop it")
-    H = [r for r in voids if r["roundness"] >= 0.5 and r["vmed"] < hmin and not inland(r) and r not in Vd and not sliver(r)]
-    row("H hole", f"{len(H)} round void(s) (normals in two directions) narrower than hole_min {hmin}; voids wider than {max(vlim, hmin)} are not measured (they clear)", f"hole_min {hmin}", "FLAG" if H else "PASS", _where(H),
+    H = [r for r in hvoids if r["roundness"] >= 0.5 and dmin <= r["vmed"] < hmin and not inland(r) and not sliver(r)]          # below detail_min is V's
+    row("H hole", f"{len(H)} round void(s) (normals in two directions) from detail_min {dmin} to below hole_min {hmin}; voids wider than {hlim} are not measured (they clear)", f"hole_min {hmin}", "FLAG" if H else "PASS", _where(H),
         "a hole below the process minimum closes or does not clear; debossed glyph counters inside legend boxes are legends, not holes (row L)", f"open the hole to >= {hmin} or drop it (drill after printing)")
     Lg = [r for r in thin + voids + kreg if inland(r)]; Sl = [r for r in thin + voids + kreg if not inland(r) and sliver(r) and r not in W]
     row("L legend boxes / slivers (INFO)", f"{len(Lg)} sub-minimum region(s), {len(land_necks)} point contact(s) and {len(bad_e) - len(e_out)} non-manifold edge(s) inside legend boxes; {len(Sl)} sliver(s) (< {SLV} mm2 and <= 2 x thickness) outside them",
@@ -863,6 +866,10 @@ def selftest():
         trimesh.creation.box((0.6, 30.0, 30.0)).export(os.path.join(d, "wall06.stl")); r = analyse(os.path.join(d, "wall06.stl"), FDM, n_s=20000); assert fired(r) == {"W"}, r["flagged"]
         slot = _extrude(Polygon([(-2.3, 0), (2.3, 0), (2.3, 10), (0.3, 10), (0.3, 2), (-0.3, 2), (-0.3, 10), (-2.3, 10)]), 20.0, os.path.join(d, "slot.stl"))
         assert "V void / slot" in analyse(slot, MJF, n_s=30000)["flagged"] and "V void / slot" not in analyse(slot, FDM, n_s=30000)["flagged"]
+        # rule H reads up to hole_min on a row whose void_min is below it (MJF 0.8 / hole_min 1.5): a Ø1.0 through hole -> H, a Ø2.0 hole passes
+        for dia, want in ((1.0, True), (2.0, False)):
+            hp = os.path.join(d, f"hole{dia}.stl"); trimesh.creation.extrude_polygon(Polygon([(0, 0), (20, 0), (20, 20), (0, 20)], holes=[[(10 + dia / 2 * np.cos(a), 10 + dia / 2 * np.sin(a)) for a in np.linspace(0, 2 * np.pi, 64, endpoint=False)]]), 3.0).export(hp)
+            r = analyse(hp, MJF, n_s=60000); assert fired(r) == ({"H"} if want else set()), (dia, r["flagged"])
         # bridge span: a 2 x 40 tunnel roof bridges 2 (not 40): B silent even with supports none; a 15 mm tunnel -> B FLAG with supports none, INFO with interior
         for wid, want in ((2.0, False), (15.0, True)):
             tp = _extrude(Polygon([(-12, 0), (12, 0), (12, 8), (-12, 8)], holes=[[(-wid / 2, 2), (wid / 2, 2), (wid / 2, 4), (-wid / 2, 4)]]), 40.0, os.path.join(d, f"tunnel{wid}.stl"), up=True)
@@ -976,7 +983,7 @@ def selftest():
     ROOT = ROOT0
     print("selftest OK: ray reads 0.8 on the 0.8 plate (W, no R) / 2.0 plate PASS / free ribs W no R / 0.5 root under a 2.0 rim x 90 -> W + R, root 1.3 PASS / SLA size / "
           "Z-limited legend box keeps W, full box lists it, records byte-identical, sidecar written + removed / 0.3 rib in a box listed not W / pins Ø0.4 Ø0.3 -> F, Ø1.2 PASS / "
-          "ridges 30-40-50 K, 60-90 read but pass / 0.6 sheet flat = skin PASS, 0.4 -> Z, stood up -> W / 0.6 slot V on MJF not FDM / 2 mm tunnel span 2, 15 mm -> B / tee arms read their inscribed width (silent), pi roof 32 mm bridge B, pi 6 x 40 silent, lands-split rebate 3 x 6.1 silent, 1.4 relief ring + open groove read 1.4, debossed 1.0 strokes read 1.0 (span by rays from the ceiling sample nearest the inscribed-circle centre) / "
+          "ridges 30-40-50 K, 60-90 read but pass / 0.6 sheet flat = skin PASS, 0.4 -> Z, stood up -> W / 0.6 slot V on MJF not FDM / Ø1.0 hole H on MJF, Ø2.0 PASS / 2 mm tunnel span 2, 15 mm -> B / tee arms read their inscribed width (silent), pi roof 32 mm bridge B, pi 6 x 40 silent, lands-split rebate 3 x 6.1 silent, 1.4 relief ring + open groove read 1.4, debossed 1.0 strokes read 1.0 (span by rays from the ceiling sample nearest the inscribed-circle centre) / "
           "60 deg slot roof 2 mm bridged, 24 mm -> O / cavity C (MJF) INFO (FDM) / open mesh + touching cubes M, --bodies 2 / gate (FLAG, --open only an OPEN row naming the piece, --expect with a reason, tampered record, sidecar ignored, uncensused STL, laxer row, md5, orphan census) / validate (RULE DEFECT, geometry twins grouped, both label schemas)")
 
 
