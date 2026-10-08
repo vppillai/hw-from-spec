@@ -68,7 +68,7 @@
   commands, and the order to separate MEASURED from JUDGMENT; then the double-blind drawing round (SKILL §5). A finding that two independent
   agents raise is acted on first (the missing bosses came from two of them).
 - **The standard protocol** (SKILL.md §5 is the home; the mechanics live here): reviewers = a second model family where one
-  is available (Opus beside Claude Code, a a second agent CLI CLI model) + the in-session agent, briefed with the artefacts and the role's checklist ONLY — no
+  is available (Opus beside Claude Code, a second agent CLI's model) + the in-session agent, briefed with the artefacts and the role's checklist ONLY — no
   decision log, no earlier reviews; **one verifier WITH record access** (DECISIONS, KNOWN_ISSUES, BLOCKERS, SPEC + `SPEC_ERRATA.md`, the test plan,
   netlist / mesh of record) classifies every finding **CONFIRMED / ALREADY DECIDED (row id; does its number still hold?) / REFUTED / PARTLY /
   UNVERIFIABLE** with a **rev-impact** column (ordered revision / arrival bench check / next revision / record only); the merge writes CC rows and
