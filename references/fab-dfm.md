@@ -1,15 +1,15 @@
 # fab-dfm.md — mirror the fab's DFM checker in-repo
 
 ## 1. Why
-CAD DRC at the fab's published capability limit passes and the fab's own DFM viewer still lights up: the viewer grades a value EQUAL to its warning
-threshold as Warning, applies checks the CAD has no rule for (THT-to-SMD spacing, mask bridge, silk-to-hole, unconnected via = copper on one layer
-only, sharp corner) and counts by its own definitions. Two quote rounds were lost to this before the mirror existed. Build the mirror before the
-first quote and make it part of the adopt rule.
+CAD DRC at the fab's published capability limit passes, and the fab's own DFM viewer still lights up. The viewer grades a value EQUAL to its
+warning threshold as Warning. It applies checks the CAD has no rule for (THT-to-SMD spacing, mask bridge, silk-to-hole, unconnected via =
+copper on one layer only, sharp corner). It counts by its own definitions. Two quote rounds were lost to this before the mirror existed.
+Build the mirror before the first quote and make it part of the adopt rule.
 
 ## 2. The generic recipe
-1. **Thresholds file** `20-design/dfm_thresholds.json`: copy every check name and its danger/warning numbers from the fab's viewer (cite the viewer URL +
-   date in `source`); checks the fab lists without numbers get `null` (every found item grades Warning, as the viewer does); `project_min` holds the
-   project's own rule for checks the fab reported clean.
+1. **Thresholds file** `20-design/dfm_thresholds.json`: copy every check name and its danger/warning numbers from the fab's viewer. Cite the
+   viewer URL + date in `source`. Checks the fab lists without numbers get `null`; every found item then grades Warning, as the viewer does.
+   `project_min` holds the project's own rule for checks the fab reported clean.
 2. **Measurer** (project-specific, CAD-bound): re-measure each check from the board file — tracks, vias, pads as effective polygons, STORED zone fills
    (no refill), silk as glyph/stroke polygons, the true outline polygon — and emit `30-board/layout/dfm_items.json` items `{check, value, refs, layer, xy}`.
    Keep it in the project's `gen/`; one measurer of record (26 checks, pure-python capsule/polygon distances on a 1 mm grid over
@@ -27,9 +27,9 @@ first quote and make it part of the adopt rule.
    and every refdes of the item is listed; the dict form `{REF: n}` is a per-ref budget applied to that acceptance entry only.
 3. **Grader** `scripts/dfm_check.py`: value ≤ danger → Danger; danger < value ≤ warning → Warning; else Good; 2-decimal half-up rounding before
    grading (viewers work at 2 decimals); project rule at full precision with a 5e-4 tolerance. Exit 1 on any open item.
-4. **Acceptances** by refdes with reason, **date and vendor evidence** (`dfm_accepted` in the board yaml; the fields `fab_dfm.bar.accepted_requires`
-   names — an entry missing one is ignored and listed): a pair item needs BOTH refs listed; dict form `{REF: n}` is a budget; bare tracks/vias
-   cannot be accepted — fix them. The bar is 0 Danger / 0 Warning open (SKILL §1.2).
+4. **Acceptances** by refdes with reason, **date and vendor evidence** (`dfm_accepted` in the board yaml). The required fields are the ones
+   `fab_dfm.bar.accepted_requires` names; an entry missing one is ignored and listed. A pair item needs BOTH refs listed. Dict form `{REF: n}`
+   is a budget. Bare tracks/vias cannot be accepted — fix them. The bar is 0 Danger / 0 Warning open (SKILL §1.2).
 5. **Design strictly greater**: rules at limit + 0.01 (0.16 where the fab says 0.15), annular ring > the minimum, silk line ≥ the minimum + 0.01.
 6. **Fixture disagreements**: when the selftest fixture and the checker disagree, print the checker's REASON before touching either — the "extra"
    unconnected-via hits were correct (copper on one layer only); the fix was in the fixture.
@@ -62,16 +62,18 @@ first quote and make it part of the adopt rule.
   the table, one sentence per item, verbs and functions instead of refdes and numbers: "the connector is placed and reflowed normally; the two
   larger unplated holes under it are for its own locating pegs, the twelve small plated holes are for a cage we press on after delivery - leave all
   fourteen without paste or solder"; "the one through-hole header is hand-soldered after reflow - do NOT wave solder, the other side is fully SMT";
-  "the USB shell legs reflow with the SMT side, partial slot fill accepted". Pre-empt the questions the desk always asks: which PART a hole belongs
-  to (say "holes in the PCB"), wave soldering for any THT part on a two-sided SMT board (say no, explicitly), and the fallback ("ship that part loose
-  in the bag"). Expect one to three clarification mails; answer each with the vendor drawing's picture of the feature. Their screenshots arrive as
-  links to the fab's message-file API, not attachments - download and file them the same day, the links are session-bound.
-- Holes in a remark are cited by drill tool / finished diameter / count with coordinates in the drill-file frame (origin = the aux origin),
-  never by CAD pad names: pad names are not exported to Gerbers or Excellon, so a remark that says "S1-S12" names nothing the fab's
+  "the USB shell legs reflow with the SMT side, partial slot fill accepted". Pre-empt the questions the desk always asks. The first is which
+  PART a hole belongs to (say "holes in the PCB"). The second is wave soldering for any THT part on a two-sided SMT board (say no,
+  explicitly). The third is the fallback ("ship that part loose in the bag"). Expect one to three clarification mails; answer each with the
+  vendor drawing's picture of the feature. Their screenshots arrive as links to the fab's message-file API, not attachments - download and
+  file them the same day, the links are session-bound.
+- Cite holes in a remark by drill tool / finished diameter / count, with coordinates in the drill-file frame (origin = the aux origin). Never
+  cite them by CAD pad names. Pad names are not exported to Gerbers or Excellon, so a remark that says "S1-S12" names nothing the fab's
   engineer can see. Attach a marked picture generated from the drill file (the same data the fab has).
 - Driven browser: session expires within hours; a fresh tab on the orders URL is the decisive signed-in check (redirect = out); reload the quote tab
-  after re-sign-in. Vue tiles ignore `element.click()` from a script — use real input events; the hidden file input needs its `hide` class defeated;
-  material lists re-order after finish changes — click by text, never by position (a positional click bought the wrong laminate at 2× the price).
+  after re-sign-in. Vue tiles ignore `element.click()` from a script — use real input events. The hidden file input needs its `hide` class
+  defeated. Material lists re-order after finish changes — click by text, never by position (a positional click bought the wrong laminate at
+  2× the price).
 - DFM viewer: rows read "Unanalyzed" until its own button is pressed (~60 s); the export is an icon-only toolbar item; the PDF lands in Downloads.
 - PCBA: a part with a stock shortfall is auto-deselected; a catalogue part without a fab footprint shows nothing until the paid confirm step.
 - Prices are read from the live form and written next to the generated parameters; `newest_quote()` accepts only a row whose price cell starts
@@ -79,31 +81,35 @@ first quote and make it part of the adopt rule.
 
 ## 6. Print-service / CNC DFM (worked example: JLC3DP / JLCCNC)
 - Print DFM = a thin-wall heat map + one yes/no risk gate (API `thinWall`). The legend (JLC3DP 2026-09-28: grey ≥ 1.2, yellow 0.5–1.2, red < 0.5)
-  is the **checker's** colouring; the vendor's **published printable minimum** is a different number (its review mail: nylon ≥ 1.0, resin ≥ 0.8);
-  the **owner's bar** (no yellow) is a third — keep the three apart (`references/dfm-printed-enclosure.md` §1) and put them in `print_targets`.
-  Compare process rule sets, not colours. Its only numbers are volume / area / bbox — turn a colour into a number with your own ray-cast.
-- FDM refuses parts < 30 × 30 × 10 mm per file; **SLA: the Edit dialog refuses a PART thinner than 2 mm overall, the wall minimum is 0.8** (two
-  different numbers — `dfm-printed-enclosure.md` §11); a mandatory customs cascader makes Save a silent no-op; dyeing / post-processing is an
-  add-on that changes dimensions (§1.2 there); pricing linear in quantity.
+  is the **checker's** colouring. The vendor's **published printable minimum** is a different number (its review mail: nylon ≥ 1.0, resin ≥
+  0.8). The **owner's bar** (no yellow) is a third. Keep the three apart (`references/dfm-printed-enclosure.md` §1) and put them in
+  `print_targets`. Compare process rule sets, not colours. Its only numbers are volume / area / bbox — turn a colour into a number with your
+  own ray-cast.
+- FDM refuses parts < 30 × 30 × 10 mm per file. **SLA: the Edit dialog refuses a PART thinner than 2 mm overall, the wall minimum is 0.8**
+  (two different numbers — `dfm-printed-enclosure.md` §11). A mandatory customs cascader makes Save a silent no-op. Dyeing / post-processing
+  is an add-on that changes dimensions (§1.2 there). Pricing is linear in quantity.
 - CNC: a faceted STL-sewn STEP goes to manual quote; a true B-rep STEP (cadquery) quotes instantly; a finish change drops the mandatory drawing
   upload — re-upload before Save. The machining rules (corner radii, walls, threads, anodising build-up) are `references/cnc-enclosure.md`.
 
-- After the order: the print service's engineer review arrives by mail with per-line file ids; the flow, the boundaries and the quote-page
-  mechanics (`getFileAnalyzeResult` → `previewUrl` heat map for a "clean" part; Edit dialog saved = form state; "audit failed" mail = Replace
-  File enabled) are in `references/vendor-review.md`.
+- After the order, the print service's engineer review arrives by mail with per-line file ids. `references/vendor-review.md` has the flow,
+  the boundaries and the quote-page mechanics (`getFileAnalyzeResult` → `previewUrl` heat map for a "clean" part; Edit dialog saved = form
+  state; "audit failed" mail = Replace File enabled).
 
 ## 7. Worked-example numbers (JLCPCB, 2026-09) — the full build-rule set with tags is `references/pcb-layout-dfm.md`
-2 oz outer: track/space 0.16/0.16 (published), via 0.30 drill / 0.62 ring (annular > 0.15 to escape Warning), pad-to-edge warning 0.20, PTH-to-trace
-0.23 (project 0.24), silk line 0.16, silk-to-hole 0.22, mask bridge 0.20, hole-to-hole 0.50, PCBA min side 70 mm, V-cut copper-to-edge 0.40.
+2 oz outer: track/space 0.16/0.16 (published), via 0.30 drill / 0.62 ring (annular > 0.15 to escape Warning), pad-to-edge warning 0.20,
+PTH-to-trace 0.23 (project 0.24). Silk line 0.16, silk-to-hole 0.22, mask bridge 0.20, hole-to-hole 0.50, PCBA min side 70 mm, V-cut
+copper-to-edge 0.40.
 These are the values that were live then; fetch the current capability page before using them.
 
 ## 8. Fab package gate: the placed-order stock freeze (project-side generator; contract here)
-The morning after an order is placed the live stock gate turns against its own package: the fab's shelf shows what the order consumed (a part at
-4 → 0), `fab_package --check` re-derives a different PCBA verdict and fails, and its selftest (built on the live records) fails with it.
-- **Rule:** a package whose order is PLACED — an owner row in the decision log matching `markers.placed_regex` AND naming the package folder — is
-  judged on `stock_snapshot.json` inside the package: the stock records of its BOM codes as at the build commit, frozen once by
-  `--freeze-stock` and hashed in the package MANIFEST. `--check` on a placed package without the snapshot says so (run `--freeze-stock`) instead
-  of grading on live data. Live re-checks after the order are still recorded in `PARTS_VERIFICATION.md`; they do not grade a frozen package.
+The morning after an order is placed, the live stock gate turns against its own package. The fab's shelf shows what the order consumed (a
+part at 4 → 0). `fab_package --check` re-derives a different PCBA verdict and fails, and its selftest (built on the live records) fails with
+it.
+- **Rule:** a package whose order is PLACED is judged on `stock_snapshot.json` inside the package. PLACED means an owner row in the decision
+  log matches `markers.placed_regex` AND names the package folder. The snapshot holds the stock records of its BOM codes as at the build
+  commit, frozen once by `--freeze-stock` and hashed in the package MANIFEST. `--check` on a placed package without the snapshot says so
+  (run `--freeze-stock`) instead of grading on live data. Live re-checks after the order are still recorded in `PARTS_VERIFICATION.md`; they
+  do not grade a frozen package.
 - **Selftest fixture:** the selftest never reads the live stock file — it builds a fixture (every record in stock, dated today) and points the
   checker at it; the package logic is under test, not the market.
 - The frozen package: fab files, panel/, board_id.txt byte-identical forever (a rebuild re-exports the panel and re-stamps the commit — never on
@@ -111,14 +117,15 @@ The morning after an order is placed the live stock gate turns against its own p
 - Look for a moved records file under both its old and new path when reading the build commit after a re-layout (`scripts/reorg_paths.py --map`).
 
 ## 9. Assembly notes in the fab package (project-side generator; contract here) — pre-answering the engineer
-A PCBA fab's engineer asks the same questions on every order: which end is the cathode on the diodes, where is pin 1 on the SOT parts, what does
-the connector on the custom footprint look like, which holes stay empty, is it okay to proceed (`references/vendor-review.md` §5–§7). The package
-answers them before they are asked:
-- **`ASSEMBLY_NOTES.md` + `assembly_notes_top.png` / `_bottom.png`** beside the fab files: the renders of record with a marker per polarised part
-  (cathode end / pin-1 corner), one caption per part CLASS ("SOD-123 diodes on the bottom: cathode band toward the <landmark> edge"), a body
-  outline + pin-1 circle + mating arrow for every connector whose footprint is custom or whose body the fab's library will not draw, a table of
-  holes that stay empty or unplated (refdes, count, finished Ø, tolerance, plated / NPTH, why), the press-fit finished-hole tolerance from the
-  connector drawing, and the order remark text that points at the file.
+A PCBA fab's engineer asks the same questions on every order (`references/vendor-review.md` §5–§7). Which end is the cathode on the diodes?
+Where is pin 1 on the SOT parts? What does the connector on the custom footprint look like? Which holes stay empty? Is it okay to proceed?
+The package answers them before they are asked:
+- **`ASSEMBLY_NOTES.md` + `assembly_notes_top.png` / `_bottom.png`** sit beside the fab files. They carry the renders of record with a
+  marker per polarised part (cathode end / pin-1 corner). Each part CLASS gets one caption ("SOD-123 diodes on the bottom: cathode band
+  toward the <landmark> edge"). They draw a body outline + pin-1 circle + mating arrow for every connector whose footprint is custom or whose
+  body the fab's library will not draw. They hold a table of holes that stay empty or unplated (refdes, count, finished Ø, tolerance, plated
+  / NPTH, why). They also hold the press-fit finished-hole tolerance from the connector drawing, and the order remark text that points at the
+  file.
 - Inputs: the board file (pad-1 positions, rotations, nets), the footprint 3-D models (body bbox in the footprint frame), the polarised-part
   class list derived from the footprints (not typed by hand), `ORDER_PARAMETERS.md`. Keyed on the board md5 + the models: a copper change
   re-renders, a prose edit does not. `--check` STALE on a key move; part of the package MANIFEST; `production_cut.yaml` row `assembly_notes`.
