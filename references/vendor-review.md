@@ -77,8 +77,8 @@ the fab will place it. The engineer asks for a yes within a day; production wait
 owner's, the agent drafts it into the record.
 - **Read the fab's marks on the board's pad-1 positions, never on the CPL rotation.** The snapshot convention is stable per fab; verify it on
   the first picture. A red `+` marks the anode, a red `−` the cathode, and a red dot pin 1. A two-letter flag (for example `FL`) marks a part
-  the engineer could not resolve. The bottom view is mirrored in X. For every queried part, read three things from the board file: pad 1's
-  position, the footprint's pin-1 meaning, and its nets. Pin 1 means cathode on the CAD library's SOD / chip-LED footprints and anode on some
+  the engineer could not resolve. The bottom view is mirrored in X. For every queried part, read three things: pad 1's position from the board
+  file, the footprint's pin-1 meaning, and its nets. Pin 1 means cathode on the CAD library's SOD / chip-LED footprints and anode on some
   vendor-library SMA footprints; check the silk bar. Map the board frame into the snapshot (board-colour bounding box → px/mm; mirror the
   bottom). Compare crops side by side with the renders
   of record. A table per part: side, what the fab shows, what the board says, OK / REVERSED (rotate 180°). The electrical intent (anodes on the

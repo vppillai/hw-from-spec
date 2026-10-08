@@ -3,7 +3,7 @@
 > **State at this release (generated facts):** record `{{BOARD_PATH_OR_STL_SET}}` md5 `{{MD5}}`,
 > package `{{PACKAGE_DIR}}`, {{ee,both}}
 > case `{{CASE_VERSION}}`, {{mech,both}}
-> decisions md5 `{{DECISIONS_MD5}}`, tag `{{TAG}}`. `scripts/project.py record` gives the record md5 and the content signature `{{SIG}}`.
+> decisions md5 `{{DECISIONS_MD5}}`, tag `{{TAG}}`. `scripts/project.py record` gives the record md5. The content signature is `{{SIG}}`.
 > Every number below names the file it was read from; a value a concurrent agent is still producing is written `[FINAL: …]` rather than copied early.
 
 ## What this is
