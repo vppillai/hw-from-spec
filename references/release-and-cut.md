@@ -171,7 +171,7 @@ blind-review verifier (a deviation already here is ALREADY DECIDED), the arrival
 
 ## 13. The order record, beside the manufactured files
 `60-orders/ORDER_<rev>.md` records the order so that a reorder needs no memory; the product's release-folder README links it. It carries:
-- every vendor option as set on the order page, read from the page: layers, quantity, thickness, colour, silkscreen, finish, copper weight, via
+- every vendor option as set on the order page, read from the page: layers, quantity, thickness, colour, silkscreen, finish, copper weight, via <!-- style: ok -->
   covering, order-number removal, tolerance, electrical test, serial number;
 - the price at order, the cart line name, the uploaded file name and its MD5;
 - reproduction as numbered steps from the release asset: download, compare the MD5, upload, set each option;

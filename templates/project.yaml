@@ -12,7 +12,7 @@ skill: {repo: {{SKILL_REPO_URL}}, commit: {{SKILL_COMMIT}}, version: {{SKILL_VER
 kickoff:                                      # the owner's kickoff answers, machine-readable (references/kickoff-questionnaire.md "What the answers write"; `scripts/project.py kickoff --check`
   answers: 10-spec/KICKOFF_ANSWERS.md   #   proves every answered row landed here); the words and D rows live in the answers file
   product_class: {{A1_PRODUCT_CLASS}}         # A1: engineering sample | product for external users | one-off lab jig
-  quantity: {{A2_QUANTITY}}                   # A2: e.g. "5 first article, design for 50"
+  quantity: {{A2_QUANTITY}}                   # A2: for example "5 first article, design for 50"
   fab: {{A3_FAB}}                             # A3: the board fab / assembler {{ee,both}}
   enclosure:                                  # C1–C10 {{mech,both}}
     pieces: {{C1_PIECES}} {{mech,both}}
@@ -40,7 +40,7 @@ board:                                        # the PCB build from kickoff B1–
   layers: {{B1_LAYERS}} {{ee,both}}
   thickness_mm: {{B1_THICKNESS}} {{ee,both}}
   stackup_template: {{B1_STACKUP}} {{ee,both}}
-  copper: {{B2_COPPER}}                       # e.g. "1 oz outer / 0.5 oz inner" {{ee,both}}
+  copper: {{B2_COPPER}}                       # for example "1 oz outer / 0.5 oz inner" {{ee,both}}
   impedance: {{B3_IMPEDANCE}} {{ee,both}}
   finish: {{B4_FINISH}} {{ee,both}}
   mask: {{B4_MASK}} {{ee,both}}
@@ -90,7 +90,7 @@ paths:
 tools:
   python: .venv/bin/python
   kicad_cli: {{CAD_CLI_PATH}}                 # the key names are historical: put YOUR CAD's CLI here ({KICAD_CLI} in commands), whatever the CAD (mech: openscad) {{ee,both}}
-  kicad_cli: {{GEOMETRY_CLI_PATH}}            # mech scope: the geometry CLI ({KICAD_CLI} in render commands), e.g. openscad {{mech}}
+  kicad_cli: {{GEOMETRY_CLI_PATH}}            # mech scope: the geometry CLI ({KICAD_CLI} in render commands), for example openscad {{mech}}
   geometry_cli: {{GEOMETRY_CLI_PATH}}         # the geometry kernel CLI (OpenSCAD or equivalent) {{mech,both}}
   slicer: {{SLICER_CLI_PATH}}                 # the slicer CLI of the home FDM preset (plates, g-code reads) {{mech,both}}
   kicad_python: {{CAD_PYTHON_PATH}}           # the CAD's own Python ({KPY}); python3 when the CAD has none {{ee,both}}
@@ -101,11 +101,11 @@ fab_dfm:                                      # the board's fab-DFM mirror (refe
   report: 30-board/layout/dfm.json {{ee,both}}
   bar: {open: 0, warnings_fail: true, accepted_requires: [reason, date, evidence]}   # owner decision {{D-BAR}}: 0 open at either of the fab's grades; an acceptance without all three fields does not count {{ee,both}}
 print_targets:                                # every printed body is censused against ONE named target; no number lives in a script (references/dfm-printed-enclosure.md) {{mech,both}}
-  {{VENDOR_TARGET}}:                          # e.g. vendor_mjf {{mech,both}}
-    vendor: {{VENDOR}}                        # e.g. JLC3DP {{mech,both}}
+  {{VENDOR_TARGET}}:                          # for example vendor_mjf {{mech,both}}
+    vendor: {{VENDOR}}                        # for example JLC3DP {{mech,both}}
     process: {{PROCESS}}                      # MJF | SLA | FDM | CNC {{mech,both}}
-    material: {{MATERIAL}}                    # e.g. PA12-HP {{mech,both}}
-    dfm_process: {{DFM_PROCESS}}              # row of 20-design/dfm_processes.yaml scripts/print_dfm.py gates this target on (kickoff C8a; e.g. jlc_mjf_pa12) {{mech,both}}
+    material: {{MATERIAL}}                    # for example PA12-HP {{mech,both}}
+    dfm_process: {{DFM_PROCESS}}              # row of 20-design/dfm_processes.yaml scripts/print_dfm.py gates this target on (kickoff C8a; for example jlc_mjf_pa12) {{mech,both}}
     wall_gate: {{WALL_GATE}}                  # the vendor checker's grey line, read on checker_date       [checker] {{mech,both}}
     void_gate: {{VOID_GATE}}                  # slots / slits / engraved strokes (1.2)                    [checker] {{mech,both}}
     red_line: {{RED_LINE}}                    # the checker's red band (0.5)                              [checker] {{mech,both}}
@@ -124,7 +124,7 @@ print_targets:                                # every printed body is censused a
     vendor: home {{mech,both}}
     process: FDM {{mech,both}}
     material: {{FILAMENT}}                    # PLA | PETG {{mech,both}}
-    printer: {{PRINTER_AND_NOZZLE}}           # e.g. "<printer model>, 0.4 nozzle, 0.20 mm" {{mech,both}}
+    printer: {{PRINTER_AND_NOZZLE}}           # for example "<printer model>, 0.4 nozzle, 0.20 mm" {{mech,both}}
     dfm_process: home_fdm_04                  # the printability floor row (walls 0.9 / one perimeter 0.45); the DESIGN rule is wall_gate below {{mech,both}}
     wall_gate: 1.6                            # 4 perimeters at 0.4                                       [owner bar] {{mech,both}}
     rib_gate: 1.2 {{mech,both}}
@@ -203,6 +203,7 @@ gates:
     - "$PY scripts/traceability.py --check"
     - "$PY scripts/release_report.py --check"
     - "$PY scripts/now_pages.py --check"      # the five answer pages of 00-now/ are current (written by scripts/now_pages.py in the record round)
+    - "$PY scripts/style_lint.py --project ."  # every README, record, order, release and kit text follows references/writing-style.md (clutter words, sentence cap)
     # G1 (schematic exists): add the project's generators and the ERC gate (references/schematic-phase.md §2) {{ee,both}}
     # - "$PY gen/build_sch.py --selftest" {{ee,both}}
     # - "$PY gen/build_sch.py --check" {{ee,both}}
