@@ -3,7 +3,7 @@
 
   evals/run_evals.py [--only ID,ID] [--python PY]
       Each eval may carry `checks: [{name, run, expect_rc?}]`: `run` is a shell snippet executed in a fresh temp dir with $SKILL (this repo),
-      $PY (the interpreter: --python made absolute, else the interpreter running this file) and $T (the temp dir) set.
+      $PY and $PYTHON (the interpreter: --python made absolute, else the interpreter running this file) and $T (the temp dir) set.
   evals/run_evals.py --selftest      # evals.json schema: unique ids, prompt / expected_output / assertions / checks (name + run) on every eval A check whose `run` starts with
       `needs-mesh:` is SKIPPED (not failed) when $PY lacks numpy / trimesh. Evals without checks are listed as manual with their assertion count
       (they need an agent run against the prompt and a human reading the assertions). Exit 1 on any failed check.
@@ -37,7 +37,7 @@ def main():
                     run = run[len("needs-mesh:"):].strip()
                     if not mesh:
                         n_skip += 1; print(f"[skip ] {e['id']:>2} {c.get('name', run[:60])}: mesh libraries absent in {py}"); continue
-                r = subprocess.run(["bash", "-e", "-o", "pipefail", "-c", run], cwd=T, env=dict(os.environ, SKILL=SKILL, PY=py, T=T), capture_output=True, text=True)
+                r = subprocess.run(["bash", "-e", "-o", "pipefail", "-c", run], cwd=T, env=dict(os.environ, SKILL=SKILL, PY=py, PYTHON=py, T=T), capture_output=True, text=True)
                 ok = r.returncode == c.get("expect_rc", 0)
                 fails += not ok
                 print(f"[{'PASS' if ok else 'FAIL'} ] {e['id']:>2} {c.get('name', run[:60])}" + ("" if ok else f"\n        rc {r.returncode}: {(r.stdout + r.stderr).strip()[-600:]}"))
