@@ -150,6 +150,15 @@ Defaults the questionnaire proposes:
   regex → offset, seeded from two databases, only agreeing rows `review: false`), `rotation_log.csv` in the pack listing every applied offset,
   and **the fab's 3-D placement preview is the only authoritative check** before paying — a G2 checklist item (a +90 for 1×N headers was
   confirmed only there).
+- **The table grows from the fab's own rows, with a selftest** **[measured]**: after every assembled order, diff the fab's engineering file
+  (`vendor-review.md` §5 round 4: `ec` vs `oc` per designator), group the deltas by footprint and write them into the rotation table as rules
+  with the order id as the source; the CPL generator's selftest regenerates the file and asserts every polarized part against the engineer rows,
+  so the next order of these packages ships right the first time. What one order taught: a vendor-made (EasyEDA) footprint does not sit at the
+  fab's zero just because the fab drew it (LQFP-64 needed +270, as the community tables said for the stock footprint); the `-BL` / `-BR` suffix
+  of a vendor footprint is a different pin-1 corner and needs its own offset (SOT-23-6: `-BL` 0, `-BR` +90); the fab's package ORIGIN is not the
+  pad-bbox centre (a USB-C receptacle +2.345 mm, slide switches +0.127 mm toward the board edge) — a rule key `shift: [dx, dy]` in the
+  footprint frame, rotated with the part and mirrored on the bottom; two-pin passives come back normalised by 180° either way (ignore). The
+  board file needs no change for any of this — the table is the design file that was missing, and the ordered package stays frozen as evidence.
 - Polarity mark on the silk of **every** polarised footprint (the fab places per silkscreen when it conflicts with the CPL): pin-1 dot on every
   IC, cathode band / triangle on diodes, + on electrolytics, pin 1 on headers; the F.Fab layer carries the same marks for the assembly drawing.
 - **Pre-answer the fab's engineer** **[convention]**: at G2, beside the silk check, a fab's-eye pass — a polarised footprint whose only mark is on the

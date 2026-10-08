@@ -1,6 +1,6 @@
 # CHANGELOG — hw-from-spec
 
-## Current state (0.11.6) — read this instead of replaying the entries below
+## Current state (0.11.7) — read this instead of replaying the entries below
 
 - **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
   twelve batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
@@ -36,6 +36,23 @@
 - **Generic by rule**: the skill names no project, part, board, order, account or person — `scripts/generic_lint.py` reads the whole repo
   (CHANGELOG and docs included; history keeps its measured numbers), a fenced worked example keeps numbers and kinds but never a name, and the
   repo carries no project retro (a retro report is folded, then deleted).
+
+## 0.11.7 — 2026-10-08 — The fab's placement-confirm step, and the rotation table that grows from the fab's own rows
+
+Source: one assembled order whose fab added an order-history "Confirm Parts Placement" step with a silent timer after three engineer mails; its
+engineering file listed every change the engineer made against the customer's CPL, and those deltas now live in the project's rotation table.
+
+### Added
+- `references/vendor-review.md` §5 round 4: the placement-confirm step (timer, viewer, the engineering file's `oc` / `ec` rows), the order of
+  checks (CPL and BOM identity, then the `ec` − `oc` diff, then the picture with a mounting-hole calibration and a pad-1 overlay for every
+  polarity-flagged part, pad-1 meaning from the footprint), agent read-only, owner submits.
+- `references/pcb-layout-dfm.md` §10: the rotation table grows from the fab's engineer rows with a selftest that regenerates the CPL against them;
+  vendor footprints `-BL` / `-BR` carry different offsets; the fab's package origin is not the pad-bbox centre (`shift` rule in the footprint
+  frame); passives normalised 180° are ignored; the board file needs no change.
+- `references/agent-ops.md`: the DevTools browser is its own signed-out profile — the owner signs in per session, the agent never enters
+  credentials; user-centre pages are read through text and data requests.
+- `references/pitfalls.md`: [fab/placement-confirm], [fab/rotation-table], [tooling/browser].
+- `SKILL.md`: the placement-confirm step in the fab-round bullet.
 
 ## 0.11.6 — 2026-10-07 — FDM colour case: the CLI writes the project, seam by geometry, mesh hygiene, fit by boolean; the colour file is one shell
 
