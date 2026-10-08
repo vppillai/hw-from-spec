@@ -120,6 +120,13 @@ the SOP's companion cell points at it (a pointer, no revision bump).
   floors, and add an inset: a thin slab (2 mm) `intersection()` through the plain region, ORTHOGRAPHIC, seen square on, parts in their two colours.
   In a rendered boolean the colour goes OUTSIDE the `intersection()` / `difference()` (a rendered boolean drops its children's colours). The inset
   sits beside a wide main picture or under a square one, with a short label ("Section across the case"), the position computed from the two sizes.
+- **Arrows and markers are vector shapes on the page, placed from the meshes.** A 3D arrow in the render comes out as a faceted red solid
+  with black edges, and it changes the framing. Instead the scene carries PINS: small spheres at the arrow tip and tail (or the dot), fully
+  transparent (`color([0, 0, 0, 0])`) in the shaded and flat passes — invisible, yet they still set a `--viewall` framing — and pure colours
+  in one more pass with the same camera. The pin centroids (by hue, so shading does not matter) give page coordinates; the page draws a
+  round-capped shaft and a filled head with a white halo, 1 mm wide, so the arrow reads over a dark part or a board's art. One pin
+  hidden by a part is an error (the arrow would start from a wrong place), never a fallback. The crop box includes the pins with room for
+  the head, so an arrow never runs out of the frame.
 - **Every number in the text comes from the design parameters** (the same file the meshes come from): counts, magnet size, the pinch band, the
   recess below a face. The guide reads the parameter file the way the drawing does (a regex over `NAME = value;` lines, derived values by one
   `echo()` run); a design change moves the pictures AND the words. Counts are words ("four magnets"), dimensions are digits ("6 x 3 mm").

@@ -52,9 +52,12 @@ meshes, and "if the design changes, do the doc scripts change too?".
   page with badge / frame / instructions / note / caution / footer; illustrations are shaded line drawings from two passes over the meshes of
   record; a recess is shown by a height split of the mesh (dark inside, light skin, inner column 1 mm inside the walls) and a steep view; an
   arrangement a perspective hides gets a partial load plus an orthographic thin-slab section inset, colour outside the boolean; every number in
-  the text from the design parameters, counts as words and dimensions as digits; wording for the reader with the part in hand.
-- `references/pitfalls.md` documentation: seven dated one-liners (raster pages, marketing renders, the deboss that read raised, the hidden
-  stagger, the boolean that drops colours, hand-typed numbers, axis names).
+  the text from the design parameters, counts as words and dimensions as digits; arrows and dots as vector shapes on the page, placed
+  from transparent pins in the scene (invisible, yet they set the framing) read back by hue in one more pass; wording for the reader with
+  the part in hand.
+- `references/print-kit.md` §4: a fit slot on a coupon is open at one edge of the block, so any mating part at hand goes in part way.
+- `references/pitfalls.md`: nine dated one-liners (raster pages, marketing renders, the deboss that read raised, the hidden stagger, the
+  boolean that drops colours, hand-typed numbers, axis names, the closed coupon slot, the 3D arrows).
 
 ### Changed
 - `SKILL.md` §10: the guide bullet names the page format, the drawing style, the recess and section rules, and the parameter source.

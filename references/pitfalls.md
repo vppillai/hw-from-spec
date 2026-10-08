@@ -368,6 +368,8 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - Ten loaded boards in a perspective view hid the alternating slot heights ("the staggered view is not clear"): five boards in, one on its way, plus an orthographic thin-slab section inset — 2026-10-08 [docs/guide].
 - A rendered `intersection()` / `difference()` drops the colours of its children (the slab came out in the default colour): `color()` goes outside the boolean — 2026-10-08 [tooling/openscad].
 - Guide text with hand-typed numbers ("four magnets", "8 mm band") drifts from the design on the next parameter change; the words read the parameter file the pictures are built from — 2026-10-08 [docs/guide].
+- A fit coupon with closed slots could not take a longer board part way ("the older version was better with an open end"): a fit slot runs out to an edge of the block — 2026-10-08 [coupons/fit].
+- 3D arrows in a line drawing read as faceted red solids and moved the framing; transparent pins in the scene + vector arrows with a white halo on the page — 2026-10-08 [docs/guide].
 - Axis names and parameter names in a guide step ("+y end", "STAGGER") mean nothing to the person holding the part; front / rear corner / long side / high board — 2026-10-08 [docs/guide].
 - A hand-written SOP that copies a generated seed inherits the seed's stale number three revisions later: cite the seed's file + md5, or generate the block — 2026-09-22 [docs/seeds].
 - "Software of record = `git log -1 -- tools/`" moves the stamp in seven documents on a README fix: stamp the md5 of the files that matter — 2026-09-22 [docs/provenance].
