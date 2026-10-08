@@ -42,7 +42,10 @@ def selftest():
     except RuntimeError as e:
         assert "mark_web_clip, mark_pinch" in str(e) and "line 1" in str(e), e
     assert scad_lint('s = "a // b"; t = 1;\n') and scad_lint('// pure comment: x = 1;\nx = 2;\n')     # a `//` inside a string is not a comment; a whole-line comment assigns nothing
-    print("selftest OK (prose in comments passes, hidden statements rejected with the names, strings and whole-line comments ignored)")
+    import contextlib, io
+    with contextlib.redirect_stderr(io.StringIO()):
+        assert main(["scad_lint.py", "--check"]) == 2, "an unknown flag is not a file name"
+    print("selftest OK (prose in comments passes, hidden statements rejected with the names, strings and whole-line comments ignored, unknown flag = 2)")
 
 
 def main(argv):
@@ -50,6 +53,9 @@ def main(argv):
         selftest(); return 0
     if not argv[1:] or argv[1] in ("-h", "--help"):
         print(__doc__); return 0 if argv[1:] else 2
+    bad = [a for a in argv[1:] if a.startswith("--")]
+    if bad:
+        print(f"scad_lint: unknown option {bad[0]} (usage: scripts/scad_lint.py <file.scad>... | --selftest)", file=sys.stderr); return 2
     rc = 0
     for p in argv[1:]:
         try:
