@@ -14,8 +14,13 @@ trap 'echo "clone gate: aborted at line $LINENO (rc $?)" >&2' ERR
 HERE=$(cd "$(dirname "$0")" && pwd -P)
 case "${1:-}" in -h|--help) sed -n '2,12p' "$0"; exit 0;; ""|--selftest|--regen) ;; *) echo "clone_gate.sh: unknown option $1 (usage: scripts/clone_gate.sh [--regen] | --selftest)" >&2; exit 2;; esac
 if [[ "$1" == "--selftest" ]]; then
-  [[ -z "${PYTHON:-}" && -x "$PWD/.venv/bin/python" ]] && "$PWD/.venv/bin/python" -c "import yaml" 2>/dev/null && export PYTHON="$PWD/.venv/bin/python"   # the selftest's temp project has no venv: take the caller's
-  T=$(mktemp -d /tmp/hwfs_cg_XXXX); trap 'rm -rf $T' EXIT
+  # the selftest's temp project has no venv: take the caller's interpreter ($PYTHON, $PY, ./.venv, the skill's .venv, python3)
+  SP=""; for c in "${PYTHON:-}" "${PY:-}" "$PWD/.venv/bin/python" "$HERE/../.venv/bin/python" python3; do
+    [[ -n "$c" ]] && "$c" -c 'import yaml' >/dev/null 2>&1 && { SP=$c; break; }
+  done
+  [[ -n "$SP" ]] || { echo "selftest FAILED: no python with pyyaml (set PYTHON or PY)"; exit 1; }
+  export PYTHON="$SP"
+  T=$(mktemp -d "${TMPDIR:-/tmp}/hwfs_cg_XXXX"); trap 'rm -rf $T' EXIT
   mkdir -p $T/r/docs $T/r/vendor/hw-from-spec && cd $T/r && git init -q && git -c user.name=t -c user.email=t@t commit -q --allow-empty -m init
   # the documented install layout: skill at vendor/hw-from-spec (a submodule — empty in `git archive`, so ignored here), RELATIVE symlink scripts/
   ln -s "$HERE" vendor/hw-from-spec/scripts; ln -s vendor/hw-from-spec/scripts scripts; printf 'vendor/hw-from-spec/\n.venv/\n' > .gitignore
@@ -31,15 +36,15 @@ fi
 ROOT=$(git rev-parse --show-toplevel)
 [[ -f "$ROOT/project.yaml" ]] || { echo "clone gate: project.yaml must sit at the git top level ($ROOT) — the archive root is what a clone sees"; exit 1; }
 cd "$ROOT"
-# interpreter: $PYTHON, else the project venv, else the skill's venv, else python3 — the first one that imports yaml
-PY=""; for c in "${PYTHON:-}" "$ROOT/.venv/bin/python" "$HERE/../.venv/bin/python" python3; do
+# interpreter: $PYTHON, else $PY, else the project venv, else the skill's venv, else python3 — the first one that imports yaml
+CAND_PY="${PY:-}"; PY=""; for c in "${PYTHON:-}" "$CAND_PY" "$ROOT/.venv/bin/python" "$HERE/../.venv/bin/python" python3; do
   [[ -n "$c" ]] && "$c" -c 'import yaml' >/dev/null 2>&1 && { PY=$c; break; }
 done
-[[ -n "$PY" ]] || { echo "clone gate: no python with pyyaml found (project .venv, skill .venv, python3)"; exit 1; }
+[[ -n "$PY" ]] || { echo "clone gate: no python with pyyaml found (\$PYTHON, \$PY, project .venv, skill .venv, python3)"; exit 1; }
 export PY
 get() { "$PY" "$HERE/project.py" get "$1"; }
 H=$(git rev-parse --short HEAD)
-BASE=$(mktemp -d /tmp/hwfs_cg_XXXX); trap 'rm -rf $BASE' EXIT
+BASE=$(mktemp -d "${TMPDIR:-/tmp}/hwfs_cg_XXXX"); trap 'rm -rf $BASE' EXIT
 # same-length path as ROOT (pad the leaf name) so truncated path labels in generated text match the working tree byte for byte
 LEAF=$(basename "$ROOT"); PADLEN=$(( ${#ROOT} - ${#BASE} - 1 )); (( PADLEN < ${#LEAF} )) && PADLEN=${#LEAF}
 A="$BASE/$(printf '%-*s' $PADLEN "$LEAF" | tr ' ' '_')"
