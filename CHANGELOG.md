@@ -79,8 +79,9 @@ expert), two GitHub Copilot CLI reviewers (GPT-5.6 Terra cold user, GPT-5.4 doma
   citation fragments in pitfalls are removed (B-32). The datasheet-notes template has no slot (A-4). README runs the kickoff before the copy
   block, in SKILL §0 order (A-2 / A-15).
 - The skill's prose rewritten to the sentence rules now that the lint counts sentences: 441 sentences over 40 words split across SKILL.md, README,
-  the references and the templates; every number, tag, path, condition and step order kept; a blind meaning review of the diff is in
-  `docs/reviews/` (B-10, the owner's standing rule 'this applies to the skill').
+  the references and the templates; every number, tag, path, condition and step order kept; a blind meaning review of the diff (Opus + GPT-5.6 Terra,
+  `docs/reviews/blind_review_0.11.14_meaning_*.md`) found no unintended rule change; three wording drifts were repaired before the tag (B-10, the
+  owner's standing rule 'this applies to the skill').
 
 ### Owner decisions (open, proposed text in `docs/reviews/blind_review_0.11.13_verified.md`)
 A-9 gate-cell backstop vs the delegation rule; A-11 agent commit identity; B-1 gate the margin itself; B-7 percentile in-box gate; B-13, B-23,

@@ -177,7 +177,7 @@ surprise; not recommended.
 `dfm_accepted` entry with the vendor's written acceptance is the only exception, per refdes / per cluster, listed in the merge**. *Alt:* a named class
 waived (for example the fab's "sharp trace corner" presence check) — one decision row per class with the vendor's statement. *Alt:* prose waivers —
 forbidden (a waived sub-minimum lip cracked on every part of one order).
-**D3 Design margin and tolerance source per target** [mech, both]. **RECOMMENDED: walls at the checker's line + 0.3 (`design_margin` ≥ 0.3), first-article caliper table
+**D3 Design margin and tolerance source per target** [mech, both]. **RECOMMENDED: walls at the checker's line + 0.3 for a vendor-mapped process (MJF / SLA; `design_margin` ≥ 0.3), first-article caliper table
 replaces the vendor's published tolerance after the first order, INFO until then** — no "PASS by design". A wall at the line read yellow on
 the vendor's map while the API passed (`references/dfm-printed-enclosure.md` §13). *Alt:* + 0.1 — lighter; the vendor map reads yellow near the
 gate. *Alt:* design at the line — the mesh samples 0.01 under and the argument is lost.
