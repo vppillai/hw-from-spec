@@ -49,5 +49,5 @@ owner's "engineering sample, not a rated enclosure" row: {{D-nn}}. **Build orien
 | {{K1s}} | the same knob at 40 mm | yes | false | proves nothing about the full length — recorded for the length rule only |
 | {{K1t}} | the same profile and length in a taller / wider box (bbox hypothesis test, §7.1) | yes | {{true/false}} | margin ∝ max bbox dimension: {{YES/NO}} → `max_bbox_for_rule` |
 
-Rule into the census as a named row: {{RULE}} (e.g. "rim over a lap step ≥ 2.0 OR undercut filled"). Yaml change: `{{KEY}}` on the vendor preset AND the
+Rule into the census as a named row: {{RULE}} (for example "rim over a lap step ≥ 2.0 OR undercut filled"). Yaml change: `{{KEY}}` on the vendor preset AND the
 home preset (own version keys). Re-verification of every body of record by the API after the change: {{PIECE}} `{{MD5_8}}` false, …

@@ -91,7 +91,7 @@ both ways** (rail wedges, 36° rail tips and cove lips flag by their tip band; c
 missed were found independently by a blind review the same day. **R separated from W only once the ray was alive**: with the ray dead, R fired on
 every W region; alive, a scaled-down tray whose rim is itself the thin wall reads W only, the real roots keep W + R. **The one body of record whose
 verdict moved** under the corrected rules was a genuine one-layer (0.2 mm) horizontal skin the dead ray had hidden behind a "wall sliver" — rule Z. **P validated by the engineer**, not the checker (the checker passed 0.003–0.018 mm arm contacts). **V / H not
-decidable** (every V body also failed W; H never fired); **F / S / C / Z / O / B not exercised** by any vendor — their numbers are the published minimums and their positive / negative constructs live in `--selftest` (FDM rows carry `validated_on: []` until a print verdict is recorded). Heat maps per
+decidable** (every V body also failed W; H never fired). **F / S / C / Z / O / B not exercised** by any vendor. Their numbers are the published minimums and their positive / negative constructs live in `--selftest`. FDM rows carry `validated_on: []` until a print verdict is recorded. Heat maps per
 face matched the vendor's pictures: a red inner wall floor-to-ledge from a 0.5 root at its top edge, and the "hairline at the wall foot" was the
 same face at a grazing angle.
 

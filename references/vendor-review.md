@@ -1,6 +1,6 @@
 # vendor-review.md — a fab's engineering mail arrives after the order: map → decide → replace files → re-DFM → replace on the order; PCBA engineer questions and the production-file package (§5–§7)
 
-The order is placed (the owner's click). Hours later the print service / CNC / PCB vendor mails "please confirm the risks" with marked-up
+The order is placed (the owner's click). Hours later the print service / CNC / PCB vendor mails "please confirm the risks" with marked-up <!-- style: ok -->
 pictures and per-line file ids, and an order-page **Replace File** button that exists only after a reply. This is a review round like any
 other — evidence first, findings mapped to design features, decisions logged, changes through the generator — with one extra wall: the order is
 the owner's account. Record template: `templates/VENDOR_REVIEW_RECORD.md` (one file per mail under `60-orders/quotes/<date>/`).
@@ -22,21 +22,21 @@ the owner's account. Record template: `templates/VENDOR_REVIEW_RECORD.md` (one f
 ## 2. The round
 1. **File the evidence.** Save the mail as `.eml` and every linked image (the vendor's marked-up heat maps are `<img>` links to its message-file
    ids, often fetchable without login; the mail itself carries no attachments) under `60-orders/quotes/<date>/`, named by order and line id. A
-   vendor picture may use a piece-local frame (e.g. a lid's Z = body Z − the split plane): write the conversion next to the picture.
+   vendor picture may use a piece-local frame (for example a lid's Z = body Z − the split plane): write the conversion next to the picture.
 2. **Map every flag to a design feature** on the STLs of record (`scripts/thin_wall_check.py --census` per piece, `--pinch` on mark-shaped
    bodies): each red area is either designed geometry listed before ordering (knife edges, slits, legend webs — quote the order sheet line that
    listed it) or a real defect. Write the mapping table into §2 of the record (`templates/VENDOR_REVIEW_RECORD.md`, under `60-orders/quotes/<date>/`); a flag you cannot map is a finding.
 3. **Decide per line** — a CC row with options and a recommendation, OPEN for the owner: accept the risk (bodies whose thin parts are designed),
    fix and replace (a real defect), redesign (rare). The owner's row (D-nn) decides; the reply wording per line goes into the CC row.
 4. **Fix through the yaml + generator** (never the STL): version bump, full generated chain, new census row for the defect class (§3 point
-   contacts), `--check`s green, tag. Compare facet count / volume / area / bbox per piece to know which files actually changed (an STL md5 is
+   contacts), `--check`s green, tag. Compare facet count / volume / area / bbox per piece to know which files changed (an STL md5 is
    not a geometry signature — CGAL export order moves every md5).
 5. **Re-run the vendor's own DFM on the replacements** before uploading them, on the quote page, nothing saved (§4 mechanics): the record says
    "no new flag" or names the new one. List the replacement files with md5s and which order line each replaces (record §4).
 6. **Replace on the order** — owner's word (§1): Replace File per activated line; a line without the button → one chat message asking to
    activate it (the vendor tip: ask Live Chat right away instead of waiting for a mail); upload; screenshot before / each line / after; record
    quantities and prices unchanged. Then the vendor re-reviews; the owner pays.
-7. **Read the follow-up mails right.** An automated "order … audit failed — please replace files" mail (JLC3DP wording, worked example) means
+7. **Read the follow-up mails right.** An automated "order … audit failed — please replace files" mail (JLC3DP wording, worked example) means <!-- style: ok -->
    *Replace File enabled*, not a rejection; the approvals arrive per line minutes after the upload. A status check is read-only: order history + detail + message centre,
    screenshots, a table "pending on our side?" per order, watch items (factory closures) listed, buttons not clicked listed.
 
@@ -47,7 +47,7 @@ any mark-shaped body or pocket: `scripts/thin_wall_check.py --pinch <stl>`, web 
 
 ## 4. Quote-page and order-page mechanics (JLC3DP is the example — verify live, they change)
 - The quote-page DFM procedure (one STL per session, the API response as the verdict, the flag independent of the material on the line, the heat
-  map via `previewUrl`, the legend vs the published minimum vs the owner's bar, the length-dependent metric and the probe method) is
+  map through `previewUrl`, the legend vs the published minimum vs the owner's bar, the length-dependent metric and the probe method) is
   `references/dfm-printed-enclosure.md` §7 / §7.1 with the record template `templates/DFM_ROUND.md` — not repeated here.
 - Quote-page state is not account state: a per-line **Edit** dialog must be *saved* for the material to stick on the quote line (form state, not a
   cart); the risk checkbox stays unticked; "I agree" stays as the site pre-checks it; the tab is closed afterwards.
@@ -59,7 +59,7 @@ any mark-shaped body or pocket: `scripts/thin_wall_check.py --pinch <stl>`, web 
   the colour / special lines one by one); a refusal (a full-colour line below its minimum bounding box) appears only as a notice at Save. The
   moment the owner reports the order id, read the order-detail page and record every line id with its file and md5 — the user-center pages
   may not screenshot through the browser bridge; capture their text instead.
-- **A print-orientation PICTURE goes with every print order**, not a remark ("top face up" drew "please provide the picture to show how to place
+- **A print-orientation PICTURE goes with every print order**, not a remark ("top face up" drew "please provide the picture to show how to place <!-- style: ok -->
   the part for printing" at file review): one tile per line — the body exactly as its uploaded file is framed (print frame: Z = build direction,
   a grey plate at Z 0, a red Z arrow), captioned with the order line id, the file name and how it sits (sole down, skirt down, colour face up),
   all tiles on one sheet. Render the body ALONE (a `colour = all` preview of a shell draws the fitted insert inside it, which the vendor does not
@@ -71,7 +71,7 @@ The assembly fab's engineer mails a numbered question with its own "corrected pa
 fab will place it) and asks for a yes within a day; production waits on the answer. Same boundaries as §1: the reply is the owner's, the agent
 drafts it into the record.
 - **Read the fab's marks on the board's pad-1 positions, never on the CPL rotation.** The snapshot convention (verify on the first picture; it
-  is stable per fab): a red `+` at the anode, a red `−` at the cathode, a red dot at pin 1, a two-letter flag (e.g. `FL`) on a part the engineer
+  is stable per fab): a red `+` at the anode, a red `−` at the cathode, a red dot at pin 1, a two-letter flag (for example `FL`) on a part the engineer
   could not resolve; the bottom view is mirrored in X. For every queried part read pad 1's position, the footprint's pin-1 meaning (cathode on the
   CAD library's SOD / chip-LED footprints, anode on some vendor-library SMA footprints — check the silk bar) and its nets from the board file,
   map the board frame into the snapshot (board-colour bounding box → px/mm; mirror the bottom), and compare crops side by side with the renders
@@ -93,7 +93,7 @@ drafts it into the record.
   shows, asks the fab to **state the cathode position in words**, attaches THEIR picture marked (red = as drawn, green = required), and
   re-asks every confirmation the fab skipped (hole tolerances). Production is released only on a picture or a sentence that shows the change;
   the arrival checklist checks those parts first either way.
-- **Round 3 — the fab answers with pictures, not words.** After "please confirm in words … and send a picture that shows it" the third render
+- **Round 3 — the fab answers with pictures, not words.** After "please confirm in words … and send a picture that shows it" the third render <!-- style: ok -->
   came with the marks moved (and the refdes labels turned back) and still no sentence; three rounds for one rotation is the normal cost. Each
   round: crop the queried parts from every round so far at 4×, side by side with their titles, and read the pad marks against the board file;
   release production on the picture that shows the change. The inline images in a reply thread are often YOUR OWN pictures quoted back —
@@ -102,7 +102,7 @@ drafts it into the record.
 - **Round 4 — the order-history "Confirm Parts Placement" step.** After the mails the fab adds an *Action Required* item on the order with a
   silent timer ("confirm within 2d23h, or your order will be produced directly") — no mail announces it, so check Order History after every
   engineer reply. Its viewer (`/smt/dfm-result?...&confirmFile=1`) shows the engineer-adjusted placement, a designator table with the polarity
-  flag and a DFM column, and the form ("Yes, please proceed" / "No, modification needed" + Submit). The data behind it is the fab's engineering
+  flag and a DFM column, and the form ("Yes, please proceed" / "No, modification needed" + Submit). The data behind it is the fab's engineering <!-- style: ok -->
   file (`downloadHandleWeldFile?fileType=Smt_Hw_Bom_Merge` → `designator_info[].top/bottom[]`, `oc` = your CPL row, `ec` = the engineer's row).
   Do this before any picture: assert `oc` == your CPL and the fab codes == your BOM for every designator, then diff `ec` against `oc` — it names
   every change (worked example: 56 passives turned 180°, package-origin shifts on two connectors and five switches, library-zero 90° deltas on a
@@ -121,7 +121,7 @@ the order remark the quote generated). Approve it the same day; it is the last l
    both / fab-only / yours-only. Connected components of each difference, mapped to the drill table by position, name the cause of every
    square millimetre; a component that maps to no hole and is not a thin edge sliver is a finding.
 2. **Read the compensation from the aperture headers**, not the raster: every fab aperture = yours + one constant (etch compensation for the
-   copper weight; +0.065 mm on 2 oz outer layers in the worked example, i.e. half that per edge). The artwork spacing at your minimum shrinks by
+   copper weight; +0.065 mm on 2 oz outer layers in the worked example, that is, half that per edge). The artwork spacing at your minimum shrinks by
    that constant and etches back; ask the fab to confirm the finished minimum, do not "fix" the files.
 3. **Expected, harmless CAM differences** — list them in the record so the review is a diff against expectations:
    - a uniform ring around every outer feature (compensation);

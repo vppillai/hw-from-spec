@@ -13,7 +13,7 @@ mirror and nothing else is kept beside the current kit. `00-now/WHAT_TO_PRINT.md
 Written by the project's slicer wrapper (`gen/`, it owns the minutes and grams) from a `kit_facts.json` the project's geometry generator writes — **numbers from the
 sidecars, prose from the knobs, nothing typed**. Four blocks, in this order:
 1. **Header**: what every project file embeds (printer, nozzle, layer, material, plate), the one hand step (AMS: *the project defines filaments
-   1 / 2 by ROLE — structure / kinematics / accent / legend — with the colour name read from the yaml; the send dialog maps them to slots* — never "load slot 2"), how to print a subset (delete objects / the `_1x` project), what the
+   1 / 2 by ROLE — structure / kinematics / accent / legend — with the colour name read from the yaml. The send dialog maps them to slots* — never "load slot 2"), how to print a subset (delete objects / the `_1x` project), what the
    `.3mf.json` sidecar is for (`print_time_s`, `filament_g`, `objects`, `stl_md5s`; the rest is the engineer's check data).
 2. **Print order table**: `step | project file (.3mf, in this folder) | objects | time + mass (sliced) | check before the next step`. Coupons →
    board dummy → tray → body → hood (option A plates / option B AMS: *choose ONE*, one line) → legend plate → fixture → caps (bracket → coupon →
@@ -75,7 +75,7 @@ README a repo path is allowed, every other class still fails); the run FAILS on 
   "Coupons are self-documenting"); START_HERE refers to them by that printed text, not by slicer object names.
 - A mark coupon proves GEOMETRY and first-layer behaviour, not the thermal state of a 99-minute print (warp, sag on a long span, colour
   opacity at depth): after the coupon, print **one part** (one cap, one plate) before the multi-object plate; START_HERE says so per step.
-- **Snug-fit features ship as a bracket plate** (`dfm-printed-enclosure.md` §8.5): e.g. crush ribs at 0.20 / 0.25 / 0.30, one object each, NAMED
+- **Snug-fit features ship as a bracket plate** (`dfm-printed-enclosure.md` §8.5): for example crush ribs at 0.20 / 0.25 / 0.30, one object each, NAMED
   by its value in the 3MF (no digit deboss — the object name carries it). **The three variants are copies of the part that CARRIES the knob**
   (three caps with three holes, three sliders with three slots), tried on ONE production-size mating feature — a plate that varies the mating
   feature instead answers only when the production value happens to lie inside the bracket (the worked example's first plate said "none"; a second plate was needed).
