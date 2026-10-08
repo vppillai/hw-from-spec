@@ -40,7 +40,7 @@ cd "$ROOT"
 CAND_PY="${PY:-}"; PY=""; for c in "${PYTHON:-}" "$CAND_PY" "$ROOT/.venv/bin/python" "$HERE/../.venv/bin/python" python3; do
   [[ -n "$c" ]] && "$c" -c 'import yaml' >/dev/null 2>&1 && { PY=$c; break; }
 done
-[[ -n "$PY" ]] || { echo "clone gate: no python with pyyaml found ($PYTHON, $PY, project .venv, skill .venv, python3)"; exit 1; }
+[[ -n "$PY" ]] || { echo "clone gate: no python with pyyaml found (\$PYTHON, \$PY, project .venv, skill .venv, python3)"; exit 1; }
 export PY
 get() { "$PY" "$HERE/project.py" get "$1"; }
 H=$(git rev-parse --short HEAD)
