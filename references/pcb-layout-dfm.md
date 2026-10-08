@@ -179,6 +179,10 @@ Defaults the questionnaire proposes:
   for hairlines only), silk-to-edge against the TRUE outline polygon (notches), glyph stroke ≥ the minimum by a morphological opening, font
   either shipped with the repo or count-aware in CI (a proprietary system font cannot run on the runner). A legibility gate READS the rendered
   PNG. Order number: "specify location" on a silk box or removed **[owner choice]**.
+- **Placed artwork inside the outline** **[convention]**: an unsigned distance-to-outline test lets an off-board point pass; a "free space" test
+  for placed copper or silk art combines point-in-polygon with the distance, and the generator asserts every placed item lies inside the
+  outline by the edge clearance. DRC did not flag copper outside the edge: marks across two tapered corners sat 1.68 mm outside the outline on
+  a shipped board **[K]**. Gate row per layer: the Gerber copper bounding box lies inside the Edge.Cuts bounding box by the edge clearance.
 - **Courtyards and tombstoning** **[fab capability + physics]**: body-to-body spacing per the fab's SMD spacing table (JLC: 0402↔0402 0.18,
   0603↔0603 0.25, chip↔QFN 1.0, QFN↔QFN 1.0, BGA↔BGA 2.0; ≥ 0.30 passives body-to-body in practice, 0.50 where hand rework is expected,
   ≥ 1.5 mm around tall parts); symmetric pads and equal thermal mass on both ends of a chip part (one pad into a pour without relief tombstones
