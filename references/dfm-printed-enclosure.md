@@ -224,8 +224,8 @@ at in `print_targets.<t>.max_bbox_for_rule`; test the hypothesis once with the s
   1. *Localise*: cut the FAILING body of record (the archived md5 file) into capped slabs with `trimesh.intersections.slice_mesh_plane(mesh, n, o,
      cap=True)`. Cut front / middle / rear thirds, then two thirds and the full length. Upload each ALONE and read the API. The slice that first turns
      `true` localises the feature AND shows the length threshold.
-  2. *Isolate*: build plain-profile probes with OpenSCAD. Each is one 2-D `polygon()` of the wall section extruded to **a short length AND to the
-     full part length**. Each probe is a closed box with ≥ gate end walls and no bosses. Use **one knob per probe** (`-D`): as-is, rim flush,
+  2. *Isolate*: build plain-profile probes with OpenSCAD. Each is one 2-D `polygon()` of the wall section extruded to
+     **a short length AND to the full part length**. Each probe is a closed box with ≥ gate end walls and no bosses. Use **one knob per probe** (`-D`): as-is, rim flush,
      wall +, undercut filled. Upload each alone.
   3. *Decide*: the first knob whose FULL-LENGTH probe reads false and whose geometry the mating part tolerates becomes the yaml change. The census
      gets the rule as a named row. The probe folder (`60-orders/quotes/<date>/<round>/probe/` with `.scad`, `.stl`, PNGs and a probe table) is the
