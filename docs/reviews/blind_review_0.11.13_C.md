@@ -1,7 +1,7 @@
 <!-- blind reviewer C: GPT-5.6 Terra (GitHub Copilot CLI); artefact + checklist only; 2026-10-08 -->
 # Blind review C — hw-from-spec 0.11.13 (cold user, both scopes)
 ## Setup (what you ran, where)
-MEASURED: Read only `/private/tmp/claude-502/-Users-vpillai-temp-aec-tester/d3f10fc6-10e5-4769-b4fd-2330e8da1aae/scratchpad/review_0113/skill` (excluding `docs/reviews`); working project is `/private/tmp/claude-502/-Users-vpillai-temp-aec-tester/d3f10fc6-10e5-4769-b4fd-2330e8da1aae/scratchpad/review_0113/work_C`; Python is `/Users/vpillai/temp/hw-from-spec/.venv/bin/python` (3.13.12). No OpenSCAD, slicer, KiCad, internet, or git mutation will be used.
+MEASURED: Read only `<scratch>/skill` (excluding `docs/reviews`); working project is `<scratch>/work_C`; Python is `<live skill>/.venv/bin/python` (3.13.12). No OpenSCAD, slicer, KiCad, internet, or git mutation will be used.
 
 MEASURED: Ran README step-4 copy/scaffold blocks for `both`, `ee`, and `mech`; every `scripts/*.{py,sh} --selftest` from a fresh project and from the skill directory; project smoke; documented evals; default/project/relative-file/marker/report style-lint cases; and negative unapproved-gate/kickoff cases.
 
@@ -15,7 +15,7 @@ MEASURED: Ran README step-4 copy/scaffold blocks for `both`, `ee`, and `mech`; e
 
 ## Checked and correct
 - MEASURED: README's template copy/scaffold block creates the scope folders and files for all three scopes. `ee` keeps G0/G1/G2/board-order/Release; `mech` keeps G0/M1/M2/case-order/Release.
-- MEASURED: All 28 Python and shell script selftests pass from both required locations when shell scripts receive the documented project interpreter (`PYTHON=/Users/vpillai/temp/hw-from-spec/.venv/bin/python`).
+- MEASURED: All 28 Python and shell script selftests pass from both required locations when shell scripts receive the documented project interpreter (`PYTHON=<live skill>/.venv/bin/python`).
 - MEASURED: `vendor/hw-from-spec/smoke/run_smoke.sh` exits 0 from the fresh project and exercises positive and negative gate enforcement.
 - MEASURED: `scripts/gate_check.py G0` exits 1 with an empty owner cell. The template and SKILL clearly assign approval-cell and release-line authorship to the owner.
 - MEASURED: `scripts/style_lint.py` on default skill files exits 0 (46 files). `--project ROOT` flags a prohibited word, `<!-- style: ok -->` suppresses it, a relative argument resolves from cwd, and `--report` exits 0.

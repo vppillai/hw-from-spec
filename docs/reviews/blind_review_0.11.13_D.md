@@ -1,9 +1,9 @@
 <!-- blind reviewer D: GPT-5.4 (GitHub Copilot CLI); artefact + checklist only; 2026-10-08 -->
 # Blind review D — hw-from-spec 0.11.13 (domain expert (PCB and printed-enclosure DFM, process))
 ## Setup (what you ran, where)
-- Initialized report at `/private/tmp/claude-502/-Users-vpillai-temp-aec-tester/d3f10fc6-10e5-4769-b4fd-2330e8da1aae/scratchpad/review_0113/reports/D_gpt-5.4.md`; review scope is `SKILL_DIR=/private/tmp/claude-502/-Users-vpillai-temp-aec-tester/d3f10fc6-10e5-4769-b4fd-2330e8da1aae/scratchpad/review_0113/skill`.
+- Initialized report at `<scratch>/reports/D_gpt-5.4.md`; review scope is `SKILL_DIR=<scratch>/skill`.
 - Read `SKILL.md`, `references/*`, `templates/*`, and the measuring / lint scripts with `view`/`rg`; extracted numeric lines to `WORK_DIR/numeric_extract.tsv`.
-- Ran selftests with `/Users/vpillai/temp/aec-tester/.venv/bin/python` for `heatmap_count.py`, `style_lint.py`, `doc_voice_lint.py`, `stability.py`, `thin_wall_census.py`, `print_dfm.py`, and `thin_wall_check.py`.
+- Ran selftests with `<project>/.venv/bin/python` for `heatmap_count.py`, `style_lint.py`, `doc_voice_lint.py`, `stability.py`, `thin_wall_census.py`, `print_dfm.py`, and `thin_wall_check.py`.
 - Ran two probes in `WORK_DIR`: one against `thin_wall_census.pure_gate()` for acceptance re-match behavior, one against `style_lint.py` for passive / future-tense coverage.
 
 ## Findings
