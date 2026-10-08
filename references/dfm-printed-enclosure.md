@@ -261,27 +261,28 @@ numbers are **[owner bar]** for a 0.4 nozzle at 0.20 mm and live in `print_targe
   Interior support area is stated per body.
 - **Walls ≥ 1.6** (4 perimeters; a two-line 0.85 skirt / rim / tab is a FAIL), ribs ≥ 1.2, voids ≥ 1.0 (a 0.4 nozzle clears a 1.0 slot);
   **minimum feature = 2 × line width** (0.8–0.9 at 0.42 line) **[physics]**.
-- **Elephant foot**: the first 2–3 layers flare 0.1–0.15 mm on a textured plate at 55 °C — a 0.30 lap clearance loses that at the seam;
-  chamfer the bottom edge 0.3–0.5 × 45° on mating skirts or use the slicer's elephant-foot compensation (0.1), recorded on the print sheet.
+- **Elephant foot**: the first 2–3 layers flare 0.1–0.15 mm on a textured plate at 55 °C. A 0.30 lap clearance loses that at the seam.
+  Chamfer the bottom edge 0.3–0.5 × 45° on mating skirts, or use the slicer's elephant-foot compensation (0.1). Record the choice on the print sheet.
 - **Hole shrink**: vertical holes print 0.1–0.3 mm under nominal **[physics]** — compensate in the preset's `fits` block (per-preset, coupon-decided)
-  or ream; state which on the print sheet. **Measured 2026-10-02 (the worked-example desktop printer: 0.4 nozzle, 0.20 mm, PLA, 4 walls — the only recorded verdict so far;
-  holes read ~0.15–0.2 under nominal):** Ø5 round hole +0.3 = free pivot without wobble; D6 (flat 1.0) socket +0.2 = snug light press, +0.3 falls
-  out; a 3 mm plate in a slot: +0.1 snug lap, +0.0 push-fit that stays on when shaken, +0.3 falls off; Ø5 press cap: hole +0.0 goes on by thumb
-  and holds, −0.15 would not go on any peg. So on this printer press fits sit at ZERO nominal clearance and running fits at +0.2…+0.3; another
-  printer / filament re-measures with the coupon, never inherits these.
+  or ream; state which on the print sheet. **Measured 2026-10-02** on the worked-example desktop printer (0.4 nozzle, 0.20 mm, PLA, 4 walls).
+  It is the only recorded verdict so far. Holes read ~0.15–0.2 under nominal. Results: Ø5 round hole +0.3 = free pivot without wobble. D6
+  (flat 1.0) socket +0.2 = snug light press, +0.3 falls out. A 3 mm plate in a slot: +0.1 snug lap, +0.0 push-fit that stays on when shaken,
+  +0.3 falls off. Ø5 press cap: hole +0.0 goes on by thumb and holds, −0.15 would not go on any peg. So on this printer press fits sit at ZERO
+  nominal clearance and running fits at +0.2…+0.3. Another printer / filament re-measures with the coupon, never inherits these.
 - **Seam placement**: the seam is set to the rear / a hidden edge in the slicer project (recorded key), never on a legend face. On a body whose
-  vertical corners are all fillets an `aligned` seam wanders from layer to layer **[K]**; cut a V groove (0.7 mm square section turned 45°, full
-  height) down ONE hidden vertical corner per part — the aligned seam snaps into the groove on every layer and the groove reads as a design
+  vertical corners are all fillets, an `aligned` seam wanders from layer to layer **[K]**. Cut a V groove (0.7 mm square section turned 45°, full
+  height) down ONE hidden vertical corner per part. The aligned seam snaps into the groove on every layer, and the groove reads as a design
   line. Two grooves per part split the choice: one part's seam took one groove, its mate's the other, and the seams did not form one line
   **[K]**. Put each part's groove on the SAME corner of the assembly. Proof from the g-code: `fdm-print-optimisation.md` §3 seam row.
 - **Layer anisotropy**: a tab or boss loaded across layers is 30–50 % weaker; boss walls shear along layers — orient bosses so the load is in-plane
   where possible, and read the FEA with the anisotropy factor.
 - **Legends RAISED**: **cap ≥ 5.1 / stroke ≥ 0.9 / AIR GAP between strokes ≥ 0.9** / height 0.6 on a face-up top (a 0.4-deep, 0.45-wide debossed void at cap 2.2 is illegible on a 0.4
-  nozzle). The earlier rule (cap 4, stroke 1.0, lands 0.45) is withdrawn for raised text: on the worked-example printer (0.4 nozzle / 0.20 / PLA) the printer CLOSED every
-  0.5–0.6 mm air gap between raised 0.6 mm strokes (the counters of E / B / S / 8 at cap 4 bold, 2026-10-02). An air gap is two 0.42 perimeters
+  nozzle). The earlier rule (cap 4, stroke 1.0, lands 0.45) is withdrawn for raised text. On the worked-example printer (0.4 nozzle / 0.20 /
+  PLA), the printer CLOSED every 0.5–0.6 mm air gap between raised 0.6 mm strokes. These were the counters of E / B / S / 8 at cap 4 bold,
+  2026-10-02. An air gap is two 0.42 perimeters
   plus margin = 0.9, the same as a stroke; a Latin capital is three strokes and two gaps, so cap ≥ 5.1 (a closed "4" counter needs cap ≥ 5.6).
-  Font by measurement at the cap: at cap 5.2 / pad 0.08 Avenir Next Demi Bold was the only one of 24 macOS system fonts with every gap ≥ 0.9 AND
-  every stroke ≥ 0.9 inside 5.7 mm of height; DIN Alternate Bold / Helvetica / Arial / Verdana bold fail on gaps. Pad (outline offset) trades
+  Font by measurement at the cap. At cap 5.2 / pad 0.08, Avenir Next Demi Bold was the only one of 24 macOS system fonts with every gap ≥ 0.9 AND
+  every stroke ≥ 0.9 inside 5.7 mm of height. DIN Alternate Bold / Helvetica / Arial / Verdana bold fail on gaps. Pad (outline offset) trades
   stroke for gap one-to-one. Keep it ≤ 0.1 and pick the weight in the font instead. Raised text cannot print face-down. A face-down face gets a flush colour body (§8.1 option b), never a deboss (its recess ceiling is a bridge underside). A fit filter keeps a legend only where it
   fits its land and LISTS what it dropped.
 - **Legend geometry, not font choice, meets the void gate**: every font's crotches (A K N W) and counters (e 4 R) fall below 1.0 at a cap that fits a 10–12 mm band. CLOSE the glyph polygons at the void gate after placement (buffer +g/2 then −g/2, ROUND joins, `quad_segs` 16). A mitre closing leaves spikes at acute corners that the mesh reads as sub-gate voids (0.04–0.3 mm at letter corners **[K]**). A dilate–erode pair with round joins restores convex corners exactly. Gate the inter-letter gap as a row. On a curved band set letters one by one along the band's offset curve anchored by POLAR ANGLE (nearest-point anchoring lands on a lobe when the waist is concave). The census's opposing-face rows honour legend lands like its wall and void rows (`--boxes` → `--box-min`): a raised stroke inside its land is two faces a stroke apart, not a thin wall. Example: a bold sans at cap 7, pad 0.5, spacing 1.6, closing 1.0 — 0 census FAIL.
@@ -302,57 +303,57 @@ numbers are **[owner bar]** for a 0.4 nozzle at 0.20 mm and live in `print_targe
   arm cannot be long enough.
 - **Fan boss count = fan hole count** (consumer 30 mm fans have 4 holes even when one SKU drawing shows 3); any point set drawn in two places is
   passed to the SCAD as ONE vector.
-- Hood ROOF-DOWN with no supports: a roof recess printed roof-down is a ceiling → drop it; **put the roof on the bed by `rotate([180,0,0])`, never
-  `mirror()`** — a mirror flips handedness and every asymmetric mark prints backwards; check the export against the board-frame mesh with a
+- Hood ROOF-DOWN with no supports: a roof recess printed roof-down is a ceiling → drop it. **Put the roof on the bed by `rotate([180,0,0])`, never
+  `mirror()`**. A mirror flips handedness and every asymmetric mark prints backwards. Check the export against the board-frame mesh with a
   proper-vs-improper rigid-match row.
-- **Test coupons BEFORE the part** (15–25 min prints, generated from the SAME yaml numbers and SCAD modules): text strokes × caps in the real font
-  (raised face-up, debossed face-up, debossed face-down), wall thicknesses, mating clearances, **an insert + screw coupon (three bosses: install,
-  torque to failure, record)**; the numbers they decide are a yaml parameter block. Ship the coupons in every kit.
-- **Coupons are self-documenting**: every test coupon and every variant on a bracket plate carries its own
-  identifier and the value it tests ON the part — DEBOSSED text with the number (for example `W1.6 R0.20`, `WALL 1.6`, `CLR 0.30`; raised text only
-  for the colour-path word of a coupon that also tests colour, next bullet), on an ironed top face or a face-up plate, debossed: cap ≥ 4 mm, stroke
-  ≥ 0.45, lands ≥ 0.45 between glyphs; raised: cap ≥ 5.1, stroke ≥ 0.9, AIR GAP ≥ 0.9 (all measured, FAIL-gated; the raised numbers are the
-  2026-10-02 rule above — the coupon of record passes the same bar as the part; each legend BOX carries its own gate — `references/print-dfm.md`,
-  legend boxes — so a debossed label and a raised colour word on one coupon are gated apart),
-  never on a bridge underside or a deep inner wall. A coupon the user has to look up in a README to identify is a coupon that gets mixed up on
+- **Test coupons BEFORE the part** (15–25 min prints, generated from the SAME yaml numbers and SCAD modules). The coupons cover text strokes ×
+  caps in the real font (raised face-up, debossed face-up, debossed face-down), wall thicknesses, mating clearances, and **an insert + screw
+  coupon (three bosses: install, torque to failure, record)**. The numbers they decide are a yaml parameter block. Ship the coupons in every kit.
+- **Coupons are self-documenting**: every test coupon and every variant on a bracket plate carries its own identifier and the value it tests
+  ON the part. Use DEBOSSED text with the number (for example `W1.6 R0.20`, `WALL 1.6`, `CLR 0.30`). Raised text is only for the colour-path
+  word of a coupon that also tests colour (next bullet). Put the text on an ironed top face or a face-up plate. Debossed: cap ≥ 4 mm, stroke
+  ≥ 0.45, lands ≥ 0.45 between glyphs. Raised: cap ≥ 5.1, stroke ≥ 0.9, AIR GAP ≥ 0.9. All are measured and FAIL-gated. The raised numbers are
+  the 2026-10-02 rule above: the coupon of record passes the same bar as the part. Each legend BOX carries its own gate (`references/print-dfm.md`,
+  legend boxes), so a debossed label and a raised colour word on one coupon are gated apart. Never put the text on a bridge underside or a deep
+  inner wall. A coupon the user has to look up in a README to identify is a coupon that gets mixed up on
   the bench; the slicer's object names are gone the moment the part comes off the plate. The marker is generated from the same yaml value it
   tests, so it cannot disagree with the geometry. **A variant too small to carry text is marked by SIZE** (caps at outer Ø 9 / 10 / 11, sliders at
-  ski length 28 / 31 / 34 — they sort on the bench by eye): a 2 mm cap ring has no room for a deboss and the census would fail one.
+  ski length 28 / 31 / 34). They sort on the bench by eye. A 2 mm cap ring has no room for a deboss, and the census would fail one.
 - **Bracket the KNOB, not the mating feature.** A coupon that prints one production hole and three pegs (4.9 / 5.0 / 5.1) only answers when the
-  production hole is inside the bracket; on the worked example's first coupon plate the cap hole (−0.15) and the slider slot (+0.3) were both outside it and the plate
-  could only say "none" — a second plate was needed (2026-10-02). For every fit knob the coupon prints **three variants OF THE PART THAT CARRIES
-  THE KNOB** (three caps with three holes, three sliders with three slots) tried on ONE production-size mating feature; **centre the bracket on
-  zero nominal clearance for press / push fits** while the printer's hole shrink is unknown (here it was ~0.15–0.2; a −0.15 hole became ~0.3 real
-  interference). The winner is written into `fits.*` and the production part follows it.
-- **Coupon labels are ALWAYS debossed — unless the coupon also tests colour (a mark / AMS coupon), and then ONE short raised word in the
-  second colour proves the colour path while the label values stay debossed.** A raised label in a second filament costs the purge, not its
-  own weight: on one coupon plate 0.4 g of letters cost 3.9 g of the second colour and 8 filament changes, where debossed values cost nothing.
+  production hole is inside the bracket. On the worked example's first coupon plate, the cap hole (−0.15) and the slider slot (+0.3) were both
+  outside it. The plate could only say "none", and a second plate was needed (2026-10-02). For every fit knob the coupon prints **three variants
+  OF THE PART THAT CARRIES THE KNOB** (three caps with three holes, three sliders with three slots). They are tried on ONE production-size mating
+  feature. **Centre the bracket on zero nominal clearance for press / push fits** while the printer's hole shrink is unknown. Here it was
+  ~0.15–0.2, and a −0.15 hole became ~0.3 real interference. The winner is written into `fits.*` and the production part follows it.
+- **Coupon labels are ALWAYS debossed — unless the coupon also tests colour (a mark / AMS coupon). Then ONE short raised word in the
+  second colour proves the colour path while the label values stay debossed**. A raised label in a second filament costs the purge, not its
+  own weight. On one coupon plate 0.4 g of letters cost 3.9 g of the second colour and 8 filament changes, where debossed values cost nothing.
   The one colour-path word is 3 changes and ~1 g; the kit text says which plate carries it (owner rule, 2026-10-01).
 - **Nothing that moves may sweep a raised feature.** A crank arm set on the face that carried the raised legends scraped the letters and
-  jammed on the first print; every render had shown it clear because the gap to the FLAT face was fine. Raised text, bosses and lugs are
+  jammed on the first print. Every render had shown it clear because the gap to the FLAT face was fine. Raised text, bosses and lugs are
   bodies in the clearance check like any other: sweep every moving part against them (`case-pipeline.md` §Interference), and put legends on a
   face nothing crosses. On a display mechanism the operating side is the side AWAY from the viewing window: a hand turning a crank in front
   of the window hides what the window is for — 2026-10-01.
 - **Board dummy, never the raw CAD mesh** (sheet metal, 0402s, 0.1 mm pins are unprintable): slab + holes + solid envelopes + fins at printable
-  thickness, in the board frame, bbox stated against the mesh of record. **Two versions, both kept**: the two-piece glue version (a scribed locator
-  ring 0.6 × 0.2 OUTSIDE the tall part's footprint locates it without a pocket — a compensating plinth lifts an overhang off the bed = a
-  floating-region warning) AND the **one-piece version**: cage / sink fused to the slab at FINAL dimensions; a nose that overhangs the board edge
-  stands on a **break-away shim** (worked example: a 1.2 mm block on the bed, inset 0.5 from the nose sides, 0.6 clear of the board edge, joined
-  through 8 posts 1.2 × 1.2 across a 0.4 mm two-layer perforation gap; the shim snaps off in one piece). **Say in the README that the shim looks
+  thickness, in the board frame, bbox stated against the mesh of record. **Two versions, both kept**. The first is the two-piece glue version. A
+  scribed locator ring 0.6 × 0.2 OUTSIDE the tall part's footprint locates it without a pocket. A compensating plinth lifts an overhang off the
+  bed = a floating-region warning. The second is the **one-piece version**: cage / sink fused to the slab at FINAL dimensions. A nose that
+  overhangs the board edge stands on a **break-away shim**. Worked example: a 1.2 mm block on the bed, inset 0.5 from the nose sides, 0.6 clear of
+  the board edge. It is joined through 8 posts 1.2 × 1.2 across a 0.4 mm two-layer perforation gap. The shim snaps off in one piece. **Say in the README that the shim looks
   like a "PCB lip" and comes off.** Verify one-piece vs two-piece by **section symmetric difference = 0 mm²** at several Z and both bboxes against
   the envelope of record. Model compressible envelopes (EMI springs) at the compressed width or the dummy jams the bezel.
-- **Slicer projects with every setting embedded** (Bambu Studio 02.08 specifics, labelled): flatten the system presets (`inherits` chains), give
-  the project preset ITS OWN NAME and list the differing keys in `different_settings_to_system` (a project naming a system preset with that list
-  empty is reconciled back to system values when the GUI opens it — supports OFF → "floating regions"). A project built from stock presets
+- **Slicer projects with every setting embedded** (Bambu Studio 02.08 specifics, labelled). Flatten the system presets (`inherits` chains). Give
+  the project preset ITS OWN NAME, and list the differing keys in `different_settings_to_system`. A project naming a system preset with that list
+  empty is reconciled back to system values when the GUI opens it: supports OFF → "floating regions". A project built from stock presets
   starts with that list EMPTY: add every override key to it, or the GUI shows the system value. Open with File → Open Project, never
   Import. Slice every object ALONE headless; **a floating-region warning is a build FAIL**. Auto-orient every non-text piece and bake the rotation
   into the STL. One material knob (PLA / PETG) read by the 3MF builder, the print sheets and every README, with the material caveat printed
   (§1.3). **A generator that refuses to overwrite its artefact on a failed run leaves the OLD 3MF on disk while the sidecar describes the new
-  one** — the analysis must read the file it names (md5 in the sidecar checked before any forensics).
+  one**. The analysis must read the file it names: check the md5 in the sidecar before any forensics.
 - Hand over ONE kit folder: case pieces + coupons + BOTH board dummies (each with its 3MF) + every project file + READMEs **+ a generated
-  `START_HERE.md`** (print order with the project-file names, assembly sequence, numeric report-back with a recipient) and the **kit text gate**
-  over every emitted text — `references/print-kit.md`; a moved folder keeps a `README_MOVED.md` pointer; a stale kit folder is named for deletion
-  in the record.
+  `START_HERE.md`** (print order with the project-file names, assembly sequence, numeric report-back with a recipient). The handover includes
+  the **kit text gate** over every emitted text (`references/print-kit.md`). A moved folder keeps a `README_MOVED.md` pointer. A stale kit folder
+  is named for deletion in the record.
 
 ### 8.1 Brand marks / logos on FDM parts — an OWNER choice at kickoff (questionnaire C9)
 The finish of a mark is decided by WHICH FACE carries it and HOW that face is built, not by the slicer profile. Two options are first-class
