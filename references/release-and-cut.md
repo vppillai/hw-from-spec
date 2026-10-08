@@ -92,8 +92,10 @@ orderable state and does not substitute for the owner's gate cells.
 - After the order the vendor's engineering review may arrive: `references/vendor-review.md` (agents never pay / agree / cart; Replace File only on
   the owner's word); the case bump it may force costs ≈ 45 min of machine time (`references/case-pipeline.md`).
 
-## 8. Illustrated assembly guide (`scripts/assembly_guide.py`)
-Beside the text SOP, a picture per step: authored SHORT yaml (parts / tools / check / camera per step, fixed pages before and after), generated
+## 8. Illustrated assembly and use guide (`scripts/assembly_guide.py`)
+Beside the text SOP, a picture per step, rendered from the exported meshes of record. Pages, in order: the parts, magnet installation with
+polarity (`print-kit.md` §2), loading, closing orientation with the keying feature marked, taking a part out, care. The PDF ships in the release
+folder beside the drawing (§12); the kit's START_HERE points to it. Inputs: authored SHORT yaml (parts / tools / check / camera per step, fixed pages before and after), generated
 step text (the case generator's `### Step N - title (T s)` + paragraph → the first two sentences), one clean render per page from the geometry of
 record (marketing look: clean scheme, the ordered colours, legends readable → cameras on the side the legend is laid out for), keyed on
 (geometry md5 of the one scad file named — flatten includes or accept that included files do not move the key, defs, camera, size) so a text edit renders nothing and a case bump re-renders every page (≈ 1 min). Numbers stay in the SOP /
@@ -128,3 +130,35 @@ regenerate, commit.
 decision that made the change, where the evidence lives, Status OPEN (owner) → APPROVED <date> → FOLDED <rev> when the next SPEC revision's change
 log cites it; a rejected row is struck through with the reason. It records changes already decided (rule 2); it changes nothing. Readers: the
 blind-review verifier (a deviation already here is ALREADY DECIDED), the arrival checklist §E (OPEN rows with their trigger), the next spec author.
+
+## 12. The release folder: copies, named by use, written by the cut
+- `70-release/<rev>/` (one subfolder per product in both scope: `board/`, `case/`) holds only copies of build outputs. Nothing in it is
+  hand-edited. The cut generator (§7) writes every file and the folder's `README.md`.
+- The README is the manifest a person reads (MANIFEST.json stays the machine copy): the build date and `git describe`, the design values read
+  from the parameter block, each check that passed with its count, the MD5 and size of every file, the print or order procedure as numbered steps.
+- Name each subfolder by what a person does with it, never by file type: `<slicer>-projects/multi-colour/`, `<slicer>-projects/single-colour/`,
+  `stl-for-other-slicers/`. A `meshes/` folder beside the slicer projects was not understood by the owner **[K]**.
+- File names state the filament role: `<part>_body_filament1_<colour>.stl`, `<part>_inlay_filament2_<colour>.stl`, `<part>_single_colour.stl`.
+- Every multi-material part also ships as a single-colour variant (the colour body merged into the host), so a printer without a multi-material
+  unit has a file. Test prints (coupons, dummies) ship as single-colour projects in the same folder.
+- A slicer project written by the slicer CLI embeds timestamps and UUIDs, so its MD5 moves on every run without a design change **[V]**. The
+  manifest records the MD5 of the committed copy; the mesh checks prove the geometry identity, never the project hash.
+
+## 13. The order record, beside the manufactured files
+`60-orders/ORDER_<rev>.md` records the order so that a reorder needs no memory; the product's release-folder README links it. It carries:
+- every vendor option as set on the order page, read from the page: layers, quantity, thickness, colour, silkscreen, finish, copper weight, via
+  covering, order-number removal, tolerance, electrical test, serial number;
+- the price at order, the cart line name, the uploaded file name and its MD5;
+- reproduction as numbered steps from the release asset: download, compare the MD5, upload, set each option;
+- the known deviations of the delivered batch, added at arrival (§10).
+Prove that the release asset equals the uploaded file: download the asset, compare the MD5s, write both in the record. An options table in a
+README alone did not answer the owner's "are the settings backed up" after the order **[K]**.
+
+## 14. Clean tree, rebuild from empty, the tag-gated CI compare
+- After a build that is not a release, restore each committed file of record the build rewrote (`git checkout -- <file>`). `git status --short`
+  is then empty and `git describe` carries no `-dirty`; the drawing title block and the manifest print it (`case-pipeline.md` §Drawings).
+- A file of record changes only in the commit that changes the record (for a generated board file: the release commit).
+- Before a release: delete every `build/` folder, regenerate everything from empty, run the gates, then read `git ls-files` and
+  `git status --short --ignored` for strays.
+- CI compares a rebuild with the release archive only on the release tag: the step runs when `git describe --tags --exact-match` equals the
+  VERSION in the order record. Main moves after the order without a red build.

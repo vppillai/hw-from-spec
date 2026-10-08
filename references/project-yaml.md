@@ -192,9 +192,10 @@ gates:
                  RELEASE_NOTES)   collateral/<rev>/   marketing/<rev>/
 80-reviews/      <round>/ — one folder per review round (the merged file at its root), REVIEW_HANDOFF, REORG_* inventories
 90-log/          DECISIONS  STATUS (append log)  GATES  BLOCKERS  KNOWN_ISSUES  TRACEABILITY  LEARNINGS_LOG  ENV — the records the generators read and write
-gen/  scripts/  tools/  lib/  Makefile  CLAUDE.md        the machinery
+assets/          shared inputs (concept image, logo, font outlines); its README names the product that uses each file
+gen/  scripts/  tools/  lib/  Makefile  CLAUDE.md        the machinery; gen/ and tools/ split per product (gen/board/, gen/case/)
 ```
-Four rules make the tree the navigation, so no README is needed to use it:
+Seven rules make the tree the navigation; the first four name it, the last three keep it usable from any folder:
 - **Names are nouns a technician knows.** No hash and no date names a folder at the top of a tree; a revision is `rev0`, a kit is its print target;
   the hash lives inside (`board_id.txt`, `RENDERS.md`, `MANIFEST`). Two exceptions, both inside their folder, never at the top: `40-case/dfm_validation/`
   keeps the labelled STLs under their hashes (the vendor verdicts are keyed on them) and `60-orders/quotes/<date>/` keeps the fab's evidence under the
@@ -203,6 +204,17 @@ Four rules make the tree the navigation, so no README is needed to use it:
 - **Records sit next to what they describe.** A part's census and DFM verdict are in `checks/` beside its STL, never in a parallel tree.
 - **Order follows the life of the project.** The numbers fix the reading order in every project; a scope that lacks a stage has no folder at that
   number (ee: no `40-case/`, `50-kits/`; mech: no `30-board/`).
+- **One home per product, set on day 1.** A product's sources, generators, build script, checks and README sit in its own folders
+  (`20-design/` yaml, `gen/<product>/`, `30-board/` or `40-case/`). Never one `tools/` folder that mixes products. Never a generated CAD file or a
+  build script at the repository root. Shared inputs sit in `assets/`.
+- **Build output is ignored and deletable.** Every build writes under its product's `build/` (`40-case/<set>/build/`, or one `build/<product>/`
+  root that mirrors the sources); `.gitignore` covers it. Each check keeps its scratch under `build/…/_check/`. Deleting every `build/` and
+  regenerating from empty gives the same tracked tree, and `git ls-files` then lists no stray (`release-and-cut.md` §14).
+- **A README in every folder.** Each `README.md` answers "what is this folder and how do I use it" without the top README: a table of the files
+  or subfolders with their purpose, the prerequisites, the commands, the outputs, each procedure as numbered steps, the design switches as a
+  table. The top README is a map (folder | what it holds | link), a quick start and one status line; details live in the folder READMEs.
+  Voice: second person, present tense, sentence-case headings, task-oriented, UI labels in bold, code in code font; short sentences, one
+  instruction per sentence, one meaning per word; no word that does no work. The kit text gate (`print-kit.md` §3) reads every README; repo paths are allowed there.
 Every path is a `paths:` key (`scripts/project.py` DEFAULTS; the commented block in `templates/project.yaml` lists them) and the templates folder
 mirrors the tree (`templates/90-log/DECISIONS.md` is copied to `90-log/DECISIONS.md`). Every path SKILL.md / the references / the templates spell
 is this layout. Changing it later is a decision row + a `reorg:` block + `scripts/reorg_paths.py` (release-and-cut §9, the `reorg:` section above)
