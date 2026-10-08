@@ -1,6 +1,6 @@
 # CHANGELOG — hw-from-spec
 
-## Current state (0.11.7) — read this instead of replaying the entries below
+## Current state (0.11.8) — read this instead of replaying the entries below
 
 - **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
   twelve batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
@@ -36,6 +36,16 @@
 - **Generic by rule**: the skill names no project, part, board, order, account or person — `scripts/generic_lint.py` reads the whole repo
   (CHANGELOG and docs included; history keeps its measured numbers), a fenced worked example keeps numbers and kinds but never a name, and the
   repo carries no project retro (a retro report is folded, then deleted).
+
+## 0.11.8 — 2026-10-08 — Regenerating after an order, and the stock the fab consumed
+
+Source: the same assembled order, once its engineer rows went into the rotation table: the export pack, the panel cross-check, the package
+check and the one-tree-per-board rule had to agree again, while a live stock refresh showed the connector the fab had consumed.
+
+### Added
+- `references/pitfalls.md`: [process/post-order-regeneration] (export + next dated package, the ordered tree to git history, a
+  `--allow-stock-shortfall` build with a NOT ORDERABLE banner when live stock refuses), [sourcing/consumed-stock] (refresh stock right after
+  every order).
 
 ## 0.11.7 — 2026-10-08 — The fab's placement-confirm step, and the rotation table that grows from the fab's own rows
 
