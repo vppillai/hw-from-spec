@@ -14,7 +14,7 @@ model family (or the in-session fallback, said so in the merge), one verifier wi
 `80-reviews/<round>_merged.md`. Every gate below needs one.
 
 **The manufacturability bar** (owner decision {{D-BAR}} from the kickoff questionnaire; default = zero / zero / no waivers), enforced by scripts:
-board — CAD DRC 0 errors / 0 unconnected / **0 warnings**, fab DFM mirror **0 open at either of the fab's grades** (e.g. Danger / Warning) unless a dated `dfm_accepted` entry with {{ee,both}}
+board — CAD DRC 0 errors / 0 unconnected / **0 warnings**, fab DFM mirror **0 open at either of the fab's grades** (for example Danger / Warning) unless a dated `dfm_accepted` entry with {{ee,both}}
 reason and vendor evidence names the refdes; ERC `scripts/erc_gate.py` green. {{ee,both}}
 printed enclosure — census **0 unaccepted FAIL** per body per preset, `print_dfm.py` PASS on every body, zero slicer warnings, vendor checker {{mech,both}}
 **no flag by API read**, no yellow / red on the heat map; CNC — vendor DFM clean. {{mech,both}}

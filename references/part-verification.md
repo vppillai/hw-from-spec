@@ -32,7 +32,7 @@ Record every endpoint that answered in `90-log/ENV.md`; a fab that changes its A
 ## Gates that catch the usual mistakes
 - **value ↔ MPN ↔ code**: the BOM groups by fab code; a value edited on the symbol does not change the ordered part. Decode the MPN (chip codes) and refuse a group with > 1 value or a Value ≠ decoded MPN.
 - **symbol MPN ↔ live MPN**: the fetched record's MPN must equal the symbol field.
-- **stock gate run-relative**: `min = ceil(qty_per_board × boards × 1.2)` for EVERY code; below it the package says "PCBA-complete: no — <code> stock N < min" under a STOCK SHORT banner. Owner-preferred absolute floors (e.g. ≥ 5000 for jellybeans) on top.
+- **stock gate run-relative**: `min = ceil(qty_per_board × boards × 1.2)` for EVERY code; below it the package says "PCBA-complete: no — <code> stock N < min" under a STOCK SHORT banner. Owner-preferred absolute floors (for example ≥ 5000 for jellybeans) on top.
 - **DNP**: DNP parts excluded from BOM and CPL, marked on the symbol and the footprint; DNP does not imply exclude-from-BOM in the schematic tool — set both attributes explicitly.
 - **BOM ⊂ CPL** (fiducials, owner-supplied parts are CPL-only), every CPL row inside the outline, drill via count = board vias.
 - **CPL rotation**: offsets per footprint family from two independent rotation databases; only agreeing rows are `review: false`; a `+90` for 1×N headers is confirmed only by the fab's 3-D preview. The REVIEW worklist follows the rule (unverified offset), not the side.
@@ -40,13 +40,13 @@ Record every endpoint that answered in `90-log/ENV.md`; a fab that changes its A
 
 ## Datasheets (rule 3)
 Every VERIFY item in the findings is closed by reading the primary datasheet, page/section cited in `10-spec/datasheet_notes/<part>.md`, before the
-part is drawn. If the vendor site blocks the fetch: `90-log/BLOCKERS.md` row (what was tried, result, workaround — e.g. an older revision read via
+part is drawn. If the vendor site blocks the fetch: `90-log/BLOCKERS.md` row (what was tried, result, workaround — for example an older revision read through
 an archive with the deltas marked unknown). Vendor library footprint vs vendor drawing: the drawing governs; the vendor STEP is the only source
 for heights. Values read from curves are marked "not in datasheet text" with the reader named.
 
 ## Bought hardware (feet, screws, inserts, labels) — where a live read is possible
 Rule 1 applies to every purchased item, not only fab codes — and for hardware the usual pages are closed to an agent: **McMaster-Carr answers every
-product URL with a login wall for automated / new sessions** (HTTP 200 JS shell; rendered "To continue browsing, please log in"), **Digi-Key sits behind
+product URL with a login wall for automated / new sessions** (HTTP 200 JS shell; rendered "To continue browsing, please log in"), **Digi-Key sits behind <!-- style: ok -->
 Cloudflare, Mouser / Newark / Farnell / RS / Keystone / Essentra return 403**. What does read: the **manufacturer's own product pages in a real browser**
 (3M Bumpon pages rendered), the **manufacturer's PDF TDS by curl** (dimension tables, tolerances — ±0.5 mm on moulded shapes), and **small plain-HTML
 dealers** (price, stock). So: verify on the manufacturer's site + TDS → [V]; a price or number seen only in a search snippet → [K]; a login-walled

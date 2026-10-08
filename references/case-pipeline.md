@@ -35,7 +35,7 @@ recorded md5 in `checks/`). Everything under the set is generated; `ASSEMBLY.md`
 (`<!-- gen:BEGIN name -->…<!-- gen:END -->`) so prose survives regeneration.
 
 ## Board mesh of record (both) / fit input of record (mech)
-- **mech scope**: there is no CAD project to export from. The fit input is the imported board STEP (converted to a mesh once, e.g. `trimesh`
+- **mech scope**: there is no CAD project to export from. The fit input is the imported board STEP (converted to a mesh once, for example `trimesh`
   / FreeCAD, canonical STL) or the owner's envelope (a box + hole pattern drawn from the dimensions); its sidecar `paths.mesh_provenance` is
   `{source, source_md5, tag: V|K}` — [V] when measured or from the vendor drawing, [K] when owner-stated; a [K] input is a KNOWN_ISSUES §2 item
   until a first article measures it. The `30-board/layout/` folder level in the paths below is absent in mech (`40-case/<preset>/`).
@@ -60,15 +60,15 @@ recorded md5 in `checks/`). Everything under the set is generated; `ASSEMBLY.md`
   re-exporting (CGAL STLs are not byte-stable).
 - FDM (owner's printer, target `home_fdm`): printer-first rules as FAIL rows, numbers from `project.yaml print_targets.home_fdm` (worked example,
   0.4 nozzle / 0.20 mm / PLA-PETG: walls ≥ 1.6 = 4 perimeters — a two-line 0.85 skirt failed as a product), every external face on the bed /
-  vertical / clean top, legends RAISED cap ≥ 5.1 / stroke ≥ 0.9 / air gaps ≥ 0.9 / 0.6 on a face-up top (the gap metric is an opening of the complement), screws or magnets over slit tabs, coupons and a board dummy before
+  vertical / clean top, legends RAISED cap ≥ 5.1 / stroke ≥ 0.9 / air gaps ≥ 0.9 / 0.6 on a face-up top. The gap metric is an opening of the complement. Screws or magnets over slit tabs, coupons and a board dummy before
   the part, slicer projects with embedded presets (`references/dfm-printed-enclosure.md` §8). Colour on TOP faces in ONE Z band per part (a coloured vertical
   flank costs a filament swap per layer); filament slots keyed by ROLE (structure / kinematics / accent / legend) with the colour name + hex as
   values, so a palette change is a yaml-only edit (`dfm-printed-enclosure.md` §8.3).
-- Print service (MJF / SLA, target e.g. `vendor_mjf`): every wall AND every void ≥ the checker's grey line (`print_targets.<t>.wall_gate` /
+- Print service (MJF / SLA, target for example `vendor_mjf`): every wall AND every void ≥ the checker's grey line (`print_targets.<t>.wall_gate` /
   `void_gate`; JLC3DP 2026-09-28: 1.2 — design at + `design_margin` under a no-yellow bar), no free-standing wedge (tangent fillets into walls are
   fine), engraved text only with stroke ≥ the void gate, snap features only with the slit ≥ the void gate and an engineered arm, closed rims;
   **nothing "stays thinner" — a listed-below-minimum row is a waiver, and the waived lip cracked on all five parts**
-  (`references/dfm-printed-enclosure.md` §1–§4; inserts / magnets §1.1; SLA §11; CNC `references/cnc-enclosure.md`). Part min size per process; two-tone via an **inlay plate** (a mark-shaped pocket is its own key when
+  (`references/dfm-printed-enclosure.md` §1–§4; inserts / magnets §1.1; SLA §11; CNC `references/cnc-enclosure.md`). Part min size per process; two-tone through an **inlay plate** (a mark-shaped pocket is its own key when
   the mark is chiral) or a **badge** (metal plate in a pocket, UV-print or laser artwork as DXF + B-rep STEP); text on a label carrier.
 - Two versions from one yaml (vendor + home): variant-only lines behind hook tokens that expand to the original text for the other presets, own version
   key per preset, byte identity of the vendor SCAD proven against HEAD before committing (`references/dfm-printed-enclosure.md` §9).
@@ -93,7 +93,7 @@ recorded md5 in `checks/`). Everything under the set is generated; `ASSEMBLY.md`
 - A traced outline of touching shapes (potrace) is ONE path pinched to 0.003–0.03 mm at every contact; extruded, the body is lobes held by
   hairlines (the fab's review: "B 0.01"), and a ridge / distance-transform "thinnest arm" census cannot see it. Test the SECTION polygon:
   `scripts/thin_wall_check.py --pinch <stl>` = non-adjacent boundary vertices closer than ~0.05 mm with > 5 % of the perimeter between them.
-- Fix in the generator: a web disc (≥ the process minimum, e.g. 1.4 mm for 0.8 mm resin) at each contact, INTERSECTED with the outline's
+- Fix in the generator: a web disc (≥ the process minimum, for example 1.4 mm for 0.8 mm resin) at each contact, INTERSECTED with the outline's
   closing (`offset(r = +R) offset(r = -R)`, R ≈ 3 × web) so each web is a concave fill — a bare disc bulges into the silhouette (a 0.4 mm nub on
   a 3 mm arm). The pocket and every deboss that uses the outline follow; artwork that stays 2-D (UV print, laser) keeps the pure outline.
 - Two census rows: the neck through each contact after the webs (`--web D --clip R`; ≥ the minimum) AND `connected components = 1` per body —

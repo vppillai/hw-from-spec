@@ -21,7 +21,7 @@ Agent: {{AGENT}}; owner delegation quoted verbatim in §4/§5; nothing here was 
 Reply template (the owner sends it; `references/dfm-printed-enclosure.md` §10): **Facts** — order {{ORDER_ID}}, line {{LINE_ID}}, file
 `{{FILE}}` md5 `{{MD5}}`. **What we measured** — {{NUMBERS}} on the received part / the ordered STL (photos `{{PNG}}`). **What we changed** — new file
 `{{FILE_vX}}` md5 `{{MD5_NEW}}`, {{WHAT_MOVED}}. **What we ask** — ship as is / reprint at our cost / reprint at your cost (dimension outside your
-published tolerance {{TOL}}) / credit. **What we do not accept** — {{E.G. a part not matching the file}}. Vendor-fault decision table: §10 step 3.
+published tolerance {{TOL}}) / credit. **What we do not accept** — {{E.G. a part not matching the file}}. Vendor-fault decision table: §10 step 3. <!-- style: ok -->
 
 ## 4. Replacement files (generated chain, version {{CASE_VERSION}}, tag {{TAG}})
 | Order line | Replace with | md5 | What changed (facets / volume / bbox vs the uploaded file) | Vendor DFM re-check (quote page, nothing saved) |
@@ -36,10 +36,10 @@ Not replaced: {{LINES_UNCHANGED}} (geometry identical: facets / volume / area eq
 | {{HH:MM}} | Chat: "{{EXACT_MESSAGE}}" | — | reply: "{{VENDOR_REPLY}}" |
 
 **Explicitly NOT touched:** payment / checkout / cart; any terms, risk or "I agree" box; quantities, materials, colours, finishes, remarks,
-address, shipping; Cancel; the other lines ({{LIST}}); other orders; account settings. Observed side effects not clicked: {{E.G. shipping display recomputed}}.
+address, shipping; Cancel; the other lines ({{LIST}}); other orders; account settings. Observed side effects not clicked: {{E.G. shipping display recomputed}}. <!-- style: ok -->
 
 ## 6. Follow-up (read-only status checks, one line per check)
-- {{DATE TIME}}: order history / detail / message centre read; the vendor's "please replace files" mail = the replace action activated, not a
+- {{DATE TIME}}: order history / detail / message centre read; the vendor's "please replace files" mail = the replace action activated, not a <!-- style: ok -->
   rejection; lines approved {{TIMES}}; pending on our side: {{NOTHING / ITEM}}; owner next: {{PAY / NOTHING}}; watch: {{FACTORY CLOSURES}}.
 
 ## 7. PCBA only — engineer questions and the production-file package (`references/vendor-review.md` §5–§6)

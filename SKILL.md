@@ -1,6 +1,6 @@
 ---
 name: hw-from-spec
-version: 0.11.11
+version: 0.11.12
 description: Run a hardware project (a PCB, a printed or CNC enclosure, or both — scope chosen at kickoff; contract fab such as JLCPCB) from a written specification to a production cut with an owner-gated, generated-only, blind-reviewed workflow — a kickoff questionnaire that asks every owner decision up front with recommended answers, a zero-warning manufacturability bar, and a retro that folds each project's learnings back into the skill. Use this whenever someone starts a board or enclosure project from a spec, asks to set up gates, a decision log, generators, part verification, a fab DFM mirror, a case pipeline, FEA, blind reviews, a release report or a production cut for one, or resumes such a project, or wants the skill improved from a finished project — even if they only say "new KiCad board", "order this at JLC", "review the layout", "cut the release" or "what did we learn".
 ---
 
@@ -59,7 +59,7 @@ reference when you reach that step, not before. Nothing here is specific to one 
    first (`$PY scripts/project.py slots` names them; an unfilled `project.yaml` is not valid YAML and every reader says so) → `$PY scripts/known_issues.py`
    → `$PY scripts/traceability.py` (**exit 1 = a decision row without a traceability entry or a FAILED check; every D-/CC- row — the kickoff rows
    included — needs an entry in `20-design/traceability.yaml`, add it and rerun**) → `$PY scripts/release_report.py` (DRAFT, record MISSING — correct
-   before G1 / M1) → `$PY scripts/now_pages.py` (the five answers of `00-now/`; `--check` is in the day-1 gate list) → commit → `scripts/adopt_gates.sh` (day-1 list + clone gate) green → `$PY scripts/project.py kickoff --check` green (every answered kickoff row landed in project.yaml with a real D row) → fill the
+   before G1 / M1) → `$PY scripts/now_pages.py` (the five answers of `00-now/`; `--check` is in the day-1 gate list) → commit → `scripts/adopt_gates.sh` (day-1 list + clone gate) green → `$PY scripts/project.py kickoff --check` green. That check passes when every answered kickoff row has landed in project.yaml with a real D row. Then fill the
    CC-001 evidence cell and the first STATUS paragraph → commit. Only now read the spec; fill 10-spec/SPEC.md / VERIFY / traceability; `scripts/project.py
    slots` reads 0 before the G0 ask (§1.1 says what happens at G0).
 7. **CI (optional, when the repo has a remote)**: `templates/ci/` holds pr-check / nightly / release workflows with `{{PROJECT_*}}` placeholders;
@@ -74,6 +74,8 @@ reference when you reach that step, not before. Nothing here is specific to one 
    does all of it in ONE pass: one project spent six restructuring passes, one per owner question ("why is the release folder not structured",
    "the files are not identifiable", "there is still a top-level tools folder", "is the version we sent a release asset", "are the order
    settings backed up", "a README in every folder").
+9. **Write to the standard** (`references/writing-style.md`): every README, record, kit text, vendor reply and chat report follows the Google
+   developer style, ASD-STE100 sentences and Zinsser's four principles; `scripts/style_lint.py --project <root>` is in the day-1 gate list.
 
 ### 0.1 The kickoff questionnaire — every owner decision up front, with a recommended answer (`references/kickoff-questionnaire.md`)
 
@@ -142,7 +144,7 @@ The release cut = reports RELEASED, collateral, tag; the production cut = docume
 1. Prerequisites first: the row's prerequisite cell in `90-log/GATES.md` is satisfied and provable (merged review report committed, the scope's
    checker outputs — ERC / DRC files [ee, both], census JSON + `DFM_ROUND.md` [mech, both] —, `scripts/adopt_gates.sh` green at HEAD, KNOWN_ISSUES §2 lists only items the owner has seen). If one is missing, say so and stop.
 2. Write the STATUS pause-point paragraph: what was reviewed (commit, SPEC rev / board md5-8), the merged report path, the OPEN rows the owner
-   must decide, and the exact ask: *"Please write the Gn / Mn cell in 90-log/GATES.md: `<your name>, <date>, <SPEC rev | schematic commit | board md5-8 | case version + record md5-8>`"*.
+   must decide, and the exact ask: *"Write the Gn / Mn cell in 90-log/GATES.md: `<your name>, <date>, <SPEC rev | schematic commit | board md5-8 | case version + record md5-8>`"*.
 3. Ask in one message with that sentence; do not start the next phase's CAD while waiting (other work — docs, tests, tooling — may continue).
 4. A valid cell is owner text in the approval column of that row; `_not yet approved_` is empty. **Agents never write approval cells or the
    release line**, not even when told "go ahead" in chat: quote the chat instruction verbatim with date/time under the table, note "cell pending"
@@ -283,7 +285,7 @@ agent proposals: CC rows OPEN), the VERIFY list is closed or BLOCKED (§4), then
 ## 6. Layout phase and the adopt rule [ee, both] (G1→G2: `references/pcb-layout-dfm.md`; G0→G1: `references/schematic-phase.md`)
 
 The layout chain (placement CSV → router session → post-pass → silk → export → `80-reviews/G2/` pack), the PCB build rules tagged checker / fab
-capability / physics / owner choice (stack-up, impedance, copper minimums vs the fab table, via-in-pad, thermal reliefs, mask / paste / stencil,
+capability / physics / owner choice (stack-up, impedance, copper minimums vs the fab table, via-in-pad, thermal reliefs, mask / paste / stencil, <!-- style: ok -->
 part-size policy, two-sided assembly, rotation / CPL, fiducials / test points, silk, courtyards, creepage, panel) and the DRC census live in
 `references/pcb-layout-dfm.md`. A routed board is adopted only when, on the committed tree: CAD DRC 0 errors / 0 unconnected / **0 warnings
 unless a dated waiver row** / schematic parity 0 with the net classes enforced (prove it with a canary rule — a deliberately violated generated
@@ -426,10 +428,10 @@ folder `70-release/<rev>/records/`** (the cut yaml's `records_dir`; RELEASE_NOTE
   the replacements before uploading, then Replace File / chat **only on the owner's explicit word** — agents never pay, agree, cart or change a line.
   [ee, both] A PCBA fab's **engineer questions** (polarity, placement, "okay to proceed?") are answered on the board's pad-1 positions, never on
   the CPL rotation, class by class, with a body-on-their-snapshot picture for any custom-footprint connector; its **production-file package** is
-  diffed per layer against the upload the day it arrives (compensation, drill oversizes, inner pad removal, mask relief, via plugging = expected;
+  diffed per layer against the upload the day it arrives (compensation, drill oversizes, inner pad removal, mask relief, via plugging = expected; <!-- style: ok -->
   anything else = finding) and approved with at most two confirmations (`references/vendor-review.md` §5–§6). **Both are pre-answered upfront**:
   `ASSEMBLY_NOTES` in the package (a cut deliverable, `references/fab-dfm.md` §9), a fab's-eye silk pass at G2 (a G2 prerequisite), the fab-side hole sizes and
-  via treatment in the order remark, arrival-checklist §A rows A-0 / A-5 (`references/vendor-review.md` §7). The fab's second round ("we
+  via treatment in the order remark, arrival-checklist §A rows A-0 / A-5 (`references/vendor-review.md` §7). The fab's second round ("we <!-- style: ok -->
   updated the DFM") is pixel-diffed against the first before any answer; an ambiguous picture gets a request to state the change, never a release.
   The order-history "Confirm Parts Placement" step (silent timer) is read from the fab's engineering file (`ec` vs `oc` per designator) and a
   hole-calibrated pad-1 overlay before the owner submits; its deltas go into the rotation table with a selftest (`references/vendor-review.md`
@@ -495,6 +497,8 @@ gate ask was pending, check the cell; if the owner answered in chat only, §1.1 
 
 Append every non-obvious learning to `90-log/LEARNINGS_LOG.md` as `- YYYY-MM-DD [domain] learning — evidence`; one DECISIONS row for the task;
 one dated STATUS paragraph; run the `--check` chain; `git status --short <paths>` after every explicit-path commit of a generated set.
+Run `scripts/style_lint.py --project <root>` over the texts you wrote (`references/writing-style.md`: Google developer style, ASD-STE100
+sentences, Zinsser's four principles). Fix every hit. The same rules shape your chat report.
 Then the retro (§13) folds the learnings back into this skill at the next production cut.
 
 ## 13. Retro — the skill improves with each project (owner: "self improving, gets better with each new project we successfully build")
@@ -541,6 +545,7 @@ row. The classifier is a keyword matcher: the report is the input to the change;
 | bring-up tool, criteria, codes | `references/software-track.md` |
 | reports, collateral, tag, cut yaml, one-round chain, assembly guide, re-layout | `references/release-and-cut.md` |
 | repository conventions: one folder per product, `assets/`, a README in every folder, build output ignored, release folder by use, order record, clean tree | §0 step 8, `references/project-yaml.md` §Layout, `references/release-and-cut.md` §12–§14 |
+| writing: sentences, voice, words, where the rules apply, how to fix a lint hit | `references/writing-style.md`, `scripts/style_lint.py` |
 | the fab's review mail after the order, Replace File boundaries, quote-page DFM mechanics | `references/vendor-review.md` |
 | orchestration, git, reviews, read-only checkers, memory / pause points, the resource budget (job pool, measure-audit-change, caching + engine policy, serialized record round, preview vs render, inline vs agent) | `references/agent-ops.md`, `scripts/jobs.sh`, `templates/ci/Makefile` |
 | every recorded pitfall, one line each | `references/pitfalls.md` |

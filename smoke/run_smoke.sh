@@ -118,6 +118,7 @@ for s in "$SKILL"/scripts/*.py "$SKILL"/scripts/*.sh; do
 done
 say "0c the skill reads as the current, generic procedure: no changelog voice, no version numbers in prose, no project names / parts / ids / dimensions outside the fenced worked examples"
 "$PY" "$SKILL/scripts/doc_voice_lint.py" --selftest >/dev/null && "$PY" "$SKILL/scripts/doc_voice_lint.py" || { echo "FAIL: doc_voice_lint hits (the skill narrates its history inside a rule)"; exit 1; }
+"$PY" "$SKILL/scripts/style_lint.py" --selftest >/dev/null && "$PY" "$SKILL/scripts/style_lint.py" || { echo "FAIL: style_lint hits (references/writing-style.md: clutter words or a sentence over the cap)"; exit 1; }
 "$PY" "$SKILL/scripts/generic_lint.py" --selftest >/dev/null && "$PY" "$SKILL/scripts/generic_lint.py" || { echo "FAIL: generic_lint hits (the skill names the project it was learned on)"; exit 1; }
 say "0d print DFM: the loop is in SKILL.md as commands, the table and verdict record ship as templates, the tool and the SCAD lint selftest, eval 14's pair flags / passes through the CLI"
 PD="$SKILL/references/print-dfm.md"; test -f "$PD" || { echo "FAIL: references/print-dfm.md missing"; exit 1; }

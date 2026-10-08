@@ -1,6 +1,6 @@
 # CHANGELOG — hw-from-spec
 
-## Current state (0.11.11) — read this instead of replaying the entries below
+## Current state (0.11.12) — read this instead of replaying the entries below
 
 - **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
   twelve batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
@@ -40,6 +40,23 @@
 - **Generic by rule**: the skill names no project, part, board, order, account or person — `scripts/generic_lint.py` reads the whole repo
   (CHANGELOG and docs included; history keeps its measured numbers), a fenced worked example keeps numbers and kinds but never a name, and the
   repo carries no project retro (a retro report is folded, then deleted).
+
+## 0.11.12 — 2026-10-08 — The writing standard: Google developer style, ASD-STE100 sentences, Zinsser's four principles
+
+Source: the owner's rule for the skill and for everything the skill produces: "Follow the Google Developer Documentation Style Guide. Use
+ASD-STE100 derived precision rules. Apply Zinsser's four principles: clarity, simplicity, brevity, and humanity."
+
+### Added
+- `references/writing-style.md`: the three sources as checkable rules (sentences, voice and person, clarity / simplicity / brevity / humanity,
+  where the rules apply, how to fix a hit).
+- `scripts/style_lint.py`: fails on clutter words and Latin abbreviations and on a sentence over 40 words (the target is 20 for an instruction,
+  25 for a description; the cap tightens); `--report` prints per-file counts; `--project ROOT` lints a project's READMEs, records, orders,
+  release texts and kit texts; `<!-- style: ok -->` marks a quoted line. The smoke runs it on the skill.
+- `SKILL.md` §0 step 9 and §12, `references/agent-ops.md` §6, `templates/CLAUDE.md` rule 12: the standard applies to the skill's output.
+
+### Changed
+- The skill's own text rewritten to the rules where the lint tripped: every sentence over 40 words split, every clutter word and Latin
+  abbreviation gone, in `SKILL.md`, the references and the templates (facts, numbers, paths and tags unchanged).
 
 ## 0.11.11 — 2026-10-08 — The assembly guide as a document: vector pages, line drawings, recesses, section insets, numbers from the parameters
 
