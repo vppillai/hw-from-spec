@@ -6,23 +6,28 @@ The chain itself is `references/case-pipeline.md`; the post-order review round i
 `scripts/thin_wall_census.py`; the records are `templates/CENSUS_GATE_ROWS.md` (check-table rows) and `templates/DFM_ROUND.md` (one file per
 quote-page session under `60-orders/quotes/<date>/`). SLA is §11, CNC is `references/cnc-enclosure.md`.
 
-**Every number here carries a tag** — the same four as `references/pcb-layout-dfm.md`: **[checker]** = what the vendor's thin-wall map colours
-(the worked example: JLC3DP, on ~150 mm parts); **[vendor sheet: URL, date]** = a published capability or tolerance; **[physics]** = the material;
-**[owner bar]** = the bar the owner set (no yellow on the map, closed rims); **[convention]** = what the scripts rely on. **No number lives in a
-script**: every gate value is read from `project.yaml print_targets.<target>` (`references/project-yaml.md`), and the numbers quoted below are one
-measured project's targets, labelled.
+**Every number here carries a tag**, the same four as `references/pcb-layout-dfm.md`:
+- **[checker]** = what the vendor's thin-wall map colours (the worked example: JLC3DP, on ~150 mm parts).
+- **[vendor sheet: URL, date]** = a published capability or tolerance.
+- **[physics]** = the material.
+- **[owner bar]** = the bar the owner set (no yellow on the map, closed rims).
+- **[convention]** = what the scripts rely on.
+
+**No number lives in a script**: every gate value is read from `project.yaml print_targets.<target>` (`references/project-yaml.md`), and the
+numbers quoted below are one measured project's targets, labelled.
 
 ## 0. The acceptance bar (an owner decision at kickoff; written into the decision row before the first census)
-**0 FAIL / 0 WARN in every check table and in the census of every body · zero slicer warnings · no vendor flag (API read) · no yellow, no red on
-the vendor's heat map · every face rendered and looked at · no waivers.** A WARN is not a verdict: a row either has a threshold (then it is PASS
-or FAIL on a MEASURED value) or it has none (then it is **INFO**, in its own table, no verdict, **with the reason it has no threshold**). "0 FAIL,
+**0 FAIL / 0 WARN in every check table and in the census of every body · zero slicer warnings · no vendor flag (API read). No yellow, no red on
+the vendor's heat map · every face rendered and looked at · no waivers**. A WARN is not a verdict. A row either has a threshold, and then it is
+PASS or FAIL on a MEASURED value. Or it has none, and then it is **INFO**, in its own table, no verdict, **with the reason it has no threshold**. "0 FAIL,
 81 WARN" told the owner nothing and hid the row that cracked the part; the same data as PASS / FAIL + INFO exposed a second defect nobody had
 seen (a dummy 0.4 mm low). The only exception path is the machine-readable `accepted` list (§2) — dated, with the vendor's written evidence.
 
 ## 1. MJF rules (worked example: JLC3DP PA12-HP; checker grey line 1.2 mm)
-- **Three numbers, three sources — never confuse them**: the vendor's **published printable minimum** (JLC review mail: "nylon ≥ 1.0";
-  Shapeways / Sculpteo / HP direct list 0.6–1.0 for PA12) **[vendor sheet]**; the **checker's yellow line** (JLC3DP heat map: grey ≥ 1.2, yellow
-  0.5–1.2, red < 0.5) **[checker]**; and the **owner's bar** (no yellow → design at `wall_gate + design_margin`; `design_margin` ≥ 0.3 — a wall AT the gate read yellow on the vendor's map while the API passed, §13) **[owner bar]**.
+- **Three numbers, three sources — never confuse them**. The first is the vendor's **published printable minimum** (JLC review mail: "nylon ≥ 1.0";
+  Shapeways / Sculpteo / HP direct list 0.6–1.0 for PA12) **[vendor sheet]**. The second is the **checker's yellow line** (JLC3DP heat map: grey
+  ≥ 1.2, yellow 0.5–1.2, red < 0.5) **[checker]**. The third is the **owner's bar** **[owner bar]**: no yellow → design at
+  `wall_gate + design_margin`, with `design_margin` ≥ 0.3. A wall AT the gate read yellow on the vendor's map while the API passed (§13).
   A team at another vendor or without the no-yellow bar designs to a different number; the mechanism (design above the line the checker
   flags, by a margin the sampling and the process spread need) is what generalises. A 1.2 nominal samples 1.19 on the mesh; the 0.3 margin
   costs little on a 2 mm shell.
@@ -33,40 +38,41 @@ seen (a dummy 0.4 mm low). The only exception path is the machine-readable `acce
 - **Engraved text is ALLOWED on MJF** (standard practice: stroke ~0.8–1.0, depth ~0.5 per vendor guides **[vendor sheet]**) **when the stroke ≥
   `void_gate`** — at 1.2 that means cap height ≥ ~6 mm. Under a no-yellow bar with cap 4 (a 0.82 stroke) it does not fit → widen the text, or a
   label carrier (UV-printed plate in a rebate, adhesive label), or raised text on a separate plate. Do not delete legibility the space allows.
-- **No FREE-STANDING wedge** **[checker]**: the map colours RED a thin edge with no wall behind it — 36° rail tips and lips (yellow / red full
-  length), an interior roof cove unioned without tangency (a knife-edge sliver), the 0.01 mm overshoot slab. It leaves GREY a chamfer or 45° ramp
+- **No FREE-STANDING wedge** **[checker]**. The map colours RED a thin edge with no wall behind it. Examples: 36° rail tips and lips (yellow / red
+  full length), an interior roof cove unioned without tangency (a knife-edge sliver), the 0.01 mm overshoot slab. It leaves GREY a chamfer or 45° ramp
   cut INTO a ≥ `wall_gate` wall. **Tangent fillets cut into ≥ gate walls are fine and recommended at stress risers** (they lower the ~1.2× slit-
   root concentration the FEA reference reports) **[physics]**; what went red was a non-tangent cove body and a fillet's exposed thin edge. So:
   chamfers and tangent fillets into walls yes; added free edges, rails, lips, knife edges no — round the tip, give it a ≥ gate flat land, or
   remove the feature.
 - **Snap fits, living hinges, compliant detents: PA12 CAN do them** **[physics]** (E ≈ 1.7 GPa, elongation at break 15–25 %; HP's MJF design
-  guide shows both). What killed them on one vendor-MJF enclosure was (a) the ≥ `void_gate` slit a no-yellow bar demands at JLC3DP, which rarely fits
-  the space budget, and (b) a rigid bump with no arm length (F ∝ t³ — a stiff bump blocks, in PA12 as in PETG). Allowed when the slit ≥ the void
+  guide shows both). Two things killed them on one vendor-MJF enclosure. (a) The ≥ `void_gate` slit a no-yellow bar demands at JLC3DP rarely
+  fits the space budget. (b) A rigid bump had no arm length (F ∝ t³). A stiff bump blocks, in PA12 as in PETG. Allowed when the slit ≥ the void
   gate and the arm is engineered (length, root fillet, FEA); otherwise screws into inserts or magnets (§1.1). On PLA / FDM: screws.
-- **A long thin skin is a wall, never a "feature"** **[owner bar + physics]**: a sub-minimum skin well over 100 mm long **cracked on every part**
-  of one geometry (from the free ends inward; likely causes cooling / depowdering stress on the wedge it carried — not fractographed, see §10).
+- **A long thin skin is a wall, never a "feature"** **[owner bar + physics]**. A sub-minimum skin well over 100 mm long **cracked on every part**
+  of one geometry, from the free ends inward. Likely causes: cooling / depowdering stress on the wedge it carried. The crack was not
+  fractographed (see §10).
   Design consequence: anything spanning > 10 mm is judged at the wall minimum; a knife edge under 10 mm span is a feature — and under the
   no-yellow bar even that gets a flat land.
-- **The vendor's metric is length-dependent** (§7.1) **[checker]**: a rim over a skirt-lap step passed at a third of the part's length and failed at
-  full length with every census clean — calibrate any long-wall profile with full-length probes, never a coupon.
+- **The vendor's metric is length-dependent** (§7.1) **[checker]**. A rim over a skirt-lap step passed at a third of the part's length. It failed
+  at full length with every census clean. Calibrate any long-wall profile with full-length probes, never a coupon.
 - **A feature that cannot be vendor-clean inside its space budget goes; it is not thinned.** A stepped dovetail with 1.2 flats on lip AND tongue
-  needs 2.4 mm of depth; the groove had 2.15 → rail off, screws, plain edges (a wider part with an ENCLOSED pocket rail is the owner's option).
+  needs 2.4 mm of depth. The groove had 2.15 → rail off, screws, plain edges. A wider part with an ENCLOSED pocket rail is the owner's option.
   Thickening one wall moves its neighbours (skirt 1.2 → 1.3 pushed the snap-tab force over its class; fixing that broke the catch minimum):
   **every wall change reruns the whole table, never one row.**
-- **Two owner rules can collide inside one feature** (a legend-plate lip needed inset ≥ 0.6 against a top fillet, its web beside a dish needed
-  inset ≤ 0.45 to stay a "wall"): the way out is honest classification — a plate is a plate, its webs are ribs at the rib gate — never a thinner
-  wall under a friendlier name.
+- **Two owner rules can collide inside one feature**. In one case, a legend-plate lip needed inset ≥ 0.6 against a top fillet. Its web beside a
+  dish needed inset ≤ 0.45 to stay a "wall". The way out is honest classification, never a thinner wall under a friendlier name. A plate is a
+  plate, and its webs are ribs at the rib gate.
 - **Rule drift check.** When the print rule changes (FDM two lines 0.85 → MJF 1.2), re-derive EVERY yaml value set against the superseded rule; a yaml
   comment `>= 0.8` beside a 0.9 wall is the tell.
 - **Overshoots become slabs.** A `+ 0.01` extrude against coplanar-face artefacts is a 0.01 mm slab in the mesh = a RED line on the map. Trim
   the union at the design face (intersection); never exempt "coplanar seam slabs" in a check.
 - **Dimensional tolerance is the vendor's, not ±0.1** **[vendor sheet]**: MJF PA12 is typically ±0.3 mm or ±0.3 % (HP: ±0.2 mm below
   100 mm, worse above — cite the vendor's sheet with URL + date in `print_targets.<t>.tolerance_source`). A 1.3 wall can print 1.0–1.1. "A 1.2
-  nominal prints 1.1 … 1.3" is an **assumption until the first-article caliper table exists** (§10 step 1); the measured spread of every gated wall
-  and bore on the received parts feeds `print_targets.<t>.tolerance` and the design margin — until then the margin row is INFO, not PASS.
-- **Build orientation and anisotropy** **[vendor sheet + physics]**: MJF Z-direction strength is ~10–20 % below XY (HP data — check the
-  vendor's sheet), FDM 30–50 % across layers; ask the vendor for the build orientation / position when the part matters (a cantilever, a boss under
-  screw preload) and record it in `DFM_ROUND.md`. Draft angles: **n/a for MJF / SLA / FDM**; required if the design is ever moulded — say so in the
+  nominal prints 1.1 … 1.3" is an **assumption until the first-article caliper table exists** (§10 step 1). The measured spread of every gated
+  wall and bore on the received parts feeds `print_targets.<t>.tolerance` and the design margin. Until then the margin row is INFO, not PASS.
+- **Build orientation and anisotropy** **[vendor sheet + physics]**. MJF Z-direction strength is ~10–20 % below XY (HP data — check the
+  vendor's sheet). For FDM the figure is 30–50 % across layers. Ask the vendor for the build orientation / position when the part matters (a
+  cantilever, a boss under screw preload). Record it in `DFM_ROUND.md`. Draft angles: **n/a for MJF / SLA / FDM**; required if the design is ever moulded — say so in the
   brief so a reader does not think it was forgotten.
 
 ### 1.1 Retention hardware: inserts, screws, magnets — per material
@@ -79,18 +85,19 @@ seen (a dummy 0.4 mm low). The only exception path is the machine-readable `acce
 
 Retention is a kickoff question (`references/kickoff-questionnaire.md`): screws + inserts (recommended for a part that is opened for service),
 magnets (tool-free, for a hood the technician lifts daily), none (friction lap only — a fit mock-up). Whatever is chosen, **the retention feature
-must exist in the exported mesh of the version ordered** — a blind review found a "retained" hood whose STLs carried no bosses (the check rows had
-read the yaml, not the mesh — every retention row measures the MESH).
+must exist in the exported mesh of the version ordered**. A blind review found a "retained" hood whose STLs carried no bosses. The check rows had
+read the yaml, not the mesh. Every retention row measures the MESH.
 
 ### 1.2 Post-processing effects **[vendor sheet + physics]**
-Dyeing adds no dimension; **bead-blast / vapour smoothing removes 0.05–0.15 mm per surface and rounds edges** — a `wall_gate + 0.1` wall and a
-1.0 legend stroke lose that; SLA post-cure warps thin flat plates; FDM sanding / ironing of a top face flattens raised legends. Rule: **every
+Dyeing adds no dimension. **Bead-blast / vapour smoothing removes 0.05–0.15 mm per surface and rounds edges**. A `wall_gate + 0.1` wall and a
+1.0 legend stroke lose that. SLA post-cure warps thin flat plates. FDM sanding / ironing of a top face flattens raised legends. Rule: **every
 post-process is named on the order sheet and on the print target (`print_targets.<t>.post_process`) and is subtracted in the census margin.**
 
 ### 1.3 Material rating and thermal **[vendor sheet + owner bar]**
-An enclosure holding a powered board: state per target on the order sheet **UL 94 rating and HDT at 0.45 MPa** (the `hdt_c` key; PA12 MJF: typically HB, HDT ~175 °C **[K]**, Tg ~50 °C **[physics]**;
-PLA: unrated, softens ~55–60 °C; PETG ~75–80 °C; resins per the TDS), keep vents away from the hot zone, and record the owner's acceptance
-**"engineering sample, not a rated enclosure"** as a decision row (the questionnaire asks it). A hood over a hot module in PLA is a fit mock-up.
+An enclosure holding a powered board: state per target on the order sheet **UL 94 rating and HDT at 0.45 MPa** (the `hdt_c` key). PA12 MJF:
+typically HB, HDT ~175 °C **[K]**, Tg ~50 °C **[physics]**. PLA: unrated, softens ~55–60 °C. PETG: ~75–80 °C. Resins: per the TDS. Keep vents
+away from the hot zone. Record the owner's acceptance **"engineering sample, not a rated enclosure"** as a decision row (the questionnaire asks
+it). A hood over a hot module in PLA is a fit mock-up.
 
 ### 1.4 Tolerance stack **[convention]**
 The interference check proves 0 mm³ overlap on NOMINAL meshes. Add a **worst-case clearance row per mating pair**: nominal clearance −
@@ -100,8 +107,9 @@ base block: FDM holes shrink ~0.1–0.3, MJF ±0.3, SLA ~0.1 — the coupon deci
 
 ### 1.5 One-sided parts on BOTH sides of a symmetric assembly — a parts-list decision, before the first plate **[convention]**
 A symmetric assembly built from identical parts places a part on its other side by turning it over (a proper rotation). That works only while
-the part has no ONE-SIDED feature: integral pegs or bosses on one face, a slot that opens one way, a flat or working face that must point at a
-mate, an outline that is not symmetric about the turn-over axis and must face a fixed direction. Turned over, such a part points its feature
+the part has no ONE-SIDED feature. A one-sided feature is any of these: integral pegs or bosses on one face, a slot that opens one way, a flat
+or working face that must point at a mate. An outline that is not symmetric about the turn-over axis and must face a fixed direction is one too.
+Turned over, such a part points its feature
 inward where the other side needs it outward; drawn with the feature outward on both sides, the model is a MIRROR (det −1, `case-pipeline.md`
 §Assembly model) and no process can make it. The parts list settles it, one row per part type with a one-sided feature, before the first plate:
 
