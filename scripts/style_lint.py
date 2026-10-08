@@ -101,7 +101,16 @@ def selftest():
     assert any("README.md:3" in m and "45 words" in m for m in msgs), msgs                  # long sentence
     assert not any("references/a.md" in m for m in msgs) and len(hits) == 2, msgs
     st = {s[0]: s for s in stats}; assert st["references/a.md"][1] == 3 and st["README.md"][3] == 1, stats
-    print("selftest OK (clutter words, the PCB noun via exempt, style: ok marker, fences / tables / front matter skipped, sentence cap, per-file stats)")
+    cwd = os.getcwd(); os.chdir(d)
+    try:
+        import io, contextlib
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            rc = main(["README.md"])                                                        # a relative file argument resolves against the working directory, not the skill
+        assert rc == 1 and "README.md:3" in buf.getvalue() and "MISSING" not in buf.getvalue(), buf.getvalue()
+    finally:
+        os.chdir(cwd)
+    print("selftest OK (clutter words, the PCB noun via exempt, style: ok marker, fences / tables / front matter skipped, sentence cap, per-file stats, relative file args)")
     return 0
 
 
@@ -113,8 +122,8 @@ def main(argv):
     if a.selftest:
         return selftest()
     base = a.project or a.skill
-    files = [os.path.join(base, f) if not os.path.isabs(f) else f for f in a.files] or (project_files(a.project) if a.project else default_files(a.skill))
-    hits, stats = lint(files, base, a.max_words)
+    files = [os.path.abspath(f) for f in a.files] or (project_files(a.project) if a.project else default_files(a.skill))
+    hits, stats = lint(files, base if not a.files else os.getcwd(), a.max_words)
     if a.report:
         print("file | sentences | >25 | >cap | avg words | passive | will | em-dashes")
         for s in sorted(stats, key=lambda s: -s[2]):

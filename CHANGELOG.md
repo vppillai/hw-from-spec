@@ -1,6 +1,6 @@
 # CHANGELOG — hw-from-spec
 
-## Current state (0.11.12) — read this instead of replaying the entries below
+## Current state (0.11.13) — read this instead of replaying the entries below
 
 - **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
   twelve batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
@@ -40,6 +40,15 @@
 - **Generic by rule**: the skill names no project, part, board, order, account or person — `scripts/generic_lint.py` reads the whole repo
   (CHANGELOG and docs included; history keeps its measured numbers), a fenced worked example keeps numbers and kinds but never a name, and the
   repo carries no project retro (a retro report is folded, then deleted).
+
+## 0.11.13 — 2026-10-08 — style_lint: a file argument resolves against the working directory
+
+Source: CLAUDE.md rule 12 of one project tells the agent to run `scripts/style_lint.py <files>` from the project. A relative path was joined
+to the skill directory and reported MISSING.
+
+### Fixed
+- `scripts/style_lint.py`: a file argument is resolved with `os.path.abspath`, so `style_lint.py docs/x.md` lints the file under the current
+  directory. Hits are reported relative to the working directory. The selftest covers it.
 
 ## 0.11.12 — 2026-10-08 — The writing standard: Google developer style, ASD-STE100 sentences, Zinsser's four principles
 
