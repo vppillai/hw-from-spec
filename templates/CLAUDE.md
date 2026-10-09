@@ -43,6 +43,9 @@ written specification, for fabrication and assembly at {{FAB}}. Humans review at
 10. **Say what you don't know.** If a datasheet, drawing or page cannot be fetched, mark the item BLOCKED in `90-log/BLOCKERS.md` and continue elsewhere.
 11. **Capture learnings.** Before your final commit, append every non-obvious learning as a dated, domain-tagged line to `90-log/LEARNINGS_LOG.md`.
 12. **Write to the standard.** Every README, record, kit text, vendor reply and chat report follows the skill's `references/writing-style.md`: Google developer style, ASD-STE100 sentences (one instruction per sentence, at most 20 words), Zinsser's clarity, simplicity, brevity and humanity. `scripts/style_lint.py --project .` checks the written files before a gate.
+13. **Commit under your own identity.** An agent commits as itself: `git -c user.name='<agent>' -c user.email=<agent>@localhost commit …`.
+   The owner's commits keep the owner's identity. `scripts/gate_check.py --release` checks the git author of the release line.
+   That check holds only while this rule holds.
 
 ## Environment (verify on first run, record in 90-log/ENV.md)
 - CAD CLI: `{{CAD_CLI_PATH}}`; CAD Python: `{{CAD_PYTHON_PATH}}`; project venv `.venv` (Python ≥ 3.11) with {{VENV_PACKAGES}}. {{ee,both}}
