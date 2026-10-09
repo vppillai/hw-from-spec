@@ -1,6 +1,6 @@
 # CHANGELOG — hw-from-spec
 
-## Current state (0.11.14) — read this instead of replaying the entries below
+## Current state (0.11.15) — read this instead of replaying the entries below
 
 - **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
   twelve batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
@@ -13,11 +13,11 @@
   the PCBA fab after the order (engineer questions answered on pad-1 positions, the production-file package diffed per layer) and its upfront
   half (`ASSEMBLY_NOTES` in the package, the fab's-eye silk pass, hole sizes in the order remark, arrival rows A-0 / A-5), the fab's second
   round pixel-diffed before an answer, colour / cosmetic inserts (the whole face, host frame + lip + sill, the edge budget, fused STL for DFM
-  and colour 3MF for the order) and the at-the-gate map rule (`design_margin` ≥ 0.3; the six-view read of §7 step 4 counted by `heatmap_count`).
+  and colour 3MF for the order) and the at-the-gate map rule (`design_margin` ≥ 0.3, a census FAIL row under the design line; the six-view read of §7 step 4 counted by `heatmap_count`, gated by `vendor_gate`).
 - **Scripts** (`project.yaml`-driven, every one with `--selftest`, exit 0 / 1 / 2): `project.py` (reader, scaffold, slots, kickoff --check,
   gates-required, record, env), `known_issues`, `traceability`, `release_report`, `collect_renders`, `assembly_guide`, `reorg_paths`, `dfm_check`,
   `erc_gate`, `gate_check`, `handoff_header`, `thin_wall_census` (`wall_gate` on the mesh; legend boxes with a Z band; accepted clusters re-matched by class and bbox), `print_dfm` (printability-floor gate + `--validate`),
-  `thin_wall_check` (quick look + pinch), `heatmap_count` (yellow / red of a vendor map capture, stdlib), `stability` (CoG vs support hull at the worst pose; `improper_placements` = the det +1 row), `scad_lint`, `step2stl`, `arrival_checklist`, `skill_retro` (+ `--apply`), `jobs.sh` (the heavy-job
+  `thin_wall_check` (quick look + pinch), `heatmap_count` (yellow / red of a vendor map capture, stdlib), `vendor_gate` (the API flag + six 0 / 0 captures per STL of record), `stability` (CoG vs support hull at the worst pose; `improper_placements` = the det +1 row), `scad_lint`, `step2stl`, `arrival_checklist`, `skill_retro` (+ `--apply`), `jobs.sh` (the heavy-job
   pool), `adopt_gates.sh`, `clone_gate.sh`, `doc_voice_lint`, `generic_lint`. Mesh stack: `numpy trimesh scipy shapely rtree networkx
   mapbox-earcut embreex` (the Embree ray engine keeps a census in seconds under 1 GB).
 - **Layout** (`references/project-yaml.md` §Layout): ten numbered folders in the order of the project's life — `00-now` (five generated answer
@@ -40,6 +40,32 @@
 - **Generic by rule**: the skill names no project, part, board, order, account or person — `scripts/generic_lint.py` reads the whole repo
   (CHANGELOG and docs included; history keeps its measured numbers), a fenced worked example keeps numbers and kinds but never a name, and the
   repo carries no project retro (a retro report is folded, then deleted).
+
+## 0.11.15 — 2026-10-09 — The owner's eight decisions from the 0.11.13 review
+
+Source: the owner decided the eight OWNER rows of `docs/reviews/blind_review_0.11.13_verified.md` on 2026-10-09 (A-9, A-11, B-1, B-7, B-13,
+B-23, B-24, B-30). Each row now says DECIDED with the chosen option.
+
+### Added
+- Agents commit under their own identity: `git -c user.name='<agent>' -c user.email=<agent>@localhost commit …`. The owner's commits keep the
+  owner's identity. `scripts/gate_check.py --release` holds only while this rule holds (`templates/CLAUDE.md` rule 13, SKILL §1, agent-ops §2) (A-11).
+- A delegation line `> delegated: <owner words, date>` under the gate table. `scripts/project.py gates-required` fails when an artefact exists and
+  its preceding gate cell is empty, unless that line exists (`templates/90-log/GATES.md`, SKILL §1) (A-9).
+- A census FAIL row for nominal walls under `wall_gate + design_margin − 0.05`: a wall drawn at the line FAILs before the vendor upload
+  (`scripts/thin_wall_census.py`, `templates/CENSUS_GATE_ROWS.md`, SKILL §8, dfm-printed-enclosure §2) (B-1).
+- `scripts/vendor_gate.py`: every STL of record needs its `<md5>_analyze.json` with the flag false and six captures at 0 / 0. It runs in the
+  day-1 gate list before the case order (SKILL §1.2, the GATES Case order row) (B-24).
+- One per-preset `fits.ef` knob (elephant-foot compensation, default 0.15) in `templates/project.yaml`. The clearance row and the slicer yaml read
+  it; dfm-printed-enclosure and fdm-print-optimisation name the knob instead of a literal (B-30).
+
+### Changed
+- In-box (legend box) clusters gate on the 10th percentile of their samples, not the median, because the thin fifth is what the vendor colours
+  (`scripts/thin_wall_census.py`, dfm-printed-enclosure, print-dfm) (B-7).
+- The rule "top shell ≥ recess depth + 1.0" holds. Its worked example is now `top_shell_layers 8` = 1.6 under a 0.6 recess (B-13).
+- One glyph-gap rule: fill the gaps in the polygon at the printer's MEASURED closing width + 0.1, and at least `gate + 0.05` on the mesh. The
+  former 0.7 (a 0.45 gate) and 0.95 (a 0.9 gate) are instances of the rule (dfm-printed-enclosure, pitfalls, `templates/project.yaml`) (B-23).
+- The 0.11.14 text "no script reads `design_margin`" and "no skill script reads the vendor API flag or the heat map" no longer holds; SKILL and
+  dfm-printed-enclosure §2 now name the census row and `vendor_gate.py`.
 
 ## 0.11.14 — 2026-10-08 — Double-blind review of 0.11.13 applied: measuring scripts, gates, one design margin, the sentence lint that counts sentences
 
