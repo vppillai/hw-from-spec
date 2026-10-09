@@ -2,9 +2,9 @@
 """scripts/thin_wall_census.py — the thin-wall census that gates a printed body (references/dfm-printed-enclosure.md §2; rows: templates/CENSUS_GATE_ROWS.md).
 
   scripts/thin_wall_census.py PIECE.stl --target NAME [--project project.yaml] [--json OUT.json]
-                              [--gate G] [--void-gate V] [--red R] [--wedge-band B] [--samples N | --samples-per-mm2 D]
+                              [--gate G] [--void-gate V] [--red R] [--wedge-band B] [--design-margin M] [--samples N | --samples-per-mm2 D]
                               [--cell 3.0] [--self-hit 0.02] [--boxes BOXES.json] [--box-min 1.0] [--accepted ACC.json]
-      Every number comes from `project.yaml print_targets.<NAME>` (wall_gate, void_gate, red_line, wedge_band, samples_per_mm2, accepted);
+      Every number comes from `project.yaml print_targets.<NAME>` (wall_gate, void_gate, red_line, wedge_band, design_margin, samples_per_mm2, accepted);
       a flag given on the command line overrides that one value; with no --target every gate must be given (no constant lives here).
       Every surface sample casts a ray INWARD (hit distance = wall thickness) and OUTWARD (hit within the void gate = a slot / slit / groove /
       engraved stroke narrower than the gate). Samples below `gate - 0.05` are grid-clustered (26-neighbour cells) and each cluster is CLASSIFIED
@@ -15,7 +15,11 @@
       rail flank a wide one), and OPPOSING faces — the nearest face with an opposing normal in ANY direction (a ledge underside beside a step top,
       the root of a rim ring set inboard of its wall: invisible to normal rays, coloured by the vendor). A FAIL cluster passes only when an
       `accepted` entry {class, bbox, reason, date, evidence} covers it (bbox ± 1 mm, same class, all three text fields present).
-      A cluster mostly inside a --boxes box gates at --box-min instead — wall, void AND opposing-face rows. A box is the print_dfm
+      MARGIN row (class `margin`): wall-class samples under `wall_gate + design_margin - 0.05` are clustered on their own. A WALL cluster
+      outside the boxes whose median sits at or over the gate and under that line FAILs. 0.05 is the census sampling noise (CLUSTER_MARGIN).
+      design_margin comes from the target (--design-margin overrides it); 0 or absent adds no row.
+      A cluster mostly inside a --boxes box gates at --box-min instead — wall, void AND opposing-face rows. An in-box wall / void
+      cluster gates on its 10th-percentile sample (BOX_PCT), not its median; opposing rows gate on their minimum. A box is the print_dfm
       3-D tuple [x0, y0, z0, x1, y1, z1] or [x0, y0, z0, x1, y1, z1, land_min, void_min]: a sample outside its Z band is not in the box,
       and the trailing pair gates walls / voids at the box's own values (a debossed label's 0.45 beside raised 0.9 strokes on one part).
       The legacy 2-D [x0, y0, x1, y1] and [x0, y0, x1, y1, gate] span every Z and print a WARNING; any other length exits 2.
@@ -44,9 +48,10 @@ import argparse, glob, hashlib, json, math, os, sys
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 from project import record_sig, verify_sig  # noqa: E402 — pure python, no yaml until a project is read
 
-VERSION = "0.9.0"        # census record version: stamped + signed into every record; the pure gate refuses another version
+VERSION = "0.10.0"       # census record version: stamped + signed into every record; the pure gate refuses another version
 WALL_DEG = 30.0          # convention: opposite face within 30 deg of parallel = a wall
-CLUSTER_MARGIN = 0.05    # convention: cluster below gate - 0.05
+CLUSTER_MARGIN = 0.05    # convention: cluster below gate - 0.05; also the census sampling noise the margin row allows (a nominal wall reads up to 0.05 under)
+BOX_PCT = 0.10           # an in-box (legend) cluster gates on its 10th-percentile sample, not its median (a thin stroke edge hides under a median)
 BINS = (0, 0.3, 0.5, 0.8, 1.0, 1.2, 1.5, 2.0, math.inf)
 ACC_TOL = 1.0            # mm: an accepted entry's bbox covers a cluster bbox within this
 
@@ -152,7 +157,7 @@ def cluster_rows(points, values, angles, cell=3.0, red=0.5, boxes=None):
         wf = len(wall) / len(idx); tw = sorted(wall) if wall else tt
         lo, hi, ext = _extent(pp)
         rows.append(dict(n=len(idx), tmin=round(tt[0], 3), tmed=round(tt[len(tt) // 2], 2), tmed_wall=round(tw[len(tw) // 2], 2),
-                         n_red=sum(t < red for t in tt), wall_frac=round(wf, 2), cls="wall" if wf >= 0.5 else "wedge",
+                         tp10_wall=round(tw[int(len(tw) * BOX_PCT)], 2), n_red=sum(t < red for t in tt), wall_frac=round(wf, 2), cls="wall" if wf >= 0.5 else "wedge",
                          span=round(ext[0], 1), band=round(ext[1], 2), bbox=[round(x, 1) for x in lo + hi],
                          in_box_frac=round(in_box_frac(pp, boxes), 2), **_own(pp, boxes)))
     rows.sort(key=lambda r: (r["cls"] != "wall", -r["n"]))
@@ -164,7 +169,7 @@ def void_rows(points, gaps, cell=3.0, boxes=None):
     for idx in grid_groups(points, cell):
         pp = [points[i] for i in idx]; gg = sorted(gaps[i] for i in idx)
         lo, hi, ext = _extent(pp)
-        rows.append(dict(n=len(idx), gmin=round(gg[0], 3), gmed=round(gg[len(gg) // 2], 2), span=round(ext[0], 1),
+        rows.append(dict(n=len(idx), gmin=round(gg[0], 3), gmed=round(gg[len(gg) // 2], 2), gp10=round(gg[int(len(gg) * BOX_PCT)], 2), span=round(ext[0], 1),
                          bbox=[round(x, 1) for x in lo + hi], in_box_frac=round(in_box_frac(pp, boxes), 2), **_own(pp, boxes, 7)))
     rows.sort(key=lambda r: -r["n"])
     return rows
@@ -194,31 +199,41 @@ def accepted_entry(cls, bbox, accepted):
     return None
 
 
-def gate_rows(clusters, voids, gate, void_gate, box_min=None, wedge_band=None, opps=None, accepted=None):
+def gate_rows(clusters, voids, gate, void_gate, box_min=None, wedge_band=None, opps=None, accepted=None, margin_clusters=None, design_margin=None):
     """-> (fails, accepted_fails): WALL clusters below the gate, VOID clusters below the void gate, WEDGE clusters with a band wider than
-    wedge_band (None = wedges are listed only), OPPOSING rows below their gate; a covered FAIL moves to accepted_fails with its entry."""
+    wedge_band (None = wedges are listed only), OPPOSING rows below their gate; a covered FAIL moves to accepted_fails with its entry.
+    In-box clusters gate on their 10th percentile (tp10_wall / gp10). MARGIN: a WALL cluster of margin_clusters (wall-class samples under
+    gate + design_margin - noise) outside the boxes whose median sits in [gate, gate + design_margin - noise) — nominal walls drawn under the margin."""
     fails, acc = [], []
 
     def emit(cls, bbox, text):
         a = accepted_entry(cls, bbox, accepted)
         (acc if a else fails).append(text if not a else dict(fail=text, reason=a["reason"], date=a["date"], evidence=a["evidence"], **{"class": cls}, bbox=bbox))
     for c in clusters:
-        g = (c.get("box_gate") or box_min) if (box_min is not None and c["in_box_frac"] >= 0.5) else gate
+        inb = box_min is not None and c["in_box_frac"] >= 0.5
+        g = (c.get("box_gate") or box_min) if inb else gate
+        t, lbl = (c.get("tp10_wall", c["tmed_wall"]), "p10 ") if inb else (c["tmed_wall"], "")
         if c["cls"] == "wall":
-            if c["tmed_wall"] < g - 1e-9:
-                emit("wall", c["bbox"], f"WALL {c['tmed_wall']:.2f} (min {c['tmin']:.2f}) < {g} span {c['span']} bbox {c['bbox']}")
+            if t < g - 1e-9:
+                emit("wall", c["bbox"], f"WALL {lbl}{t:.2f} (min {c['tmin']:.2f}) < {g} span {c['span']} bbox {c['bbox']}")
         elif wedge_band is not None and c.get("band", 0) > wedge_band + 1e-9:
             emit("wedge", c["bbox"], f"WEDGE band {c['band']:.2f} > {wedge_band} (edge {c['tmed']:.2f}, min {c['tmin']:.2f}) span {c['span']} bbox {c['bbox']} — free-standing unless an accepted entry names the backing wall")
     for v in voids:
-        g = (v.get("box_gate") or box_min) if (box_min is not None and v["in_box_frac"] >= 0.5) else void_gate
-        if v["gmed"] < g - 1e-9:
-            emit("void", v["bbox"], f"VOID {v['gmed']:.2f} (min {v['gmin']:.2f}) < {g} span {v['span']} bbox {v['bbox']}")
+        inb = box_min is not None and v["in_box_frac"] >= 0.5
+        g = (v.get("box_gate") or box_min) if inb else void_gate
+        t, lbl = (v.get("gp10", v["gmed"]), "p10 ") if inb else (v["gmed"], "")
+        if t < g - 1e-9:
+            emit("void", v["bbox"], f"VOID {lbl}{t:.2f} (min {v['gmin']:.2f}) < {g} span {v['span']} bbox {v['bbox']}")
     for o in opps or []:
         g = void_gate if o["kind"] == "void" else gate
         if box_min is not None and o.get("in_box_frac", 0) >= 0.5:    # a legend stroke IS two opposing faces box_min apart: the land rule owns it
             g = o.get("box_gate") or box_min
         if o["dmin"] < g - 1e-9:                 # the root WIDTH is the minimum (exact point-to-face distance, no sampling noise); the median grows with the band
             emit("opp", o["bbox"], f"OPP {o['dmin']:.2f} (med {o['dmed']:.2f}) < {g} ({o['kind']}, opposing faces in any direction) span {o['span']} bbox {o['bbox']}")
+    line = round(gate + (design_margin or 0) - CLUSTER_MARGIN, 3)
+    for c in margin_clusters or []:
+        if c["cls"] == "wall" and not (box_min is not None and c["in_box_frac"] >= 0.5) and gate - 1e-9 <= c["tmed_wall"] < line - 1e-9:
+            emit("margin", c["bbox"], f"MARGIN {c['tmed_wall']:.2f} (min {c['tmin']:.2f}) < {line} = wall_gate {gate} + design_margin {design_margin} - noise {CLUSTER_MARGIN} span {c['span']} bbox {c['bbox']}")
     return fails, acc
 
 
@@ -375,7 +390,7 @@ def opposing_faces(m, pts, nrm, fid, radius, np):
 
 
 def census(stl, samples, gate, void_gate, cell, self_hit, red, boxes, box_min, out_json, wedge_band=None, density=None, accepted=None,
-           target=None, seed=0):
+           target=None, seed=0, design_margin=None):
     np, trimesh = need("numpy", "trimesh", "scipy")[:2]
     boxes = norm_boxes(boxes)
     np.random.seed(seed)                                                                  # trimesh < 4 reads the global seed
@@ -403,7 +418,12 @@ def census(stl, samples, gate, void_gate, cell, self_hit, red, boxes, box_min, o
     # opposing faces: only where the normal rays are clean (otherwise the wall / void row already carries the finding)
     ot = [i for i in range(samples) if T[i] >= thr and G[i] >= void_gate and D[i] < ((void_gate if K[i] else gate) - CLUSTER_MARGIN)]   # normal rays clean, opposing face not
     opps = opp_rows([P[i] for i in ot], [D[i] for i in ot], [K[i] for i in ot], cell, boxes)
-    fails, acc = gate_rows(clusters, voids, gate, void_gate, box_min if boxes else None, wedge_band, opps, accepted)
+    # MARGIN row: wall-class samples under gate + design_margin - noise, clustered on their own (merging them into the gate pass would let a
+    # nominal 1.3 wall carry a sub-gate lip's median over the gate)
+    mthr = round(gate + (design_margin or 0) - CLUSTER_MARGIN, 3)
+    mi = [i for i in range(samples) if T[i] < mthr and A[i] < WALL_DEG] if (design_margin or 0) > 0 else []
+    mclusters = cluster_rows([P[i] for i in mi], [T[i] for i in mi], [A[i] for i in mi], cell, red, boxes)
+    fails, acc = gate_rows(clusters, voids, gate, void_gate, box_min if boxes else None, wedge_band, opps, accepted, mclusters, design_margin)
     wall = ang < WALL_DEG
     _, Pr = _project_targets(os.path.dirname(os.path.abspath(stl)))
     stl_rec = os.path.relpath(os.path.abspath(stl), os.path.abspath(Pr.root)) if Pr else stl   # project-relative in the record: the gate resolves it in ITS tree
@@ -411,6 +431,7 @@ def census(stl, samples, gate, void_gate, cell, self_hit, red, boxes, box_min, o
              bodies=int(len(m.split(only_watertight=False))), bbox=np.round(m.bounds, 2).tolist(), vol_cm3=round(float(m.volume) / 1000, 3),
              area_mm2=round(area, 1), signature=dict(vol=round(float(m.volume), 3), area=round(area, 3), bbox=np.round(m.bounds, 3).tolist(), faces=int(len(m.faces))),
              samples=samples, density_per_mm2=round(samples / area, 2), gate=gate, void_gate=void_gate, red=red, wedge_band=wedge_band, thr=thr,
+             design_margin=design_margin, margin_line=mthr if (design_margin or 0) > 0 else None,
              hist=histogram(T), frac_below={str(b): round(float((th < b).mean()), 4) for b in (0.8, 1.0, gate)},
              wall_frac_below={str(thr): round(float(((th < thr) & wall).mean()), 5)}, void_frac_below={str(thr): round(float((gap < thr).mean()), 5)},
              clusters=clusters, voids=voids, opposing=opps, fails=fails, accepted_fails=acc)
@@ -426,7 +447,7 @@ def census(stl, samples, gate, void_gate, cell, self_hit, red, boxes, box_min, o
     for o in opps[:30]:
         print(f"  n {o['n']:5d} med {o['dmed']:.2f} min {o['dmin']:.2f} {o['kind']:4s} span {o['span']:6.1f} bbox {o['bbox']}")
     print(f"FAIL {len(fails)}" + ("".join("\n  " + f for f in fails) if fails else
-                                   f" — 0 walls below the gate, 0 voids below the void gate, 0 wedges over band {wedge_band}, 0 opposing faces; wedges listed: "
+                                   f" — 0 walls below the gate, 0 voids below the void gate, 0 wedges over band {wedge_band}, 0 opposing faces, 0 walls under the margin line; wedges listed: "
                                    f"{sum(c['cls'] == 'wedge' for c in clusters)}") + (f"; ACCEPTED {len(acc)} (dated, evidence): " + "; ".join(a['fail'][:60] for a in acc) if acc else ""))
     r["sig"] = record_sig(r, VERSION)                                          # the pure gate refuses a record whose body changed after it was written
     if out_json:
@@ -470,6 +491,20 @@ def selftest():
     assert own[0]["box_gate"] == 0.45 and gate_rows(own, [], 1.6, 1.0, box_min=1.6)[0] == [] and gate_rows(boxed, [], 1.6, 1.0, box_min=1.6)[0], "a box's own gate"
     vown = void_rows([(10.0, 10.0, 6.3)], [0.5], boxes=norm_boxes([[0, 0, 30, 30, 0.45]], warn=False))
     assert gate_rows([], vown, 1.6, 1.0, box_min=0.9)[0] == [] and gate_rows([], void_rows([(10.0, 10.0, 6.3)], [0.5], boxes=norm_boxes([[0, 0, 30, 30]], warn=False)), 1.6, 1.0, box_min=0.9)[0], "void rows honour the box's own gate"
+    # B-7: an in-box cluster gates on its 10th percentile: 20 % of the samples at 0.6 and 80 % at 1.0 under a 0.9 land FAIL (the median reads 1.0)
+    mix = cluster_rows(plate, [0.6] * 180 + [1.0] * 720, [0.0] * 900, boxes=norm_boxes([[-1, -1, -1, 31, 31, 1, 0.9, 0.9]]))
+    assert mix[0]["tmed_wall"] == 1.0 and mix[0]["tp10_wall"] == 0.6 and any(f.startswith("WALL p10 0.60") for f in gate_rows(mix, [], 1.6, 1.0, box_min=0.9)[0]), mix
+    vmix = void_rows(plate, [0.3] * 180 + [1.0] * 720, boxes=norm_boxes([[-1, -1, -1, 31, 31, 1, 0.9, 0.9]]))
+    assert any(f.startswith("VOID p10 0.30") for f in gate_rows([], vmix, 1.6, 1.0, box_min=0.9)[0]), "in-box voids gate on p10 too"
+    assert gate_rows(cluster_rows(plate, [0.6] * 180 + [1.0] * 720, [0.0] * 900), [], 0.9, 1.0)[0] == [], "outside a box the median rule stands"
+    # B-1: the MARGIN row — a 1.3 wall under wall_gate 1.2 + design_margin 0.3 - noise 0.05 = 1.45 FAILs; margin 0.0 or a 1.5 wall adds no row
+    w13 = cluster_rows(plate, [1.3] * 900, [0.0] * 900)
+    f = gate_rows([], [], 1.2, 1.2, margin_clusters=w13, design_margin=0.3)[0]
+    assert len(f) == 1 and f[0].startswith("MARGIN 1.30") and "< 1.45" in f[0], f
+    assert gate_rows([], [], 1.2, 1.2, margin_clusters=w13, design_margin=0.0)[0] == [], "margin 0.0: no row"
+    assert gate_rows([], [], 1.2, 1.2, margin_clusters=cluster_rows(plate, [1.46] * 900, [0.0] * 900), design_margin=0.3)[0] == [], "a 1.46 wall clears 1.45"
+    assert gate_rows([], [], 1.2, 1.2, margin_clusters=cluster_rows(plate, [1.0] * 900, [0.0] * 900), design_margin=0.3)[0] == [], "below the gate: the WALL row owns it"
+    assert gate_rows([], [], 1.2, 1.2, accepted=[dict(acc[0], **{"class": "margin"})], margin_clusters=w13, design_margin=0.3)[1], "a margin entry accepts it"
     # an opposing-face pair inside a legend land gates at box_min too (a 1.3 raised stroke is two faces 1.3 apart, not a thin wall)
     lopp = opp_rows([(10.0, 10.0, 6.3), (10.0, 11.3, 6.3)], [1.3, 1.3], [0, 0], boxes=norm_boxes([[0, 0, 30, 30]], warn=False))
     assert gate_rows([], [], 1.6, 1.0, box_min=1.0, opps=lopp)[0] == [] and gate_rows([], [], 1.6, 1.0, opps=lopp)[0], "legend land rule applies to opposing-face rows"
@@ -539,7 +574,7 @@ def selftest():
             put(dict(good, accepted_fails=[dict(fail="WALL 0.9", reason="r", date="2026-01-01", evidence="e")]))
             assert any("without class / bbox" in b for b in pure_gate([C])), "a pre-0.11.14 accepted entry asks for a rerun"
             put(good)
-    msg = "selftest OK (pure core: wall / wedge classification, wedge band, opposing rows, accepted matching, void + legend-box gating, 3-D boxes (host wall under a label box FAILs, legacy 2-D spans Z, 8-tuple gates, bad length exits 2), pure --gate-dir incl. signature / withdrawn or moved acceptance / uncensused STL / foreign-tree path, target settings"
+    msg = "selftest OK (pure core: wall / wedge classification, wedge band, opposing rows, accepted matching, void + legend-box gating (in-box p10), MARGIN row, 3-D boxes (host wall under a label box FAILs, legacy 2-D spans Z, 8-tuple gates, bad length exits 2), pure --gate-dir incl. signature / withdrawn or moved acceptance / uncensused STL / foreign-tree path, target settings"
     try:
         import numpy, trimesh, scipy, shapely  # noqa: F401
     except ImportError:
@@ -576,17 +611,21 @@ def selftest():
         acc = [dict(**{"class": "opp"}, bbox=[0, 8, -1, 3, 12, 41], reason="root widened next round; vendor accepted this batch", date="2026-09-28", evidence="60-orders/quotes/2026-09-28/DFM_ROUND.md")]
         assert census(os.path.join(d, "root.stl"), None, 1.2, 1.2, 3.0, 0.02, 0.5, None, None, os.path.join(d, "root.stl.json"), wedge_band=1.5, density=10, accepted=acc) == 0
         r = json.load(open(os.path.join(d, "root.stl.json"))); assert r["fails"] == [] and len(r["accepted_fails"]) >= 1
+        # B-1 on a mesh: a 1.3 plate passes the 1.2 gate, FAILs the MARGIN row at design_margin 0.3, and adds no row at 0.0
+        assert run(trimesh.creation.box((30.0, 30.0, 1.3)), "plate13.stl", design_margin=0.3) == 1
+        r = json.load(open(os.path.join(d, "plate13.stl.json"))); assert [x.split()[0] for x in r["fails"]] == ["MARGIN"] and r["margin_line"] == 1.45, r["fails"]
+        assert run(trimesh.creation.box((30.0, 30.0, 1.3)), "plate13.stl", design_margin=0.0) == 0
         for n in ("plate10", "rib", "slit"):
             os.remove(os.path.join(d, n + ".stl.json"))
         assert pure_gate([d]) == [], pure_gate([d])
-    print(msg + "; recall primitives: 1.0 plate FAIL, 45 deg prism 0 FAIL, 2.0 plate 0 FAIL, 0.8 rib + 0.6 slit = 1 WALL + 1 VOID FAIL, 0.4 rim-ring root = 1 OPP FAIL, accepted root passes)"); return 0
+    print(msg + "; recall primitives: 1.0 plate FAIL, 45 deg prism 0 FAIL, 2.0 plate 0 FAIL, 0.8 rib + 0.6 slit = 1 WALL + 1 VOID FAIL, 0.4 rim-ring root = 1 OPP FAIL, accepted root passes, 1.3 plate = 1 MARGIN FAIL at margin 0.3 and 0 at 0.0)"); return 0
 
 
 def main(argv):
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("stl", nargs="?"); ap.add_argument("--gate-dir", nargs="+", metavar="DIR"); ap.add_argument("--selftest", action="store_true")
     ap.add_argument("--target", metavar="NAME", help="print_targets.<NAME> in project.yaml"); ap.add_argument("--project")
-    ap.add_argument("--gate", type=float); ap.add_argument("--void-gate", type=float); ap.add_argument("--red", type=float); ap.add_argument("--wedge-band", type=float)
+    ap.add_argument("--gate", type=float); ap.add_argument("--void-gate", type=float); ap.add_argument("--red", type=float); ap.add_argument("--wedge-band", type=float); ap.add_argument("--design-margin", type=float)
     ap.add_argument("--samples", type=int); ap.add_argument("--samples-per-mm2", type=float)
     ap.add_argument("--cell", type=float, default=3.0); ap.add_argument("--self-hit", type=float, default=0.02)
     ap.add_argument("--boxes", metavar="JSON"); ap.add_argument("--box-min", type=float, default=1.0); ap.add_argument("--accepted", metavar="JSON"); ap.add_argument("--json", metavar="OUT")
@@ -599,7 +638,7 @@ def main(argv):
             print("CENSUS GATE:", b)
         print(f"census gate: {len(bad)} problem(s)"); return 1 if bad else 0
     if a.stl:
-        t = target_settings(a.target, a.project) if a.target else dict(gate=None, void_gate=None, red=None, wedge_band=None, density=None, accepted=[])
+        t = target_settings(a.target, a.project) if a.target else dict(gate=None, void_gate=None, red=None, wedge_band=None, density=None, accepted=[], design_margin=None)
         gate = a.gate if a.gate is not None else t["gate"]; void_gate = a.void_gate if a.void_gate is not None else t["void_gate"]
         if gate is None or void_gate is None:
             print("thin_wall_census: name a print target (--target NAME, project.yaml print_targets) or give --gate and --void-gate — no gate value lives in this script", file=sys.stderr); sys.exit(2)
@@ -608,7 +647,8 @@ def main(argv):
         density = a.samples_per_mm2 if a.samples_per_mm2 is not None else t["density"]
         accepted = json.load(open(a.accepted)) if a.accepted else t["accepted"]
         boxes = json.load(open(a.boxes)) if a.boxes else None
-        return census(a.stl, a.samples, gate, void_gate, a.cell, a.self_hit, red, boxes, a.box_min, a.json, wedge_band, density, accepted, a.target)
+        margin = a.design_margin if a.design_margin is not None else t["design_margin"]
+        return census(a.stl, a.samples, gate, void_gate, a.cell, a.self_hit, red, boxes, a.box_min, a.json, wedge_band, density, accepted, a.target, design_margin=margin)
     ap.print_help(); return 2
 
 

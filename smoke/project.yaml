@@ -84,6 +84,7 @@ gates:
     - "$PY scripts/erc_gate.py --selftest"
     - "$PY scripts/step2stl.py --selftest"
     - "$PY scripts/arrival_checklist.py --selftest"
+    - "$PY scripts/vendor_gate.py --selftest"
     - "$PY scripts/reorg_paths.py --check"
     - "$PY scripts/assembly_guide.py --check"
     - "$PY scripts/arrival_checklist.py --check"

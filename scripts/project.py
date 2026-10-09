@@ -13,7 +13,8 @@ CLI (for shell scripts):
   scripts/project.py rev                      # the revision that names folders (project.revision, default rev0): <fab_dir>/<rev>/, <production_dir>/<rev>/, collateral/<rev>/
   scripts/project.py scaffold --scope S FILE...   # resolve the {{ee,both}}-style scope tags of copied templates in place: a tagged line stays only
                                               # when S is in its list (tag removed); untagged lines stay; the {{SCOPE}} slot becomes S. Then `slots`.
-  scripts/project.py gates-required           # exit 1 when an artefact exists (schematic, board, the STL set) and gates.adopt has no gate line for it
+  scripts/project.py gates-required           # exit 1 when an artefact exists (schematic, board, the STL set) and gates.adopt has no gate line for it,
+                                              # or when a next-phase artefact exists and its preceding gate has no cell and no `> delegated:` line
   scripts/project.py slots [FILE|DIR ...]     # the unfilled {{...}} slots per file (default: CLAUDE.md 10-spec/SPEC.md project.yaml docs design — CI workflow
                                               # files are the ci/README's own `{{PROJECT_` grep); lines between
                                               # `<!-- skeleton: begin -->` / `<!-- skeleton: end -->` are skipped; exit 1 while any slot remains
@@ -210,6 +211,28 @@ def required_gate_lines(P):
     ac = P.get("arrival_checklist.yaml", "20-design/arrival_checklist.yaml")
     if os.path.exists(os.path.join(P.root, ac)) and "arrival_checklist.py --check" not in lines:
         bad.append(f"{ac} exists but gates.adopt has no `scripts/arrival_checklist.py --check` line")
+    return bad + gate_cell_backstop(P, sets)
+
+
+def gate_cell_backstop(P, sets):
+    """A next-phase artefact that exists needs its preceding gate approved: a cell in paths.gates, or a `> delegated: <gate> ...` line under the
+    table (the owner's delegation quote; SKILL.md §1.1 keeps the cell empty then). schematic -> G0, board -> G1, fab package <fab_dir>/<rev>/ -> G2,
+    an STL set -> G0, mech scope ORDER_<rev>.md -> M1. -> problem list (blind review 0.11.13 A-9)."""
+    from gate_check import gate_cell, gate_rows   # lazy: gate_check imports this module
+    gp = P.path("gates"); text = open(gp, encoding="utf-8").read() if gp and os.path.exists(gp) else ""
+    last = max((n for n, _ in gate_rows(text).values()), default=0)
+    delegated = [l for l in text.splitlines()[last:] if l.startswith("> delegated:")]
+    fab = os.path.join(P.path("fab_dir"), P.rev())
+    order = os.path.join(P.path("orders_dir"), f"ORDER_{P.rev()}.md")
+    pairs = [("G0", "schematic", P.path("schematic")), ("G1", "board", P.path("board")),
+             ("G2", "fab package", fab if os.path.isdir(fab) and os.listdir(fab) else None)]
+    pairs += [("G0", f"STL set {st}", os.path.join(P.root, st)) for st in sets]
+    if P.scope() == "mech":
+        pairs.append(("M1", "case order file", order))
+    bad = []
+    for gate, what, f in pairs:
+        if f and os.path.exists(f) and not gate_cell(text, gate) and not any(re.search(rf"\b{gate}\b", l) for l in delegated):
+            bad.append(f"{what} {os.path.relpath(f, P.root)} exists but {gate} is not approved in {P.get('paths.gates')} (empty cell, no `> delegated: {gate}` line under the table)")
     return bad
 
 
@@ -388,6 +411,8 @@ def selftest():
     open(f"{d}/D.md", "w").write("| ID | Date | Status | Topic | P | R |\n|---|---|---|---|---|---|\n| **D-07** | d | **OPEN** | widen root | p | r |\n| CC-010 | d | APPLIED | x | p | r |\n| CC-011 | d | OPEN (owner) | y | p | r |\n")
     assert open_decisions(f"{d}/D.md") == {"D-07": "widen root p r", "CC-011": "y p r"}, open_decisions(f"{d}/D.md")
     P.cfg["paths"] = {"mech_record": "40-case/*/parts/*.stl", "schematic": "k/k.kicad_sch"}; P.cfg["gates"] = {"adopt": ["$PY scripts/known_issues.py --check"]}
+    os.makedirs(f"{d}/90-log"); GT = "| Gate | M | P | Owner approval |\n|---|---|---|---|\n| **G0** | spec | x | Owner, 2026-01-01, SPEC r1 |\n| **M1** | geo | x | _not yet approved_ |\n"
+    open(f"{d}/90-log/GATES.md", "w").write(GT)
     bad = required_gate_lines(P); assert len(bad) == 1 and "40-case/vendor_mjf" in bad[0] and "--gate-dir" in bad[0] and "print_dfm.py --gate" in bad[0], bad
     P.cfg["gates"]["adopt"] += ["$PY scripts/thin_wall_census.py --gate-dir out/x/census", "$PY scripts/print_dfm.py --gate out/x/dfm"]
     bad = required_gate_lines(P); assert len(bad) == 1 and "40-case/vendor_mjf" in bad[0], ("a gate line must name the set's checks dir", bad)
@@ -400,10 +425,24 @@ def selftest():
     os.makedirs(f"{d}/k"); open(f"{d}/k/k.kicad_sch", "w").write("x"); assert "erc_gate.py" in required_gate_lines(P)[0]
     os.makedirs(f"{d}/20-design"); open(f"{d}/20-design/arrival_checklist.yaml", "w").write("sections: []\n"); assert any("arrival_checklist.py" in b for b in required_gate_lines(P))
     P.cfg["gates"]["adopt"] += ["$PY scripts/arrival_checklist.py --check"]; assert not any("arrival_checklist" in b for b in required_gate_lines(P))
+    # the gate-cell backstop (A-9): an artefact + an empty preceding cell FAILs; an approved cell or a `> delegated: <gate>` line under the table passes
+    P.cfg["gates"]["adopt"] += ["$PY scripts/erc_gate.py 30-board/layout/erc.json"]
+    assert required_gate_lines(P) == [], ("G0 approved: schematic and STL sets pass", required_gate_lines(P))
+    open(f"{d}/90-log/GATES.md", "w").write(GT.replace("Owner, 2026-01-01, SPEC r1", "_not yet approved_"))
+    bad = required_gate_lines(P); assert len(bad) == 3 and all("G0 is not approved" in b for b in bad) and "schematic k/k.kicad_sch" in bad[0], bad
+    open(f"{d}/90-log/GATES.md", "a").write("\n> delegated: G1, Owner, 2026-01-02, \"go on\"\n"); assert len(required_gate_lines(P)) == 3, "a G1 delegation does not cover G0"
+    open(f"{d}/90-log/GATES.md", "a").write("> delegated: G0, Owner, 2026-01-02, \"start the schematic\"\n"); assert required_gate_lines(P) == [], required_gate_lines(P)
+    os.makedirs(f"{d}/60-orders"); open(f"{d}/60-orders/ORDER_rev0.md", "w").write("x")
+    bad = required_gate_lines(P); assert len(bad) == 1 and "M1 is not approved" in bad[0] and "ORDER_rev0.md" in bad[0], bad
+    open(f"{d}/90-log/GATES.md", "w").write("> delegated: M1 above the table counts for nothing\n" + GT); assert any("M1" in b for b in required_gate_lines(P))
+    P.cfg["project"]["scope"] = "ee"; os.makedirs(f"{d}/30-board/fab/rev0"); assert not any("fab package" in b for b in required_gate_lines(P)), "an empty package folder is no package"
+    open(f"{d}/30-board/fab/rev0/board_id.txt", "w").write("x"); assert any("G2 is not approved" in b for b in required_gate_lines(P))
+    open(f"{d}/90-log/GATES.md", "a").write("| **G2** | lay | x | Owner, 2026-01-03, board 0123abcd |\n"); assert required_gate_lines(P) == [], required_gate_lines(P)
+    P.cfg["project"]["scope"] = "mech"; os.remove(f"{d}/60-orders/ORDER_rev0.md")
     # slots (skeleton skipped) and the kickoff check
     open(f"{d}/S.md", "w").write("a {{X}} b {{Y}}\n<!-- skeleton: begin -->\n{{SKEL}}\n<!-- skeleton: end -->\n{{X}}\n")
     assert slots(["S.md", "nope.md"], d) == {"S.md": ["{{X}}", "{{Y}}"]}, slots(["S.md"], d)
-    os.makedirs(f"{d}/90-log"); os.makedirs(f"{d}/10-spec"); open(f"{d}/10-spec/KICKOFF_ANSWERS.md", "w").write(
+    os.makedirs(f"{d}/10-spec"); open(f"{d}/10-spec/KICKOFF_ANSWERS.md", "w").write(
         "| Q | Question | Answer | Rec. | D row | Written to |\n|---|---|---|---|---|---|\n| A1 | product class | sample | yes | D-02 | `kickoff.product_class`; SPEC §1 |\n"
         "| B1 | layers | 4 | yes | D-03 | `board.layers`, `board.thickness_mm` |\n| C2 | retention | n/a (scope) | - | - | `kickoff.enclosure.retention` |\n"
         "| C8a | rows | jlc | yes | D-{{nn}} | `print_targets.<t>.dfm_process` |\n| D1 | bar | {{zero}} | yes | D-04 | `fab_dfm.bar` |\n"
@@ -420,7 +459,7 @@ def selftest():
     P.cfg["project"]["scope"] = "mech"; assert not any(b.startswith("A0:") for b in kickoff_check(P)); P.cfg["project"]["scope"] = "ee"
     h = host_facts(); assert h["cores"] >= 1 and h["jobs_max"] >= 1 and h["min_free_gb"] >= 2 and "| Host |" in host_row(h), h
     assert host_row(dict(cores=14, ram_gb=24, jobs_max=3, min_free_gb=3.6)).startswith("| Host | 14 cores, 24 GB RAM")
-    print("selftest OK (defaults, paths, ids, scope, record md5, scaffold, record signing, OPEN rows, required gate lines, slots, kickoff check (owner ids only, A0 = project.scope), host row)")
+    print("selftest OK (defaults, paths, ids, scope, record md5, scaffold, record signing, OPEN rows, required gate lines, gate-cell backstop (empty cell + artefact fails, approved cell or delegation line passes), slots, kickoff check (owner ids only, A0 = project.scope), host row)")
     return 0
 
 
