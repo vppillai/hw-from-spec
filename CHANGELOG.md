@@ -1,6 +1,6 @@
 # CHANGELOG — hw-from-spec
 
-## Current state (0.11.15) — read this instead of replaying the entries below
+## Current state (0.11.16) — read this instead of replaying the entries below
 
 - **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
   twelve batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
@@ -40,6 +40,18 @@
 - **Generic by rule**: the skill names no project, part, board, order, account or person — `scripts/generic_lint.py` reads the whole repo
   (CHANGELOG and docs included; history keeps its measured numbers), a fenced worked example keeps numbers and kinds but never a name, and the
   repo carries no project retro (a retro report is folded, then deleted).
+
+## 0.11.16 — 2026-10-09 — Vector arrows from pins, the open coupon slot, no copied design values in the picture tools
+
+Source: the same printed-case project as 0.11.11, after the owner's reads of the guide and a question about a wider case. The second
+half of the 0.11.11 work was never folded: its pull request closed with only the first commit folded.
+
+### Added
+- `references/release-and-cut.md` §8: arrows and dots are vector shapes on the page, placed from transparent pins in the scene that one
+  more pass reads back by hue; one solid colour, no halo; a hidden pin is an error. No picture tool keeps its own copy of a design value:
+  the board count, the magnet positions and the lifted index come from the design file, and a count change in that file alone is the test.
+- `references/print-kit.md` §4: a fit slot on a coupon is open at one edge of the block, so the mating part at hand goes in part way.
+- `references/pitfalls.md`: three dated one-liners (the closed coupon slot, the 3D arrows and the halo, the copied board count).
 
 ## 0.11.15 — 2026-10-09 — The owner's eight decisions from the 0.11.13 review
 
