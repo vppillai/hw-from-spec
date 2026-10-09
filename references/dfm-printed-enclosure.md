@@ -69,7 +69,7 @@ seen (a dummy 0.4 mm low). The only exception path is the machine-readable `acce
 - **Dimensional tolerance is the vendor's, not ±0.1** **[vendor sheet]**: MJF PA12 is typically ±0.3 mm or ±0.3 % (HP: ±0.2 mm below
   100 mm, worse above — cite the vendor's sheet with URL + date in `print_targets.<t>.tolerance_source`). A 1.3 wall can print 1.0–1.1. "A 1.2
   nominal prints 1.1 … 1.3" is an **assumption until the first-article caliper table exists** (§10 step 1). The measured spread of every gated
-  wall and bore on the received parts feeds `print_targets.<t>.tolerance` and the design margin. Until then the margin row is INFO, not PASS.
+  wall and bore on the received parts feeds `print_targets.<t>.tolerance` and the design margin. Until then the tolerance row is INFO, not PASS.
 - **Build orientation and anisotropy** **[vendor sheet + physics]**. MJF Z-direction strength is ~10–20 % below XY (HP data — check the
   vendor's sheet). For FDM the figure is 30–50 % across layers. Ask the vendor for the build orientation / position when the part matters (a
   cantilever, a boss under screw preload). Record it in `DFM_ROUND.md`. Draft angles: **n/a for MJF / SLA / FDM**; required if the design is ever moulded — say so in the
@@ -124,7 +124,8 @@ the census. *Worked example:* one first article forced this decision; four plate
 ## 2. Waivers are not checks — the census is a FAIL gate
 
 The census gates `wall_gate` per `print_targets.<t>` (the checker's line). The case generator draws walls at `wall_gate + design_margin`.
-The census also carries a FAIL row for nominal walls under `wall_gate + design_margin − 0.05`. A wall drawn at the line FAILs before the vendor upload.
+The census also FAILs a nominal wall under `wall_gate + design_margin − 0.05` (row MARGIN; 0.05 is the census's sampling noise).
+A wall drawn at the gate therefore FAILs before the vendor upload. Only an `accepted` entry of class `margin` passes it.
 The owner's six-view heat-map read still checks the result (§7 step 4). The printability FLOOR (walls, roots, knife edges, point contacts, voids, holes,
 size — from physics + the cited process minimums, vendor-independent) is `scripts/print_dfm.py --process <row>` on the same mesh before every
 upload, with the verdict → validate → rule-fix → retro loop in `references/print-dfm.md`. Both are PURE adopt gates; neither reads the yaml.
@@ -206,9 +207,11 @@ Every rim and wall reads CLOSED on the single part: no through-slot, notch, key 
 3. **The flag is computed at UPLOAD and does not depend on the process / material chosen on the line**. Still set the material first (Edit dialog
    SAVED — form state, not a cart). It gives the price and the legend of the material's heat map. The record names the material on the line and
    **the quote price per body** before reading anything. Changing the material never flips `thinWall`. The page defaults to a resin.
-4. **Open the heat map on every face** even when `thinWall` is false. Take six captures per body: the origin view, three 90° azimuth drags (a horizontal drag of canvas-height/2 px is 180°), and both poles (±canvas-height/2 vertical, from the origin). `scripts/heatmap_count.py` on the six captures must print 0 / 0 (yellow / red in the model area: the legend column and the tool-bar strip are skipped). It reads each pixel in HSV, so shaded faces and amber count too. Record **the legend thresholds as displayed
+4. **Open the heat map on every face** even when `thinWall` is false. Take six captures per body: the origin view, three 90° azimuth drags (a horizontal drag of canvas-height/2 px is 180°), and both poles (±canvas-height/2 vertical, from the origin). `scripts/heatmap_count.py` on the six captures must print 0 / 0 (yellow / red in the model area: the legend column and the tool-bar strip are skipped).
+   `scripts/vendor_gate.py <round dir> --stl <set>/parts/*.stl` checks the reply and the six captures per STL md5. It reads each pixel in HSV, so shaded faces and amber count too. Record **the legend thresholds as displayed
    that day** — the census turns a colour into a number.
-5. **Save screenshots named `<piece>_<round>_<md5-8>_<material>_heatmap_<face>.png`** plus `quote_page_<round>_flags.png`. Keep the uploaded STL
+5. **Save screenshots named `<piece>_<round>_<md5-8>_<material>_heatmap_<face>.png`** plus `quote_page_<round>_flags.png`.
+   `<face>` is one of `az000 az090 az180 az270 poleA poleB`, the names `vendor_gate.py` reads. Keep the uploaded STL
    beside them. Write `templates/DFM_ROUND.md` into `60-orders/quotes/<date>/` with the API fields, the browser / UA / signed-in state per body.
 6. **When a verdict flips between two uploads, diff the meshes before touching the generator**: the r3 tray read RED where the r2 tray had passed —
    same 4088 triangles, every vertex within 7.7e-6 mm. The real difference was a premature DOM read (step 2).
@@ -313,8 +316,9 @@ numbers are **[owner bar]** for a 0.4 nozzle at 0.20 mm and live in `print_targe
 - **Coupons are self-documenting**: every test coupon and every variant on a bracket plate carries its own identifier and the value it tests
   ON the part. Use DEBOSSED text with the number (for example `W1.6 R0.20`, `WALL 1.6`, `CLR 0.30`). Raised text is only for the colour-path
   word of a coupon that also tests colour (next bullet). Put the text on an ironed top face or a face-up plate. Debossed: cap ≥ 4 mm, stroke
-  ≥ 0.45, lands ≥ 0.45 between glyphs. Raised: cap ≥ 5.1, stroke ≥ 0.9, AIR GAP ≥ 0.9. All are measured and FAIL-gated.
-  An in-box cluster gates on the 10th percentile of its samples, not the median, because the thin fifth is what the vendor colours. The raised numbers are
+  ≥ 0.45, lands ≥ 0.45 between glyphs. Raised: cap ≥ 5.1, stroke ≥ 0.9, AIR GAP ≥ 0.9. All are measured and FAIL-gated: the census gates each legend box.
+  An in-box wall or void cluster gates on the 10th percentile of its samples, not the median. A median hides a thin minority, and the vendor colours it.
+  `print_dfm.py` lists in-box regions as INFO (row L). The raised numbers are
   the 2026-10-02 rule above: the coupon of record passes the same bar as the part. Each legend BOX carries its own gate (`references/print-dfm.md`,
   legend boxes), so a debossed label and a raised colour word on one coupon are gated apart. Never put the text on a bridge underside or a deep
   inner wall. A coupon the user has to look up in a README to identify is a coupon that gets mixed up on

@@ -6,7 +6,7 @@ longer lengths. A long lip built that way cracked on five parts. It is also tied
 that that is where we saw good results."* So the rules are physics + the published process minimums. Each process has one row in
 `20-design/dfm_processes.yaml`, with a citation on every number. The vendors' verdicts are a **validation set**, never a fitting target. The tool
 runs on the exported MESH (never the yaml) before every upload, and the census (`thin_wall_census.py`) gates `wall_gate` (the vendor's grey line).
-Print DFM gates the printability floor, the census gates `wall_gate`; the generator applies `design_margin`; both are PURE adopt gates.
+Print DFM gates the printability floor. The census gates `wall_gate` and the MARGIN line `wall_gate + design_margin − 0.05`. Both are PURE adopt gates.
 
 ## 1. What it measures and the rules (one row each in the record)
 
@@ -45,8 +45,8 @@ is the legacy spelling (spans every Z). Inside a box, the wall limit is `legend_
 are the RAISED numbers, 0.9 / 0.9. A box may carry its own pair after its corners: `(x0, y0, z0, x1, y1, z1, land_min, void_min)`. An example is a
 debossed label's 0.45 / 0.45 beside raised strokes on one coupon. `thin_wall_census.py --boxes` reads the same 6- or 8-tuple. Its legacy 2-D
 `[x0, y0, x1, y1(, gate)]` spans every Z and prints a WARNING. Inside a box, row L lists every rule's findings instead of flagging them. A region is
-inside when ≥ 50 % of its samples are. The census gates each in-box cluster on the 10th percentile of its samples, not the median,
-because the thin fifth is what the vendor colours. Every rule respects the boxes, W and R included.
+inside when ≥ 50 % of its samples are. The census gates each in-box wall or void cluster on its 10th-percentile sample, not
+its median. A median hides a thin minority, and the vendor colours it. Every rule respects the boxes, W and R included.
 
 Heat maps (`--render`, matplotlib): per-FACE minimum in the vendors' palette (grey ≥ `wall_reco`, yellow, red < `feature_min`, narrow voids dark
 red), six faces + two isos — a per-sample field looks nothing like the vendor's picture; per-face MIN does.
