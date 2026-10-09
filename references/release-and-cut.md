@@ -131,10 +131,21 @@ the SOP's companion cell points at it (a pointer, no revision bump).
   their two colours.
   In a rendered boolean the colour goes OUTSIDE the `intersection()` / `difference()` (a rendered boolean drops its children's colours). The inset
   sits beside a wide main picture or under a square one, with a short label ("Section across the case"), the position computed from the two sizes.
+- **Arrows and markers are vector shapes on the page, placed from the meshes.** A 3D arrow in the render comes out as a faceted red
+  solid with black edges, and it changes the framing. Instead, the scene carries PINS: small spheres at the arrow tip and tail (or at the
+  dot). In the shaded and flat passes they are fully transparent (`color([0, 0, 0, 0])`): invisible, yet they still set a `--viewall`
+  framing. One more pass with the same camera renders them in pure colours. The pin centroids (by hue, so shading does not matter) give
+  the page coordinates. The page draws a round-capped shaft and a filled head in one solid colour. No outline or halo around it: a white
+  halo cuts the drawing's own lines and reads as a sticker on the picture. One pin hidden by a part is an error, never a fallback. The
+  crop box includes the pins with room for the head, so an arrow never runs out of the frame.
 - **Every number in the text comes from the design parameters** (the same file the meshes come from): counts, magnet size, the pinch band, the
   recess below a face. The guide reads the parameter file the way the drawing does (a regex over `NAME = value;` lines, derived values by one
   `echo()` run); a design change moves the pictures AND the words. Counts are words ("four magnets"), dimensions are digits ("6 x 3 mm").
   Cameras are the one hand-tuned input: a size change that moves a feature out of frame trips the frame warning, not a wrong number.
+- **No picture tool keeps its own copy of a design value.** The board count, the magnet positions, the index of the board a step lifts:
+  each tool reads them from the design file, as it reads the dimensions. A constant copied into a tool (`N_BOARDS = 10`, a list
+  of ten indices, a magnet at x = 0) passes every check at the count it was written for and draws the wrong picture at the next count.
+  The test: change the count in the design file alone, rebuild, and compare the pictures. Only the cameras may need a hand.
 - **Wording for the reader of the part, not the author of the file**: no axis names, no parameter names. "The front", "a rear corner", "the long
   side", "a high board", "the band above its neighbours" — words a person with the part in hand can follow.
 
