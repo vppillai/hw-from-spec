@@ -79,6 +79,9 @@ README a repo path is allowed, every other class still fails); the run FAILS on 
   does not exist to the reader.
 - Coupons and bracket variants carry their identifier and tested value as printed text on the part (dfm-printed-enclosure.md
   "Coupons are self-documenting"); START_HERE refers to them by that printed text, not by slicer object names.
+- **A fit slot on a coupon is open at one edge of the block**, not a closed pocket. The owner tries the coupon with the mating part at hand:
+  a longer board, an older revision, a part of a sheet, slid in part way. A closed slot takes only a part shorter than the slot. A coupon
+  that cannot take the part on the bench is reprinted on the day it is needed.
 - A mark coupon proves GEOMETRY and first-layer behaviour, not the thermal state of a 99-minute print (warp, sag on a long span, colour
   opacity at depth). After the coupon, print **one part** (one cap, one plate) before the multi-object plate. START_HERE says so per step.
 - **Snug-fit features ship as a bracket plate** (`dfm-printed-enclosure.md` §8.5): for example crush ribs at 0.20 / 0.25 / 0.30, one object each, NAMED
