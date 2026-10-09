@@ -49,23 +49,38 @@ B-23, B-24, B-30). Each row now says DECIDED with the chosen option.
 ### Added
 - Agents commit under their own identity: `git -c user.name='<agent>' -c user.email=<agent>@localhost commit …`. The owner's commits keep the
   owner's identity. `scripts/gate_check.py --release` holds only while this rule holds (`templates/CLAUDE.md` rule 13, SKILL §1, agent-ops §2) (A-11).
-- A delegation line `> delegated: <owner words, date>` under the gate table. `scripts/project.py gates-required` fails when an artefact exists and
-  its preceding gate cell is empty, unless that line exists (`templates/90-log/GATES.md`, SKILL §1) (A-9).
-- A census FAIL row for nominal walls under `wall_gate + design_margin − 0.05`: a wall drawn at the line FAILs before the vendor upload
-  (`scripts/thin_wall_census.py`, `templates/CENSUS_GATE_ROWS.md`, SKILL §8, dfm-printed-enclosure §2) (B-1).
-- `scripts/vendor_gate.py`: every STL of record needs its `<md5>_analyze.json` with the flag false and six captures at 0 / 0. It runs in the
-  day-1 gate list before the case order (SKILL §1.2, the GATES Case order row) (B-24).
+- A delegation line under the gate table: `> delegated: <gate>, <owner>, <YYYY-MM-DD HH:MM>, "<owner words>"`. The line names its gate, so a
+  G1 line does not cover G0. `scripts/project.py gates-required` (and so `adopt_gates.sh`) fails when a next-phase artefact exists and its gate
+  has neither a cell nor that line. The pairs: schematic → G0, board → G1, fab package → G2, STL set → G0, `ORDER_<rev>.md` (mech) → M1
+  (`templates/90-log/GATES.md`, SKILL §1) (A-9).
+- A census MARGIN row: a nominal wall cluster outside the legend boxes under `wall_gate + design_margin − 0.05` FAILs. The 0.05 is the
+  census's sampling noise. A wall drawn at the gate therefore FAILs before the vendor upload. Only an `accepted` entry of class `margin` passes
+  it; `design_margin` 0 adds no row (`scripts/thin_wall_census.py`, `templates/CENSUS_GATE_ROWS.md`, SKILL §8, dfm-printed-enclosure §2) (B-1).
+- `scripts/vendor_gate.py <round dir> --stl <stl>...`: the vendor round's grader. For every STL md5 of record, the filed reply
+  (`<md5-8>_analyze.json` or the saved `getFileAnalyzeResult` response) must show `success` true, every `parseStatus` 2, every `thinWall` false,
+  `modelBrokenFace` 0, an empty `errorMsg` and a `fileMd5` equal to the STL's md5. The six captures (`az000 az090 az180 az270 poleA poleB`)
+  must count 0 yellow / 0 red by `heatmap_count.py`. Exit 1 on any problem. Its line waits commented in the `gates.adopt` template until the
+  first vendor round (SKILL §1.2, dfm-printed-enclosure §7, the GATES Case order row) (B-24).
 - One per-preset `fits.ef` knob (elephant-foot compensation, default 0.15) in `templates/project.yaml`. The clearance row and the slicer yaml read
   it; dfm-printed-enclosure and fdm-print-optimisation name the knob instead of a literal (B-30).
 
 ### Changed
-- In-box (legend box) clusters gate on the 10th percentile of their samples, not the median, because the thin fifth is what the vendor colours
-  (`scripts/thin_wall_census.py`, dfm-printed-enclosure, print-dfm) (B-7).
+- In-box (legend box) wall and void clusters gate on the 10th percentile of their samples, not the median. A median hides a thin minority, and
+  the vendor colours it. The row label reads `WALL p10` (`scripts/thin_wall_census.py`, dfm-printed-enclosure, print-dfm) (B-7).
 - The rule "top shell ≥ recess depth + 1.0" holds. Its worked example is now `top_shell_layers 8` = 1.6 under a 0.6 recess (B-13).
 - One glyph-gap rule: fill the gaps in the polygon at the printer's MEASURED closing width + 0.1, and at least `gate + 0.05` on the mesh. The
   former 0.7 (a 0.45 gate) and 0.95 (a 0.9 gate) are instances of the rule (dfm-printed-enclosure, pitfalls, `templates/project.yaml`) (B-23).
-- The 0.11.14 text "no script reads `design_margin`" and "no skill script reads the vendor API flag or the heat map" no longer holds; SKILL and
+- The 0.11.14 text "no script reads `design_margin`" and "no skill script reads the vendor API flag or the heat map" no longer holds. SKILL and
   dfm-printed-enclosure §2 now name the census row and `vendor_gate.py`.
+
+### Upgrade
+- The census record `VERSION` is 0.10.0. `thin_wall_census.py --gate-dir` refuses a 0.9.0 record, so every project must rerun its census.
+  The rerun can bring new FAILs: MARGIN rows on walls drawn at the gate under `design_margin` 0.3, and p10 rows inside legend boxes.
+
+### Interpretations for the owner to check
+- The case order file is `<orders_dir>/ORDER_<rev>.md`, the file written at the order (release-and-cut). It pairs with M1.
+- A delegation line names its gate. Without that rule, a G0 delegation would also pass G2.
+- The 10th percentile applies to in-box voids as well as walls, for symmetry.
 
 ## 0.11.14 — 2026-10-08 — Double-blind review of 0.11.13 applied: measuring scripts, gates, one design margin, the sentence lint that counts sentences
 

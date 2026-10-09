@@ -126,8 +126,9 @@ The release cut = reports RELEASED, collateral, tag; the production cut = docume
   The owner's commits keep the owner's identity.
 - Do not start the next phase's CAD before the gate line exists. Every project generator of the next phase calls `scripts/gate_check.py <gate>` first
   and refuses while it is 1 (the placement script before G1, the case geometry before G0 / M1, the fab package before G2). If the owner delegates
-  ("proceed, I retro-approve"), quote the instruction in `90-log/GATES.md` under the table and keep the approval cells empty.
-  The quote is one line `> delegated: <owner words, date>`. While it exists, `scripts/project.py gates-required` does not fail its empty-cell backstop.
+  ("proceed, I retro-approve"), quote the instruction under the table of `90-log/GATES.md`. Keep the approval cells empty.
+  The quote is one line that names its gate: `> delegated: <gate>, <owner>, <YYYY-MM-DD HH:MM>, "<owner words>"`. A G1 line does not cover G0.
+  `scripts/project.py gates-required` fails while a next-phase artefact exists and its gate has neither a cell nor that line.
 - **One review round precedes every gate**. It is defined once and used everywhere. For every role of the round's role set, a round has one
   in-session reviewer + two external models of a second model family. The in-session fallback may stand in for the external models, and the merge
   says so. Each role also gets one verifier with record access. The round produces one merged report (§5). "Two reviews" in an older record
@@ -157,8 +158,8 @@ The release cut = reports RELEASED, collateral, tag; the production cut = docume
    the owner must decide. It ends with the exact ask: *"Write the Gn / Mn cell in 90-log/GATES.md: `<your name>, <date>, <SPEC rev | schematic commit | board md5-8 | case version + record md5-8>`"*.
 3. Ask in one message with that sentence; do not start the next phase's CAD while waiting (other work — docs, tests, tooling — may continue).
 4. A valid cell is owner text in the approval column of that row; `_not yet approved_` is empty. **Agents never write approval cells or the
-   release line**, not even when told "go ahead" in chat. Quote the chat instruction verbatim with date/time under the table, and note "cell pending"
-   in STATUS. Proceed only if the instruction explicitly delegates (§1 second bullet). The owner fills the cell later; the report banner and
+   release line**, not even when told "go ahead" in chat. Quote the chat instruction verbatim under the table as a `> delegated: <gate>` line (§1), and note
+   "cell pending" in STATUS. Proceed only if the instruction explicitly delegates (§1 second bullet). The owner fills the cell later; the report banner and
    the release phrase are read only from the cells/lines the owner wrote.
 5. After the cell exists: one STATUS paragraph "Gn approved (cell text)", regenerate the records, commit, start the phase.
 
@@ -172,10 +173,10 @@ vendor evidence exists (`scripts/dfm_check.py` reads `fab_dfm.bar`). **printed e
 body of the STL set against the target's own process row, zero slicer warnings, vendor checker **no flag by API read**, no yellow / red on the heat
 map. **CNC** — the vendor's DFM clean. **Who enforces each item:** the skill's scripts enforce ERC, the fab DFM mirror, the census and
 print DFM; `kicad-cli pcb drc` enforces DRC. The project's slicer wrapper enforces zero slicer warnings. `scripts/vendor_gate.py` enforces the vendor API
-flag and the heat map: every STL of record needs its `<md5>_analyze.json` with the flag false and six captures that count 0 / 0.
-It runs in the day-1 gate list, before the case order. Both mesh gates glob the STL set of record (a body nobody checked fails), verify every record's signature
+flag and the heat map. Every STL md5 of record needs its filed reply (`<md5-8>_analyze.json`: success, parseStatus 2, thinWall false, the
+same fileMd5) and six captures at 0 yellow / 0 red. Its line waits commented in `gates.adopt`; uncomment it with the first vendor round, before the case order. Both mesh gates glob the STL set of record (a body nobody checked fails), verify every record's signature
 (a hand-edited record fails) and the rule-set version. `scripts/adopt_gates.sh` fails when a schematic / board / STL set exists and its gate line
-is missing or still commented out in `gates.adopt`. `templates/90-log/GATES.md` carries the bar as a prerequisite on G2, the board order and the case
+is missing or still commented out in `gates.adopt`. It also fails when a next-phase artefact exists and its gate has no cell and no `> delegated:` line. `templates/90-log/GATES.md` carries the bar as a prerequisite on G2, the board order and the case
 order. A WARN that is "known" is not a bar; it is either fixed or a dated, evidence-bearing acceptance the checker re-asserts every run.
 
 ## 2. Generated only
@@ -361,7 +362,8 @@ void / red gates, design margin, tolerance + source, max bbox the rule was calib
 list. The reference tags each **[checker]** / **[vendor sheet]** / **[physics]** / **[owner bar]**. The numbers below are one MJF checker's line on
 ~150 mm parts and a 0.4-nozzle FDM printer's. Substitute yours and keep the mechanism.
 1. **Two PURE mesh gates on every body of every preset, before the first upload** — the census gates `wall_gate` (the checker's line), the print-DFM check the
-   printability FLOOR. The case generator draws walls at `wall_gate + design_margin`. The census FAILs a nominal wall under `wall_gate + design_margin − 0.05`, so a wall drawn at the line FAILs before the vendor upload (`references/dfm-printed-enclosure.md` §2).
+   printability FLOOR. The case generator draws walls at `wall_gate + design_margin`. The census FAILs a nominal wall under `wall_gate + design_margin − 0.05` (row MARGIN; 0.05 is the census's sampling noise).
+   A wall drawn at the gate therefore FAILs before the vendor upload (`references/dfm-printed-enclosure.md` §2).
    Both gates read the MESH, never the yaml; both glob the STL set of record and sign their records:
    - `scripts/thin_wall_census.py <stl> --target <t> --json 40-case/<set>/checks/census/<piece>.json` (rows `templates/CENSUS_GATE_ROWS.md`). It checks walls AND voids
      against the target's gates, wedges by the width of their sub-gate band, and the nearest OPPOSING face in any direction, with samples ∝ area.
