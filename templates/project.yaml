@@ -133,6 +133,7 @@ print_targets:                                # every printed body is censused a
     design_margin: 0.0 {{mech,both}}
     wedge_band: 1.5 {{mech,both}}
     tolerance: 0.2                            # hole shrink 0.1..0.3 until the coupon says otherwise {{mech,both}}
+    fits: {ef: 0.15}                          # per-preset fit knobs; ef = elephant-foot compensation, read by the clearance row and the slicer yaml {{mech,both}}
     samples_per_mm2: 10 {{mech,both}}
     post_process: none {{mech,both}}
     rating: {ul94: unrated, hdt_c: 55, source: {{TDS_URL}}} {{mech,both}}
@@ -144,7 +145,7 @@ print_targets:                                # every printed body is censused a
 #   printer: {{PRINTER_AND_NOZZLE}}
 #   dfm_process: home_fdm_04_colour_body      # the printability floor for a 2-3 layer body (strokes are walls; print_dfm rule W gates them)
 #   wall_gate: 0.4                            # = colour layers × layer height (default 2 × 0.20 = 0.4; 3 layers = 0.6) — the census gates the body on itself
-#   void_gate: 0.9                            # two perimeters: the air gaps between raised strokes (the worked-example printer closed every 0.5–0.6 gap, 2026-10-02); glyph gaps are filled in the polygon ~0.05 over it (the mesh tools read under the polygon)
+#   void_gate: 0.9                            # two perimeters: the air gaps between raised strokes (the worked-example printer closed every 0.5–0.6 gap, 2026-10-02); glyph gaps are filled in the polygon at the measured closing width + 0.1, at least gate + 0.05 (0.95 here)
 #   red_line: 0.4
 #   design_margin: 0.0
 #   wedge_band: 1.5

@@ -45,7 +45,8 @@ is the legacy spelling (spans every Z). Inside a box, the wall limit is `legend_
 are the RAISED numbers, 0.9 / 0.9. A box may carry its own pair after its corners: `(x0, y0, z0, x1, y1, z1, land_min, void_min)`. An example is a
 debossed label's 0.45 / 0.45 beside raised strokes on one coupon. `thin_wall_census.py --boxes` reads the same 6- or 8-tuple. Its legacy 2-D
 `[x0, y0, x1, y1(, gate)]` spans every Z and prints a WARNING. Inside a box, row L lists every rule's findings instead of flagging them. A region is
-inside when ≥ 50 % of its samples are. Every rule respects the boxes, W and R included.
+inside when ≥ 50 % of its samples are. The census gates each in-box cluster on the 10th percentile of its samples, not the median,
+because the thin fifth is what the vendor colours. Every rule respects the boxes, W and R included.
 
 Heat maps (`--render`, matplotlib): per-FACE minimum in the vendors' palette (grey ≥ `wall_reco`, yellow, red < `feature_min`, narrow voids dark
 red), six faces + two isos — a per-sample field looks nothing like the vendor's picture; per-face MIN does.
