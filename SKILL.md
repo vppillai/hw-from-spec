@@ -1,6 +1,6 @@
 ---
 name: hw-from-spec
-version: 0.11.14
+version: 0.11.15
 description: Run a hardware project (a PCB, a printed or CNC enclosure, or both — scope chosen at kickoff; contract fab such as JLCPCB) from a written specification to a production cut with an owner-gated, generated-only, blind-reviewed workflow — a kickoff questionnaire that asks every owner decision up front with recommended answers, a zero-warning manufacturability bar, and a retro that folds each project's learnings back into the skill. Use this whenever someone starts a board or enclosure project from a spec, asks to set up gates, a decision log, generators, part verification, a fab DFM mirror, a case pipeline, FEA, blind reviews, a release report or a production cut for one, or resumes such a project, or wants the skill improved from a finished project — even if they only say "new KiCad board", "order this at JLC", "review the layout", "cut the release" or "what did we learn".
 ---
 
@@ -122,9 +122,12 @@ The release cut = reports RELEASED, collateral, tag; the production cut = docume
   Release row's approval cell) are owner text. **`scripts/gate_check.py <gate>`** reads a cell (exit 1 while empty). **`--release`** reads the release
   cell plus its git author, which must be `project.owner`. The report banner reads the same function and says **DRAFT** until the owner's committed
   cell exists. A cell an agent wrote or committed stays DRAFT (`scripts/release_report.py`; the clone gate blames the line in the real checkout).
+  The author check holds only while agents commit under their own identity (`git -c user.name='<agent>' -c user.email=<agent>@localhost commit`).
+  The owner's commits keep the owner's identity.
 - Do not start the next phase's CAD before the gate line exists. Every project generator of the next phase calls `scripts/gate_check.py <gate>` first
   and refuses while it is 1 (the placement script before G1, the case geometry before G0 / M1, the fab package before G2). If the owner delegates
   ("proceed, I retro-approve"), quote the instruction in `90-log/GATES.md` under the table and keep the approval cells empty.
+  The quote is one line `> delegated: <owner words, date>`. While it exists, `scripts/project.py gates-required` does not fail its empty-cell backstop.
 - **One review round precedes every gate**. It is defined once and used everywhere. For every role of the round's role set, a round has one
   in-session reviewer + two external models of a second model family. The in-session fallback may stand in for the external models, and the merge
   says so. Each role also gets one verifier with record access. The round produces one merged report (§5). "Two reviews" in an older record
@@ -168,9 +171,9 @@ vendor evidence exists (`scripts/dfm_check.py` reads `fab_dfm.bar`). **printed e
 `print_targets.<t>.accepted` entry with vendor evidence passes a cluster, re-matched against the yaml every run. `print_dfm.py` PASS on every
 body of the STL set against the target's own process row, zero slicer warnings, vendor checker **no flag by API read**, no yellow / red on the heat
 map. **CNC** — the vendor's DFM clean. **Who enforces each item:** the skill's scripts enforce ERC, the fab DFM mirror, the census and
-print DFM; `kicad-cli pcb drc` enforces DRC. The project's slicer wrapper enforces zero slicer warnings. No skill script reads the vendor API
-flag or the heat map. The owner reads both at the case-order gate: the filed analyze JSON and six captures per body, counted by
-`scripts/heatmap_count.py`. Both mesh gates glob the STL set of record (a body nobody checked fails), verify every record's signature
+print DFM; `kicad-cli pcb drc` enforces DRC. The project's slicer wrapper enforces zero slicer warnings. `scripts/vendor_gate.py` enforces the vendor API
+flag and the heat map: every STL of record needs its `<md5>_analyze.json` with the flag false and six captures that count 0 / 0.
+It runs in the day-1 gate list, before the case order. Both mesh gates glob the STL set of record (a body nobody checked fails), verify every record's signature
 (a hand-edited record fails) and the rule-set version. `scripts/adopt_gates.sh` fails when a schematic / board / STL set exists and its gate line
 is missing or still commented out in `gates.adopt`. `templates/90-log/GATES.md` carries the bar as a prerequisite on G2, the board order and the case
 order. A WARN that is "known" is not a bar; it is either fixed or a dated, evidence-bearing acceptance the checker re-asserts every run.
@@ -358,7 +361,7 @@ void / red gates, design margin, tolerance + source, max bbox the rule was calib
 list. The reference tags each **[checker]** / **[vendor sheet]** / **[physics]** / **[owner bar]**. The numbers below are one MJF checker's line on
 ~150 mm parts and a 0.4-nozzle FDM printer's. Substitute yours and keep the mechanism.
 1. **Two PURE mesh gates on every body of every preset, before the first upload** — the census gates `wall_gate` (the checker's line), the print-DFM check the
-   printability FLOOR. No script reads `design_margin`: the case generator draws walls at `wall_gate + design_margin`, and the owner's heat-map read checks it (`references/dfm-printed-enclosure.md` §7 step 4).
+   printability FLOOR. The case generator draws walls at `wall_gate + design_margin`. The census FAILs a nominal wall under `wall_gate + design_margin − 0.05`, so a wall drawn at the line FAILs before the vendor upload (`references/dfm-printed-enclosure.md` §2).
    Both gates read the MESH, never the yaml; both glob the STL set of record and sign their records:
    - `scripts/thin_wall_census.py <stl> --target <t> --json 40-case/<set>/checks/census/<piece>.json` (rows `templates/CENSUS_GATE_ROWS.md`). It checks walls AND voids
      against the target's gates, wedges by the width of their sub-gate band, and the nearest OPPOSING face in any direction, with samples ∝ area.

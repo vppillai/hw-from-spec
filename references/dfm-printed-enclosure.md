@@ -123,8 +123,9 @@ the census. *Worked example:* one first article forced this decision; four plate
 
 ## 2. Waivers are not checks — the census is a FAIL gate
 
-The census gates `wall_gate` per `print_targets.<t>` (the checker's line). No script reads `design_margin`. The case generator draws
-walls at `wall_gate + design_margin`, and the owner's six-view heat-map read checks the result (§7 step 4). The printability FLOOR (walls, roots, knife edges, point contacts, voids, holes,
+The census gates `wall_gate` per `print_targets.<t>` (the checker's line). The case generator draws walls at `wall_gate + design_margin`.
+The census also carries a FAIL row for nominal walls under `wall_gate + design_margin − 0.05`. A wall drawn at the line FAILs before the vendor upload.
+The owner's six-view heat-map read still checks the result (§7 step 4). The printability FLOOR (walls, roots, knife edges, point contacts, voids, holes,
 size — from physics + the cited process minimums, vendor-independent) is `scripts/print_dfm.py --process <row>` on the same mesh before every
 upload, with the verdict → validate → rule-fix → retro loop in `references/print-dfm.md`. Both are PURE adopt gates; neither reads the yaml.
 - A row `KEPT BELOW 1.2 (listed): …` with verdict `None` and yaml numbers is a waiver nobody signed. The cracked lip's row quoted the MALE profile
@@ -262,7 +263,7 @@ numbers are **[owner bar]** for a 0.4 nozzle at 0.20 mm and live in `print_targe
 - **Walls ≥ 1.6** (4 perimeters; a two-line 0.85 skirt / rim / tab is a FAIL), ribs ≥ 1.2, voids ≥ 1.0 (a 0.4 nozzle clears a 1.0 slot);
   **minimum feature = 2 × line width** (0.8–0.9 at 0.42 line) **[physics]**.
 - **Elephant foot**: the first 2–3 layers flare 0.1–0.15 mm on a textured plate at 55 °C. A 0.30 lap clearance loses that at the seam.
-  Chamfer the bottom edge 0.3–0.5 × 45° on mating skirts, or use the slicer's elephant-foot compensation (0.1). Record the choice on the print sheet.
+  Chamfer the bottom edge 0.3–0.5 × 45° on mating skirts, or use the slicer's elephant-foot compensation (the preset's `fits.ef` knob, default 0.15). Record the choice on the print sheet.
 - **Hole shrink**: vertical holes print 0.1–0.3 mm under nominal **[physics]** — compensate in the preset's `fits` block (per-preset, coupon-decided)
   or ream; state which on the print sheet. **Measured 2026-10-02** on the worked-example desktop printer (0.4 nozzle, 0.20 mm, PLA, 4 walls).
   It is the only recorded verdict so far. Holes read ~0.15–0.2 under nominal. Results: Ø5 round hole +0.3 = free pivot without wobble. D6
@@ -286,7 +287,7 @@ numbers are **[owner bar]** for a 0.4 nozzle at 0.20 mm and live in `print_targe
   stroke for gap one-to-one. Keep it ≤ 0.1 and pick the weight in the font instead. Raised text cannot print face-down. A face-down face gets a flush colour body (§8.1 option b), never a deboss (its recess ceiling is a bridge underside). A fit filter keeps a legend only where it
   fits its land and LISTS what it dropped.
 - **Legend geometry, not font choice, meets the void gate**: every font's crotches (A K N W) and counters (e 4 R) fall below 1.0 at a cap that fits a 10–12 mm band. CLOSE the glyph polygons at the void gate after placement (buffer +g/2 then −g/2, ROUND joins, `quad_segs` 16). A mitre closing leaves spikes at acute corners that the mesh reads as sub-gate voids (0.04–0.3 mm at letter corners **[K]**). A dilate–erode pair with round joins restores convex corners exactly. Gate the inter-letter gap as a row. On a curved band set letters one by one along the band's offset curve anchored by POLAR ANGLE (nearest-point anchoring lands on a lobe when the waist is concave). The census's opposing-face rows honour legend lands like its wall and void rows (`--boxes` → `--box-min`): a raised stroke inside its land is two faces a stroke apart, not a thin wall. Example: a bold sans at cap 7, pad 0.5, spacing 1.6, closing 1.0 — 0 census FAIL.
-- **Legend at a small cap (a word on a 6 mm rail)**: `text(size=)` is NOT the cap height. Render one H per font, measure it, and derive the size (a condensed DIN: cap = 0.72 × size; every font differs). Pick the font by MEASUREMENT at that cap: erode for strokes ≥ 0.9, open the COMPLEMENT for gaps ≥ 0.9 after padding. The 2026-10-01 "counters ≥ 0.45" bar printed closed. Arial / Helvetica / Futura / DIN all fail on gaps at cap 5.2; Avenir Next Demi Bold passes. Take the glyph polygons from the SVG path with holes classified by ring COVERAGE (a point test put a D's outer ring inside its own counter and dropped the letter). Morphology order: OPEN (tips) → CLOSE (gaps) → neck thickening, never the other order (an opening after the closing reopens every filled slit). Fill gaps ~0.05 over the gate because the mesh tools read under the polygon (0.95 for a 0.9 gate). Rows: thin regions < 0.9 longer than 1.2 mm = 0 (an erosion AREA ratio penalises corners, not strokes), and gaps < 0.9 = 0 by the complement-opening metric (next bullet). One body per character. Every label inside its face **and the legend body inside the LENGTH of the surface it sits on** (a rail word at 3/4 of the rail ran off the end once the cap grew). **label pitch grows with the cap**: labels at pitch 19 nearly touched at cap 5.2. Labels 20 mm wide need pitch ≥ 23. Derive the pitch from the measured label width, never a constant.
+- **Legend at a small cap (a word on a 6 mm rail)**: `text(size=)` is NOT the cap height. Render one H per font, measure it, and derive the size (a condensed DIN: cap = 0.72 × size; every font differs). Pick the font by MEASUREMENT at that cap: erode for strokes ≥ 0.9, open the COMPLEMENT for gaps ≥ 0.9 after padding. The 2026-10-01 "counters ≥ 0.45" bar printed closed. Arial / Helvetica / Futura / DIN all fail on gaps at cap 5.2; Avenir Next Demi Bold passes. Take the glyph polygons from the SVG path with holes classified by ring COVERAGE (a point test put a D's outer ring inside its own counter and dropped the letter). Morphology order: OPEN (tips) → CLOSE (gaps) → neck thickening, never the other order (an opening after the closing reopens every filled slit). Fill glyph gaps in the polygon at the printer's MEASURED closing width + 0.1, and at least `gate + 0.05` (the mesh tools read ~0.05 under the polygon). The worked-example printer closed 0.5–0.6, so a 0.45 gate fills at 0.7 and a 0.9 gate at 0.95. Rows: thin regions < 0.9 longer than 1.2 mm = 0 (an erosion AREA ratio penalises corners, not strokes), and gaps < 0.9 = 0 by the complement-opening metric (next bullet). One body per character. Every label inside its face **and the legend body inside the LENGTH of the surface it sits on** (a rail word at 3/4 of the rail ran off the end once the cap grew). **label pitch grows with the cap**: labels at pitch 19 nearly touched at cap 5.2. Labels 20 mm wide need pitch ≥ 23. Derive the pitch from the measured label width, never a constant.
 - **The gap metric is an OPENING of the complement, never a closing of the glyph.** The closing test (`geom.buffer(h).buffer(-h).difference(geom)`) saturates at ~0.45. Above that every concave corner reads as a gap, so it can never enforce a stricter gate. It passed the cap-4 labels the printer closed. Required test (shapely), gate `g`:
   ```python
   from shapely.geometry import box
@@ -312,7 +313,8 @@ numbers are **[owner bar]** for a 0.4 nozzle at 0.20 mm and live in `print_targe
 - **Coupons are self-documenting**: every test coupon and every variant on a bracket plate carries its own identifier and the value it tests
   ON the part. Use DEBOSSED text with the number (for example `W1.6 R0.20`, `WALL 1.6`, `CLR 0.30`). Raised text is only for the colour-path
   word of a coupon that also tests colour (next bullet). Put the text on an ironed top face or a face-up plate. Debossed: cap ≥ 4 mm, stroke
-  ≥ 0.45, lands ≥ 0.45 between glyphs. Raised: cap ≥ 5.1, stroke ≥ 0.9, AIR GAP ≥ 0.9. All are measured and FAIL-gated. The raised numbers are
+  ≥ 0.45, lands ≥ 0.45 between glyphs. Raised: cap ≥ 5.1, stroke ≥ 0.9, AIR GAP ≥ 0.9. All are measured and FAIL-gated.
+  An in-box cluster gates on the 10th percentile of its samples, not the median, because the thin fifth is what the vendor colours. The raised numbers are
   the 2026-10-02 rule above: the coupon of record passes the same bar as the part. Each legend BOX carries its own gate (`references/print-dfm.md`,
   legend boxes), so a debossed label and a raised colour word on one coupon are gated apart. Never put the text on a bridge underside or a deep
   inner wall. A coupon the user has to look up in a README to identify is a coupon that gets mixed up on
@@ -361,7 +363,7 @@ The finish of a mark is decided by WHICH FACE carries it and HOW that face is bu
 - **(a) TOP-face feature under ironing.** The mark is a deboss 0.6 deep (= 3 whole layers at 0.20, measured on the mesh) or a raised body 0.6
   high on a face that is a TOP face of the print. The plate profile irons **ALL top surfaces: `ironing_type: top` — never `topmost`**.
   `topmost` irons only the highest face and skips the recess floor. That recreates the texture mismatch the option exists to avoid.
-  **Top shell ≥ recess depth + 1.0** (worked example: `top_shell_layers 7` = 1.4 under a 0.6 recess) so no sparse infill shows through the
+  **Top shell ≥ recess depth + 1.0** (worked example: `top_shell_layers 8` = 1.6 under a 0.6 recess) so no sparse infill shows through the
   recess floor; floor and face are then both topmost solid surfaces built by the same pass. **Orient the part so the marked face IS a top
   face**: a cap prints mouth down (blind pocket rising from the bed, flange on the bed, the closed end = the marked top face, §8.2); a plate
   prints face-up. The mark is read directly, not mirrored. Cost: one filament, ironing adds ~5 min on a small plate.
@@ -413,7 +415,7 @@ the geometry rows guarantee the rest — the report says which is which.
   support-free: standing on the bed, hole axis vertical, wall around the hole ≥ the wall gate (1.6) outboard and inboard to the mouth.
 - **Print MOUTH DOWN**: the lip flange flat on the bed, mouth chamfer ≤ 45°. **Ribs / crush beads start ≥ 1.0 above the bed** so elephant foot
   never widens a fit surface. The pocket tip face is the ONLY bridge (≤ 10 mm; sag lands in the tip gap). Profile: elephant-foot compensation
-  0.15 + 0.5 mm first-layer lines, thin-wall detection on for the mouth rim, thick bridges off. FAIL rows: chamfer angle, lip footprint = the
+  `fits.ef` + 0.5 mm first-layer lines, thin-wall detection on for the mouth rim, thick bridges off. FAIL rows: chamfer angle, lip footprint = the
   full lip (vertex extents), rib start Z, bridge span, material under the mark (§8.1).
 - The pocket corner radius comes from the mating part's DRAWING, not a print rule of thumb (a module corner R 0.15 is clipped by a pocket
   R > 0.66). Ribs bear on the faces the drawing shows SOLID (a pluggable module is open at its bottom leading edge and recessed on top).
@@ -488,7 +490,7 @@ ironing, fuzzy skin, per-object overrides) and how each is PROVEN from the g-cod
 - **The lands are the datum, the bridged strips sit one layer BELOW them**. A plate whose grooves rest on the land tops while its underside
   touches the bridge ceilings stands on the sag humps (0.1..0.3 at a 6 mm span) and rocks. Strip ceiling = land top − `sag_gap` (0.2 = one layer)
   under the part, so sag cannot lift the plate. FAIL rows: seat datum (gap 0.20), proud height (1.2), **working clearance after elephant-foot
-  compensation on BOTH parts ≥ 0.1** (0.3 − 2 × 0.1 EF … measured on the meshes, not the yaml).
+  compensation on BOTH parts ≥ 0.1** (0.3 − 2 × `fits.ef` … measured on the meshes, not the yaml).
 - **Clearance for a glued plate: 0.3 per side** (CA fills; 0.2 was a 0.0..0.1 working fit after EF). **Widen the PLATE's clearance by shrinking
   the plate, never by widening the rebate**: the rebate lip to the roof fillet is a census wall — +0.1 per side took a 1.6 lip to 1.53 = FAIL. The
   rebate footprint stays where the census approved it; the plate shrinks by 0.2 per side.
