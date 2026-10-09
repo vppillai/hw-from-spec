@@ -7,3 +7,6 @@ The owner writes the approval cells; agents never edit them. The release reports
 | **G0** | SPEC approved for schematic capture | one review round merged, PARTS_VERIFICATION with no [K] left | _not yet approved_ |
 | **G1** | Schematic approved for layout | ERC 0 errors, review pack, one review round merged | _not yet approved_ |
 | **G2** | Layout approved for fabrication outputs | DRC 0 errors, fab DFM mirror 0 open, one review round merged | _not yet approved_ |
+
+> delegated: G1, smoke, 2026-01-02 09:00, "lay out the smoke board"
+> delegated: G2, smoke, 2026-01-03 09:00, "build the smoke fab package"

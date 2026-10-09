@@ -63,7 +63,7 @@ Q=$(get gates.quiet_regex); [[ -n $Q ]] || Q='^$'
 quiet() { grep -vE "$Q" || true; }
 step() { echo "== $1"; eval "$1" 2>&1 | quiet; [[ ${PIPESTATUS[0]} == 0 ]] || { echo "GATE FAILED: $1"; exit 1; }; }
 L=$(get gates.adopt); [[ -n "$L" ]] || { echo "adopt gates: gates.adopt is empty — nothing checked (a green gate that ran nothing is a failing check)"; exit 1; }
-"$PY" "$HERE/project.py" gates-required || { echo "GATE FAILED: an artefact exists whose gate line is missing or still commented out in gates.adopt (schematic -> erc_gate.py, board -> a DRC gate, STL set -> census --gate-dir + print_dfm --gate)"; exit 1; }
+"$PY" "$HERE/project.py" gates-required || { echo "GATE FAILED: an artefact exists whose gate line is missing or still commented out in gates.adopt (schematic -> erc_gate.py, board -> a DRC gate, STL set -> census --gate-dir + print_dfm --gate), or a next-phase artefact exists while its preceding gate has no cell and no > delegated: line"; exit 1; }
 while IFS= read -r c; do [[ -n $c ]] && step "$c"; done <<< "$L"
 if [[ "$1" != "--no-clone" ]]; then
   step "$HERE/clone_gate.sh"

@@ -219,6 +219,8 @@ PYEOF
  # 0.11.0 B-4: the gate lines are per set — a second set with STLs and no line naming its checks dir fails, and the message names the set
  printf 'gates: {adopt: ["$PY scripts/thin_wall_census.py --gate-dir 40-case/pre/checks/census", "$PY scripts/print_dfm.py --gate 40-case/pre/checks/dfm"], clone: []}\n' > gates.yaml
  sed -i.bak '/^gates:/d' project.yaml; cat gates.yaml >> project.yaml; rm gates.yaml
+ out=$("$PY" scripts/project.py gates-required 2>&1 || true); echo "$out" | grep -q 'G0 is not approved' || { echo "FAIL (A-9): an STL set with an empty G0 cell and no delegation line was green"; echo "$out"; exit 1; }
+ printf '> delegated: G0, smoke, 2026-01-01 09:00, "draw the case"\n' > 90-log/GATES.md
  "$PY" scripts/project.py gates-required >/dev/null || { echo "FAIL (B-4): the set pre has both gate lines naming its checks dir and gates-required failed"; exit 1; }
  mkdir -p 40-case/other/parts; printf 'solid x\nendsolid x\n' > 40-case/other/parts/x.stl
  out=$("$PY" scripts/project.py gates-required 2>&1 || true); echo "$out" | grep -q 'GATES REQUIRED: STL set 40-case/other' || { echo "FAIL (B-4): a second STL set (other) with no gate line of its own was green"; echo "$out"; exit 1; }

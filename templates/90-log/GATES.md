@@ -32,3 +32,6 @@ A waiver is a dated decision row plus a machine-readable accept entry the gate r
 | **Release** | Reports RELEASED | every gate above approved; the owner writes the release phrase into this row's approval cell and commits it (`scripts/gate_check.py --release`) | _not yet written_ |
 
 Owner instructions quoted verbatim (with date/time) go here when the owner delegates a step; the cells above stay empty until the owner fills them.
+A delegation line starts with `> delegated:` and names its gate: `> delegated: G0, <owner>, <YYYY-MM-DD HH:MM>, "<owner words>"`.
+`scripts/project.py gates-required` fails while a next-phase artefact exists and its gate has neither a cell nor such a line.
+The pairs are: schematic → G0, board → G1, fab package → G2, STL set → G0, `ORDER_<rev>.md` (mech) → M1.
