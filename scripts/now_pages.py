@@ -12,7 +12,7 @@
   scripts/now_pages.py --selftest
 Never hand-edited: the pages are rebuilt by the record round and a stale page fails the gates like a stale release report. Sources are the
 paths the layout names (scripts/project.py DEFAULTS); nothing here reads a README. Sidecar keys read (references/print-kit.md §4): print_time_s,
-filament_g, objects, optional filament_changes, proves, order, stl_md5s, case_version."""
+filament_g, objects, optional filament_changes (a number or {designed, counted, ok}), proves, order, stl_md5s, case_version."""
 import glob, hashlib, json, os, re, sys, time
 
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
@@ -124,11 +124,20 @@ def to_print(P):
         items.append((int(s.get("order", 99)), kit, plate, s, plate_problems(os.path.join(P.root, kd, kit), p, s)))
     for _, kit, plate, s, why in sorted(items, key=lambda x: (x[0], x[1], x[2])):
         broken += bool(why)
-        L.append(f"| {kit} | {plate} | {int(s.get('print_time_s', 0)) // 60} min | {s.get('filament_g', 0)} g | {int(s.get('filament_changes', 0))} changes | {s.get('proves', '')} | "
+        L.append(f"| {kit} | {plate} | {int(s.get('print_time_s', 0)) // 60} min | {s.get('filament_g', 0)} g | {changes(s)} changes | {s.get('proves', '')} | "
                  f"{s.get('case_version', '-')} | `{kd}/{kit}/START_HERE.md` | {'BROKEN: ' + '; '.join(why) if why else 'ok'} |")
     if broken:
         L += ["", f"- {broken} broken plate(s)"]
     return "\n".join(L) + "\n"
+
+
+def changes(s):
+    """`filament_changes` is a number or a mapping `{designed, counted, ok}` (a slicer writer that counts the changes in the g-code): the counted
+    number, else the designed one, else 0."""
+    c = s.get("filament_changes", 0)
+    if isinstance(c, dict):
+        c = c.get("counted", c.get("designed", 0))
+    return int(c or 0)
 
 
 def plate_problems(kit_dir, sidecar, s):
@@ -209,6 +218,8 @@ def selftest():
     import hashlib
     w("50-kits/home_fdm/START_HERE.md", "# start\n"); w("50-kits/home_fdm/parts/a.stl", "solid a\nendsolid a\n"); amd5 = hashlib.md5(b"solid a\nendsolid a\n").hexdigest()
     w("50-kits/home_fdm/plates/body.3mf", ""); w("50-kits/home_fdm/plates/body.3mf.json", json.dumps({"print_time_s": 3600, "filament_g": 12.5, "objects": ["a"], "filament_changes": 2, "proves": "fit", "order": 2, "stl_md5s": [amd5], "case_version": "v3"}))
+    w("50-kits/home_fdm/plates/deck.3mf", ""); w("50-kits/home_fdm/plates/deck.3mf.json", json.dumps({"print_time_s": 60, "filament_g": 3, "objects": ["d"], "filament_changes": {"designed": 4, "counted": 6, "ok": False}, "order": 3}))
+    w("50-kits/home_fdm/plates/lid.3mf", ""); w("50-kits/home_fdm/plates/lid.3mf.json", json.dumps({"print_time_s": 60, "filament_g": 3, "objects": ["l"], "filament_changes": {"designed": 5}, "order": 3}))
     w("50-kits/home_fdm/plates/coupon.3mf", ""); w("50-kits/home_fdm/plates/coupon.3mf.json", json.dumps({"print_time_s": 600, "filament_g": 1.5, "objects": ["c"], "proves": "legend", "order": 1}))
     # BROKEN plates: no .3mf beside the sidecar, a missing key, an md5 that is not a part of the kit, a kit without START_HERE
     w("50-kits/home_fdm/plates/no3mf.3mf.json", json.dumps({"print_time_s": 1, "filament_g": 1, "objects": [], "order": 9}))
@@ -226,6 +237,7 @@ def selftest():
     tp = pages["WHAT_TO_PRINT.md"]
     assert "| home_fdm | coupon | 10 min | 1.5 g | 0 changes | legend | - | `50-kits/home_fdm/START_HERE.md` | ok |" in tp and tp.index("coupon") < tp.index("| body |"), tp
     assert "| home_fdm | body | 60 min | 12.5 g | 2 changes | fit | v3 | `50-kits/home_fdm/START_HERE.md` | ok |" in tp, tp
+    assert "| deck | 1 min | 3 g | 6 changes |" in tp and "| lid | 1 min | 3 g | 5 changes |" in tp, ("a mapping reads counted, else designed", tp)
     for row, why in (("no3mf", "BROKEN: no .3mf |"), ("nokey", "BROKEN: missing filament_g |"), ("badmd5", "BROKEN: stl md5 00000000 not in parts/ |"), ("| nostart | x |", "BROKEN: no START_HERE.md |")):
         line = next(l for l in tp.splitlines() if row in l); assert line.endswith(why), (row, line)
     assert "- 4 broken plate(s)" in tp and "objects_in_3mf" not in open(__file__).read().split("def selftest")[0], tp
@@ -245,7 +257,7 @@ def selftest():
     assert all("nothing" in t for t in pages.values()), [n for n, t in pages.items() if "nothing" not in t]
     assert main([]) == 0 and sorted(os.listdir("00-now")) == sorted(PAGES)
     print("selftest OK (five pages from gates / decisions / status / blockers / arrival yaml / procurement / kit sidecars; newest-first log; "
-          "print order; --check catches a hand edit; ee scope prints nothing; an empty project says nothing on every page)")
+          "print order; filament_changes as a number or a counted / designed mapping; --check catches a hand edit; ee scope prints nothing; an empty project says nothing on every page)")
     return 0
 
 

@@ -91,7 +91,9 @@ reorg:                                    # scripts/reorg_paths.py — only when
   # Worked example: a project laid out as `docs/<topic>/` + `out/<board>/` moving to the numbered tree. Each row is a file or a WHOLE <!-- legacy-path: ok -->
   # directory; `--apply` runs them longest key first, so a file listed out of a directory leaves before the directory goes, and a
   # directory whose destination already exists is merged file by file. Literals under a moved directory are rewritten with the prefix
-  # (`docs/quotes/<date>/mail.txt` -> `60-orders/quotes/<date>/mail.txt`) in every non-frozen tracked text file.
+  # (`docs/quotes/<date>/mail.txt` -> `60-orders/quotes/<date>/mail.txt`) in every non-frozen tracked text file. Every key carries a slash or
+  # names a root file (`SPEC.md`). A bare name rewrites prose: `design` turned "the design of record" into "the 20-design of record".
+  # The script prints the bare keys and exits 2.
   moves:
     docs/governance/KICKOFF_ANSWERS.md: 10-spec/KICKOFF_ANSWERS.md   # the one governance file that belongs to the spec stage
     docs/governance: 90-log                                           # the append logs: DECISIONS STATUS GATES BLOCKERS KNOWN_ISSUES LEARNINGS_LOG TRACEABILITY ENV
@@ -100,7 +102,7 @@ reorg:                                    # scripts/reorg_paths.py — only when
     docs/spec_sections: 10-spec/spec_sections
     docs/datasheet_notes: 10-spec/datasheet_notes
     docs/design: 20-design                                            # briefs, notes, test plan beside the yaml sources of truth
-    design: 20-design                                                 # the yaml sources (merged into the directory the row above created)
+    design/case.yaml: 20-design/case.yaml                             # the yaml sources, one row per file or subfolder (a bare `design` key is refused) <!-- legacy-path: ok -->
     docs/parts: 60-orders                                             # PARTS_VERIFICATION PROCUREMENT parts_check.json
     docs/production/ORDER.md: 60-orders/ORDER_rev0.md
     docs/production/ARRIVAL_CHECKLIST.md: 60-orders/ARRIVAL_CHECKLIST_rev0.md
@@ -110,7 +112,7 @@ reorg:                                    # scripts/reorg_paths.py — only when
     docs/release/marketing/<md5-8>_<ver>: 70-release/marketing/rev0
     docs/release: 70-release/reports                                  # design reports, release notes (collateral and marketing left first)
     docs/reviews: 80-reviews                                          # then one folder per round by hand, the merged file at its root
-    kicad: 30-board/kicad
+    kicad/<board>: 30-board/kicad/<board>                             # one row per CAD project (a bare `kicad` key is refused) <!-- legacy-path: ok -->
     out/<board>/layout: 30-board/layout  # <!-- legacy-path: ok -->
     out/<board>/fab/<date>_<md5-8>: 30-board/fab/rev0                 # board_id.txt inside keeps the md5 + commit <!-- legacy-path: ok -->
     out/<board>/mechanical/<set>: 40-case/<set>                       # one row per print target; parts/ checks/ pictures/ build/ are split afterwards <!-- legacy-path: ok -->
@@ -183,7 +185,7 @@ gates:
 40-case/         <set>/ per print target — the folder IS the `print_targets` key (vendor_mjf, home_fdm …); coupons, board_dummy, dfm_validation,   [mech, both]
                  fea, board_mesh are sets that are not targets (their gate lines pass `--target`)
                  each set: parts/ (STL of record, tracked)  checks/ (census + DFM records, clearance, interference = what the gates read)
-                           pictures/ (previews, faces, assembly renders)  build/ (SCAD, logs, slicer scratch, caches — gitignored)
+                           pictures/ (previews, faces, assembly renders)  build/ (scratch SCAD, logs, slicer scratch, caches, gitignored)
 50-kits/         <kit>/ per print target — START_HERE.md  plates/ (.3mf + .3mf.json sidecar)  parts/ (STL copies, md5-checked)  sheets/  [mech, both]
                  the one kit of record; mirrored byte-identical to ~/Downloads/<project>_kits/<kit>/
 60-orders/       PROCUREMENT.md  PARTS_VERIFICATION.md  parts_check.json  ORDER_<rev>.md (the order sheet, written at the order)  ARRIVAL_CHECKLIST_<rev>.md
@@ -209,7 +211,8 @@ Seven rules make the tree the navigation; the first four name it, the last three
   build script at the repository root. Shared inputs sit in `assets/`.
 - **Build output is ignored and deletable.** Every build writes under its product's `build/` (`40-case/<set>/build/`, or one `build/<product>/`
   root that mirrors the sources); `.gitignore` covers it. Each check keeps its scratch under `build/…/_check/`. Deleting every `build/` and
-  regenerating from empty gives the same tracked tree, and `git ls-files` then lists no stray (`release-and-cut.md` §14).
+  regenerating from empty gives the same tracked tree, and `git ls-files` then lists no stray (`release-and-cut.md` §14). The SCAD of record
+  stays tracked at the set root, not under `build/`, because the assembly-guide renders and the traceability checks key on its md5.
 - **A README in every folder.** Each `README.md` answers "what is this folder and how do I use it" without the top README. It holds a table of the files
   or subfolders with their purpose, the prerequisites, the commands, the outputs, each procedure as numbered steps, and the design switches as a
   table. The top README is a map (folder | what it holds | link), a quick start and one status line; details live in the folder READMEs.

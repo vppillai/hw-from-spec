@@ -158,6 +158,10 @@ them); an uploaded package's generator-owned notes are re-derived, its fab files
 `blob/.*/<old>` by hand). Before a deletion, grep basenames AND exact paths. Separate live citations (gen/, 20-design/, CI, live docs) from
 record citations (DECISIONS / STATUS / merged reviews); treating records as blockers freezes the tree. A traceability `exists` check on a file
 that leaves the tree becomes `git show <tag>:<path> | grep -qF '<same string>'`, nothing weakened.
+Put the trims and untracks in their own commit before the BEFORE dump, and keep `trim: []` and `untrack: []` in the block. The reason:
+`--apply` runs them after the moves, but the BEFORE dump holds the pre-move paths. `--proof` accepts the old or the new spelling of a trim
+entry, so a missed commit still proves. Every move key carries a slash or names a root file (`SPEC.md`). A bare name such as `design` rewrites
+prose, so the script prints the bare keys and exits 2.
 
 ## 10. The arrival / first-article checklist (`scripts/arrival_checklist.py`) — written at the order, closed as the parts arrive
 `20-design/arrival_checklist.yaml` (`templates/20-design/arrival_checklist.yaml`) → `60-orders/ARRIVAL_CHECKLIST_<rev>.md`; `--check` joins `gates.adopt`
