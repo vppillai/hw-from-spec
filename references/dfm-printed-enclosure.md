@@ -255,6 +255,12 @@ the md5 and identical to the signature. A flipped verdict on "identical" geometr
 **Gate watertightness AFTER canonicalisation, on the file that is recorded**. A canonicaliser that drops zero-area slivers can open the mesh: a
 sliver of 1e-5 mm² can be the only face joining two near-coincident vertices. Snap the sliver's closest vertex pair first, then drop what
 collapsed. A body without slivers keeps its bytes. Record the md5 of the canonical file, never of the raw export.
+**Every chain writes the canonical STL.** A chain that copies the raw OpenSCAD 2021.01 export moves its md5 on every re-run, because the triangle
+order changes. The first canonical pass of an old raw file can change bytes without changing shape, because it drops zero-area slivers. Prove that
+pass by triangle set, area and volume, then accept it once.
+**A tessellation change on a print aid is a baseline update, never a geometry change.** CGAL can triangulate a coplanar face differently across
+environments, with the same binary and fonts. Prove determinism first: two forced exports give identical bytes. Then record the new md5 and the
+volume delta. On a part of an ordered set the stop rule of `case-pipeline.md` §Process rules still holds.
 
 ## 8. FDM at home (a desktop printer with a 0.4 nozzle at 0.20 mm layers, PLA / PETG, Bambu Studio 02.08 as the slicer) — printer-first preset
 A census that passes on paper is not a print. The FDM preset had 0 FAIL and failed as a product. The failures: bad finish, supports on visible

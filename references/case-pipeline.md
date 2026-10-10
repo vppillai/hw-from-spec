@@ -29,8 +29,9 @@ A set is one folder per PRINT TARGET under `40-case/<set>/`, named by the `print
 from the folder name. Sets that are not targets (coupons, board_dummy, dfm_validation, fea, board_mesh) carry `--target` on their gate lines. Never
 make one folder per case version; the version is a field of the records and the sheets. Inside a set, `parts/` holds the STL set of record, tracked;
 the kits copy from here. `checks/` holds the census + DFM records and the clearance and interference checks; it is the only place the gates look.
-`pictures/` holds previews, faces and assembly renders. `build/` holds SCAD, logs, slicer scratch and caches. It is gitignored and recreated by every
-run. The determinism check compares a regenerated part with its recorded md5 in `checks/`. Everything under the set is generated. `ASSEMBLY.md` and
+`pictures/` holds previews, faces and assembly renders. `build/` holds scratch SCAD, logs, slicer scratch and caches. It is gitignored and recreated by every
+run. The SCAD of record stays tracked at the set root, because the assembly-guide renders and the traceability checks key on its md5.
+The determinism check compares a regenerated part with its recorded md5 in `checks/`. Everything under the set is generated. `ASSEMBLY.md` and
 print sheets are generated with spliced blocks (`<!-- gen:BEGIN name -->…<!-- gen:END -->`) so prose survives regeneration.
 
 ## Board mesh of record (both) / fit input of record (mech)
@@ -219,6 +220,8 @@ geometry together), per-piece and assembly STEP (OCP/cadquery), `--check` = md5 
   STL exports of record run on the preset's `engine:` (the one that passes the mesh gates). They are cached only on the inputs + engine key, with the
   sidecar md5 as a determinism check (`--no-cache` forces). Use `--render` for geometry of record. Kill the chain early when an owner addition
   arrives.
+- The SCAD text embeds the generator and asset paths, and the export cache keys on that text. A layout change therefore re-exports every STL.
+  The stop rule makes a re-layout safe for an ordered set: every STL of record comes back byte-identical, or the work stops.
 - Never run a case "check" in the working tree if it writes tracked files — the traceability sandbox copies `gen/ + 20-design/` and symlinks the mesh.
 - Print sheets and order sheets list filaments / processes per piece, orientation, supports, post-process, and the material rating (UL 94 / HDT from
   the TDS). They list insert type / bore / temperature per material (from the insert TDS, `dfm-printed-enclosure.md` §1.1). They carry the insert
