@@ -53,11 +53,11 @@ class Reorg:
         inv = {v: k for k, v in self.moves.items()}
         names = {n for f in self.frozen + self.skip for n in (f, self.map(f), self.map(f, inv))}
         self.frozen_rx = re.compile("^(?:" + "|".join(re.escape(n.rstrip("/")).replace(r"\*", "[^/]*") for n in sorted(names)) + ")(?:/|$)") if names else None
-        self.old_rx = re.compile(r"(?<![\w-])(?<!\w/)(" + "|".join(map(re.escape, olds)) + r")(?!\w)") if olds else None
+        self.old_rx = re.compile(r"(?<![\w-])(?<!\w/)(?<!\w:)(" + "|".join(map(re.escape, olds)) + r")(?![\w-])") if olds else None   # 0.11.17: not after `<rev>:` (a git show form names the path AT that revision), not before `-` (docs/x is not docs/x-old)
         joins = [(o.split("/", 1)) for o in olds if o.count("/") == 1]
         self.join_rx = re.compile(r'"(' + "|".join(sorted({d for d, _ in joins})) + r')"(\s*[/,]\s*)"(' + "|".join(re.escape(b) for _, b in joins) + r')"') if joins else None
         tops = sorted({n.split("/")[0] for n in self.moves.values()} | {o.split("/")[0] for o in olds})
-        self.lit_rx = re.compile(r"(?<![\w-])(?<!\w/)((?:" + "|".join(map(re.escape, tops)) + r")/[A-Za-z0-9_][A-Za-z0-9_./+-]*\.[A-Za-z0-9]{1,10})(?![\w…/])") if tops else None   # `docs/v1.2/x` is a directory segment, not a file
+        self.lit_rx = re.compile(r"(?<![\w-])(?<!\w/)(?<!\w:)((?:" + "|".join(map(re.escape, tops)) + r")/[A-Za-z0-9_][A-Za-z0-9_./+-]*\.[A-Za-z0-9]{1,10})(?![\w…/])") if tops else None   # `docs/v1.2/x` is a directory segment, not a file
 
     def map(self, p, moves=None):
         """Where `p` lives after the moves: the longest key equal to `p` or a directory prefix of it, with the remainder appended."""
@@ -228,14 +228,16 @@ def selftest():
       "  gitignore: ['out/logs/*.log']\n  frozen: [out/fab/, 60-orders/quotes, '70-release/*/records']\n  no_existence: ['.py', '.js', 90-log/DECISIONS.md]\n"
       "  allow_missing: ['^60-orders/quotes/']\n  rewrites_record: 80-reviews/REORG_REWRITES.txt\n")
     w("docs/governance/DECISIONS.md", "see docs/governance/STATUS.md and ./docs/governance/GATES.md and other-repo/docs/governance/STATUS.md and "
-      "docs/governance_2026/x.md and docs/gone.md and docs/quotes/2026-01-01/mail.txt and docs/governance/KICKOFF_ANSWERS.md\n")
+      "docs/governance_2026/x.md and docs/gone.md and docs/quotes/2026-01-01/mail.txt and docs/governance/KICKOFF_ANSWERS.md "
+      "and `git show v1:docs/governance/STATUS.md` and docs/governance-old/x.md\n")
     w("docs/governance/STATUS.md", "x\n"); w("docs/governance/GATES.md", "y\n"); w("docs/governance/KICKOFF_ANSWERS.md", "k\n")
     w("docs/parts/parts_check.json", "{}\n"); w("docs/governance_2026/x.md", "z\n")
     w("gen/a.py", 'A = (ROOT / "docs" / "parts" / "parts_check.json")\nB = os.path.join(R, "docs", "quotes")\nC = "docs/parts/parts_check.json"\nD = "60-orders/quotes/2026-02-02/gone.txt"\n')
     frozen_txt = "see docs/quotes/2026-01-01/mail.txt\n"
     w("docs/quotes/2026-01-01/mail.txt", frozen_txt)
     w("out/fab/old.md", "frozen docs/governance/DECISIONS.md\n"); w("out/old/x.txt", "g\n"); w("out/logs/run.log", "l\n")
-    w("design/live.yaml", "path: docs/missing_file.md\nok: 60-orders/quotes/2026-02-02/gone.txt\nver: docs/v1.2/notes\nurl: https://x/blob/main/docs/governance/STATUS.md\n")
+    w("design/live.yaml", "path: docs/missing_file.md\nok: 60-orders/quotes/2026-02-02/gone.txt\nver: docs/v1.2/notes\nurl: https://x/blob/main/docs/governance/STATUS.md\n"
+      "at_tag: git show v1:docs/governance/STATUS.md\n")
     subprocess.run(["git", "init", "-q", d], check=True)
     g = lambda *a: subprocess.run(["git", "-c", "user.email=a@b", "-c", "user.name=t", *a], cwd=d, check=True, capture_output=True, text=True).stdout
     g("add", "-A"); g("commit", "-qm", "0"); before = g("ls-files", "-s")
@@ -252,7 +254,7 @@ def selftest():
     assert {p for p, _ in rw} == {"90-log/DECISIONS.md", "gen/a.py"}, rw
     t = open(f"{d}/90-log/DECISIONS.md").read()
     assert t == ("see 90-log/STATUS.md and ./90-log/GATES.md and other-repo/docs/governance/STATUS.md and docs/governance_2026/x.md and docs/gone.md and "
-                 "60-orders/quotes/2026-01-01/mail.txt and 10-spec/KICKOFF_ANSWERS.md\n"), t
+                 "60-orders/quotes/2026-01-01/mail.txt and 10-spec/KICKOFF_ANSWERS.md and `git show v1:docs/governance/STATUS.md` and docs/governance-old/x.md\n"), t   # 0.11.17: a path after `<rev>:` and a dashed sibling stay
     t = open(f"{d}/gen/a.py").read()
     assert '"60-orders" / "parts_check.json"' in t and '"60-orders", "quotes"' in t and 'C = "60-orders/parts_check.json"' in t, t
     assert os.path.exists(f"{d}/10-spec/KICKOFF_ANSWERS.md") and not os.path.exists(f"{d}/docs/governance"), "file pulled out before its directory moved"
@@ -267,6 +269,7 @@ def selftest():
     bad_lines = buf.getvalue()
     assert "dangling `docs/missing_file.md`" in bad_lines and "docs/gone.md" not in bad_lines, bad_lines   # DECISIONS is a record (no_existence); live.yaml is structural
     assert "2026-02-02" not in bad_lines and "docs/v1.2" not in bad_lines, bad_lines                        # allow_missing regex; a directory segment is not a file
+    assert "v1:docs/governance/STATUS.md" not in bad_lines and bad_lines.count("docs/governance/STATUS.md") == 0, bad_lines   # 0.11.17: `<rev>:<path>` is the path at that revision
     assert "blob/main/docs/governance/STATUS.md" in open(f"{d}/design/live.yaml").read(), "URLs are not rewritten (documented)"
     with contextlib.redirect_stdout(io.StringIO()) as buf:
         assert main(["reorg_paths.py", "--map", "docs/quotes/2026-01-01/mail.txt", "--project", f"{d}/project.yaml"]) == 0

@@ -1,6 +1,6 @@
 # CHANGELOG — hw-from-spec
 
-## Current state (0.11.16) — read this instead of replaying the entries below
+## Current state (0.11.17) — read this instead of replaying the entries below
 
 - **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
   twelve batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
@@ -40,6 +40,15 @@
 - **Generic by rule**: the skill names no project, part, board, order, account or person — `scripts/generic_lint.py` reads the whole repo
   (CHANGELOG and docs included; history keeps its measured numbers), a fenced worked example keeps numbers and kinds but never a name, and the
   repo carries no project retro (a retro report is folded, then deleted).
+
+## 0.11.17 — 2026-10-09 — The re-layout checker keeps `<rev>:<path>` forms and dashed siblings
+
+Source: one project moved to the numbered tree in one pass (835 moves). The apply rewrote fourteen `git show <tag>:<old path>` literals to paths that
+do not exist at that tag, and a key `case/v3` matched inside `case/v3-fdm`. Both needed hand repair.
+
+### Changed
+- `scripts/reorg_paths.py`: the old-literal and the dangling-literal regexes skip a path that follows `<word>:` (a git revision prefix names the path at
+  that revision) and stop at a `-` after a key (`docs/x` is not `docs/x-old`). The selftest covers both forms through apply and check.
 
 ## 0.11.16 — 2026-10-09 — Vector arrows from pins, the open coupon slot, no copied design values in the picture tools
 
