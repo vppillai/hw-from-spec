@@ -26,6 +26,11 @@ Learned the hard way (references/pitfalls.md, process): exempt the rewriter's OW
 under out/ embeds docs paths too; a literal rewrite moves the md5 of files other generators stamp — regenerate the chain, do not hand-edit.
 Not rewritten: URLs into the repo (`…/blob/main/docs/X.md` — the `<word>/` guard excludes them; grep `blob/.*/<old>` by hand) and binaries.
 Paths with non-ASCII characters: run the `git ls-files -s` dumps with `git -c core.quotepath=off`.
+Every move key carries a slash or names a root file (`SPEC.md`). A bare name such as `design` rewrites prose ("the design of record" became
+"the 20-design of record"), so the constructor prints the bare keys and exits 2 (0.11.18). Spell a directory per subfolder or per file.
+Trims and untracks: --apply runs them AFTER the moves, so a trim or untrack entry may name the old or the new path; --proof accepts either
+spelling. The simplest sequence still puts the trims and untracks in their own commit BEFORE the BEFORE dump, with `trim: []` and `untrack: []`
+in the block: then the proof sees only moves and rewrites (references/release-and-cut.md §9).
 """
 import argparse, os, re, subprocess, sys, tempfile
 
@@ -42,6 +47,11 @@ class Reorg:
         self.P, self.root = P, P.root
         r = P.get("reorg") or {}
         self.moves = dict(r.get("moves") or {})
+        bare = sorted(k for k in self.moves if "/" not in k.strip("/") and not re.search(r"[^./]\.[A-Za-z0-9]+$", k))
+        if bare:
+            print("reorg.moves: a key without a slash rewrites prose (`design` -> `20-design` inside \"the design of record\"); spell it per subfolder "
+                  "or per file:", *bare, sep="\n  ")
+            sys.exit(2)
         self.trim = list(r.get("trim") or []); self.untrack = list(r.get("untrack") or []); self.gitignore = list(r.get("gitignore") or [])
         self.frozen = tuple(r.get("frozen") or ()); self.skip = tuple(r.get("skip") or ())
         self.allow_old_files = set(r.get("allow_old_files") or ()) | {"scripts/reorg_paths.py", "project.yaml"}
@@ -140,11 +150,11 @@ class Reorg:
             os.makedirs(os.path.dirname(os.path.join(self.root, new)) or self.root, exist_ok=True)
             self.git("mv", old, new)
         rewrites = self.plan(write=True)            # after the move: the corpus is enumerated from the index, which now holds the new paths
-        for p in self.trim:
+        for p in {self.map(t) for t in self.trim}:  # after the moves: an old spelling is mapped first, a new spelling maps to itself
             if self.git("ls-files", p).strip():
-                self.git("rm", "-r", "-q", p)
+                self.git("rm", "-r", "-q", "-f", p)   # -f: a trimmed path the moves staged under its new name; the BEFORE tag keeps its content
         untracked = []
-        for g in self.untrack:
+        for g in dict.fromkeys(self.map(u) for u in self.untrack):
             for p in self.git("ls-files", g).splitlines():
                 self.git("rm", "--cached", "-q", p); untracked.append(p)
         if self.gitignore:
@@ -187,18 +197,19 @@ class Reorg:
             return {l.rstrip("\n").split(None, 3)[3]: l.split()[1] for l in open(f) if l.strip()}
         b, a = load(before), load(after)
         rw = {l.strip() for l in open(rewrites) if l.strip()}
-        trims = tuple(t.rstrip("/") + "/" for t in self.trim); trim_files = set(self.trim)
-        untrack_rx = [re.compile("^" + re.escape(g).replace(r"\*\*/", "(?:.*/)?").replace(r"\*", "[^/]*") + "$") for g in self.untrack]
+        trim_all = set(self.trim) | {self.map(t) for t in self.trim}          # a trim / untrack names the old or the new path (--apply maps it)
+        trims = tuple(t.rstrip("/") + "/" for t in trim_all); trim_files = trim_all
+        untrack_rx = [re.compile("^" + re.escape(g).replace(r"\*\*/", "(?:.*/)?").replace(r"\*", "[^/]*") + "$") for g in set(self.untrack) | {self.map(u) for u in self.untrack}]
         missing, moved, same, rewritten, removed, untracked = [], 0, 0, 0, [], []
         for p, sha in b.items():
-            if p in trim_files or p.startswith(trims):
+            q = self.map(p)
+            if {p, q} & trim_files or p.startswith(trims) or q.startswith(trims):
                 removed.append((p, sha)); continue
-            if any(r.match(p) for r in untrack_rx):
-                f = os.path.join(self.root, p); untracked.append((p, sha))
-                if not os.path.exists(f):
+            if any(r.match(p) or r.match(q) for r in untrack_rx):
+                untracked.append((p, sha))
+                if not (os.path.exists(os.path.join(self.root, q)) or os.path.exists(os.path.join(self.root, p))):
                     missing.append(f"{p}: untracked but gone from disk")
                 continue
-            q = self.map(p)
             if q not in a:
                 missing.append(f"{p} -> {q}: not in AFTER"); continue
             moved += q != p
@@ -224,14 +235,14 @@ def selftest():
     # into a destination another row created first (docs/quotes goes before docs/parts), a one-level directory (join forms), a frozen
     # directory (spelled by its NEW name, as the template does) whose content must survive byte-identical
     w("project.yaml", "project: {name: t}\nreorg:\n  moves: {docs/governance: 90-log, docs/governance/KICKOFF_ANSWERS.md: 10-spec/KICKOFF_ANSWERS.md, "
-      "docs/parts: 60-orders, docs/quotes: 60-orders/quotes}\n  trim: [out/old]\n  untrack: ['out/logs/*.log']\n"
-      "  gitignore: ['out/logs/*.log']\n  frozen: [out/fab/, 60-orders/quotes, '70-release/*/records']\n  no_existence: ['.py', '.js', 90-log/DECISIONS.md]\n"
+      "docs/parts: 60-orders, docs/quotes: 60-orders/quotes}\n  trim: [out/old, docs/governance/SCRATCH.md]\n  untrack: ['out/logs/*.log', 'docs/parts/*.log']\n"
+      "  gitignore: ['out/logs/*.log', '60-orders/*.log']\n  frozen: [out/fab/, 60-orders/quotes, '70-release/*/records']\n  no_existence: ['.py', '.js', 90-log/DECISIONS.md]\n"
       "  allow_missing: ['^60-orders/quotes/']\n  rewrites_record: 80-reviews/REORG_REWRITES.txt\n")
     w("docs/governance/DECISIONS.md", "see docs/governance/STATUS.md and ./docs/governance/GATES.md and other-repo/docs/governance/STATUS.md and "
       "docs/governance_2026/x.md and docs/gone.md and docs/quotes/2026-01-01/mail.txt and docs/governance/KICKOFF_ANSWERS.md "
       "and `git show v1:docs/governance/STATUS.md` and docs/governance-old/x.md\n")
     w("docs/governance/STATUS.md", "x\n"); w("docs/governance/GATES.md", "y\n"); w("docs/governance/KICKOFF_ANSWERS.md", "k\n")
-    w("docs/parts/parts_check.json", "{}\n"); w("docs/governance_2026/x.md", "z\n")
+    w("docs/parts/parts_check.json", "{}\n"); w("docs/governance/SCRATCH.md", "s\n"); w("docs/parts/run.log", "l\n"); w("docs/governance_2026/x.md", "z\n")
     w("gen/a.py", 'A = (ROOT / "docs" / "parts" / "parts_check.json")\nB = os.path.join(R, "docs", "quotes")\nC = "docs/parts/parts_check.json"\nD = "60-orders/quotes/2026-02-02/gone.txt"\n')
     frozen_txt = "see docs/quotes/2026-01-01/mail.txt\n"
     w("docs/quotes/2026-01-01/mail.txt", frozen_txt)
@@ -263,7 +274,8 @@ def selftest():
     assert "frozen docs/governance/DECISIONS.md" in open(f"{d}/out/fab/old.md").read(), "frozen file rewritten"
     assert R.plan() == [], "second pass must be a no-op (idempotent)"
     assert not g("ls-files", "out/old").strip() and not g("ls-files", "out/logs/run.log").strip() and os.path.exists(f"{d}/out/logs/run.log")
-    assert "out/logs/*.log" in open(f"{d}/.gitignore").read() and un == ["out/logs/run.log"]
+    assert "out/logs/*.log" in open(f"{d}/.gitignore").read() and sorted(un) == ["60-orders/run.log", "out/logs/run.log"], un
+    assert not g("ls-files", "90-log/SCRATCH.md").strip() and os.path.exists(f"{d}/60-orders/run.log"), "a trim / untrack spelled by its OLD path works after the moves"
     with contextlib.redirect_stdout(io.StringIO()) as buf:
         assert R.check(verbose=True) == 1
     bad_lines = buf.getvalue()
@@ -278,7 +290,8 @@ def selftest():
     open(f"{d}/B", "w").write(before); open(f"{d}/A", "w").write(after)
     with contextlib.redirect_stdout(io.StringIO()) as buf:
         assert R.proof(f"{d}/B", f"{d}/A", f"{d}/80-reviews/REORG_REWRITES.txt") == 0, buf.getvalue()
-    assert "MISSING: 0" in buf.getvalue() and "moved 6" in buf.getvalue(), buf.getvalue()             # 3 under docs/governance + KICKOFF + parts_check + the frozen mail
+    assert "MISSING: 0" in buf.getvalue() and "moved 6" in buf.getvalue() and "removed  " in buf.getvalue() and "docs/governance/SCRATCH.md" in buf.getvalue(), buf.getvalue()
+    assert "untracked-kept-on-disk 2" in buf.getvalue(), buf.getvalue()                               # the proof reads the old spelling of a trim / untrack too             # 3 under docs/governance + KICKOFF + parts_check + the frozen mail
     row = next(l for l in after.splitlines() if l.endswith("design/live.yaml"))                       # a blob-identical file: corrupt its sha in AFTER
     open(f"{d}/A2", "w").write(after.replace(row, row.replace(row.split()[1], "0" * 40)))              # = changed without being in the rewrite list
     with contextlib.redirect_stdout(io.StringIO()) as buf:
@@ -287,13 +300,22 @@ def selftest():
     os.remove(f"{d}/design/live.yaml"); g("rm", "-q", "design/live.yaml")
     assert R.check(verbose=False) == 0, "clean fixture must pass"
     # a one-segment key must not rewrite non-paths: a container image `kicad/kicad:<tag>` and a bracketed domain tag `[kicad/drc]` (0.11.0 A-8)
-    d2 = tempfile.mkdtemp(prefix="hwfs_reorg2_"); open(f"{d2}/project.yaml", "w").write("project: {name: t}\nreorg: {moves: {kicad: 30-board/kicad}}\n")
+    # 0.11.18: a bare key (no slash, not a root file) is refused with exit 2 and the keys printed, in the constructor and so in --plan
+    d2 = tempfile.mkdtemp(prefix="hwfs_reorg2_"); open(f"{d2}/project.yaml", "w").write("project: {name: t}\nreorg: {moves: {kicad: 30-board/kicad, design: 20-design, SPEC.md: 10-spec/SPEC.md}}\n")
+    for call in (lambda: Reorg(Project(f"{d2}/project.yaml")), lambda: main(["reorg_paths.py", "--plan", "--project", f"{d2}/project.yaml"])):
+        with contextlib.redirect_stdout(io.StringIO()) as buf:
+            try:
+                call(); raise AssertionError("a bare key must be refused")
+            except SystemExit as e:
+                assert e.code == 2, e.code
+        assert "\n  design\n  kicad\n" in buf.getvalue() and "SPEC.md" not in buf.getvalue(), buf.getvalue()
+    open(f"{d2}/project.yaml", "w").write("project: {name: t}\nreorg: {moves: {kicad/b: 30-board/kicad/b, SPEC.md: 10-spec/SPEC.md}}\n")
     R2 = Reorg(Project(f"{d2}/project.yaml"))
-    src = "image: kicad/kicad:10.0.5-full; tag [kicad/drc] and [kicad/gen]; path kicad/b/b.kicad_pcb; link [kicad/b/b.kicad_pcb](kicad/b/b.kicad_pcb)\n"
-    assert R2.sub(src) == "image: kicad/kicad:10.0.5-full; tag [kicad/drc] and [kicad/gen]; path 30-board/kicad/b/b.kicad_pcb; link [30-board/kicad/b/b.kicad_pcb](30-board/kicad/b/b.kicad_pcb)\n", R2.sub(src)
-    assert len(R2.hits(src)) == 3, [m.group(0) for m in R2.hits(src)]                                 # the image and the two tags are not literals to count or to flag
+    src = "image: kicad/kicad:10.0.5-full; tag [kicad/b/drc]; path kicad/b/b.kicad_pcb; link [kicad/b/b.kicad_pcb](kicad/b/b.kicad_pcb); see SPEC.md\n"
+    assert R2.sub(src) == "image: kicad/kicad:10.0.5-full; tag [kicad/b/drc]; path 30-board/kicad/b/b.kicad_pcb; link [30-board/kicad/b/b.kicad_pcb](30-board/kicad/b/b.kicad_pcb); see 10-spec/SPEC.md\n", R2.sub(src)
+    assert len(R2.hits(src)) == 4, [m.group(0) for m in R2.hits(src)]                                 # the image and the bracketed tag are not literals to count or to flag
     print("selftest OK (directory + file moves longest-key first, rewrite idempotent, frozen dir moved whole and byte-identical under old and new "
-          "spelling + glob, join forms, URLs untouched, trim/untrack/gitignore, dangling vs record vs allow_missing vs dir segment, --map sub-path, zero-loss proof pass + fail)")
+          "spelling + glob, join forms, URLs untouched, trim/untrack/gitignore, dangling vs record vs allow_missing vs dir segment, --map sub-path, zero-loss proof pass + fail, trim / untrack by old or new spelling, bare keys refused with exit 2)")
     return 0
 
 def main(argv):

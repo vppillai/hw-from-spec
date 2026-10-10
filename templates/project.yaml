@@ -205,6 +205,7 @@ gates:
     - "$PY scripts/release_report.py --check"
     - "$PY scripts/now_pages.py --check"      # the five answer pages of 00-now/ are current (written by scripts/now_pages.py in the record round)
     - "$PY scripts/style_lint.py --project ."  # every README, record, order, release and kit text follows references/writing-style.md (clutter words, sentence cap)
+    # - "$PY scripts/style_gate.py"          # a late adopter with old records: it replaces the line above. `scripts/style_gate.py --write` freezes 90-log/STYLE_BASELINE.json once, new or edited files lint at 0
     # G1 (schematic exists): add the project's generators and the ERC gate (references/schematic-phase.md §2) {{ee,both}}
     # - "$PY gen/build_sch.py --selftest" {{ee,both}}
     # - "$PY gen/build_sch.py --check" {{ee,both}}

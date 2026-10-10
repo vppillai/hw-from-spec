@@ -4,7 +4,7 @@ A Claude Code skill that takes a board, an enclosure, or both from a written spe
 It brings owner-gated phases, generated-only artefacts, a zero-warning manufacturability bar, blind reviews with
 a record-reading verifier, and a retro that folds every project's learnings back into the skill.
 
-`version 0.11.17` · MIT · `SKILL.md` is the procedure; everything else is reference, template or tool.
+`version 0.11.18` · MIT · `SKILL.md` is the procedure. Everything else is reference, template or tool.
 What changed per version: `CHANGELOG.md` (its first section is the current state).
 
 ## Quick start
@@ -44,7 +44,8 @@ Exit 0 = PASS, 1 = FLAG with one line per rule (measured | limit | where | fix):
   vendors' verdicts. A vendor flag we pass = a rule defect. Build rules for PCB and MJF / FDM / SLA /
   CNC enclosures, tagged checker / fab capability / physics / owner choice. Slicer knobs with a proof row each.
 - Generic `project.yaml`-driven scripts (every one with `--selftest` and a read-only `--check`) for the
-  records, gates, release and production cut, the arrival checklist, the job pool and the retro.
+  records, gates, release and production cut, the arrival checklist, the job pool and the retro. The
+  writing standard has two: `style_lint.py` for new text and `style_gate.py`, a dated baseline for a project with old records.
 - Blind-review workflow templates with a record-reading verifier; a two-minute dry run (`smoke/`) that
   drives every script, greps every rule and runs the two lints that keep the skill generic and present-tense.
 
