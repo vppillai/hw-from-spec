@@ -1,6 +1,6 @@
 # CHANGELOG — hw-from-spec
 
-## Current state (0.11.16) — read this instead of replaying the entries below
+## Current state (0.11.17) — read this instead of replaying the entries below
 
 - **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
   twelve batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
@@ -40,6 +40,21 @@
 - **Generic by rule**: the skill names no project, part, board, order, account or person — `scripts/generic_lint.py` reads the whole repo
   (CHANGELOG and docs included; history keeps its measured numbers), a fenced worked example keeps numbers and kinds but never a name, and the
   repo carries no project retro (a retro report is folded, then deleted).
+
+## 0.11.17 — 2026-10-09 — The manifest records what the cut measured; text on a part checked in its pose of use
+
+Source: the same printed-case project. A manifest sentence "self-check clean" turned out to be a template string while the drawing warned on
+every run; the same manifest said "magnets 0 x 3 mm" from a regex that matched a comment; and a board dummy's word read inverted when the
+dummy hung by its hole.
+
+### Added
+- `references/release-and-cut.md` §12: the cut script runs the fit test, the print DFM check and the drawing, stops on a failure, and writes
+  the counts it read; a check that cannot run stops the cut. Design values come from the code with the comments stripped, or from one
+  `echo()` run of the CAD. §8: the parameter read strips comments first.
+- `references/print-kit.md` §4: text on a part is checked in the pose of use (hanging by the hole, standing in its slot) on a render of the
+  mesh of record with dark recess floors; the real product's preview is the reference for a dummy's marking.
+- `references/pitfalls.md`: five dated one-liners (the template sentence, the comment match, the leader 0.14 mm off, the inverted dummy word,
+  two coupon readings a day apart).
 
 ## 0.11.16 — 2026-10-09 — Vector arrows from pins, the open coupon slot, no copied design values in the picture tools
 
