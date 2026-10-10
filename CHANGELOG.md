@@ -1,6 +1,6 @@
 # CHANGELOG — hw-from-spec
 
-## Current state (0.11.17) — read this instead of replaying the entries below
+## Current state (0.11.18): read this instead of replaying the entries below
 
 - **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
   twelve batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
@@ -18,7 +18,7 @@
   gates-required, record, env), `known_issues`, `traceability`, `release_report`, `collect_renders`, `assembly_guide`, `reorg_paths`, `dfm_check`,
   `erc_gate`, `gate_check`, `handoff_header`, `thin_wall_census` (`wall_gate` on the mesh; legend boxes with a Z band; accepted clusters re-matched by class and bbox), `print_dfm` (printability-floor gate + `--validate`),
   `thin_wall_check` (quick look + pinch), `heatmap_count` (yellow / red of a vendor map capture, stdlib), `vendor_gate` (the API flag + six 0 / 0 captures per STL of record), `stability` (CoG vs support hull at the worst pose; `improper_placements` = the det +1 row), `scad_lint`, `step2stl`, `arrival_checklist`, `skill_retro` (+ `--apply`), `jobs.sh` (the heavy-job
-  pool), `adopt_gates.sh`, `clone_gate.sh`, `doc_voice_lint`, `generic_lint`. Mesh stack: `numpy trimesh scipy shapely rtree networkx
+  pool), `adopt_gates.sh`, `clone_gate.sh`, `doc_voice_lint`, `generic_lint`. The writing gates are `style_lint` and `style_gate` (the dated baseline). Mesh stack: `numpy trimesh scipy shapely rtree networkx
   mapbox-earcut embreex` (the Embree ray engine keeps a census in seconds under 1 GB).
 - **Layout** (`references/project-yaml.md` §Layout): ten numbered folders in the order of the project's life — `00-now` (five generated answer
   pages) `10-spec` `20-design` `30-board` `40-case` `50-kits` `60-orders` `70-release` `80-reviews` `90-log` — plus the machinery (`gen/ scripts/
@@ -40,6 +40,33 @@
 - **Generic by rule**: the skill names no project, part, board, order, account or person — `scripts/generic_lint.py` reads the whole repo
   (CHANGELOG and docs included; history keeps its measured numbers), a fenced worked example keeps numbers and kinds but never a name, and the
   repo carries no project retro (a retro report is folded, then deleted).
+
+## 0.11.18 - 2026-10-09 - Bare move keys refused, the dated style baseline, exact gate ids in a delegation
+
+Source: one project's one-pass move to the numbered tree (835 moves) and its ten learnings of the same day. The rewriter turned a bare key into
+prose edits. The proof read trims on pre-move paths. The answer pages failed on a mapping in a plate sidecar. A lint with 1,569 frozen hits
+could not gate. A delegation of `G0` covered a later gate of the same name.
+
+### Added
+- `scripts/style_gate.py`: the writing-standard gate for a project with old records. It keeps a dated baseline keyed on file md5
+  (`paths.style_baseline`, default `90-log/STYLE_BASELINE.json`). An unchanged file keeps its frozen hits, and every new or edited file lints at 0.
+  `--write` freezes, the plain call gates, `style_gate.exclude` skips generated records. Linked from SKILL §0 step 9, `writing-style.md` §4, the
+  template's `gates.adopt` (a commented line) and the README.
+- `references/pitfalls.md`: eleven dated lines (layout, case, records, gates) from the re-layout.
+- `references/dfm-printed-enclosure.md` §7.2: every chain writes the canonical STL, and a print aid's tessellation change is a baseline update
+  with a determinism proof. `references/case-pipeline.md` §Process rules: the export cache keys on the SCAD text, so a layout change re-exports
+  every STL, and the stop rule keeps the ordered set safe.
+
+### Changed
+- `scripts/reorg_paths.py`: a move key without a slash that is not a root file name exits 2 and prints the keys, in the constructor and so in
+  `--plan`. `--apply` maps a trim or untrack entry through the moves, and `--proof` accepts either spelling. The docstring and
+  `release-and-cut.md` §9 put the trims and untracks in their own commit before the BEFORE dump. The `project-yaml.md` worked example spells
+  its two bare keys per subfolder. Selftest covers both.
+- `scripts/now_pages.py`: `filament_changes` is a number or a mapping `{designed, counted, ok}`, read as `counted`, else `designed`. Selftest
+  covers both forms. `references/print-kit.md` §4 names the mapping.
+- `scripts/project.py`: `gates-required` matches a `> delegated:` line by its full gate id, one id per comma field, so `G0` and
+  `G0 (case v4 spec)` are two gates. Selftest case.
+- `references/project-yaml.md` §Layout and `references/case-pipeline.md`: the SCAD of record stays tracked at the set root, not under `build/`.
 
 ## 0.11.17 — 2026-10-09 — The re-layout checker keeps `<rev>:<path>` forms and dashed siblings
 

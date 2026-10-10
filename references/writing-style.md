@@ -40,6 +40,9 @@ to a vendor, and chat reports.
   `scripts/generic_lint.py` keeps them free of project names.
 - A project: folder READMEs (`references/project-yaml.md` §Layout), kit texts (`references/print-kit.md` §3), records under `90-log/`,
   order records, vendor replies (`references/vendor-review.md`), and the chat report at the end of a task (`references/agent-ops.md` §6).
+- A project with old records: `scripts/style_gate.py` gates instead of the plain lint. It freezes a dated baseline keyed on file md5
+  (`90-log/STYLE_BASELINE.json`, `--write`). An unchanged file keeps its frozen hits, and every new or edited file lints at 0.
+  `style_gate.exclude` in `project.yaml` lists generated records, which are linted at their generator.
 - Not the owner's own words. A quoted owner sentence keeps its wording; mark the line `<!-- style: ok -->` when the lint trips on it.
 
 ## 5. How to fix a hit

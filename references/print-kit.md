@@ -73,8 +73,8 @@ README a repo path is allowed, every other class still fails); the run FAILS on 
 ## 4. Coupon, ONE part, then the plate
 - Every plate carries a sidecar `<plate>.3mf.json` beside it. The sidecar holds at least `print_time_s` (int), `filament_g` (float), `objects`
   (the slicer's object list), `stl_md5s` and `case_version`. `stl_md5s` is the md5 of every STL the plate was sliced from: its identity against
-  `parts/`. When known, the sidecar also holds `filament_changes` (int), `proves` (what printing it settles: fit, legend, colour path) and `order`
-  (print order within the kit, 1 = first). A plate
+  `parts/`. When known, the sidecar also holds `filament_changes`, `proves` (what printing it settles: fit, legend, colour path) and `order`
+  (print order within the kit, 1 = first). `filament_changes` is an int, or a mapping `{designed, counted, ok}` that the page reads as `counted`, else `designed`. A plate
   whose `.3mf` is missing, whose sidecar lacks the required keys or whose `stl_md5s` are not in `parts/` is listed as BROKEN. `scripts/now_pages.py` derives `00-now/WHAT_TO_PRINT.md` from these sidecars alone — a plate without a sidecar
   does not exist to the reader.
 - Coupons and bracket variants carry their identifier and tested value as printed text on the part (dfm-printed-enclosure.md

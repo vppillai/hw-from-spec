@@ -55,7 +55,7 @@ DEFAULTS = {
               "reviews_dir": "80-reviews", "reorg_rewrites": "80-reviews/REORG_REWRITES.txt",
               "log_dir": "90-log", "decisions": "90-log/DECISIONS.md", "status": "90-log/STATUS.md", "gates": "90-log/GATES.md",
               "blockers": "90-log/BLOCKERS.md", "known_issues": "90-log/KNOWN_ISSUES.md", "learnings": "90-log/LEARNINGS_LOG.md",
-              "env": "90-log/ENV.md", "traceability_out": "90-log/TRACEABILITY.md"},
+              "env": "90-log/ENV.md", "traceability_out": "90-log/TRACEABILITY.md", "style_baseline": "90-log/STYLE_BASELINE.json"},
     "tools": {"python": ".venv/bin/python", "kicad_cli": "kicad-cli", "kicad_python": "python3"},
 }
 
@@ -221,7 +221,8 @@ def gate_cell_backstop(P, sets):
     from gate_check import gate_cell, gate_rows   # lazy: gate_check imports this module
     gp = P.path("gates"); text = open(gp, encoding="utf-8").read() if gp and os.path.exists(gp) else ""
     last = max((n for n, _ in gate_rows(text).values()), default=0)
-    delegated = [l for l in text.splitlines()[last:] if l.startswith("> delegated:")]
+    # a delegation names gates by their FULL id, one per comma field: `G0` and `G0 (case v4 spec)` are two gates (0.11.18 [gates/gate-ids])
+    delegated = [{f.strip().strip("*").lower() for f in l[len("> delegated:"):].split(",")} for l in text.splitlines()[last:] if l.startswith("> delegated:")]
     fab = os.path.join(P.path("fab_dir"), P.rev())
     order = os.path.join(P.path("orders_dir"), f"ORDER_{P.rev()}.md")
     pairs = [("G0", "schematic", P.path("schematic")), ("G1", "board", P.path("board")),
@@ -231,7 +232,7 @@ def gate_cell_backstop(P, sets):
         pairs.append(("M1", "case order file", order))
     bad = []
     for gate, what, f in pairs:
-        if f and os.path.exists(f) and not gate_cell(text, gate) and not any(re.search(rf"\b{gate}\b", l) for l in delegated):
+        if f and os.path.exists(f) and not gate_cell(text, gate) and not any(gate.lower() in ids for ids in delegated):
             bad.append(f"{what} {os.path.relpath(f, P.root)} exists but {gate} is not approved in {P.get('paths.gates')} (empty cell, no `> delegated: {gate}` line under the table)")
     return bad
 
@@ -431,6 +432,8 @@ def selftest():
     open(f"{d}/90-log/GATES.md", "w").write(GT.replace("Owner, 2026-01-01, SPEC r1", "_not yet approved_"))
     bad = required_gate_lines(P); assert len(bad) == 3 and all("G0 is not approved" in b for b in bad) and "schematic k/k.kicad_sch" in bad[0], bad
     open(f"{d}/90-log/GATES.md", "a").write("\n> delegated: G1, Owner, 2026-01-02, \"go on\"\n"); assert len(required_gate_lines(P)) == 3, "a G1 delegation does not cover G0"
+    open(f"{d}/90-log/GATES.md", "a").write("> delegated: G0 (case v4 spec), Owner, 2026-01-02, \"start the G0 work\"\n")
+    assert len(required_gate_lines(P)) == 3, "a delegation of `G0 (case v4 spec)` is not a delegation of G0, and a quote naming G0 is not one either"
     open(f"{d}/90-log/GATES.md", "a").write("> delegated: G0, Owner, 2026-01-02, \"start the schematic\"\n"); assert required_gate_lines(P) == [], required_gate_lines(P)
     os.makedirs(f"{d}/60-orders"); open(f"{d}/60-orders/ORDER_rev0.md", "w").write("x")
     bad = required_gate_lines(P); assert len(bad) == 1 and "M1 is not approved" in bad[0] and "ORDER_rev0.md" in bad[0], bad
@@ -459,7 +462,7 @@ def selftest():
     P.cfg["project"]["scope"] = "mech"; assert not any(b.startswith("A0:") for b in kickoff_check(P)); P.cfg["project"]["scope"] = "ee"
     h = host_facts(); assert h["cores"] >= 1 and h["jobs_max"] >= 1 and h["min_free_gb"] >= 2 and "| Host |" in host_row(h), h
     assert host_row(dict(cores=14, ram_gb=24, jobs_max=3, min_free_gb=3.6)).startswith("| Host | 14 cores, 24 GB RAM")
-    print("selftest OK (defaults, paths, ids, scope, record md5, scaffold, record signing, OPEN rows, required gate lines, gate-cell backstop (empty cell + artefact fails, approved cell or delegation line passes), slots, kickoff check (owner ids only, A0 = project.scope), host row)")
+    print("selftest OK (defaults, paths, ids, scope, record md5, scaffold, record signing, OPEN rows, required gate lines, gate-cell backstop (empty cell + artefact fails, approved cell or delegation line passes, a delegation matches the full gate id), slots, kickoff check (owner ids only, A0 = project.scope), host row)")
     return 0
 
 

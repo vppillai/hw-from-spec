@@ -1,6 +1,6 @@
 ---
 name: hw-from-spec
-version: 0.11.17
+version: 0.11.18
 description: Run a hardware project (a PCB, a printed or CNC enclosure, or both — scope chosen at kickoff; contract fab such as JLCPCB) from a written specification to a production cut with an owner-gated, generated-only, blind-reviewed workflow — a kickoff questionnaire that asks every owner decision up front with recommended answers, a zero-warning manufacturability bar, and a retro that folds each project's learnings back into the skill. Use this whenever someone starts a board or enclosure project from a spec, asks to set up gates, a decision log, generators, part verification, a fab DFM mirror, a case pipeline, FEA, blind reviews, a release report or a production cut for one, or resumes such a project, or wants the skill improved from a finished project — even if they only say "new KiCad board", "order this at JLC", "review the layout", "cut the release" or "what did we learn".
 ---
 
@@ -80,6 +80,8 @@ reference when you reach that step, not before. Nothing here is specific to one 
    settings backed up" and "a README in every folder".
 9. **Write to the standard** (`references/writing-style.md`): every README, record, kit text, vendor reply and chat report follows the Google
    developer style, ASD-STE100 sentences and Zinsser's four principles; `scripts/style_lint.py --project <root>` is in the day-1 gate list.
+   A project that adopts the skill with old records gates on `scripts/style_gate.py` instead: a dated baseline keyed on file md5 (`--write`
+   freezes it), and every new or edited file lints at 0.
 
 ### 0.1 The kickoff questionnaire — every owner decision up front, with a recommended answer (`references/kickoff-questionnaire.md`)
 
@@ -568,7 +570,7 @@ row. The classifier is a keyword matcher: the report is the input to the change;
 | bring-up tool, criteria, codes | `references/software-track.md` |
 | reports, collateral, tag, cut yaml, one-round chain, assembly guide, re-layout | `references/release-and-cut.md` |
 | repository conventions: one folder per product, `assets/`, a README in every folder, build output ignored, release folder by use, order record, clean tree | §0 step 8, `references/project-yaml.md` §Layout, `references/release-and-cut.md` §12–§14 |
-| writing: sentences, voice, words, where the rules apply, how to fix a lint hit | `references/writing-style.md`, `scripts/style_lint.py` |
+| writing: sentences, voice, words, where the rules apply, how to fix a lint hit | `references/writing-style.md`, `scripts/style_lint.py`, `scripts/style_gate.py` |
 | the fab's review mail after the order, Replace File boundaries, quote-page DFM mechanics | `references/vendor-review.md` |
 | orchestration, git, reviews, read-only checkers, memory / pause points, the resource budget (job pool, measure-audit-change, caching + engine policy, serialized record round, preview vs render, inline vs agent) | `references/agent-ops.md`, `scripts/jobs.sh`, `templates/ci/Makefile` |
 | every recorded pitfall, one line each | `references/pitfalls.md` |
