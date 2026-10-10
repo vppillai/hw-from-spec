@@ -139,7 +139,8 @@ the SOP's companion cell points at it (a pointer, no revision bump).
   halo cuts the drawing's own lines and reads as a sticker on the picture. One pin hidden by a part is an error, never a fallback. The
   crop box includes the pins with room for the head, so an arrow never runs out of the frame.
 - **Every number in the text comes from the design parameters** (the same file the meshes come from): counts, magnet size, the pinch band, the
-  recess below a face. The guide reads the parameter file the way the drawing does (a regex over `NAME = value;` lines, derived values by one
+  recess below a face. The guide reads the parameter file the way the drawing does (a regex over `NAME = value;` lines with the comments
+  stripped first, derived values by one
   `echo()` run); a design change moves the pictures AND the words. Counts are words ("four magnets"), dimensions are digits ("6 x 3 mm").
   Cameras are the one hand-tuned input: a size change that moves a feature out of frame trips the frame warning, not a wrong number.
 - **No picture tool keeps its own copy of a design value.** The board count, the magnet positions, the index of the board a step lifts:
@@ -187,6 +188,13 @@ when the next SPEC revision's change log cites it. A rejected row is struck thro
 - The README is the manifest a person reads; MANIFEST.json stays the machine copy. The README carries the build date and `git describe`, the
   design values read from the parameter block, each check that passed with its count, and the MD5 and size of every file. It also carries the
   print or order procedure as numbered steps.
+- **The cut script runs the checks and writes their counts.** A check sentence typed into the manifest template is a claim, not a record. One
+  manifest said "self-check clean" for three releases while the drawing printed a warning on every run. The script runs the fit test, the
+  print DFM check and the drawing on the build, stops when one fails, and writes the counts it read from their output. A check that cannot
+  run (a missing tool) stops the cut with its message; it is never written as passed.
+- **Design values come from the code, not the comments.** A regex over the parameter file matched `MAG_D = 0` inside a comment ("… = 0 removes
+  the pockets") before the real line. A published manifest then said "magnets 0 x 3 mm". Strip the comments first, or read derived values by
+  one `echo()` run of the CAD, and compare one value in the manifest with the drawing by eye before the tag.
 - Name each subfolder by what a person does with it, never by file type: `<slicer>-projects/multi-colour/`, `<slicer>-projects/single-colour/`,
   `stl-for-other-slicers/`. A `meshes/` folder beside the slicer projects was not understood by the owner **[K]**.
 - File names state the filament role: `<part>_body_filament1_<colour>.stl`, `<part>_inlay_filament2_<colour>.stl`, `<part>_single_colour.stl`.
