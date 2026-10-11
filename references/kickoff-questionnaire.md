@@ -199,8 +199,8 @@ analysis API per body. Both are filed with raw evidence before any order. FEA on
 (press-fit, side load), with the owner accepting any WARN by row** — the gates in `templates/90-log/GATES.md`. *Alt:* vendor DFM only after ordering —
 the vendor's review mail becomes the review. *Alt:* no FEA — for a lab jig only.
 **E4a Drop case: the stop** [mech, both] (`references/fea-stage.md` §Drop). **RECOMMENDED: derive the stop by energy balance on the real STL
-(`m g h = σ_y V(d) + U_el`). Load the FEA with the peak force and gate the far field; the plastic zone is INFO** — an assumed stop asked for twice
-the drop's energy once. *Alt:* an assumed stop distance as an INFO row — no gate. *Alt:* no drop case — for a bench instrument that never leaves
+(`m g h = σ_y V(d) + U_el`). The plastic zone is INFO. Load the FEA with the peak force and gate the far field** — an assumed stop asked
+for twice the drop's energy once. *Alt:* an assumed stop distance as an INFO row — no gate. *Alt:* no drop case — for a bench instrument that never leaves
 the bench.
 **E4b Thermal: what closes the row** [mech, both] (`references/fea-stage.md` §Thermal). **RECOMMENDED: the model states what it reads (sink,
 `h`, pose factor). A bench measurement row (T-nn) closes the thermal pins at arrival** — a sink-only model cannot credit a vent change. *Alt:*

@@ -225,6 +225,7 @@ gates:
     # - "$PY scripts/scad_lint.py 40-case/<set>/build/*.scad"        # no statement hidden behind a `//` in generated SCAD {{mech,both}}
     # Case order (a vendor-mapped target): the checker's verdict per STL md5 of record — the API reply and six 0 / 0 captures; uncomment with the first vendor round {{mech,both}}
     # - "$PY scripts/vendor_gate.py 60-orders/quotes/<date>/<round> --stl 40-case/<set>/parts/*.stl" {{mech,both}}
+    # - "$PY scripts/vendor_gate.py --newest '60-orders/quotes/*/<round>*' --stl 40-case/<set>/parts/*.stl" {{mech,both}}   # the newest round folder by version sort
   clone:                                      # run inside `git archive HEAD`
     - "$PY scripts/known_issues.py --check"
     - "$PY scripts/release_report.py --check"
