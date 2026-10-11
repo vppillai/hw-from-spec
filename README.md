@@ -161,7 +161,7 @@ commands take the host pool, so the fast path cannot silently stand in for a rel
 
 Before the spec is read, the agent asks the scope (A0). Then it asks every decision class that scope needs:
 product, PCB build, enclosure architecture, the manufacturability bar, verification, bought parts,
-software, release, identity, slicer optimisation. It asks in up to twelve `AskUserQuestion` batches of at
+software, release, identity, slicer optimisation. It asks in up to thirteen `AskUserQuestion` batches of at
 most four. Each question has a marked RECOMMENDED answer and the alternatives' consequences. Answers
 become owner rows in `DECISIONS.md`, values in `project.yaml` (`project.py kickoff --check` proves they
 landed) and `10-spec/KICKOFF_ANSWERS.md`. Detail: `references/kickoff-questionnaire.md`, `SKILL.md` §0.1.

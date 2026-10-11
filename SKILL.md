@@ -87,7 +87,7 @@ reference when you reach that step, not before. Nothing here is specific to one 
 
 Before the spec is read and before any CAD, ask **A0 Scope** alone (`ee` / `mech` / `both`). RECOMMENDED = what the brief implies, `both` when a
 board is designed and housed; each option says what it skips. Then ask **every decision class that scope needs**, grouped by phase. Ask them in up
-to twelve batches with the **`AskUserQuestion` tool** (≤ 4 questions per call, ≤ 4 options per question). "accept every recommended answer of this
+to thirteen batches with the **`AskUserQuestion` tool** (≤ 4 questions per call, ≤ 4 options per question). "accept every recommended answer of this
 batch" is the first option of the batch's first question. The classes are: product / process / material / quantity. PCB build [ee, both]:
 layers, copper, impedance, finish, min part size + link policy, assembly sides, test points, panel. Enclosure architecture [mech, both]: pieces,
 retention = screws + inserts / magnets / none, coupling, feet, labelling = deboss / plate / badge, fan, vents, light pipe, two targets, brand

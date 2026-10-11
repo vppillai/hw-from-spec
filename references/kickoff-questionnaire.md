@@ -27,12 +27,13 @@ question is skipped. A mech-only owner never sees via-in-pad, and an ee-only own
 | 5 enclosure architecture (cont.) | C5–C8 | mech, both | case.yaml |
 | 6 print process rows, brand marks, kit, margin | C8a, C9, C10, D3 | mech, both | `print_targets.<t>.dfm_process`, the mark option before the first FDM plate, START_HERE recipient |
 | 7 the manufacturability bar + review rounds | D1, D2, E1, E2 | all | day-1 `fab_dfm.bar` / `print_targets.*.accepted`; the G0 review round |
-| 8 verification (cont.) + bought parts | E3, E4, F1, F2 | all (E3 mech/both) | the G0 review round, parts.yaml |
-| 9 software + reports | G1, G2, H1, H2 | all (G1–G2 ee/both) | the bring-up tool, the first release report |
-| 10 CI, retro, envelope, branding | H3, H4, I1, I2 | all | the spec is read |
-| 11 debug access, delegation, slicer optimisation, stability | I3, I4, C11, C12 | all (I3 ee/both, C11–C12 mech/both) | the spec is read |
+| 8 verification (cont.) | E3, E4, E4a, E4b | all (E3, E4a, E4b mech/both) | the G0 review round |
+| 9 bought parts | F1, F2 | all | parts.yaml |
+| 10 software + reports | G1, G2, H1, H2 | all (G1–G2 ee/both) | the bring-up tool, the first release report |
+| 11 CI, retro, envelope, branding | H3, H4, I1, I2 | all | the spec is read |
+| 12 debug access, delegation, slicer optimisation, stability | I3, I4, C11, C12 | all (I3 ee/both, C11–C12 mech/both) | the spec is read |
 
-Twelve batches (0–11), none above four questions; a batch whose questions are all out of scope is skipped.
+Thirteen batches (0–12), none above four questions; a batch whose questions are all out of scope is skipped.
 
 ## A0. Scope (asked first, alone)
 **A0 Project scope.** **RECOMMENDED: what the brief implies — `both` when a board is being designed AND will be housed** (today's full flow: G0 → G1 →
@@ -192,23 +193,28 @@ only at release — the sole with the off-centre pockets HAD been rendered and n
 **E3 Coupons, dummies, first article** [mech, both]. **RECOMMENDED: FDM coupons (text, walls, fits, insert + torque) and a board dummy (two-piece AND one-piece)
 before the first case print; a first-article caliper table on every received part** — the fit numbers become yaml knobs. *Alt:* order the case
 and measure — one vendor round per surprise. *Alt:* coupons at the vendor too — 1 week and a quote per coupon; the probe method is cheaper.
-**Owner inputs (hardware in hand):** who calipers the bought hardware (magnets, inserts, screws) before the case order. The measured value lands in
-the pocket knob; a gate whose prerequisites are physical is carried by the record, not closed (`case-pipeline.md` §Process rules).
+**E3a Owner inputs (hardware in hand)** [mech, both]: who calipers the bought hardware (magnets, inserts, screws) before the case order. The
+measured value lands in the pocket knob. A gate whose prerequisites are physical is carried by the record, not closed (`release-and-cut.md`
+§3.1). Written to `kickoff.coupons.hardware_measurer`.
 **E4 Vendor DFM before the order and FEA.** **RECOMMENDED: the fab's own DFM viewer on board AND panel, and the print service's checker read from its
 analysis API per body. Both are filed with raw evidence before any order. FEA on the case (torsion, drop, boss load, thermal) and the board
 (press-fit, side load), with the owner accepting any WARN by row** — the gates in `templates/90-log/GATES.md`. *Alt:* vendor DFM only after ordering —
 the vendor's review mail becomes the review. *Alt:* no FEA — for a lab jig only.
 **E4a Drop case: the stop** [mech, both] (`references/fea-stage.md` §Drop). **RECOMMENDED: derive the stop by energy balance on the real STL
-(`m g h = σ_y V(d) + U_el`). The plastic zone is INFO. Load the FEA with the peak force and gate the far field** — an assumed stop asked
-for twice the drop's energy once. *Alt:* an assumed stop distance as an INFO row — no gate. *Alt:* no drop case — for a bench instrument that never leaves
-the bench.
+(`m g h = σ_y V(d) + U_el`). The contact is rigid-perfectly-plastic at yield. The plastic zone is INFO. Gate the far field at the
+peak force** — an assumed stop once asked for twice the drop's energy. The model bounds the force from below; its flow-pressure factor is
+a yaml knob the owner sees. *Alt:* an assumed stop distance as an INFO row — no gate. *Alt:* no drop case — for a bench instrument that never
+leaves the bench. **Owner inputs:** the drop height, the pose (corner, edge or face), the floor and the number of drops. Also the TDS pair: yield
+and elongation at break. Recommended default: 0.75 m, the worst corner, a rigid floor, one drop. Written to `kickoff.verification.drop_stop`
+and `kickoff.verification.drop_inputs`.
 **E4b Thermal: what closes the row** [mech, both] (`references/fea-stage.md` §Thermal). **RECOMMENDED: the model states what it reads (sink,
 `h`, pose factor). A bench measurement row (T-nn) closes the thermal pins at arrival** — a sink-only model cannot credit a vent change. *Alt:*
-model only, INFO — the vent geometry is never asked of a model that cannot credit it.
+model only, INFO — the vent geometry is never asked of a model that cannot credit it. Written to `kickoff.verification.thermal_close`.
 
 ## F. Bought parts (`references/part-verification.md`)
 **F1 Acceptable verification sources.** **RECOMMENDED: the fab's parts library API + page for electronics ([V] only after a live fetch this session).
-The manufacturer's product page + PDF TDS for hardware. Plain-HTML dealers for price / stock. Snippet-only numbers stay [K]** — never an invented
+The manufacturer's product page + PDF TDS for hardware. Plain-HTML dealers and a dealer's own API on its country site for price / stock.
+Snippet-only numbers stay [K]** — never an invented
 number. *Alt:* distributor pages the owner opens logged in (McMaster, Digi-Key, Mouser are login- or bot-walled) — a BLOCKERS row per part with the
 exact URL for the owner. *Alt:* owner-supplied part list taken as [V] — only with the owner's fetch date and URL on each row.
 **F2 Stock policy and alternates.** **RECOMMENDED: stock ≥ qty × boards × 1.2 for every code, ≥ 1 000 for jellybeans, an `Alt_MPN` verified for
@@ -262,7 +268,8 @@ every action taken.
 | B1–B8 | `board.layers / thickness / copper / stackup_template / impedance / finish / mask / silk / min_package / link_parts / sides / test_points / panel` | SPEC §4–§6 (R-M01…), `20-design/<board>_board.yaml`, `20-design/dfm_thresholds.json` (source + date) |
 | C1–C12 | `kickoff.enclosure` (pieces, retention, coupling, feet, labelling, fan, light_pipe, targets, marks, kit_recipient, fit_decider, fit_result, optimise, stands_free); C8a `print_targets.<t>.dfm_process` | SPEC §8, `20-design/case.yaml` presets + `fits` knobs; START_HERE report-back recipient; the plate yaml `optimise:` block; ARRIVAL_CHECKLIST E-FIT |
 | D1–D3 | `fab_dfm.bar`, `print_targets.<t>.design_margin / tolerance / accepted` | GATES.md `{{D-BAR}}` row id, CLAUDE.md rule 9 |
-| E1–E4 | `kickoff.verification` (rounds, visual, fea), `kickoff.coupons` (E3) | GATES prerequisites, `workflows/` model list |
+| E1–E4 | `kickoff.verification` (rounds, visual, fea), `kickoff.coupons.plan` (E3), `kickoff.coupons.hardware_measurer` (E3a) | GATES prerequisites, `workflows/` model list |
+| E4a–E4b | `kickoff.verification.drop_stop`, `kickoff.verification.drop_inputs` (height, pose, floor, drops), `kickoff.verification.thermal_close` | the FEA yaml `drop:` block; the test plan's bench row |
 | F1–F2 | `kickoff.sourcing` (sources, stock_floor, attrition) | PARTS_VERIFICATION header, BLOCKERS |
 | G1–G2 | `kickoff.software` (modes, posture) | SOFTWARE_ARCHITECTURE.md §1/§3, test_criteria.yaml header |
 | H1–H4 | `kickoff.release` (reports, cut, ci, retro) | production_cut.yaml, ci templates, SKILL §13 |
