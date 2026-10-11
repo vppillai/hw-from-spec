@@ -106,3 +106,7 @@ gate §3).
   `project_settings.config` of the 3MF it names (md5). A reviewer reads the config, not the sidecar; the two must agree.
 - Sidecars in the kit carry no local temp paths (`cli` block stripped or the paths made relative); `.DS_Store` and census artefacts removed by the
   mirror step; the mirror is byte-identical to the sources (md5 list in `kit_facts.json`).
+- **The kit mirror is a superset of the kit folder, never a sync with delete.** The generators drop flat copies there (plates, coupons,
+  dummies, caps) that the repo keeps elsewhere. `diff -rq` lists them as "Only in" the mirror; that is not drift. Never mirror with
+  `rsync --delete`; one run removed about 105 files (2026-10). Check the mirror with the collateral gate, or with `diff -rq` and the
+  "Only in" lines ignored. Restore it by re-running the generators with the cache warm: no re-slice, byte-identical.
