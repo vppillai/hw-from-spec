@@ -63,6 +63,10 @@ grep -q 'A module loaded twice has two copies of every class' "$SWT" || { echo "
 grep -q 'Decide what a missing value means before you write the rule kinds' "$SWT" || { echo "FAIL: $SWT lost the missing-value rule (§5)"; exit 1; }
 grep -q 'Test the judge on what the runner writes, never on a hand-made record' "$SWT" || { echo "FAIL: $SWT lost the judge-on-runner rule (§5)"; exit 1; }
 grep -q 'Read the standard.s table before you name a register' "$SWT" || { echo "FAIL: $SWT lost the standard-table rule (§8)"; exit 1; }
+grep -q 'Write the hardware runbook from the code of record, never from the spec' "$SWT" || { echo "FAIL: $SWT lost the runbook rule (§14)"; exit 1; }
+grep -q 'must rebuild every input the live judge saw' "$SWT" && grep -q 'A calibration candidate never loosens a limit of record' "$SWT" || { echo "FAIL: $SWT lost the re-judge / calibration rules (§15)"; exit 1; }
+grep -q 'A screen hook never raises into the flow' "$SWT" || { echo "FAIL: $SWT lost the screen-hook rule (§16)"; exit 1; }
+grep -q 'is a checklist, not a rewrite' "$SWT" || { echo "FAIL: $SWT lost the checklist-revision rule (§17)"; exit 1; }
 grep -q 'Stack-and-mark polarity rule' "$KIT" && grep -q 'Dry attract check before any CA' "$KIT" && grep -q 'feet LAST' "$KIT" || { echo "FAIL: print-kit.md lost the magnet / feet sequence"; exit 1; }
 grep -q '`None`, `nan`, a `{name}` brace' "$KIT" && grep -q 'Print-sheet names = project-file names' "$KIT" && grep -q 'Watertight row per exported STL' "$KIT" || { echo "FAIL: print-kit.md lost the kit text gate / naming / watertight rules"; exit 1; }
 grep -q 'bridged strips sit one layer BELOW them' "$REF" && grep -q 'exactly 45.0° is AT the overhang limit' "$REF" && grep -q 'Ship a bracket plate' "$REF" || { echo "FAIL: $REF lost §8.4 / §8.5 (plate seat, 45° limit, bracket plate)"; exit 1; }
