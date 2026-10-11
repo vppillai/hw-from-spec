@@ -2,6 +2,9 @@
 """scripts/vendor_gate.py — the vendor checker's verdict, read by a script: every STL of record has a clean API reply and six clean captures (stdlib only).
 
   scripts/vendor_gate.py <checks dir | file>... --stl <stl>...
+  scripts/vendor_gate.py --newest '<glob>' --stl <stl>...
+      `--newest` picks the newest round folder among the glob's directories by version sort (`_r2` < `_r10`, a later date dir later),
+      so a gate line survives a round folder that moves to `_r<n>`; no match exits 2 (a pin that silently passes an empty folder is no gate).
       For every STL (md5 of record, first 8 hex = md5-8) the files given (directories are listed, not walked) must hold:
       - the analysis reply: `<md5-8>_analyze.json` or the saved `*<md5-8>*getFileAnalyzeResult*` network response (JLC3DP format).
         It passes when `success` is true, every `parseStatus` reads 2 (analysis complete), every `thinWall` reads false (at least one),
@@ -19,6 +22,14 @@ sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 from heatmap_count import count, write_png  # noqa: E402
 
 VIEWS = ("az000", "az090", "az180", "az270", "poleA", "poleB")
+
+
+def newest(pattern):
+    """The newest directory among the glob matches by version sort over the whole path (digits compare as numbers); None when nothing matches."""
+    import glob, re
+    key = lambda p: [int(s) if s.isdigit() else s for s in re.split(r"(\d+)", p)]
+    dirs = sorted((m for m in glob.glob(pattern) if os.path.isdir(m)), key=key)
+    return dirs[-1] if dirs else None
 
 
 def walk(o, key):
@@ -112,9 +123,22 @@ def selftest():
         reply(**kw); bad = gate([d], [stl]); assert len(bad) == 1 and word in bad[0], (kw, bad)
     os.remove(os.path.join(d, f"{m8}_analyze.json")); assert any("no analysis reply" in b for b in gate([d], [stl]))
     reply(); assert gate([os.path.join(d, f) for f in os.listdir(d)], [stl]) == [], "files given one by one"
+    q = os.path.join(d, "quotes")
+    for sub in ("2026-10-09/jlc_dfm_v4.0", "2026-10-10/jlc_dfm_v4.0_r2", "2026-10-10/jlc_dfm_v4.0_r10", "2026-10-10/jlc_dfm_v4.0_r3"):
+        os.makedirs(os.path.join(q, sub))
+    open(os.path.join(q, "2026-10-10/jlc_dfm_v4.0_r11"), "w").write("a file, not a round")
+    assert newest(os.path.join(q, "*/jlc_dfm_*")).endswith("2026-10-10/jlc_dfm_v4.0_r10"), newest(os.path.join(q, "*/jlc_dfm_*"))
+    assert newest(os.path.join(q, "*/nothing_*")) is None
+    with contextlib.redirect_stderr(io.StringIO()):
+        assert main(["vendor_gate.py", "--newest", os.path.join(q, "*/nothing_*"), "--stl", stl]) == 2, "no round folder = 2"
+    for f in os.listdir(d):
+        if m8 in f:
+            os.rename(os.path.join(d, f), os.path.join(q, "2026-10-10/jlc_dfm_v4.0_r10", f))
+    with contextlib.redirect_stdout(io.StringIO()):
+        assert main(["vendor_gate.py", "--newest", os.path.join(q, "*/jlc_dfm_*"), "--stl", stl]) == 0, "the newest round folder passes"
     with contextlib.redirect_stderr(io.StringIO()):
         assert main(["vendor_gate.py", d]) == 2 and main(["vendor_gate.py", d, "--stl", os.path.join(d, "nope.stl")]) == 2, "usage / missing STL = 2"
-    print("vendor_gate selftest OK: clean reply + six grey captures pass; a red capture, a missing capture, thinWall true, parseStatus not 2, an errorMsg, a foreign fileMd5 and a missing reply fail; usage exits 2")
+    print("vendor_gate selftest OK: clean reply + six grey captures pass; a red capture, a missing capture, thinWall true, parseStatus not 2, an errorMsg, a foreign fileMd5 and a missing reply fail; usage exits 2; --newest picks _r10 over _r3 by version sort and exits 2 on no match")
     return 0
 
 
@@ -124,6 +148,13 @@ def main(argv):
     if "--stl" not in argv:
         print(__doc__, file=sys.stderr); return 2
     i = argv.index("--stl"); paths, stls = argv[1:i], argv[i + 1:]
+    if paths[:1] == ["--newest"]:
+        if len(paths) != 2:
+            print("vendor_gate: --newest takes one glob", file=sys.stderr); return 2
+        folder = newest(paths[1])
+        if folder is None:
+            print(f"vendor_gate: no round folder matches {paths[1]}", file=sys.stderr); return 2
+        print(f"vendor gate: newest round folder {folder}"); paths = [folder]
     if not paths or not stls or any(not os.path.exists(p) for p in paths + stls):
         print("vendor_gate: give existing checks dirs / files and --stl files" + "".join(f"\n  missing: {p}" for p in paths + stls if not os.path.exists(p)), file=sys.stderr)
         return 2
