@@ -93,6 +93,13 @@ print sheets are generated with spliced blocks (`<!-- gen:BEGIN name -->…<!-- 
 - **The census is a FAIL gate per print preset, not a review aid** (`scripts/thin_wall_census.py --target <t>`). `--gate-dir <census dir>` in the
   adopt list proves md5 + 0 unaccepted FAIL against the committed STL. What it gates, how clusters are classed and what the only exception path is:
   `references/dfm-printed-enclosure.md` §2, with rows in `templates/CENSUS_GATE_ROWS.md`. Concentricity and every face render come from the mesh too.
+- **An item text carries no preset or derived value.** The value column or the note carries the number. A value in the item text makes a
+  different item per preset. The look-delta pairing then drops the row. Pair presets on group + item with every free-standing
+  number masked; keep the digits of a refdes. A digit strip that eats refdes digits merges two labels. Two rows that differ only by a
+  number collide on such a key. Stop the pairing on a collision. Worked example (2026-10): 12 of 71 rows carried a value in
+  the item. After the move 83 rows paired, 12 new, 0 lost.
+- A changed item text changes every traceability grep that quotes it. Grep the traceability yaml for the old item text in the same
+  commit.
 
 ## Point contacts (mark-shaped bodies and pockets: inlay plates, badges, debosses)
 - A traced outline of touching shapes (potrace) is ONE path pinched to 0.003–0.03 mm at every contact. Extruded, the body is lobes held by hairlines
@@ -255,6 +262,12 @@ geometry together), per-piece and assembly STEP (OCP/cadquery), `--check` = md5 
   full-depth cavity outline with a wider rim outline is a DRAFT over the whole depth, not a lead-in chamfer. The mating gap read 0.5–0.6 instead of
   0.2. Confine the hull to the last 0.4 mm of the rim. Both traps passed the fit test and print DFM. Acceptance rows on the MESH catch them: pocket
   depth by the two probes of §Interference, cavity width 1 mm above the rim = nominal.
+- **A through-opening cutter runs past the face** **[K]**. Do not stack a coplanar overlap box on a frustum that ends at the face. A box
+  0.001 wider than the frustum top leaves a 0.001 × 0.001 step ring around the opening. Every index read passed (shells, watertight,
+  volume, the vendor API); the vendor map painted the slivers beside it. Extrude one shape `c + 1` tall with the scale adjusted. One
+  solid then cuts the chamfer and the air above it. Keep an overlap only on the hull side of a mouth. Count the faces under 0.002 mm
+  tall before an export. Worked example (JLC3DP analyser, 2026-10): 40 micro-faces around five slots split the chamfer faces into 12640
+  slivers; the fixed cutter left 2920 (`dfm-printed-enclosure.md` §13.1).
 - A partial chain run (`--pieces <one>`) rewrites the shared records with that run's rows only. The shared records are the clearance table, the
   kit README and the render index. Commit the piece artefacts; leave the shared files to the full chain, or restore them before the commit.
 - A census VERSION bump makes every record at the old version a gate problem. Run every generator that writes a census, the ones outside the
