@@ -755,4 +755,4 @@ with its angle; never mix them.
   the cone's opposing angle of the reverse sample normal. The worked example used 60°. With that rule the cone and the plain ray agreed on
   the one thin land.
 - A hydraulic-width rule (`4A/P`) reads a narrow slot ceiling as a ledge or a bridge depending on a chamfer. Class a slot ceiling by its two
-  closing vertical faces, both within one gate of the cluster edge. Report the gap between them as the bridge. A ledge has an open side.
+  closing vertical faces within 1 mm of the cluster edge. The 1 mm is the worked example's value at a 1.2 gate. Report the gap between them as the bridge. A ledge has an open side.
