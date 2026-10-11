@@ -8,9 +8,9 @@ The kit is a folder of the repo, `50-kits/<kit>/`, one per print target. Its nam
 kit for the same printer adds what it prints: `home_fdm_caps`. The name carries no version: the version is a line in START_HERE and in every
 sheet. Inside: `START_HERE.md` at the root, `plates/` (every `.3mf` with its
 `.3mf.json` sidecar), `parts/` (the STL set of this kit, copied from `40-case/<set>/parts/` and md5-checked), `sheets/` (print sheets, coupon and
-dummy READMEs, the assembly sequence). The generators write here directly; `~/Downloads/<project>_kits/<kit>/` is a byte-identical mirror the
-collateral gate checks. One current kit per target: a superseded kit folder outside the repo receives a one-line `SUPERSEDED.md` pointing at the
-mirror and nothing else is kept beside the current kit. `00-now/WHAT_TO_PRINT.md` is derived from `50-kits/*/plates/*.3mf.json` alone.
+dummy READMEs, the assembly sequence). The generators write here directly; `~/Downloads/<project>_kits/<kit>/` is a mirror the
+collateral gate checks (§5). One current kit per target. A superseded kit folder outside the repo receives a one-line `SUPERSEDED.md` that points at
+the mirror. Nothing else is kept beside the current kit. `00-now/WHAT_TO_PRINT.md` is derived from `50-kits/*/plates/*.3mf.json` alone.
 Written by the project's slicer wrapper (`gen/`, it owns the minutes and grams) from a `kit_facts.json` the project's geometry generator writes — **numbers from the
 sidecars, prose from the knobs, nothing typed**. Four blocks, in this order:
 1. **Header**: what every project file embeds (printer, nozzle, layer, material, plate), the one hand step (AMS: *the project defines filaments
@@ -104,5 +104,10 @@ gate §3).
 - **Sidecars carry every slicer key a rule depends on** — `top_one_wall_type`, `xy_hole_compensation`, `elefant_foot_compensation`, the ironing
   keys (`ironing_type`, `top_shell_layers`), `wall_loops`, seam, support flags — and a drift check compares the sidecar with the embedded
   `project_settings.config` of the 3MF it names (md5). A reviewer reads the config, not the sidecar; the two must agree.
-- Sidecars in the kit carry no local temp paths (`cli` block stripped or the paths made relative); `.DS_Store` and census artefacts removed by the
-  mirror step; the mirror is byte-identical to the sources (md5 list in `kit_facts.json`).
+- Sidecars in the kit carry no local temp paths (`cli` block stripped or the paths made relative).
+- **The kit mirror is a superset of the kit folder, never a sync with delete.** The md5 list in `kit_facts.json` covers the kit files.
+  Each of them is byte-identical in the mirror. The generators also drop flat copies there (plates, coupons, dummies, caps) that the
+  repo keeps elsewhere, outside the list. `diff -rq` lists them as "Only in" the mirror. That is not drift. The mirror step removes
+  only `.DS_Store` and census artefacts, never a kit or generator file. Never mirror with `rsync --delete`. One run removed about 105
+  files (2026-10). Check the mirror with the collateral gate, or with `diff -rq` and the "Only in" lines ignored. Restore it by
+  re-running the generators with the cache warm: no re-slice, byte-identical.

@@ -100,6 +100,13 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - The vendor's map paints a whole triangle by its thinnest sample. A 2.0 × 2.0 bar reads grey, a 1.2 land yellow. Read a band's end, not its length. Bisect with plane-cut slabs and section at the painted Z — 2026-10-10 [dfm/vendor-map] (`dfm-printed-enclosure.md` §7.1, §13.1).
 - The MJF quote form refuses a loose part outside a 2 × 2 × 10 mm box. The plain and the full-colour material read alike. The analysis still runs; only the price is missing — 2026-10-10 [dfm/vendor-form].
 - A land at the vendor's bound is painted (2.0 − 0.8 = 1.20 against 1.2; float32 reads 1.199). Gate every free-face land at the margin line — 2026-10-10 [dfm/gate-at-the-bound] (`dfm-printed-enclosure.md` §13.2).
+- A zero-width seam passes every index read. Two coincident opposite-normal walls under a mark outline passed shells, edge pairing by index, volume and the vendor analyser. The area read 23.1 mm² over the body (2 × 11.5). Gate a colour 3MF on pairs 0, zero-area 0, area delta ≤ 0.1 mm² and watertight on the recorded file. The area gate is a 0.3 deep seam 0.17 mm long, with one kernel for both files — 2026-10-11 [3mf/fuse] (`dfm-printed-enclosure.md` §12).
+- A 3MF writer with 6 decimals merged two vertices under 5e-7 apart. The collapsed triangle was a sliver the CAD body never had. Weld by printed text in the canonicaliser. Salt the cache key with its version — 2026-10-11 [3mf/canonical] (`dfm-printed-enclosure.md` §12).
+- The same solid read grey as an STL and yellow as a 3MF on the vendor map. The 3MF path carried four times the chamfer triangles; the API flag saw neither. Read every order file in its own format — 2026-10-11 [vendor/3mf-vs-stl] (`dfm-printed-enclosure.md` §7 step 4).
+- A map read was blamed on the legend triangulation by guess. Four knob variants in 25 minutes said otherwise: legends off still painted, a changed cutter read clean. Bisect a map read by variant, in a worktree. Upload the loaded file too when a new md5 reads badly — 2026-10-11 [dfm/vendor-map] (`dfm-printed-enclosure.md` §7.1).
+- A probe file that became the file of record was read again under its record name. A pointer to the probe folder is not evidence — 2026-10-11 [vendor/record] (`dfm-printed-enclosure.md` §7 step 5).
+- A quote line is replaced by upload first, delete after. The per-line delete asks "delete the selected item?" and Select All makes that every line — 2026-10-11 [vendor/reload] (`dfm-printed-enclosure.md` §7 step 8).
+- One pole capture duplicated the azimuth view and read 0 / 0 for the wrong face. The first "Back to Origin" text match was a zero-size span. Check the capture md5s and pick the visible toolbar element — 2026-10-11 [vendor/viewer] (`dfm-printed-enclosure.md` §7 step 4).
 ## process / gates
 - A date-stamped artefact selftest (two dated packages, one expected STALE) run across midnight produced two dates and failed the PR gate for no design reason. Pin the date in the test or make the gate tolerate a rollover — 2026-09-29 [tooling/gates].
 - A DFM/DRC rule set at the fab's published limit passes DRC and still lights up the fab's DFM: mirror the fab's checks in-repo and gate on them — 127/128.
@@ -151,6 +158,10 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A re-layout must grep every default-argument fallback, not only the writers. A label read from a pre-layout path wrote `*_unversioned` records — 2026-10-10 [process/reorg].
 - A hand-added row in a generated checklist reads STALE one round later, and a regeneration drops it. The row goes in the yaml — 2026-10-10 [process/generated].
 - A DECISIONS row with a missing cell stops `known_issues --check` and every entry that runs it. A merged row without its yaml entry reads unmapped. Count the cells and run a dry traceability before the round — 2026-10-10 [process/decisions-table].
+- A check-table item that carried a preset value was a different item per preset. The per-preset check-table diff dropped the row (12 of 71). Name a row by words; the value column carries the number — 2026-10-11 [records/item-text] (`case-pipeline.md` §Census).
+- A clearance-row item text change broke two traceability greps that quoted the old text. Grep the traceability yaml for the old item text in the same commit — 2026-10-11 [records/traceability].
+- A pin's `pending:` text named one record while its check read another. Read the generated check before you write a record template. Test the template by filling a scratch copy and running `traceability.py --only` per pin — 2026-10-11 [records/gate-pins] (`release-and-cut.md` §3.1).
+- A kit mirror synced with `rsync --delete` lost about 105 generator copies that the repo keeps elsewhere. The mirror is a superset. Restore it with the generators, cache warm — 2026-10-11 [kits/mirror] (`print-kit.md` §5).
 ## agents / git
 - Agents die when the machine sleeps or on API 500s; resume by message with the MEASURED state; heartbeat monitors ~25 min; time-box every long task; parallel router JVMs SIGTERM each other — STATUS 09-18…21.
 - Background-task watchers did not wake the coordinator: block in-process with `until ! kill -0 $pid; do sleep 20; done` (≤ 600 s per call, repeat) — 2026-09-22.
@@ -373,6 +384,7 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A bbox-minimum rule on one part (a 2.0 key bar) grows its pocket and moves every band below it. Re-derive the whole Z stack from the pocket, never edit the band knob — 2026-10-10 [mech/derivation].
 - A profile slice that overshoots its end by 0.01 moves the exported top face. A height gate at `lim + 0.05` passed it. End the slice at the face and gate at `lim + 1e-6`. Cast float32 extents to float64 before the subtraction — 2026-10-10 [mech/export].
 - A flat on a pillar clips the cylinder and its wall box only. Clipping the whole pillar union cut a web and left a 0.33 slot — 2026-10-10 [mech/csg].
+- A 0.001 overlap box on a frustum ending at the face left a 0.001 × 0.001 step ring per slot. 40 micro-faces under 0.002 tall (gate 0) split the chamfer into 12640 INFO slivers. Every index read green, the map yellow. Run a through-opening cutter past the face — 2026-10-11 [mech/csg] (`case-pipeline.md` §Process rules).
 ## fea
 - Gmsh refuses CGAL STLs as volume boundaries; fTetWild meshes them; drop zero-volume slivers or K is singular.
 - Dropping tets leaves orphan nodes = zero rows in K (SuperLU "exactly singular", NaN): compact nodes (`np.unique(t, return_inverse=True)`) on the cache-load path too — fea/mesh.
@@ -385,6 +397,7 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - An assumed drop stop asked for twice the drop's energy. Derive the stop by energy balance on the real STL — 2026-10-10 [fea/drop] (`fea-stage.md` §Drop).
 - Gate the von Mises off the load, support and tie bands. A sliver tet on a tie node reads ten times its average — 2026-10-10 [fea/bands].
 - `--only <subset>` wiped the other cases of the record and the report. A subset run never writes the report of record — 2026-10-10 [fea/records].
+- An FEA owner row with no test row stayed open across two gates. Write the arrival row the day the model reads FAIL: pose, instrument, reduction formula, pass number, record file, fail action. A brief named row ids that already existed; check the yaml first — 2026-10-11 [fea/owner-rows] (`fea-stage.md` §Thermal).
 ## software
 - A fixed jig cap makes the WARN level unreachable when THROTTLE = min(alarm − margin, cap): make the interplay explicit and print both levels — software/thermal.
 - Manuals written before the software they describe: the "what you should see" lines go under an explicit banner naming the fake backend that produced them — 2026-09-22 [documentation].

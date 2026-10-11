@@ -58,6 +58,10 @@ copy-back with `git checkout` once its diff is timestamp-only.
   the first export. A deleted kit file takes its pins, allow-list line and render index entry with it, in the same batch.
 - A DECISIONS row with a missing cell or an unescaped pipe inside backticks stops every generator that reads it. A merged row also
   needs its yaml entry. Check both before the round: the cell count per row and the unmapped count of a dry traceability run.
+- **A physical gate opened by delegation carries its rows as pending pins on the owner's record.** Write a record template with one
+  section per pin, in the line shape its pin greps. A pin's `pending:` text can name one file while its check reads another. Read the
+  generated check, not the pending text, before you write the template. Test the template: fill a scratch copy and run
+  `traceability.py --only <id>` per pin. The owner then fills the record, and the pins verify it.
 
 ## 4. Collateral (`scripts/collect_renders.py`)
 `collateral/<rev>/renders/` holds CAD 3-D renders, panel preview, silk PNGs, case renders, FEA composites, drawing PDFs, and fab-viewer
@@ -196,6 +200,8 @@ the merged blind reviews ("what the boards decide" = the CONFIRMED items whose c
 the parts arrive, never reconstructed afterwards. Every row carries `status` (TODO / DONE <date> / N/A / APPLIED <date> while the owner's veto
 window is open) and `evidence`; the script refuses a DONE without evidence, a duplicate id, a status outside the grammar. Closing a row = yaml edit,
 regenerate, commit.
+An owner row that only a model closes gets an arrival row the day the model row reads FAIL. `fea-stage.md` §Thermal names the row's
+fields.
 
 ## 11. A frozen SPEC gets an errata file, never an edit (`templates/10-spec/SPEC_ERRATA.md`)
 `10-spec/SPEC_ERRATA.md` holds one E-row per deviation of the design of record from the frozen text. A row carries the SPEC text, the design
