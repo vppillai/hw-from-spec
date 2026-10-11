@@ -1,6 +1,6 @@
 # KICKOFF_ANSWERS.md — {{PROJECT}} — the owner's answers to `references/kickoff-questionnaire.md` ({{DATE}})
 
-Asked in up to twelve batches (A0 first; batches outside the scope are skipped) with the recommended answer listed first; every row below is an owner decision (D row quoted verbatim) written BEFORE any
+Asked in up to thirteen batches (A0 first; batches outside the scope are skipped) with the recommended answer listed first. Every row below is an owner decision (D row quoted verbatim) written BEFORE any
 CAD. `Answer` is the option chosen; `Rec.` = the recommended default was accepted (`yes`) or overridden (`no` — the owner's reason is in the D
 row). A deferred question is `OPEN` here and in the decision log and blocks the phase named in the questionnaire's batch table. Re-asking an
 answered question is a defect; changing an answer is a new D row that supersedes the old one and a new line here. A question outside the scope
@@ -40,8 +40,11 @@ answered question is a defect; changing an answer is a new D row that supersedes
 | D3 | design margin / tolerance source | {{+0.3 MJF; first article replaces the vendor sheet}} | yes | D-{{nn}} | `print_targets.*.design_margin / tolerance` | {{mech,both}}
 | E1 | review rounds per gate | {{one round per gate, two external models}} | yes | D-{{nn}} | `kickoff.verification.rounds`; `{{EXTERNAL_MODELS}}` |
 | E2 | visual inspections | {{tiles + renders + six faces}} | yes | D-{{nn}} | `kickoff.verification.visual` |
-| E3 | coupons / dummies / first article | {{yes}} | yes | D-{{nn}} | `kickoff.coupons` | {{mech,both}}
+| E3 | coupons / dummies / first article | {{yes}} | yes | D-{{nn}} | `kickoff.coupons.plan` | {{mech,both}}
+| E3a | who calipers the bought hardware before the case order | {{owner}} | yes | D-{{nn}} | `kickoff.coupons.hardware_measurer` | {{mech,both}}
 | E4 | vendor DFM before order + FEA | {{yes}} | yes | D-{{nn}} | `kickoff.verification.fea`; GATES prerequisites |
+| E4a | drop case: the stop; height, pose, floor, drops | {{derived; 0.75 m, worst corner, rigid floor, one drop}} | yes | D-{{nn}} | `kickoff.verification.drop_stop`, `kickoff.verification.drop_inputs`; the FEA yaml `drop:` block | {{mech,both}}
+| E4b | thermal: what closes the row | {{bench row T-nn at arrival}} | yes | D-{{nn}} | `kickoff.verification.thermal_close`; the test plan | {{mech,both}}
 | F1 | verification sources | {{fab API + manufacturer TDS; owner opens walled sites}} | yes | D-{{nn}} | `kickoff.sourcing.sources` |
 | F2 | stock policy / alternates | {{× 1.2, ≥ 1000 jellybeans, Alt_MPN}} | yes | D-{{nn}} | `kickoff.sourcing.stock_floor`, `kickoff.sourcing.attrition` |
 | G1 | software modes / posture | {{operator + engineering; warn / throttle}} | yes | D-{{nn}} | `kickoff.software.modes`, `kickoff.software.posture`; SOFTWARE_ARCHITECTURE §1 | {{ee,both}}
@@ -55,4 +58,4 @@ answered question is a defect; changing an answer is a new D row that supersedes
 | I3 | debug / service access | {{wire header + straps, hood off}} | yes | D-{{nn}} | `kickoff.debug_access` | {{ee,both}}
 | I4 | delegation while offline | {{recommended option below a named class}} | yes | D-{{nn}} | `kickoff.identity.delegation`; pause-point owner list |
 
-Batches asked: {{0–11 with date/time}}. Questions deferred: {{none}}. Owner's closing words: "{{QUOTE}}".
+Batches asked: {{0–12 with date/time}}. Questions deferred: {{none}}. Owner's closing words: "{{QUOTE}}".

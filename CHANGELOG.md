@@ -3,7 +3,7 @@
 ## Current state (0.11.19): read this instead of replaying the entries below
 
 - **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
-  twelve batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
+  thirteen batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
   (zero errors / zero warnings / no waivers, enforced by scripts), generated-only, the decision log, parts tags [V] / [K] / [K owner-read] / [S],
   blind reviews with a record-reading verifier, layout + fab DFM mirror, the case pipeline with two PURE mesh gates (census margin, print-DFM
   floor), the stability row for anything that stands free (kickoff C12) and the three assembly-model rows (every placement det +1, a fit row per
