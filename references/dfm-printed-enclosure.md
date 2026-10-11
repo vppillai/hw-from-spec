@@ -237,12 +237,28 @@ Every rim and wall reads CLOSED on the single part: no through-slot, notch, key 
    - The analysis radio can lose a click while the model loads. Retry until the legend text is on the page, then rotate.
    - A drag right after the origin button can repeat the last view. Compare each capture's yellow box with the previous one before you accept it.
    - The viewer tab and the quote tab are independent streams. The session rule of step 1 still holds.
+   - Check every capture's md5 against the set before the count. One pole capture duplicated the azimuth view and read 0 / 0 for the
+     wrong face (measured once).
+   - The first text match for the origin button can be a zero-size span. A click on it does nothing. Pick the visible toolbar element
+     (width > 0).
+   - A thin flat plate drops no thickness marker on the pole drags. A marker count of 0 is then correct.
+   **Read every order file in its own format.** A colour 3MF gets its own six captures, beside its body STL. The same solid can read grey
+   as an STL and yellow as a 3MF. The analyser samples per triangle, and colour boundaries make small triangles. Worked numbers (JLC3DP
+   analyser, MJF PAC-HP, 2026-10): one body STL read 0 / 0 in six views. Its colour 3MF read 613 / 173 yellow / red in the first view.
+   The 3MF path carried four times the chamfer triangles. The API flag saw neither; `thinWall` read false on both. Six captures of one
+   3MF line take about three minutes signed out.
 5. **Save screenshots named `<piece>_<round>_<md5-8>_<material>_heatmap_<face>.png`** plus `quote_page_<round>_flags.png`.
    `<face>` is one of `az000 az090 az180 az270 poleA poleB`, the names `vendor_gate.py` reads. Keep the uploaded STL
    beside them. Write `templates/DFM_ROUND.md` into `60-orders/quotes/<date>/` with the API fields, the browser / UA / signed-in state per body.
+   A probe file that becomes the file of record is read again under its record name, in the round folder. The round folder is then
+   self-contained for the gate and the pins. A pointer to a probe folder is not evidence.
 6. **When a verdict flips between two uploads, diff the meshes before touching the generator**: the r3 tray read RED where the r2 tray had passed —
    same 4088 triangles, every vertex within 7.7e-6 mm. The real difference was a premature DOM read (step 2).
 7. **A coordinator verifies a worker's "no flag" claim itself** (re-request the API for the md5 in the record) before a decision row says PASS.
+8. **Replace a quote line by upload first, delete after.** Upload the new file, run its material dialog, and read the line back. Then
+   delete the old line. The per-line remove icon asks "delete the selected item?". With **Select All** on, that word covers every line.
+   Uncheck **Select All**, check the one row, then confirm. The total reads "--" while no row is checked; check **Select All** again at
+   the end. Two lines took about fifteen minutes signed out, read-backs included (measured once, 2026-10).
 
 ### 7.1 The vendor's thin-wall metric is LENGTH-DEPENDENT — calibrate with probes, in one round
 A ray-cast census can read nothing under the gate on a body the vendor's checker colours RED along its long walls. The trip is a profile whose
@@ -275,6 +291,14 @@ at in `print_targets.<t>.max_bbox_for_rule`; test the hypothesis once with the s
      knob moves. A face seen edge-on looks like a strip on its neighbour. A pillar's lead-in annulus looks like a corner arc.
   5. *What a slab read cannot tell*: which triangle carries the colour, and whether the land is design or cut. Only a section at
      the painted Z tells that.
+  6. *Vary the knob*: when the paint sits at a feature with knobs, build one variant per knob. Upload the set in one session. Turn the
+     feature off, close the opening, zero the chamfer, change the cutter. The variant that reads clean names the cause. The variant
+     that still paints clears a suspect. Worked example (JLC3DP analyser, 2026-10): four variants in 25 minutes. Legends off still
+     painted. The opening closed, the chamfer at zero and a changed cutter each read 0 / 0. The cause was the cutter, not the legends.
+     One chain run per variant took 25 s with one piece and no render. The upload and six views took about five minutes per variant.
+     Build the variants in a worktree, so no file of record moves.
+  7. *Read the loaded file too*: when a new md5 reads badly, upload the file it replaces. If the old file reads the same colour, the stop
+     sat on the order before the fix. One extra upload answered that in ten minutes (measured once).
   A probe or a slab can be built from `trimesh` alone. Build one box per grid cell. Every cell boundary shares its vertices, so the union
   is watertight with no boolean engine. `slice_plane(cap=True)` fails to cap some planes. `process(validate=True)` after a cut re-opens the
   mesh. Merge vertices only, cap by hand with `shapely.polygonize`, and pick the material faces by a containment test, not by area.
@@ -688,6 +712,19 @@ duplicate-aware SafeLoader and fail on a duplicate. Prove byte identity before c
   wall gate. A shorter colour body hides the same wedge under the census floor. Erode the artwork by a solved inset until the contact opens to
   the gate. The arms meet at angles, so the opening is wider than `2 × inset`. Give the arms a gap or an accepted entry; never loosen the gate.
   A colour body split into arms trips print DFM's one-solid rule. Pass `--bodies N` from the design, not from the file.
+- **Fuse check on every colour 3MF**, beside the shells and volume rows. Count coincident opposite-normal triangle pairs (gate 0) and
+  zero-area triangles (gate 0). Read the area against the fused body (within 0.1 mm²). Weld by position, then read watertight (True).
+  Report the count of triangles under 0.01 mm² as INFO. A zero-width double wall passes every index read: edge pairing by index, shells,
+  volume and the vendor analyser (`parseStatus 2`, `brokenFace 0`, `thinWall false`). The area shows it. Worked example (MJF PAC-HP
+  order file, 2026-10): two coincident walls ran under 38.5 mm of a 65.7 mm mark outline. They read 671 pairs and 942 zero-area
+  triangles. The 3MF area read 23.1 mm² over the body STL (2 × 11.5). The volume matched to 0.002 mm³. The sliver count is a signal,
+  not a gate. A ringed body read 14798, the fixed body 2799, a clean text plate 6370. The skill has no colour-3MF script; the project's
+  canonicaliser carries the check with a selftest.
+- **Cut and fill a colour pocket with one identical 2D.** A pocket cut with all skin items and filled with one item's 2D relies on
+  the boolean to cancel two walls. Manifold kept both walls on part of the outline. One cut term per 2D fused it. A second
+  trap: a 3MF writer that prints 6 decimals merges two vertices under 5e-7 apart into one point. Their triangle becomes a zero-area
+  sliver that the CAD body never had. Weld by printed text in the canonicaliser, then drop what collapsed. Salt the cache key with the
+  canonical version; a changed canonicaliser is a key change, not a determinism drift.
 
 ## 13. The vendor's map at the gate, and the metrics that over-read **[measured]**
 - A wall designed EXACTLY at the vendor's gate reads yellow on its heat map although the API passes. A 2.0 sole with a 0.8 deboss = 1.20 left
@@ -724,6 +761,13 @@ bodies up to 150 mm. Re-measure them on another checker before you lean on them.
   face such as a bore floor. The first sections of one round were 7 mm off (measured once).
 - Read the opposing-face pair's coordinates before you call a census minimum new. A 0.001-tall sliver face at a face plane can carry a designed
   land into the minimum on some runs only.
+- The map paints a colour 3MF and its body STL apart. A small triangle beside a thin feature takes the thin sample whole, and colour
+  boundaries make small triangles. Read the file that goes on the order line, in its own format (§7 step 4).
+- A step ring of 0.001 mm beside an opening paints the floor around it. Every index read passes: shells, watertight, volume, the vendor
+  API. Count the faces under 0.002 mm tall before an export (`case-pipeline.md` §Process rules). Worked example (JLC3DP analyser, 2026-10):
+  40 micro-faces around five slots split the chamfer faces into 12640 slivers. The fixed cutter left 2920.
+- On a colour 3MF the map draws a legend's fill white and colours only its outline triangles. Read the floor beside the legend, not the
+  letters.
 
 ### 13.2 Geometry at the gate **[measured]**
 - **A land at the vendor's bound is painted**. A 2.0 wall with a 0.8 chamfer leaves 1.20 against a 1.2 bound. The float32 mesh reads 1.199,
