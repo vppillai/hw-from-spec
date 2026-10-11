@@ -45,7 +45,7 @@
 
 Source: the same project's software rounds, 11 learnings of one day. The classification read GENERAL 11 (3 of them carried in part) and
 PROJECT 0. The report was folded, then deleted (SKILL §13); the project keeps its copy under its reviews folder. The day held a package
-carved out of a working tool, a criteria engine, a technician flow and a lot loop. Two blind reviews, a wheel and a spec revision
+carved from a working tool, a criteria engine, a technician flow and a lot loop. Two blind reviews, a wheel and a spec revision
 followed. The judge
 passed 31 hand-made probes and failed on the first real record. A fake that inserted itself after the open hid the normal case. A brief
 asked for a register the standard does not have.
