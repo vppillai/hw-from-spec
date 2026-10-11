@@ -1,6 +1,6 @@
 # CHANGELOG — hw-from-spec
 
-## Current state (0.11.18): read this instead of replaying the entries below
+## Current state (0.11.19): read this instead of replaying the entries below
 
 - **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
   twelve batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
@@ -17,7 +17,7 @@
 - **Scripts** (`project.yaml`-driven, every one with `--selftest`, exit 0 / 1 / 2): `project.py` (reader, scaffold, slots, kickoff --check,
   gates-required, record, env), `known_issues`, `traceability`, `release_report`, `collect_renders`, `assembly_guide`, `reorg_paths`, `dfm_check`,
   `erc_gate`, `gate_check`, `handoff_header`, `thin_wall_census` (`wall_gate` on the mesh; legend boxes with a Z band; accepted clusters re-matched by class and bbox), `print_dfm` (printability-floor gate + `--validate`),
-  `thin_wall_check` (quick look + pinch), `heatmap_count` (yellow / red of a vendor map capture, stdlib), `vendor_gate` (the API flag + six 0 / 0 captures per STL of record), `stability` (CoG vs support hull at the worst pose; `improper_placements` = the det +1 row), `scad_lint`, `step2stl`, `arrival_checklist`, `skill_retro` (+ `--apply`), `jobs.sh` (the heavy-job
+  `thin_wall_check` (quick look + pinch), `heatmap_count` (yellow / red of a vendor map capture, stdlib), `vendor_gate` (the API flag + six 0 / 0 captures per STL of record; `--newest` picks the round folder), `stability` (CoG vs support hull at the worst pose; `improper_placements` = the det +1 row), `scad_lint`, `step2stl`, `arrival_checklist`, `skill_retro` (+ `--apply`), `jobs.sh` (the heavy-job
   pool), `adopt_gates.sh`, `clone_gate.sh`, `doc_voice_lint`, `generic_lint`. The writing gates are `style_lint` and `style_gate` (the dated baseline). Mesh stack: `numpy trimesh scipy shapely rtree networkx
   mapbox-earcut embreex` (the Embree ray engine keeps a census in seconds under 1 GB).
 - **Layout** (`references/project-yaml.md` §Layout): ten numbered folders in the order of the project's life — `00-now` (five generated answer
@@ -40,6 +40,77 @@
 - **Generic by rule**: the skill names no project, part, board, order, account or person — `scripts/generic_lint.py` reads the whole repo
   (CHANGELOG and docs included; history keeps its measured numbers), a fenced worked example keeps numbers and kinds but never a name, and the
   repo carries no project retro (a retro report is folded, then deleted).
+
+## 0.11.19 - 2026-10-10 - The vendor map read by its thinnest sample, the derived drop stop, gate pins before the gate opens
+
+Source: one printed-case project's case v4 round, 154 learnings of one day. The classification table is `docs/retro/2026-10-10-case-v4.md`
+(GENERAL 147, of which 7 were carried already; PROJECT 7). The day held a double-blind review, nine fix branches and nine chain passes.
+It held seven vendor DFM rounds with a probe round, a bisect round and a corner round. Five fix rounds along a painted band missed its
+cause; one slab pair named it. The gate pins ran for the first time when the gate opened, and 34 read FAILED. An assumed drop stop asked
+for twice the drop's energy. A `--only` subset wiped the other FEA cases of the record.
+
+### Added
+- `references/dfm-printed-enclosure.md` §13.1 Reading the map:
+  - The vendor's map paints a whole triangle by its thinnest sample, so a band is read at its end.
+  - No bar effect at 2.0 × 2.0: a 2.0 × 2.0 bar reads grey, a 1.2 land yellow.
+  - Regions are named by landmarks, never by pixel box; the frame is recorded per round.
+  - How to read a pixel-identical count after a fix, a count that does not move, and a fix that adds a face.
+  - Mirror pairs do not read alike; every corner is read.
+  - The print frame before any section read.
+- `references/dfm-printed-enclosure.md` §13.2 Geometry at the gate:
+  - A land at the vendor's bound is painted; gate free-face lands at the margin line.
+  - The chamfer band, the corner-round run-out, the hanging wall at a rounded end.
+  - `2 × w_in` for a free-standing block, the ring-corner formula, the opposing-face pairing across a seam.
+- `references/dfm-printed-enclosure.md` §7.1 The bisect method:
+  - Plane-cut slabs of the mesh of record, uploaded one by one; the suspect feature cut out of one slab.
+  - The slab mirrored, not the body; the feature named by a section at the painted Z; what a slab read cannot tell.
+  - A slab or probe from `trimesh` alone (the tensor grid), with the cap and validate traps.
+- `references/dfm-printed-enclosure.md`, the rest:
+  - §1: the quote form's 2 × 2 × 10 mm minimum box for the plain and the full-colour MJF material.
+  - §7 step 0: the licence clause. Step 1: the md5 of record after the chain commit; a facet-order-only re-export reads as its parent; the
+    ten-upload tab. Step 2: the re-poll for the heat-map URL. Step 4: the viewer mechanics as a pointer list.
+  - §2: the second ray from the host wall; the cluster minimum at `gate − 2 × margin`.
+  - §8.3: support enforcers headless. §8.4: flush and lands exclude each other.
+  - §12: two colour bodies that touch leave a host wedge; `bodies_expected` from the design.
+- `references/print-dfm.md` §1: the ray reads that lie. They are the omnidirectional minimum, a cone without the opposing-face rule, the
+  hydraulic-width slot ceiling, and rule M against the design.
+- `references/fea-stage.md`:
+  - The tie gap is derived from the lap clearance and the surface node spacing; the tied fraction is reported.
+  - The St. Venant gate runs off the load, support and tie bands; the band peak is INFO.
+  - An INFO above the limit, or a 2× move, is an owner line. Every threshold is re-checked after a material change.
+  - The bare case is the sensitive torsion case.
+  - §Drop: the energy balance on the real STL; the plastic zone as INFO.
+  - §Thermal: state what the model can credit; the pass target in the model's variable; a bench row for the rest.
+  - Pitfalls: `--only` subsets, the mesh cache as the determinism anchor, worktree runs, report-only rebuilds, the drop sliver, the units.
+- `references/release-and-cut.md` §3.1:
+  - Exercise every gate pin against the evidence before the gate opens.
+  - An owner row at an open gate reads `PENDING(<row>)` through the entry's `pending:` text, never a waiver.
+  - The record round stops at FAILED > 0, and the second report pass does not run.
+  - Every generator the cut lists runs before the round; SUPERSEDED entries land in the batch of the first export.
+  - The DECISIONS cell count and the unmapped count are checked before the round.
+  - §10: never add a row to a generated checklist by hand.
+- `references/agent-ops.md`:
+  - §2: a chain agent can end between its last gate and its record commit; the gate logs live under `build/_check/<chain>/`.
+  - §2: a fresh worktree has no gitignored caches (facet-order drift, proof only); `git checkout --` restores the STLs; chains run after
+    every merge.
+  - §3: the DECISIONS row cell count; untracked evidence before an adopt-gate FAIL; the style gate right before the round.
+  - §4: the closing pass of a merged review by a blind verifier.
+  - §6: the browser that outlives its driver; file arguments inside the workspace roots. §8: a queued holder holds no slot.
+- `references/case-pipeline.md`:
+  - §Feature views: one section per designed asymmetry. Flat faces render in one shade, and six faces are not a signature. Measure
+    before you promise a picture. Legends read upside down on a top face. A render-only mode.
+  - §Presets: pin a new key in every override; compare the volume of every untouched body.
+  - §Process rules: partial chain runs; a census VERSION bump; the preview that aborts past 100 000 elements.
+  - §Process rules: a physical gate carried by the record; the dealer API read before the order sheet.
+- `references/part-verification.md` §Bought hardware: dealer API reads. A short numeric MPN is not a stable keyword; check the next price
+  break; the maker-class hardware gap is a BLOCKER.
+- `references/vendor-review.md` §4: quote-page recipes change between rounds; the recipe that worked goes into the round record.
+- `references/kickoff-questionnaire.md`: E3 owner input (who calipers the bought hardware before the case order); E4a the drop case's
+  stop; E4b what closes the thermal row.
+- `references/pitfalls.md`: twenty-six dated lines (dfm, process, agents, tooling, mech, fea, documentation, records).
+- `scripts/vendor_gate.py --newest '<glob>'`: the newest round folder by version sort (`_r2` < `_r10`), exit 2 on no match; selftest. The
+  template's commented adopt line shows it.
+- `docs/retro/2026-10-10-case-v4.md`: the classification table of this retro, kept as the record of the fold (the generic lint reads it).
 
 ## 0.11.18 - 2026-10-09 - Bare move keys refused, the dated style baseline, exact gate ids in a delegation
 
