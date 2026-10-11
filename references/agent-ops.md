@@ -36,14 +36,14 @@
   commit>`). The record says so. A tag on a `not yet gated` commit is a false release marker.
 - **A chain agent can end between its last gate and its record commit.** Keep every gate log under `build/_check/<chain>/`. The successor
   reads the logs and writes the record from them.
-- **A fresh worktree has no gitignored caches**: no STL export cache, no sidecars, no mesh cache. The first export there re-exports every body,
-  and the kernel returns a different facet order (same triangles, same volume, new md5). Copy the set's cache sidecars from the main checkout
-  before a checks run, or treat the worktree's tables as proof only. The main-chain export is the record, and the order sheet quotes its md5.
-  The drift is per body, so read every body md5 after the main chain. A path check in a worktree reads dangling findings for the ignored files
-  that live only in the main checkout.
+- **A fresh worktree has no gitignored caches**: no STL export cache, no sidecars, no mesh cache. A worktree without the cache re-exports
+  every body. Its STL is proof only. The STL of record is the cached canonical export of the main chain, and the order sheet quotes its md5.
+  Drift under an unchanged key is still a FAIL (§8 item 3, `dfm-printed-enclosure.md` §7.2), never a cache miss. Copy the set's cache
+  sidecars from the main checkout before a checks run. Read every body md5 after the main chain. A path check in a worktree reads dangling
+  findings for the ignored files that live only in the main checkout.
 - `git checkout -- <set>` restores the tracked STLs too, not only the check records. Prove on a fresh export first, restore afterwards, and
   never commit a partial-run record.
-- A merge can carry a SCAD of record from an intermediate generator state. Run the chains after every merge, before a vendor upload.
+- Run the chains after every merge, before a vendor upload (`case-pipeline.md` §Process rules).
 
 ## 3. Regenerating shared records
 - Re-read (re-grep) the row immediately before replacing a status cell; prefer a suffix append over a full-cell rewrite.
@@ -141,7 +141,7 @@
   every upload / read — never act on a page id from an earlier turn.
 - **The browser can outlive its driver.** `list_pages` reads "browser already running" while no driver process exists. Check `ps` for a second
   driver; if there is none, close the browser and let the driver relaunch it. The open tabs are lost, so record a round before the session
-  ends. The driver refuses file arguments outside the workspace roots; stage uploads and dumps under `build/_check/`.
+  ends. The driver refuses file arguments outside the workspace roots. Stage uploads and dumps under `build/_check/<chain>/`.
 
 ## 7. Memory, pause points, owner lists
 - **Auto-memory (`MEMORY.md` + topic files)** holds what must survive a session. It holds the project's resume pointer (which files to read first). It
@@ -175,8 +175,9 @@ audit, then change.
    renders are heavy jobs too**. Run them through the pool, one slot each, never beside a CAD export outside it. A census with trimesh's default rtree
    ray engine holds rays × candidate triangles. It needs tens of GB for a large body at the census density (one took a 24 GB host down). `embreex` in
    the mesh stack gives trimesh the Embree engine, and the same census runs in seconds under 1 GB (`pitfalls.md`).
-   A holder that waits behind the load gate holds no slot until its slot directory exists in the lock dir. Check the lock dir before you start
-   a browser or upload session outside the pool.
+   An upload session runs outside the pool; a PDF render does not. A holder that waits behind the load gate holds no slot until its slot
+   directory exists in the lock dir. Before an upload session, count the slot directories in the lock dir. If `jobs_max` exist, wait. A
+   session started beside a queued holder lands next to the chain that is about to start.
 2. **Measure first, then audit, then change.** (a) Measure serially in a detached worktree replica (`git worktree add --detach`). Run one stage at a
    time under `nice` with `/usr/bin/time -l` (macOS; `-v` on Linux) and `uptime`. Record wall + peak RSS per chain, per plate, per record-round step,
    per gate step. The wrapper writes the same two numbers into the pool log on every job. The retro then sees where the time goes before anyone
