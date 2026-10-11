@@ -41,6 +41,23 @@ copy-back with `git checkout` once its diff is timestamp-only.
   folder deletes a sibling's output — register foreign files with their own check instead.
 - A generated document can carry a fetch-time stamp a yaml bump does not move (a compliance table's "case version" written at fetch time):
   every consumer of the version string is re-run in the bump.
+- **Exercise every gate pin against the evidence of record BEFORE the gate opens**. A pin that waits on a closed gate is never run.
+  Thirty-four pins written against an assumed evidence format read FAILED the minute the gate opened. Before the gate opens, run
+  `traceability.py --only <family>`. Read every `now k/n` under PENDING(stage) as a failure in waiting (`pitfalls.md`). The script has no
+  flag that forces a stage. A check-table row is gate evidence only when its note cell names the requirement id. The id goes into the
+  generator's note text, never into the table by hand.
+- **An owner row at an open gate** reads `PENDING(<text>)`, never a waiver. The entry's `pending:` text carries the owner's decision row
+  id. In `scripts/traceability.py`, PENDING(text) is a known gap with a logged fix. The check table keeps its FAIL. The
+  gate record reads PENDING on the owner's decision. The round then runs.
+- **The record round stops at FAILED > 0** (`set -e` on the traceability step). The analysis index, the PDF render and the production cut do
+  not run; the previous round's cut stays in place. The second `release_report` pass does not run either, so the clone gate reads the pre-round
+  report STALE. Fix the entries and run the round again; never patch the report.
+- Run every generator the cut lists before the round, the drawings included. A drawing re-derived after the round leaves the manifest one build
+  behind. `known_issues` is STALE again when the round itself appended DECISIONS rows: run it, then `--check`, in the same stage.
+- The first export of a new case base replaces files that old traceability entries check. Mark the old entries SUPERSEDED in the same batch as
+  the first export. A deleted kit file takes its pins, allow-list line and render index entry with it, in the same batch.
+- A DECISIONS row with a missing cell or an unescaped pipe inside backticks stops every generator that reads it. A merged row also
+  needs its yaml entry. Check both before the round: the cell count per row and the unmapped count of a dry traceability run.
 
 ## 4. Collateral (`scripts/collect_renders.py`)
 `collateral/<rev>/renders/` holds CAD 3-D renders, panel preview, silk PNGs, case renders, FEA composites, drawing PDFs, and fab-viewer
@@ -164,6 +181,8 @@ entry, so a missed commit still proves. Every move key carries a slash or names 
 prose, so the script prints the bare keys and exits 2.
 
 ## 10. The arrival / first-article checklist (`scripts/arrival_checklist.py`) — written at the order, closed as the parts arrive
+Never add a row to a generated checklist by hand. The adopt gate reads it STALE one round later, and the regeneration drops the row. Put the row
+in the yaml, then regenerate.
 `20-design/arrival_checklist.yaml` (`templates/20-design/arrival_checklist.yaml`) → `60-orders/ARRIVAL_CHECKLIST_<rev>.md`; `--check` joins `gates.adopt`
 the moment the yaml exists (`project.py gates-required`), the markdown is a cut deliverable (`production_cut.yaml` REC-002). The sections
 follow the order of the day. **before shipment**: the fab's assembly photos (polarity vs silk, the critical connector's seating, holes that

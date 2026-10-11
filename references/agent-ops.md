@@ -34,6 +34,16 @@
   not only the default. A partial mirror is a stale kit that the parity gate reports as a design change (source: plug-cap + case agents, 2026-09-29).
 - **Tags follow the gated commit.** Re-point a tag created on a checkpoint or a WIP commit once the gated commit exists (`git tag -f <tag> <gated
   commit>`). The record says so. A tag on a `not yet gated` commit is a false release marker.
+- **A chain agent can end between its last gate and its record commit**. Keep every gate log under `build/_check/<chain>/`. The successor
+  reads the logs and writes the record from them.
+- **A fresh worktree has no gitignored caches**: no STL export cache, no sidecars, no mesh cache. A worktree without the cache re-exports
+  every body. Its STL is proof only. The STL of record is the cached canonical export of the main chain, and the order sheet quotes its md5.
+  Drift under an unchanged key is still a FAIL (§8 item 3, `dfm-printed-enclosure.md` §7.2), never a cache miss. Copy the set's cache
+  sidecars from the main checkout before a checks run. Read every body md5 after the main chain. A path check in a worktree reads dangling
+  findings for the ignored files that live only in the main checkout.
+- `git checkout -- <set>` restores the tracked STLs too, not only the check records. Prove on a fresh export first, restore afterwards, and
+  never commit a partial-run record.
+- Run the chains after every merge, before a vendor upload (`case-pipeline.md` §Process rules).
 
 ## 3. Regenerating shared records
 - Re-read (re-grep) the row immediately before replacing a status cell; prefer a suffix append over a full-cell rewrite.
@@ -46,6 +56,11 @@
   status --porcelain` differs before/after the gates. The PR-check template ends with the same guard. Every skill script answers `--help` read-only
   (argparse), and a project script must too. A script without argparse runs its default WRITE action on `--help`. Until it has argparse, probe its
   usage with `sed -n 1,12p` of its docstring.
+- A DECISIONS row with a missing cell or an unescaped pipe in backticks breaks every generator that reads it. Check the cell count per
+  row before the round (`release-and-cut.md` §3.1).
+- Read `git status` for untracked evidence before you read an adopt-gate FAIL as a record defect. An untracked folder from a concurrent vendor
+  round makes a report `--check` STALE in the working tree. The HEAD archive still passes.
+- Run the style gate right before the round when another agent commits to the shared log. One line over the baseline fails the round.
 
 ## 4. Blind reviews (the protocol; templates in `workflows/`)
 - Freeze: start from a clean tree (`git status --short --untracked-files=no` empty). Run `git worktree add --detach <frozen> HEAD`, then `git -C
@@ -87,6 +102,9 @@
   (findings, refuted rate, already-decided rate, empty runs per model) and the counts. Commit with explicit paths.
 - Visual inspections: tiles ≥ 40 px/mm with a mm legend burned in, per-net-class highlight renders, the external inspector sees ONLY the tiles
   (copy them into a fresh directory and run the CLI there).
+- **A merged review record needs a closing pass after the fix wave**. One blind verifier closes it. Each finding gets one row: the disposition
+  row, the artefact line read, and the verdict line in the pin's form. Write the findings as numbered rows in the merge; prose bullets make the
+  count a reconstruction.
 
 ## 5. Background jobs and the machine
 - **Long chains run in the BACKGROUND and are waited on by the harness, never by a foreground loop.** Every job writes its own log. It ends the log
@@ -121,6 +139,9 @@
 - **Browser sessions are shared state.** The DevTools-driven browser can be restarted or re-used by another agent between two of your turns: page
   ids, tabs and the signed-in state are then gone. Re-list the pages, re-derive the id, re-check the sign-in (a fresh tab on the account URL) before
   every upload / read — never act on a page id from an earlier turn.
+- **The browser can outlive its driver.** `list_pages` reads "browser already running" while no driver process exists. Check `ps` for a second
+  driver; if there is none, close the browser and let the driver relaunch it. The open tabs are lost, so record a round before the session
+  ends. The driver refuses file arguments outside the workspace roots. Stage uploads and dumps under `build/_check/<chain>/`.
 
 ## 7. Memory, pause points, owner lists
 - **Auto-memory (`MEMORY.md` + topic files)** holds what must survive a session. It holds the project's resume pointer (which files to read first). It
@@ -154,6 +175,9 @@ audit, then change.
    renders are heavy jobs too**. Run them through the pool, one slot each, never beside a CAD export outside it. A census with trimesh's default rtree
    ray engine holds rays × candidate triangles. It needs tens of GB for a large body at the census density (one took a 24 GB host down). `embreex` in
    the mesh stack gives trimesh the Embree engine, and the same census runs in seconds under 1 GB (`pitfalls.md`).
+   An upload session runs outside the pool; a PDF render does not. A holder that waits behind the load gate holds no slot until its slot
+   directory exists in the lock dir. Before an upload session, count the slot directories in the lock dir. If `jobs_max` exist, wait. A
+   session started beside a queued holder lands next to the chain that is about to start.
 2. **Measure first, then audit, then change.** (a) Measure serially in a detached worktree replica (`git worktree add --detach`). Run one stage at a
    time under `nice` with `/usr/bin/time -l` (macOS; `-v` on Linux) and `uptime`. Record wall + peak RSS per chain, per plate, per record-round step,
    per gate step. The wrapper writes the same two numbers into the pool log on every job. The retro then sees where the time goes before anyone

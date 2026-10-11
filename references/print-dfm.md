@@ -48,6 +48,8 @@ debossed label's 0.45 / 0.45 beside raised strokes on one coupon. `thin_wall_cen
 inside when ≥ 50 % of its samples are. The census gates each in-box wall or void cluster on its 10th-percentile sample, not
 its median. A median hides a thin minority, and the vendor colours it. Every rule respects the boxes, W and R included.
 
+Rule M counts bodies against the design: pass `--bodies N` for a colour body drawn as several arms. The ray reads that over-read in a
+project's own section script are `dfm-printed-enclosure.md` §13.3.
 Heat maps (`--render`, matplotlib): per-FACE minimum in the vendors' palette (grey ≥ `wall_reco`, yellow, red < `feature_min`, narrow voids dark
 red), six faces + two isos — a per-sample field looks nothing like the vendor's picture; per-face MIN does.
 
