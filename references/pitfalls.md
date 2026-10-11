@@ -176,7 +176,7 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 
 
 - A chain agent can end between its last gate and its record commit. Keep the gate logs under `build/_check/<chain>/`, so the successor writes the record from them — 2026-10-10 [agents/handover].
-- A fresh worktree has no gitignored caches (STL sidecars, mesh cache): every body re-exports with a new facet order and every FEA re-meshes. Copy the caches for the same keys, or treat the worktree's tables as proof only; the main-chain export is the record — 2026-10-10 [agents/worktree].
+- A fresh worktree has no gitignored caches (STL sidecars, mesh cache): every body re-exports and every FEA re-meshes. Copy the caches for the same keys, or treat the worktree's tables as proof only. The STL of record is the cached canonical export of the main chain; drift under an unchanged key is a FAIL — 2026-10-10 [agents/worktree].
 ## tooling / determinism
 - Bambu Studio CLI (02.08.x): `sparse_infill_density` 100 % is rejected (rc -18) — use top / bottom shell thickness for a solid column. A two-filament slice with a prime tower SEGFAULTS (rc -11 / 133, "no filament colors found in projects") unless each slot's filament JSON carries `filament_colour` (or `--filament-colour '#..;#..'`). Bisect on the temp inputs one variable per run — 2026-09-29 [tooling/bambu].
 - Multi-material on the Bambu CLI = one multi-part object: Bambu-style 3MF with per-part `extruder` in `Metadata/model_settings.config` (or pre-placed STLs + `--load-filament-ids 1,2 --assemble --arrange 0`). Purge mass = used − solid-part volume × density, derivable for the SOLID colour mark only. The same STL path N times = N objects, count from the CLI's `objects`. `different_settings_to_system` omits values equal to the system default — prove from the embedded value — 2026-09-29 [tooling/bambu/ams].
@@ -227,9 +227,9 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 
 - A snapshot's `--backend=Manifold` (`tools.openscad_args`) exports a body in < 0.1 s where the release kernel took minutes. A 360-step sweep and an animation become affordable as previews (the exports of record keep the engine rule, [tooling/openscad] above). Two Manifold constructs break watertightness. `hull()` of two 0.01-high slabs (degenerate faces — a 45° transition is a solid wedge or a bevelled cut). A standing D-shaft as D-extrude + cylinder + ramp unions (13 shells — ONE cylinder minus bevelled flat cuts is manifold by construction) — 2026-10-01 [tooling/openscad].
 
-- The release kernel's preview aborts past 100 000 CSG elements, writes a blank PNG and exits 0; nine empty frames shipped for a day. Fail the run on an empty frame — 2026-10-10 [tooling/openscad].
+- OpenSCAD 2021.01's preview aborts CSG normalisation past its `openCSGLimit` preference (100 000 elements by default), writes a blank PNG and exits 0; nine empty frames shipped for a day. Fail the run on an empty frame — 2026-10-10 [tooling/openscad].
+- A new base key leaked a wall value into a sibling preset and moved its body by 36.7 mm³ on the first export. Pin a new key in every override that pins its sibling — 2026-10-10 [tooling/presets].
 - `slice_plane(cap=True)` fails to cap some planes, and `process(validate=True)` after a cut re-opens the mesh. Merge vertices only, cap by hand with `shapely.polygonize`, pick material faces by containment, not by area — 2026-10-10 [tooling/mesh].
-- A zsh `for c in "cmd --flag"` loop does not word-split `$c`; write `${=c}` — 2026-10-10 [tooling/shell].
 - A check that imports yaml exits 1 under the stock python before it reads a path. Run every skill script with the project venv's python — 2026-10-10 [tooling/venv].
 - A README with two spliced blocks needs its mask and preserve keyed by the marker name (one regex with a backreference). A single-marker mask erases the second block on the next regen — 2026-10-10 [tooling/generators].
 ## kicad / drc / swig *(worked examples; the mechanism generalises to any CAD CLI)*

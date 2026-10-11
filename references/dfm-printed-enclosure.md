@@ -74,10 +74,10 @@ seen (a dummy 0.4 mm low). The only exception path is the machine-readable `acce
   vendor's sheet). For FDM the figure is 30–50 % across layers. Ask the vendor for the build orientation / position when the part matters (a
   cantilever, a boss under screw preload). Record it in `DFM_ROUND.md`. Draft angles: **n/a for MJF / SLA / FDM**; required if the design is ever moulded — say so in the
   brief so a reader does not think it was forgotten.
-- **The quote form's minimum box** **[vendor form, measured 2026-10-10]**. The MJF form refuses a loose part that does not fill a 2 × 2 × 10 mm
-  box. The rule holds for the plain and the full-colour MJF materials alike. A 1.5 or 1.8 mm bar is refused; a 2.0 mm bar is priced at the
-  minimum line price. The analysis and the heat map still run for a refused body; only the price is missing. A loose part thinner than 2 mm
-  needs a sprue or a thicker design before it can be quoted.
+- **The quote form's minimum box** **[JLC3DP quote form, measured 2026-10-10]**. The MJF form refuses a loose part whose thinnest bounding-box
+  dimension is under 2 mm or whose longest is under 10 mm. The rule holds for the plain and the full-colour MJF materials alike (§11 and §12
+  point here). A 1.5 or 1.8 mm bar is refused; a 2.0 mm bar is priced at the minimum line price. The analysis and the heat map still run for
+  a refused body; only the price is missing. A loose part thinner than 2 mm needs a sprue or a thicker design before it can be quoted.
 
 ### 1.1 Retention hardware: inserts, screws, magnets — per material
 | Material | Insert / fastener | Bore and depth | Boss OD / wall | Notes |
@@ -169,10 +169,11 @@ upload, with the verdict → validate → rule-fix → retro loop in `references
   touches", not "inside one land" (a block of strings merges into one cluster).
 - **INFO rows added since the previous round are listed in the gate merge** — an INFO table is the new escape hatch if a row can move
   there by deleting its threshold; each INFO row states why it has none.
-- **Classify a wedge by a second ray from the host wall**, not by the opposite-face angle alone. A free-standing wedge and a chamfer cut into
-  a wall both read 45° at the face. The ray from the host face tells them apart. A free edge ends on a land under the gate; a chamfer in a wall
-  keeps the host at the wall value. Gate a cluster MINIMUM at `gate − 2 × cluster_margin`, because a minimum carries twice the noise of a
-  median.
+- **A free-standing wedge and a chamfer cut into a wall both read 45° at the face.** The opposite-face angle alone does not separate them.
+  The census separates them by the band width (`wedge_band`): a free wedge has a wide band, a chamfer in a wall a narrow one. When the band
+  is near the limit, read a second ray from the host face in a section. A free edge ends on a land under the gate. A chamfer in a wall keeps
+  the host at the wall value. The census gates a wall cluster at its median under `gate − 0.05` (`CLUSTER_MARGIN`, the sampling noise) and an
+  opposing row at its minimum under the exact gate. It adds no further allowance for a minimum.
 
 ## 3. Vendor heat map = strength finding
 A heat map yellow "full length" along a feature is a strength finding, not cosmetic: file it as an owner decision **with the number** ("the lip
@@ -205,11 +206,11 @@ Every rim and wall reads CLOSED on the single part: no through-slot, notch, key 
 1. **One STL per page session, reload between uploads.** With several lines present the page opened the wrong file's analysis twice. The hidden
    `input[type=file]` can be unhidden by script; uploads and the analysis work **signed out** (ordering does not). Name the uploaded copy
    `<piece>_<version><round>_<md5-8>.stl`.
-   **Upload the md5 of record**. Wait for the chain commit and read the sidecar. A chain re-export after your read moves the md5, and the
-   round names its files by it. A re-export that changes the facet order only reads as its parent on the map (same triangles, same volume).
-   Upload it anyway, because the gate keys on the md5 of record. A signed-out quote tab takes ten uploads; the eleventh sends no request and
-   the page stays silent. Two lines in one tab worked on 2026-10-10 with their material dialogs run one after the other; the one-per-session
-   rule stays the safe default.
+   **Upload the STL of record**: the cached canonical export of the main chain (§7.2). Wait for the chain commit and read the sidecar,
+   because the round names its files by that md5. A worktree without the cache re-exports; its STL is proof only, never the upload. Drift
+   under an unchanged key is a FAIL (`agent-ops.md` §8 item 3), not a cache miss. A signed-out quote tab takes ten uploads; the eleventh
+   sends no request and the page stays silent. The one exception, dated: two lines in one tab worked on 2026-10-10 when their material
+   dialogs ran one after the other. The one-per-session rule stands.
 2. **The verdict of record is the analysis API, not the page.** The page polls `GET …/tdpFile/getFileAnalyzeResult?fileAccessId=…`; read it from
    the browser's network log (or re-request the same URL) and accept it only when `parseStatus == 2`. Then `modelAnalysisVO.thinWall` (bool) IS
    the flag; `modelAnalysisVO.previewUrl` opens the heat-map viewer; `volume`, surface area and bbox must equal yours (**same geometry parsed, same
@@ -219,23 +220,23 @@ Every rim and wall reads CLOSED on the single part: no through-slot, notch, key 
    verdict class downgrades to "page popover + screenshot", the round is NOT YET until the API read is restored or the owner accepts the weaker
    evidence in a D row. **Capability-page snapshot** once per round: PDF / print of the vendor's published design rules with the date, so the
    numbers in `print_targets` can be re-derived when the site changes.
-   **The reply at `parseStatus 2` can lack the heat-map URL** (`previewUrl` without the model URL). Re-poll the same URL after 15 s; the
-   re-poll carried it with the same `fileMd5`. Save the re-poll as the reply of record. One page script can re-fetch the last poll URL per
-   `fileAccessId` and save every reply of the session.
+   **The reply at `parseStatus 2` can lack the heat-map URL** (`previewUrl` without the model URL). Re-poll the same URL until the URL is
+   present (one re-poll after 15 s carried it, measured once, same `fileMd5`). Save the re-poll as the reply of record. One page script can
+   re-fetch the last poll URL per `fileAccessId` and save every reply of the session.
 3. **The flag is computed at UPLOAD and does not depend on the process / material chosen on the line**. Still set the material first (Edit dialog
    SAVED — form state, not a cart). It gives the price and the legend of the material's heat map. The record names the material on the line and
    **the quote price per body** before reading anything. Changing the material never flips `thinWall`. The page defaults to a resin.
-4. **Open the heat map on every face** even when `thinWall` is false. Take six captures per body: the origin view, three 90° azimuth drags (a horizontal drag of canvas-height/2 px is 180°), and both poles (±canvas-height/2 vertical, from the origin). `scripts/heatmap_count.py` on the six captures must print 0 / 0 (yellow / red in the model area: the legend column and the tool-bar strip are skipped).
+4. **Open the heat map on every face** even when `thinWall` is false. Take six captures per body: the origin view, three 90° azimuth drags (a horizontal drag of canvas-height/2 px is 180°), and both poles (±h/4 vertical from the origin, h = canvas height). `scripts/heatmap_count.py` on the six captures must print 0 / 0 (yellow / red in the model area: the legend column and the tool-bar strip are skipped).
    `scripts/vendor_gate.py <round dir> --stl <set>/parts/*.stl` checks the reply and the six captures per STL md5. It reads each pixel in HSV, so shaded faces and amber count too. Record **the legend thresholds as displayed
    that day** — the census turns a colour into a number.
-   **Viewer mechanics** (pointers only; the page changes, so the recipe that worked goes into the round record, never here):
-   - The viewer is a trackball, not a clamped orbit. A vertical drag of h/2 is 180° in both directions, so both poles look alike; use h/4 up
-     and down from the origin. Synthetic pointer events on the canvas rotate it.
+   **Viewer mechanics** (pointers only). The page changes. The recipe that worked goes into the round record, never here.
+   - The viewer is a trackball, not a clamped orbit. A vertical drag of h/2 is 180° in both directions, so both poles look alike. Drag h/4
+     up and down from the origin. Synthetic pointer events on the canvas rotate it.
    - A drag that releases on the model drops a thickness marker. Its red close control counts as red in the capture. Close every marker, then
      count the markers left on the page, not the clicks sent.
    - The analysis radio can lose a click while the model loads. Retry until the legend text is on the page, then rotate.
    - A drag right after the origin button can repeat the last view. Compare each capture's yellow box with the previous one before you accept it.
-   - The viewer tab and the quote tab are independent streams. Two bodies run as two tab pairs: upload the second while the first map is read.
+   - The viewer tab and the quote tab are independent streams. The session rule of step 1 still holds.
 5. **Save screenshots named `<piece>_<round>_<md5-8>_<material>_heatmap_<face>.png`** plus `quote_page_<round>_flags.png`.
    `<face>` is one of `az000 az090 az180 az270 poleA poleB`, the names `vendor_gate.py` reads. Keep the uploaded STL
    beside them. Write `templates/DFM_ROUND.md` into `60-orders/quotes/<date>/` with the API fields, the browser / UA / signed-in state per body.
@@ -263,8 +264,9 @@ at in `print_targets.<t>.max_bbox_for_rule`; test the hypothesis once with the s
   4. *Record*: the probe table names the method, every probe with its knob and verdict, the rule adopted, and the API re-verification of every body.
 - **The bisect method (the probes pass, the map still paints a body of record; about 30 min per slab pair):**
   1. *Slabs*: cut the mesh of record into plane-cut slabs (`slice_mesh_plane(..., cap=True)`), each watertight, named by md5. Keep the full skin.
-     Cut 0.5 mm clear of every face plane and 2.0 mm clear of every slot edge. Otherwise the cut makes its own thin features: a 0.4 fin reads
-     red, a 0.8 ledge yellow. Ray-read every slab before the upload, so a yellow on a slab is the geometry's, not the cut's.
+     Put every cut plane in a face plane, or at least `wall_gate + design_margin` from every face plane and slot edge (derived from the
+     gate). A closer cut makes its own thin feature: a 0.4 fin read red, a 0.8 ledge yellow (worked example). Ray-read every slab before the
+     upload, so a yellow on a slab is the geometry's, not the cut's.
   2. *Halve*: upload the slabs one by one. Then cut the suspect feature out of one slab and upload the pair. The slab that keeps the colour names
      the region. Worked example: five fix rounds along a band had missed its cause. The band lived in one 11 × 10 × 9 mm corner slab, and it
      vanished with the corner cut off.
@@ -273,7 +275,7 @@ at in `print_targets.<t>.max_bbox_for_rule`; test the hypothesis once with the s
      knob moves. A face seen edge-on looks like a strip on its neighbour, and a pillar's lead-in annulus looks like a corner arc.
   5. *What a slab read cannot tell*: which triangle carries the colour, and whether the land is the design value or the cut's. Only a section at
      the painted Z tells that.
-  A probe or a slab can be built from `trimesh` alone. A conforming tensor grid of columns, with the walls split at every neighbour level, is
+  A probe or a slab can be built from `trimesh` alone: one box per grid cell, every cell boundary shares its vertices, so the union is
   watertight with no boolean engine. `slice_plane(cap=True)` fails to cap some planes, and `process(validate=True)` after a cut re-opens the
   mesh. Merge vertices only, cap by hand with `shapely.polygonize`, and pick the material faces by a containment test, not by area.
 
@@ -685,7 +687,7 @@ duplicate-aware SafeLoader and fail on a duplicate. Prove byte identity before c
 - **Two colour bodies that touch at a point leave a wedge of the host colour between them**. The census reads it as a free-edge wedge under the
   wall gate. A shorter colour body hides the same wedge under the census floor. Erode the artwork by a solved inset until the contact opens to
   the gate. The arms meet at angles, so the opening is wider than `2 × inset`. Give the arms a gap or an accepted entry; never loosen the gate.
-  A colour body split into arms trips print DFM's one-solid rule: pass `bodies_expected` from the design, not from the file.
+  A colour body split into arms trips print DFM's one-solid rule: pass `--bodies N` from the design, not from the file.
 
 ## 13. The vendor's map at the gate, and the metrics that over-read **[measured]**
 - A wall designed EXACTLY at the vendor's gate reads yellow on its heat map although the API passes. A 2.0 sole with a 0.8 deboss = 1.20 left
@@ -701,39 +703,56 @@ duplicate-aware SafeLoader and fail on a duplicate. Prove byte identity before c
   centre line under the part that hides it.
 
 ### 13.1 Reading the map **[measured 2026-10-10, seven rounds and a probe round]**
+These rules depend on one checker: the JLC3DP quote-page analyser and its heat-map viewer, MJF PA11-HP and PAC-HP, bodies up to 150 mm,
+read 2026-10. Re-measure them on another checker before you lean on them.
 - **The map paints a whole triangle by its thinnest sample**. A long yellow band on a plain 2.0 wall is one sliver triangle coloured at its end.
   Read the band's END: section the mesh where the band meets a corner, a hole or an end wall. Three land fixes along one band moved nothing,
   because none touched the corner.
-- **There is no bar effect at 2.0 × 2.0**. A free-standing 2.0 × 2.0 bar reads grey at a 60 and a 150 mm bbox. It reads grey at a free edge,
-  with or without a root chamfer (three probes, 18 views, 0 yellow). A 1.2 land reads yellow. The smallest grey section is the smallest one tested.
+- **At this checker's 1.2 line a free-standing 2.0 × 2.0 bar (`wall_gate + 0.8`) reads grey** at a 60 and a 150 mm bbox. It reads grey at a free
+  edge, with or without a root chamfer (three probes, 18 views, 0 yellow). A 1.2 land reads yellow. The smallest grey section is the smallest
+  one tested: do not design below 2.0 on this evidence. The length rule of §7.1 still holds near the line.
 - Name a region by landmarks in the crop (holes, pillars, an opening), never by its pixel box. The six views differ between sessions, and the
-  capture frame differs between rounds. Record the frame per round; compare counts within one round only.
-- Before a fix, name the side from a landmark. A fix on the wrong side of a mirror pair leaves the count within 5 %. A count that does not move
-  says the fix is not on the painted feature.
-- A count equal to the last round to the pixel, on a changed mesh, says the fix did not touch the coloured triangles. Byte-compare the capture
-  with the last round before you read a same count as a stale upload.
+  capture frame differs between rounds. Record the frame per round. Compare counts within one round.
+- Before a fix, name the side from a landmark. A fix on the wrong side of a mirror pair left the count within 5 % (measured once). A count
+  that does not move says the fix is not on the painted feature.
+- The one cross-round read is a byte-identical capture. A count equal to the last round to the pixel, on a changed mesh, says the fix did not
+  touch the coloured triangles. Byte-compare the capture with the last round before you read a same count as a stale upload.
 - A fix that adds a face adds a place to read. A larger count after a fix is not a regression of the old feature until the landmarks say so.
 - Mirror pairs do not read alike; read every corner, not one per pair. Two mirror corners that read apart are not a geometry difference until a
   section says so. Test the mirror by reflecting one half of the mesh onto the other.
 - Find the print frame before any section read. The STL of record stands in its print frame, not the design frame. Read the frame from a known
-  face such as a bore floor; the first sections of one round were 7 mm off.
-- Read the pair's coordinates before you call a census minimum new. A 0.001-tall sliver face at a face plane can carry a designed land into the
-  minimum on some runs only.
+  face such as a bore floor. The first sections of one round were 7 mm off (measured once).
+- Read the opposing-face pair's coordinates before you call a census minimum new. A 0.001-tall sliver face at a face plane can carry a designed
+  land into the minimum on some runs only.
 
 ### 13.2 Geometry at the gate **[measured]**
 - **A land at the vendor's bound is painted**. A 2.0 wall with a 0.8 chamfer leaves 1.20 against a 1.2 bound. The float32 mesh reads 1.199,
   and the map reads yellow. Gate every free-face land at the margin line (`wall_gate + design_margin`), never at the bound.
-- A chamfer on an opening eats the land to the next edge, not the void. Derive the opening band as `edge + w_in + chamfer` per face family; a
-  band at `w_in` cannot carry a chamfer. A wall thinned under a mouth chamfer keeps its land only where the skin continues past it. Thin the
-  free-edge wall at `chamfer + gate`, the side walls at `w_in`.
+- `w_in` is the design wall of the preset: `wall_gate + design_margin`, the project's inner-wall knob. A chamfer on an opening removes
+  `chamfer` from the land beside the next edge, not from the void. Derive the opening band as `edge + w_in + chamfer` per face family. A band
+  at `w_in` cannot carry a chamfer. A wall under a mouth chamfer keeps its land only where the skin continues past the chamfer. Set the
+  free-edge wall to `chamfer + gate`, because the chamfer removes `chamfer` from the land. Keep the side walls at `w_in`.
 - A corner round is tangent to the free edge. So a fill's run-out past the tangent point IS the end face's thickness on that edge. A run-out
   of 0.3 left a knife wedge; set the run-out to the gate.
 - A hanging wall that starts at a rounded end leaves a land that tapers to zero between the round and the wall face. Fill the corner out to the
   outline over the round's length, and trim the glue lip clear of it.
-- A free-standing block gets `2 × w_in` in every plan direction, not only across. A rim band that ends on a clip line leaves a stub under the
-  gate between the arc and the clip. Widen the end to `2 × w_in`. Measure a stub with a ray from the end face, never with a ray that starts
-  inside the material.
-- A square inner corner does not thicken a ring under an outer round. The ring's diagonal is `√2 × host + (√2 − 1) × (R_in − R_out)`; a larger
-  concave round centred inboard is what thickens it. Fill the cavity corner so the round alone bounds the ring, or the cavity arc leaves a cusp.
+- A free-standing block gets `2 × w_in` in every plan direction, not only across, because a block with two free faces carries one land per
+  face. A rim band that ends on a clip line leaves a stub under the gate between the arc and the clip. Widen the end to `2 × w_in`. Measure a
+  stub with a ray from the end face, never with a ray that starts inside the material.
+- A square inner corner does not thicken a ring under an outer round. The ring's diagonal is `√2 × host + (√2 − 1) × (R_in − R_out)` (derived,
+  both arcs centred on the diagonal). A square inner corner (`R_in = 0`) thins the ring once the outer round exceeds the wall. A larger concave
+  round centred inboard is what thickens it. Fill the cavity corner so the round alone bounds the ring, or the cavity arc leaves a cusp.
 - The opposing-face metric pairs a rim end face above the seam with the wall face behind it below the seam. It does so even where the two
   never overlap in height. Run the fill below the seam `w_in` past every end face above it.
+
+### 13.3 Ray reads that over-read **[measured on a corner slab, 2026-10-10, with a project's own section script]**
+The skill's `thin_wall_census.py` and `print_dfm.py` make none of these reads. The angles differ per measure: the census pairs opposing faces
+within 30° (`WALL_DEG`), `print_dfm.py`'s tangent ball within 45° (`COS_OPP`), and the cone diagnostic below used 60°. Name the measure
+with its angle; never mix them.
+- A minimum over random ray directions at a point near a face reads only the distance to that face. Use the inward normal ray or a section
+  polygon, never an omnidirectional minimum.
+- A cone read without an opposing-face rule is noise: every convex edge reads 0.00. Count a hit only when the exit face's normal lies within
+  the cone's opposing angle of the reverse sample normal (60° in the worked example). With that rule the cone and the plain ray agreed on
+  the one thin land.
+- A hydraulic-width rule (`4A/P`) reads a narrow slot ceiling as a ledge or a bridge depending on a chamfer. Class a slot ceiling by its two
+  closing vertical faces, both within one gate of the cluster edge. Report the gap between them as the bridge. A ledge has an open side.

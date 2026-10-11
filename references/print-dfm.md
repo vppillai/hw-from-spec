@@ -48,14 +48,8 @@ debossed label's 0.45 / 0.45 beside raised strokes on one coupon. `thin_wall_cen
 inside when ≥ 50 % of its samples are. The census gates each in-box wall or void cluster on its 10th-percentile sample, not
 its median. A median hides a thin minority, and the vendor colours it. Every rule respects the boxes, W and R included.
 
-**Ray reads that lie** (measured on a corner slab, 2026-10-10):
-- A minimum over random ray directions at a point near a face reads only the distance to that face. Use the inward normal ray or a section
-  polygon, never an omnidirectional minimum.
-- A cone read without an opposing-face rule is noise: every convex edge reads 0.00. Count a hit only when the exit face's normal lies within
-  60° of the reverse sample normal. With that rule the cone and the plain ray agree on the one thin land.
-- A hydraulic-width rule (`4A/P`) reads a narrow slot ceiling as a ledge or a bridge depending on a chamfer. Class a slot ceiling by its two
-  closing vertical faces within 1 mm of the cluster edge. Report the gap between them as the bridge. A ledge has an open side.
-- Rule M counts bodies against the design: pass `bodies_expected` for a colour body drawn as several arms.
+Rule M counts bodies against the design: pass `--bodies N` for a colour body drawn as several arms. The ray reads that over-read in a
+project's own section script are `dfm-printed-enclosure.md` §13.3.
 Heat maps (`--render`, matplotlib): per-FACE minimum in the vendors' palette (grey ≥ `wall_reco`, yellow, red < `feature_min`, narrow voids dark
 red), six faces + two isos — a per-sample field looks nothing like the vendor's picture; per-face MIN does.
 
