@@ -1,6 +1,6 @@
 # CHANGELOG — hw-from-spec
 
-## Current state (0.11.19): read this instead of replaying the entries below
+## Current state (0.11.20): read this instead of replaying the entries below
 
 - **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
   thirteen batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
@@ -13,7 +13,7 @@
   the PCBA fab after the order (engineer questions answered on pad-1 positions, the production-file package diffed per layer) and its upfront
   half (`ASSEMBLY_NOTES` in the package, the fab's-eye silk pass, hole sizes in the order remark, arrival rows A-0 / A-5), the fab's second
   round pixel-diffed before an answer, colour / cosmetic inserts (the whole face, host frame + lip + sill, the edge budget, fused STL for DFM
-  and colour 3MF for the order) and the at-the-gate map rule (`design_margin` ≥ 0.3, a census FAIL row under the design line; the six-view read of §7 step 4 counted by `heatmap_count`, gated by `vendor_gate`).
+  and colour 3MF for the order) and the at-the-gate map rule (`design_margin` ≥ 0.3, a census FAIL row under the design line; the six-view read of §7 step 4 counted by `heatmap_count`, gated by `vendor_gate`; every order file read in its own format, the colour 3MF with its fuse rows).
 - **Scripts** (`project.yaml`-driven, every one with `--selftest`, exit 0 / 1 / 2): `project.py` (reader, scaffold, slots, kickoff --check,
   gates-required, record, env), `known_issues`, `traceability`, `release_report`, `collect_renders`, `assembly_guide`, `reorg_paths`, `dfm_check`,
   `erc_gate`, `gate_check`, `handoff_header`, `thin_wall_census` (`wall_gate` on the mesh; legend boxes with a Z band; accepted clusters re-matched by class and bbox), `print_dfm` (printability-floor gate + `--validate`),
@@ -40,6 +40,37 @@
 - **Generic by rule**: the skill names no project, part, board, order, account or person — `scripts/generic_lint.py` reads the whole repo
   (CHANGELOG and docs included; history keeps its measured numbers), a fenced worked example keeps numbers and kinds but never a name, and the
   repo carries no project retro (a retro report is folded, then deleted).
+
+## 0.11.20 - 2026-10-11 - The colour 3MF read in its own format, the fuse rows, the cutter that runs past the face
+
+Source: the same printed-case project, 18 learnings of the day after the cut. The classification read GENERAL 18 (3 of them carried in
+part) and PROJECT 0. The report was folded, then deleted (SKILL §13); the project keeps its copy under its reviews folder. The day held a
+colour-3MF seam read, a probe round of four knob variants, two vendor rounds and a quote reload. The order file read yellow where its body
+STL had read grey. A zero-width double wall under a mark outline had passed every index read. A 0.001 overlap box on a slot cutter had left
+a step ring that the map painted.
+
+### Changed
+- `references/dfm-printed-enclosure.md` §7 step 4: every order file is read in its own format. A colour 3MF gets its own six captures
+  beside its body STL. The viewer pointers gain the capture md5 check, the visible toolbar element and the thin-plate marker count.
+- `references/dfm-printed-enclosure.md` §7 step 5: a probe file that becomes the file of record is read again under its record name.
+- `references/print-kit.md` §5: the kit mirror is a superset of the kit folder, never a sync with delete.
+
+### Added
+- `references/dfm-printed-enclosure.md`:
+  - §7 step 8: replace a quote line by upload first, delete after; the Select All trap.
+  - §7.1 items 6 and 7: the knob-variant bisect in one vendor session, and the loaded file re-read when a new md5 reads badly.
+  - §12: the fuse check on every colour 3MF (coincident opposite-normal pairs 0, zero-area triangles 0, area within 0.1 mm² of the
+    fused body, watertight after a position weld, the sliver count as INFO). One identical 2D cuts and fills a colour pocket. The
+    6-decimal writer weld, and the cache key salted with the canonical version.
+  - §13.1: the map paints a 3MF and its body STL apart; a 0.001 step ring paints the floor beside an opening; the legend fill draws white.
+- `references/case-pipeline.md` §Process rules: a through-opening cutter runs past the face; count the faces under 0.002 mm tall before an
+  export. §Census: an item text carries no preset or derived value; a changed item text moves the traceability greps.
+- `references/release-and-cut.md` §3.1: a physical gate opened by delegation carries pending pins with a record template tested per pin.
+  §10: an owner row that only a model closes gets an arrival row.
+- `references/fea-stage.md` §Thermal / §Drop: the owner rows close by test at arrival (coupled and free reads cancel the thermocouple
+  offset; the drop on the spare set). §Pitfalls: a brief's row id is checked against the yaml.
+- `references/pitfalls.md`: thirteen dated lines.
+- No script changed. The skill has no colour-3MF script, so the fuse check is a rule with its numbers; a project's canonicaliser carries it.
 
 ## 0.11.19 - 2026-10-10 - The vendor map read by its thinnest sample, the derived drop stop, gate pins before the gate opens
 
