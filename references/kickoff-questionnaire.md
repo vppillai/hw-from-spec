@@ -192,10 +192,19 @@ only at release — the sole with the off-centre pockets HAD been rendered and n
 **E3 Coupons, dummies, first article** [mech, both]. **RECOMMENDED: FDM coupons (text, walls, fits, insert + torque) and a board dummy (two-piece AND one-piece)
 before the first case print; a first-article caliper table on every received part** — the fit numbers become yaml knobs. *Alt:* order the case
 and measure — one vendor round per surprise. *Alt:* coupons at the vendor too — 1 week and a quote per coupon; the probe method is cheaper.
+**Owner inputs (hardware in hand):** who calipers the bought hardware (magnets, inserts, screws) before the case order. The measured value lands in
+the pocket knob; a gate whose prerequisites are physical is carried by the record, not closed (`case-pipeline.md` §Process rules).
 **E4 Vendor DFM before the order and FEA.** **RECOMMENDED: the fab's own DFM viewer on board AND panel, and the print service's checker read from its
 analysis API per body. Both are filed with raw evidence before any order. FEA on the case (torsion, drop, boss load, thermal) and the board
 (press-fit, side load), with the owner accepting any WARN by row** — the gates in `templates/90-log/GATES.md`. *Alt:* vendor DFM only after ordering —
 the vendor's review mail becomes the review. *Alt:* no FEA — for a lab jig only.
+**E4a Drop case: the stop** [mech, both] (`references/fea-stage.md` §Drop). **RECOMMENDED: derive the stop by energy balance on the real STL
+(`m g h = σ_y V(d) + U_el`). Load the FEA with the peak force and gate the far field; the plastic zone is INFO** — an assumed stop asked for twice
+the drop's energy once. *Alt:* an assumed stop distance as an INFO row — no gate. *Alt:* no drop case — for a bench instrument that never leaves
+the bench.
+**E4b Thermal: what closes the row** [mech, both] (`references/fea-stage.md` §Thermal). **RECOMMENDED: the model states what it reads (sink,
+`h`, pose factor). A bench measurement row (T-nn) closes the thermal pins at arrival** — a sink-only model cannot credit a vent change. *Alt:*
+model only, INFO — the vent geometry is never asked of a model that cannot credit it.
 
 ## F. Bought parts (`references/part-verification.md`)
 **F1 Acceptable verification sources.** **RECOMMENDED: the fab's parts library API + page for electronics ([V] only after a live fetch this session).
