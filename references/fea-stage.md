@@ -54,6 +54,9 @@ elasticity, heat) · pyamg (SA-AMG + CG for > 60k DOF) · trimesh/rtree/shapely 
 - The contact zone is plastic by construction. Report it as an INFO row: the crush depth and the Neuber strain against the elongation at
   break. The far
   field outside the zone and the bands stays gated at yield / margin. A selftest row solves a cube corner against the closed form.
+- The drop owner row closes by test at arrival, on the spare set (§Thermal names the row's fields). Name the pose of the drop record
+  and the drop count. Name the inspection per drop: crack, seam gap, white mark outside the contact zone, the unit still assembles.
+  The crush depth against the model is INFO.
 
 ## Thermal: state what the model can credit
 - Say what the thermal model reads. A sink-only model holds `h` as a yaml constant and the pose as a factor on `h`. It cannot credit a vent change.
@@ -63,12 +66,13 @@ elasticity, heat) · pyamg (SA-AMG + CG for > 60k DOF) · trimesh/rtree/shapely 
   the row must carry (W). A row the model cannot close needs a bench measurement row (kickoff E4b), not a geometry change.
 - An owner row with no test row stays open for ever. Write the arrival row the day the model row reads FAIL. The row names the pose,
   the instrument and the reduction formula with its source line. It names the pass number, the record file and the fail action. The
-  owner closes by test; the model stays the bounding record. Two reads on the same unit, coupled and free, give the pose factor without
-  the absolute `h`. A thermocouple offset then cancels. Worked example (2026-10): `h = q / (A × ΔT)`, with `A` the exposed sink area the
-  model reads. Four reads of 15 min. Pass at the model's `h`, or at a measured factor written back into the yaml.
-- The drop owner row closes the same way, on the spare set at arrival. Name the pose of the drop record, the drop count and the
-  inspection per drop (crack, seam gap, white mark outside the contact zone, the unit still assembles). The crush depth against the
-  model is INFO.
+  owner closes by test. The model stays the bounding record. Two reads on the same unit, coupled and free, give the pose factor as a
+  ratio. With `h = q / (A × ΔT)` the ratio `h_coupled / h_free` cancels the sink area `A` and the absolute `h`. A constant probe offset
+  does not cancel in that ratio. It cancels only when one probe reads both temperatures of each `ΔT`. With two probes, one at the sink
+  base and one at the ambient, the offset between them stays in each `ΔT`. Calibrate the pair in one bath first, or read both points
+  with one probe. Planned reads (2026-10, written before the parts arrive): `A` is the exposed sink area the model reads, `q` the pad
+  power at the plateau. Four reads of 15 min: coupled hood off, coupled hood on, then the same unit free in both poses. Pass at the
+  model's `h`, or at a measured factor written back into the yaml with the model rerun PASS.
 ## Cases that paid for themselves (worked examples)
 - Case torsion (two-hand twist): a single bottom dovetail is a hinge; two rail pairs ~17 mm apart gave ~2.5× stiffness.
 - Snap tab: the hand formula under-read peak stress by ~1.2× (slit-root concentration); peak ∝ deflection — reduce travel before thickening.
