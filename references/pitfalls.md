@@ -416,6 +416,12 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A package module named `inspect.py` shadowed the stdlib in script mode and a cached check still read PASS. No stdlib names for modules — 2026-10-11 [software/package].
 - An entry-point isolation check inside the selftest process proved nothing: the engineering module was already loaded. Check `sys.modules` in a fresh interpreter — 2026-10-11 [software/entry-point].
 - The reviewer's list of untested paths is the list of what the first boards will hit. Write it into the record before the boards arrive — 2026-10-11 [software/hardware].
+- No document named the run verb's insertion window; a unit-state field had no writer. Write the hardware runbook from the code of record, four cells per row — 2026-10-11 [software/runbook].
+- A re-judge rebuilt the measured keys and lost the runner passthrough; a THERMAL session read FAIL and "caught". Diff the live observed dict against the rebuilt one key by key — 2026-10-11 [software/calibration].
+- A median × 10 candidate came out looser than the record, and a rehearsal session entered the golden set. Cap every candidate at the record, skip dry runs, refuse the record path as output — 2026-10-11 [software/calibration].
+- A selftest green on PASS clones of one shape hid three review findings. One fixture clone per live status the engine can emit — 2026-10-11 [software/review].
+- A live page took no typed input: the prompt printed above it and the echo hid. Stop the page, print a bounded static copy, read, restart. A screen hook never raises into the flow — 2026-10-11 [software/tui].
+- Three facts in the delta lists had drifted from the code before the spec revision. Grep the code for every name. The revision is a checklist from the rows; keep the open-questions table and the PROPOSED tags — 2026-10-11 [software/spec].
 
 ## documentation
 - Every mention of a retired string across live docs after a design change: grep, not memory; logs and reviews keep stale words on purpose.
