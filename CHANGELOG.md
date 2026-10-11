@@ -1,6 +1,6 @@
 # CHANGELOG — hw-from-spec
 
-## Current state (0.11.20): read this instead of replaying the entries below
+## Current state (0.11.21): read this instead of replaying the entries below
 
 - **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
   thirteen batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
@@ -40,6 +40,41 @@
 - **Generic by rule**: the skill names no project, part, board, order, account or person — `scripts/generic_lint.py` reads the whole repo
   (CHANGELOG and docs included; history keeps its measured numbers), a fenced worked example keeps numbers and kinds but never a name, and the
   repo carries no project retro (a retro report is folded, then deleted).
+
+## 0.11.21 - 2026-10-11 - The software track grown from the package round
+
+Source: the same project's software rounds, 11 learnings of one day. The classification read GENERAL 11 (3 of them carried in part) and
+PROJECT 0. The report was folded, then deleted (SKILL §13); the project keeps its copy under its reviews folder. The day held a package
+carved out of a working tool, a criteria engine, a technician flow and a lot loop. Two blind reviews, a wheel and a spec revision
+followed. The judge
+passed 31 hand-made probes and failed on the first real record. A fake that inserted itself after the open hid the normal case. A brief
+asked for a register the standard does not have.
+
+### Changed
+- `references/software-track.md` is a reference, not a list. Its §1 Order gains the package, the spec revision and the hardware phase. Its §2 names
+  where the selftest patches `time.sleep`.
+- `references/kickoff-questionnaire.md` G2 carries two sub-answers: who owns each criteria number, and which standard tables the tool decodes.
+  No new question id, because batch 10 is at four.
+
+### Added
+- `references/software-track.md` §3 to §13, each rule with its reason and one example:
+  - §3 carve a package: move code verbatim, the tool's selftest byte-identical as the proof. A module loaded twice has two copies of every
+    class: load once or rebind. A `__file__`-relative data path, no stdlib module names, the parity diff.
+  - §4 one `say` callback per primitive, never a captured log. The console wrap in a pipe. A quoted `off` in yaml.
+  - §5 the judge and the runner: a missing value is INCONCLUSIVE NOT-MEASURED, never 0. Judge the runner's own record through JSON before
+    any hand-made probe. One case per judge path. A slope needs two samples.
+  - §6 fakes: the fake's default is the field default. Test the pre-inserted and the never-present paths. A dead end ACKs once.
+  - §7 a flow on the primitives: read each edge first. A report page before `close()` lists only final hashes.
+  - §8 read the standard's table before you name a register. Every decoder cites its table in a notes file.
+  - §9 one process, one open. A post-close verdict goes to the lot file, never the closed manifest.
+  - §10 revise the spec to the code after the review round. One dated OPEN row carries the veto hash and the deltas.
+  - §11 the wheel: a symlink inside the package, no path that climbs out, a throwaway venv. Remove the build leftovers.
+  - §12 entry-point isolation: no register-access import, no override flag, proven with `sys.modules` in a fresh interpreter.
+  - §13 the hardware list: the reviewer's untested paths, written into the record before the boards arrive.
+- `references/agent-ops.md` §5: rerun a flaky gate once before you read it as real; the two-copies trap.
+- `references/pitfalls.md`: thirteen dated lines (twelve software, one process / gates).
+- `smoke/run_smoke.sh`: the software-track contract (four greps).
+- No script changed.
 
 ## 0.11.20 - 2026-10-11 - The colour 3MF read in its own format, the fuse rows, the cutter that runs past the face
 
