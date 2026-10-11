@@ -2,9 +2,12 @@
 """scripts/vendor_gate.py — the vendor checker's verdict, read by a script: every STL of record has a clean API reply and six clean captures (stdlib only).
 
   scripts/vendor_gate.py <checks dir | file>... --stl <stl>...
-  scripts/vendor_gate.py --newest '<glob>' --stl <stl>...
+  scripts/vendor_gate.py --newest '<glob>' --stl <stl>...        # `--newest` is the first argument and takes exactly one glob
       `--newest` picks the newest round folder among the glob's directories by version sort (`_r2` < `_r10`, a later date dir later),
       so a gate line survives a round folder that moves to `_r<n>`; no match exits 2 (a pin that silently passes an empty folder is no gate).
+      A round folder name ends in a digit (`<round>`, `<round>_r<n>`). A suffixed sibling (`<round>_r10_corner`, `<round>_bisect`) is
+      skipped, so a probe, bisect or corner folder never outranks the round; slabs and probes never get their own `_r<n>` folder.
+  scripts/vendor_gate.py --help                                   # this text, exit 0
       For every STL (md5 of record, first 8 hex = md5-8) the files given (directories are listed, not walked) must hold:
       - the analysis reply: `<md5-8>_analyze.json` or the saved `*<md5-8>*getFileAnalyzeResult*` network response (JLC3DP format).
         It passes when `success` is true, every `parseStatus` reads 2 (analysis complete), every `thinWall` reads false (at least one),
@@ -28,7 +31,7 @@ def newest(pattern):
     """The newest directory among the glob matches by version sort over the whole path (digits compare as numbers); None when nothing matches."""
     import glob, re
     key = lambda p: [int(s) if s.isdigit() else s for s in re.split(r"(\d+)", p)]
-    dirs = sorted((m for m in glob.glob(pattern) if os.path.isdir(m)), key=key)
+    dirs = sorted((m for m in glob.glob(pattern) if os.path.isdir(m) and os.path.basename(m)[-1:].isdigit()), key=key)   # a round folder ends in a digit
     return dirs[-1] if dirs else None
 
 
@@ -124,7 +127,8 @@ def selftest():
     os.remove(os.path.join(d, f"{m8}_analyze.json")); assert any("no analysis reply" in b for b in gate([d], [stl]))
     reply(); assert gate([os.path.join(d, f) for f in os.listdir(d)], [stl]) == [], "files given one by one"
     q = os.path.join(d, "quotes")
-    for sub in ("2026-10-09/jlc_dfm_v4.0", "2026-10-10/jlc_dfm_v4.0_r2", "2026-10-10/jlc_dfm_v4.0_r10", "2026-10-10/jlc_dfm_v4.0_r3"):
+    for sub in ("2026-10-09/jlc_dfm_v4.0", "2026-10-10/jlc_dfm_v4.0_r2", "2026-10-10/jlc_dfm_v4.0_r10", "2026-10-10/jlc_dfm_v4.0_r3",
+                "2026-10-10/jlc_dfm_v4.0_r10_corner", "2026-10-10/jlc_dfm_bisect", "2026-10-09/jlc_dfm_v4.0_r12"):
         os.makedirs(os.path.join(q, sub))
     open(os.path.join(q, "2026-10-10/jlc_dfm_v4.0_r11"), "w").write("a file, not a round")
     assert newest(os.path.join(q, "*/jlc_dfm_*")).endswith("2026-10-10/jlc_dfm_v4.0_r10"), newest(os.path.join(q, "*/jlc_dfm_*"))
@@ -136,15 +140,22 @@ def selftest():
             os.rename(os.path.join(d, f), os.path.join(q, "2026-10-10/jlc_dfm_v4.0_r10", f))
     with contextlib.redirect_stdout(io.StringIO()):
         assert main(["vendor_gate.py", "--newest", os.path.join(q, "*/jlc_dfm_*"), "--stl", stl]) == 0, "the newest round folder passes"
+        assert main(["vendor_gate.py", "--help"]) == 0, "--help exits 0"
+        with contextlib.redirect_stderr(io.StringIO()):
+            assert main(["vendor_gate.py", "--newest", "a", "b", "--stl", stl]) == 2, "two globs = 2"
+    os.makedirs(os.path.join(q, "2026-10-11/jlc_dfm_v4.0_r1"))
+    assert newest(os.path.join(q, "*/jlc_dfm_*")).endswith("2026-10-11/jlc_dfm_v4.0_r1"), "a later date dir wins over a higher _r"
     with contextlib.redirect_stderr(io.StringIO()):
         assert main(["vendor_gate.py", d]) == 2 and main(["vendor_gate.py", d, "--stl", os.path.join(d, "nope.stl")]) == 2, "usage / missing STL = 2"
-    print("vendor_gate selftest OK: clean reply + six grey captures pass; a red capture, a missing capture, thinWall true, parseStatus not 2, an errorMsg, a foreign fileMd5 and a missing reply fail; usage exits 2; --newest picks _r10 over _r3 by version sort and exits 2 on no match")
+    print("vendor_gate selftest OK: clean reply + six grey captures pass; a red capture, a missing capture, thinWall true, parseStatus not 2, an errorMsg, a foreign fileMd5 and a missing reply fail; usage exits 2; --newest picks _r10 over _r3 by version sort, skips a suffixed sibling and a bisect folder, prefers a later date dir, and exits 2 on no match; --help exits 0")
     return 0
 
 
 def main(argv):
     if argv[1:] == ["--selftest"]:
         return selftest()
+    if "--help" in argv[1:] or "-h" in argv[1:]:
+        print(__doc__); return 0
     if "--stl" not in argv:
         print(__doc__, file=sys.stderr); return 2
     i = argv.index("--stl"); paths, stls = argv[1:i], argv[i + 1:]
