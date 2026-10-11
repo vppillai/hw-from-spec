@@ -227,7 +227,10 @@ approves the criteria set; both levels printed** — a fixed cap with a hidden W
 external user; blocks bring-up. *Alt:* engineering mode only — no technician manual.
 **G2 Criteria and codes** [ee, both]. **RECOMMENDED: criteria as YAML the tool reads (T-nn ↔ limits, owner-approved in a D row), PASS / FAIL / INCONCLUSIVE
 with reason codes from one list, the technician table generated from it** — one source. *Alt:* limits in code — three copies drift by the second
-revision.
+revision. Two sub-answers belong to this question (`references/software-track.md` §5, §8). **Who owns each criteria number**: RECOMMENDED
+the owner, by a D row the yaml header cites. The agent drafts every number from the spec. **Which standard tables the tool decodes**:
+RECOMMENDED a list by table id and page, one notes file per standard under `10-spec/datasheet_notes/`. A register outside the list is a
+decision row before a decoder exists.
 
 ## H. Release, production cut, feedback loop (`references/release-and-cut.md`, SKILL §13)
 **H1 Report set.** **RECOMMENDED: PCB + case design reports generated (DRAFT until the owner's line), release notes with a source per number, the

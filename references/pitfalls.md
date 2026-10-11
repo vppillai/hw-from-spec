@@ -122,6 +122,7 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - Fragment agents + ONE arbiter script (fresh copy + fragment + enforced DRC + baseline delta) merge cleanly; the harness must fail HARD when a fragment does not apply.
 - Archiving a STATUS section must move the heading with its CLOSED line (or leave a CLOSED pointer): a generator deriving "round open" from headings grew a false banner.
 - State derived from a heading in a hand-maintained doc breaks the day the paragraph is archived; derive it from every record that can carry the close and selftest the archived case — G03.
+- One adopt run failed at its clone step. The standalone clone gate passed on the same HEAD, and the rerun passed 28 of 28. Rerun a flaky gate once before you read it as real — 2026-10-11 [process/gates].
 - Hash-checking generated metadata proves "not hand-edited", not "still derived from today's inputs": `--check` must re-derive and diff; the hash stays for tamper detection — fab_package G15–G17.
 - A requirement family ID can collide with an existing spec prefix: grep the prefix census before proposing IDs, log the alternative as OPEN.
 - Deliverables needing photos, press logs, print settings, test results cannot be written at the end unless filed as they happen: a "capture now" list + records folder before the first build — PRODUCTION_CUT_PLAN §5.3.
@@ -403,6 +404,18 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - Manuals written before the software they describe: the "what you should see" lines go under an explicit banner naming the fake backend that produced them — 2026-09-22 [documentation].
 - Time-driven polls are testable by swapping `time.sleep` for a no-op in `try/finally` and feeding the sensor from an iterator hooked on the exact read shape — software/selftest.
 - Identity fields into the record first, gate second.
+- A module loaded twice has two copies of every class. The legacy `except Nack` missed the package's `Nack`. Rebind the shared classes after the load, or load once — 2026-10-11 [software/package].
+- A captured log returned at the end hid a 60 s hold. One `say=None` callback per primitive prints while it waits — 2026-10-11 [software/refactor].
+- A rule that skipped an absent key let a run that stopped early read PASS. A missing value is INCONCLUSIVE NOT-MEASURED, never 0 — 2026-10-11 [software/criteria].
+- 31 hand-made probes passed the judge; one real runner record failed four ways. Judge the runner's own record through JSON first — 2026-10-11 [software/review].
+- A fake that inserted itself 0.3 s after the open hid the normal case. The first board would have read NOT-PRESENT on every cable. The fake's default is the field default — 2026-10-11 [software/fakes].
+- A brief asked for a register the standard does not have. Read the table index, then the body, before you name a register — 2026-10-11 [software/standards].
+- A lot loop over separate processes cannot hold a USB handle. One process, one open; a post-close verdict goes to `lot.json`, never the closed manifest — 2026-10-11 [software/lot].
+- Eight rows each listed the next spec revision and disagreed with the code. Revise the spec to the code after the review round, as one OPEN row with a veto hash — 2026-10-11 [software/spec].
+- A path that climbs out of the package broke in the wheel; a symlink inside it did not. Prove the wheel in a throwaway venv — 2026-10-11 [software/packaging].
+- A package module named `inspect.py` shadowed the stdlib in script mode and a cached check still read PASS. No stdlib names for modules — 2026-10-11 [software/package].
+- An entry-point isolation check inside the selftest process proved nothing: the engineering module was already loaded. Check `sys.modules` in a fresh interpreter — 2026-10-11 [software/entry-point].
+- The reviewer's list of untested paths is the list of what the first boards will hit. Write it into the record before the boards arrive — 2026-10-11 [software/hardware].
 
 ## documentation
 - Every mention of a retired string across live docs after a design change: grep, not memory; logs and reviews keep stale words on purpose.

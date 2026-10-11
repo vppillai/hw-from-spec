@@ -122,6 +122,11 @@
 - Parallel router JVMs SIGTERM each other; one JVM at a time, `-mt 1` for determinism.
 - Owner offline: list owner-only items (orders, gate cells, hardware records) at the pause point, never attempt them; kill a long chain early when an
   owner addition arrives through the coordinator.
+- **Rerun a flaky gate once before you read it as real.** One adopt run failed at its clone step. The standalone clone gate passed on the
+  same HEAD, and the rerun passed every step. Report both runs in the chat report. A second failure is real; one is a rerun.
+- **A module loaded twice has two copies of every class**. A selftest or a shim that loads a module by path beside its package import gets
+  a second `Nack`, a second `Port`. An `except` on one copy misses the other. Load once, or rebind the shared classes after the load
+  (`references/software-track.md` §3).
 
 ## 6. Reporting
 - Every report, record and README follows `references/writing-style.md`: lead with the result, second person, active voice, present tense,
