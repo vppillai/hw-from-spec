@@ -45,13 +45,13 @@
 
 Source: the same printed-case project, 18 learnings of the day after the cut. The classification read GENERAL 18 (3 of them carried in
 part) and PROJECT 0. The report was folded, then deleted (SKILL §13); the project keeps its copy under its reviews folder. The day held a
-colour-3MF seam read, a probe round of four knob variants, two vendor rounds and a quote reload. The order file read yellow where its body
+colour-3MF seam read and a probe round of four knob variants. Two vendor rounds and a quote reload followed. The order file read yellow where its body
 STL had read grey. A zero-width double wall under a mark outline had passed every index read. A 0.001 overlap box on a slot cutter had left
 a step ring that the map painted.
 
 ### Changed
 - `references/dfm-printed-enclosure.md` §7 step 4: every order file is read in its own format. A colour 3MF gets its own six captures
-  beside its body STL. The viewer pointers gain the capture md5 check, the visible toolbar element and the thin-plate marker count.
+  beside its body STL. The viewer pointers gain the capture md5 check and the visible toolbar element.
 - `references/dfm-printed-enclosure.md` §7 step 5: a probe file that becomes the file of record is read again under its record name.
 - `references/print-kit.md` §5: the kit mirror is a superset of the kit folder, never a sync with delete.
 
@@ -60,17 +60,21 @@ a step ring that the map painted.
   - §7 step 8: replace a quote line by upload first, delete after; the Select All trap.
   - §7.1 items 6 and 7: the knob-variant bisect in one vendor session, and the loaded file re-read when a new md5 reads badly.
   - §12: the fuse check on every colour 3MF (coincident opposite-normal pairs 0, zero-area triangles 0, area within 0.1 mm² of the
-    fused body, watertight after a position weld, the sliver count as INFO). One identical 2D cuts and fills a colour pocket. The
-    6-decimal writer weld, and the cache key salted with the canonical version.
+    fused body, watertight on the recorded file, the sliver count as INFO). The area gate is derived: a seam adds `2 × w × L`. So
+    0.1 mm² is a 0.3 deep seam 0.17 mm long, read with one kernel for both files. One identical 2D cuts and fills a colour pocket. The
+    6-decimal writer weld, one weld in the canonicaliser, and the cache key salted with the canonical version.
   - §13.1: the map paints a 3MF and its body STL apart; a 0.001 step ring paints the floor beside an opening; the legend fill draws white.
-- `references/case-pipeline.md` §Process rules: a through-opening cutter runs past the face; count the faces under 0.002 mm tall before an
-  export. §Census: an item text carries no preset or derived value; a changed item text moves the traceability greps.
+- `references/case-pipeline.md` §Process rules: a through-opening cutter runs past the face. The faces under 0.002 mm tall (twice the
+  0.001 overlap) are gated at 0 before an export. §Census: an item text carries no preset or derived value; a changed item text moves the traceability greps.
 - `references/release-and-cut.md` §3.1: a physical gate opened by delegation carries pending pins with a record template tested per pin.
   §10: an owner row that only a model closes gets an arrival row.
-- `references/fea-stage.md` §Thermal / §Drop: the owner rows close by test at arrival (coupled and free reads cancel the thermocouple
-  offset; the drop on the spare set). §Pitfalls: a brief's row id is checked against the yaml.
+- `references/fea-stage.md` §Thermal / §Drop: the owner rows close by test at arrival. The coupled / free ratio cancels `A` and the
+  absolute `h`, not a probe offset. The drop row runs on the spare set. §Pitfalls: a brief's row id is checked against the yaml.
 - `references/pitfalls.md`: thirteen dated lines.
-- No script changed. The skill has no colour-3MF script, so the fuse check is a rule with its numbers; a project's canonicaliser carries it.
+- No script changed. The skill has no colour-3MF script, so the fuse check is a rule with its numbers. A project's canonicaliser carries it.
+  Open for a later fold: bring the fuse check in as a script with a selftest.
+- Blind review B of this entry (6 REQUIRED, 12 RECOMMENDED, 5 NOTE) is folded: the 0.11.19 sentences that contradicted the new rules
+  are rewritten, every bare gate number carries its derivation or its source, and the thermal physics names what the ratio cancels.
 
 ## 0.11.19 - 2026-10-10 - The vendor map read by its thinnest sample, the derived drop stop, gate pins before the gate opens
 
