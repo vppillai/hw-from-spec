@@ -1,6 +1,6 @@
 # CHANGELOG — hw-from-spec
 
-## Current state (0.11.21): read this instead of replaying the entries below
+## Current state (0.11.22): read this instead of replaying the entries below
 
 - **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
   thirteen batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
@@ -40,6 +40,40 @@
 - **Generic by rule**: the skill names no project, part, board, order, account or person — `scripts/generic_lint.py` reads the whole repo
   (CHANGELOG and docs included; history keeps its measured numbers), a fenced worked example keeps numbers and kinds but never a name, and the
   repo carries no project retro (a retro report is folded, then deleted).
+
+## 0.11.22 - 2026-10-11 - The software track before the boards: the runbook, the re-judge, the live screen, the checklist revision
+
+Source: the same project's software rounds after the package round, 6 learnings of one day. The classification read GENERAL 6 and PROJECT 0.
+One of the six is a near duplicate of a folded rule, carried as one line. The report was folded, then deleted (SKILL §13); the project
+keeps its copy under its reviews folder. The day held a hardware runbook written before the boards and a calibration tool that re-judges
+old records. A technician screen on a live terminal page followed. One blind review of the two tools and a spec revision closed the day.
+The re-judge lost the runner passthrough and called an INCONCLUSIVE cable "caught". A candidate came out looser than the record. The
+live page took no typed input.
+
+### Changed
+- `references/software-track.md` §1: item 9 points at the checklist revision. Item 10 points at the runbook and the cloned-record
+  calibration. In §2, under the patched sleep two samples share one timestamp, so assert the temperature. Section 10 points at the checklist form.
+- `references/software-track.md` §6: the fake's default is the field default. Carried from the package round; no new text.
+
+### Added
+- `references/software-track.md` §14 to §17, each rule with its reason and one example:
+  - §14 the hardware runbook: written from the code of record before the boards arrive. Four cells per row (command, expected
+    lines, record file, pass rule by id). The primitives' printed strings verbatim in the expected column. The reviewer's
+    "first things the boards hit" list as the closing checklist. A fix-list template with its columns. Open questions as
+    decide-after lines.
+  - §15 re-judging records and calibration: rebuild every input the live judge saw, the interrupt passthrough included. Diff the
+    live observed dict against the rebuilt one key by key. One real session judged PASS under the file of record before any statistic.
+    Fixture clones of that session, one per live status. A candidate never loosens a limit of record (cap at the record, "the lower
+    wins"). It skips dry runs (marked in the manifest) and refuses the record path as output. Adoption only through a decision row.
+  - §16 a live screen: stop the page, print a static copy bounded to the terminal height, read, restart. The page feeds from the
+    session events through one hook. A screen hook never raises into the flow. A hook attribute set in `__init__` is absent on an
+    `attach` through `__new__`. The real terminal goes on the hardware list.
+  - §17 the spec revision as a checklist: the rows' "deltas for the next revision" lines are the items. Never a rewrite. Grep the
+    code for every name. Keep the open questions table and the PROPOSED tags; new questions as rows with a recommended answer. Lint
+    the added lines alone at the 20-word cap.
+- `references/pitfalls.md`: six dated software lines.
+- `smoke/run_smoke.sh`: four greps on the new sections.
+- No script changed.
 
 ## 0.11.21 - 2026-10-11 - The software track grown from the package round
 
