@@ -9,8 +9,8 @@ kit for the same printer adds what it prints: `home_fdm_caps`. The name carries 
 sheet. Inside: `START_HERE.md` at the root, `plates/` (every `.3mf` with its
 `.3mf.json` sidecar), `parts/` (the STL set of this kit, copied from `40-case/<set>/parts/` and md5-checked), `sheets/` (print sheets, coupon and
 dummy READMEs, the assembly sequence). The generators write here directly; `~/Downloads/<project>_kits/<kit>/` is a mirror the
-collateral gate checks (§5). One current kit per target: a superseded kit folder outside the repo receives a one-line `SUPERSEDED.md` pointing at the
-mirror and nothing else is kept beside the current kit. `00-now/WHAT_TO_PRINT.md` is derived from `50-kits/*/plates/*.3mf.json` alone.
+collateral gate checks (§5). One current kit per target. A superseded kit folder outside the repo receives a one-line `SUPERSEDED.md` that points at
+the mirror. Nothing else is kept beside the current kit. `00-now/WHAT_TO_PRINT.md` is derived from `50-kits/*/plates/*.3mf.json` alone.
 Written by the project's slicer wrapper (`gen/`, it owns the minutes and grams) from a `kit_facts.json` the project's geometry generator writes — **numbers from the
 sidecars, prose from the knobs, nothing typed**. Four blocks, in this order:
 1. **Header**: what every project file embeds (printer, nozzle, layer, material, plate), the one hand step (AMS: *the project defines filaments

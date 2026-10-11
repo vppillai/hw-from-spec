@@ -242,19 +242,19 @@ Every rim and wall reads CLOSED on the single part: no through-slot, notch, key 
    - The first text match for the origin button can be a zero-size span. A click on it does nothing. Pick the visible toolbar element
      (width > 0).
    **Read every order file in its own format.** A colour 3MF gets its own six captures, beside its body STL. The same solid can read grey
-   as an STL and yellow as a 3MF. The two files come from two export paths: the body STL from the preset's kernel (§7.2), the colour
-   3MF from the Manifold colour export (§12). Run `vendor_gate.py --stl <the 3MF>` for its reply and captures; the script hashes the
-   bytes, whatever the format. Worked numbers (JLC3DP analyser, MJF PAC-HP, 2026-10): one body STL read 0 / 0 in six views. Its colour
+   as an STL and yellow as a 3MF. The two files come from two export paths. The body STL comes from the preset's kernel (§7.2), the
+   colour 3MF from the Manifold colour export (§12). Run `vendor_gate.py --stl <the 3MF>` for its reply and captures. The script
+   hashes the bytes, whatever the format. Worked numbers (JLC3DP analyser, MJF PAC-HP, 2026-10): one body STL read 0 / 0 in six views. Its colour
    3MF read 613 / 173 yellow / red in the first view. The 3MF path carried four times the chamfer triangles (counted per face family).
    The API flag saw neither. `thinWall` read false on both. Six captures of one 3MF line take about three minutes signed out.
-   **[K]** The analyser samples per triangle, so a finer triangulation beside a thin feature gives it more small triangles to paint.
+   **[K]** The analyser samples per triangle. A finer triangulation beside a thin feature gives it more small triangles to paint.
    Not tested.
 5. **Save screenshots named `<piece>_<round>_<md5-8>_<material>_heatmap_<face>.png`** plus `quote_page_<round>_flags.png`.
    `<face>` is one of `az000 az090 az180 az270 poleA poleB`, the names `vendor_gate.py` reads. Keep the uploaded STL
    beside them. Write `templates/DFM_ROUND.md` into `60-orders/quotes/<date>/` with the API fields, the browser / UA / signed-in state per body.
    A probe file that becomes the file of record is read again under its record name, in the round folder. The round folder is then
    self-contained for the gate and the pins. The probe folder stays the evidence for the calibrated rule (§7.1 step 3). The gate and
-   the pins on a file of record read the round folder, never a pointer to the probe folder.
+   the pins on a file of record read the round folder. They never read a pointer to the probe folder.
 6. **When a verdict flips between two uploads, diff the meshes before touching the generator**: the r3 tray read RED where the r2 tray had passed —
    same 4088 triangles, every vertex within 7.7e-6 mm. The real difference was a premature DOM read (step 2).
 7. **A coordinator verifies a worker's "no flag" claim itself** (re-request the API for the md5 in the record) before a decision row says PASS.
@@ -721,10 +721,10 @@ duplicate-aware SafeLoader and fail on a duplicate. Prove byte identity before c
   holds only when both files come from one kernel, or after one remesh of both. A finer tessellation of a round moves the area by more
   than 0.1 mm² on a large body. Read watertight (True) on the recorded file, with no weld at check time (§7.2). The one weld sits in
   the canonicaliser (next item). Report the count of triangles under 0.01 mm² as INFO. The threshold comes from the cutter ring of
-  §13.1: its chamfer slivers read about 0.003 mm² each, and a clean text plate still reads 6370 triangles under 0.01 mm². So the count
+  §13.1, whose chamfer slivers read about 0.003 mm² each. A clean text plate still reads 6370 triangles under 0.01 mm², so the count
   sets no gate. A zero-width double wall passes every index read. Those are edge pairing by index, shells, volume and the vendor
   analyser (`parseStatus 2`, `modelBrokenFace 0`, `thinWall false`). The area shows it. Worked example (MJF PAC-HP order file,
-  2026-10): two coincident walls ran 0.3 deep under 38.5 mm of a 65.7 mm mark outline. They read 671 pairs and 942 zero-area
+  2026-10). Two coincident walls ran 0.3 deep under 38.5 mm of a 65.7 mm mark outline. They read 671 pairs and 942 zero-area
   triangles. The 3MF area read 23.1 mm² over the body STL (`2 × 0.3 × 38.5`, 11.5 per side). The volume matched to 0.002 mm³. The
   sliver count: a ringed body read 14798, the fixed body 2799, a clean text plate 6370. The skill has no colour-3MF script. The
   project's canonicaliser carries the check with a selftest.
