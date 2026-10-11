@@ -34,7 +34,7 @@
   not only the default. A partial mirror is a stale kit that the parity gate reports as a design change (source: plug-cap + case agents, 2026-09-29).
 - **Tags follow the gated commit.** Re-point a tag created on a checkpoint or a WIP commit once the gated commit exists (`git tag -f <tag> <gated
   commit>`). The record says so. A tag on a `not yet gated` commit is a false release marker.
-- **A chain agent can end between its last gate and its record commit.** Keep every gate log under `build/_check/<chain>/`. The successor
+- **A chain agent can end between its last gate and its record commit**. Keep every gate log under `build/_check/<chain>/`. The successor
   reads the logs and writes the record from them.
 - **A fresh worktree has no gitignored caches**: no STL export cache, no sidecars, no mesh cache. A worktree without the cache re-exports
   every body. Its STL is proof only. The STL of record is the cached canonical export of the main chain, and the order sheet quotes its md5.
@@ -56,10 +56,10 @@
   status --porcelain` differs before/after the gates. The PR-check template ends with the same guard. Every skill script answers `--help` read-only
   (argparse), and a project script must too. A script without argparse runs its default WRITE action on `--help`. Until it has argparse, probe its
   usage with `sed -n 1,12p` of its docstring.
-- A DECISIONS row with a missing cell, or an unescaped pipe in backticks, breaks every generator that reads the table. Check the cell count per
+- A DECISIONS row with a missing cell or an unescaped pipe in backticks breaks every generator that reads it. Check the cell count per
   row before the round (`release-and-cut.md` §3.1).
 - Read `git status` for untracked evidence before you read an adopt-gate FAIL as a record defect. An untracked folder from a concurrent vendor
-  round makes a report `--check` STALE in the working tree while the HEAD archive passes.
+  round makes a report `--check` STALE in the working tree. The HEAD archive still passes.
 - Run the style gate right before the round when another agent commits to the shared log. One line over the baseline fails the round.
 
 ## 4. Blind reviews (the protocol; templates in `workflows/`)

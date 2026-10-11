@@ -71,13 +71,12 @@ any mark-shaped body or pocket: `scripts/thin_wall_check.py --pinch <stl>`, web 
   print with the shell); the sheet is re-cut whenever a line's file changes. The colour-file rule the same review enforces (one shell per file)
   is `dfm-printed-enclosure.md` §12 Files.
 - **Quote-page recipes change between rounds**. A click path that worked in one round failed in the next (a keyboard open, then a pointer
-  sequence). Record the recipe that worked in the round record (`templates/DFM_ROUND.md`), never here. Pointers only:
-  - the customs description is a two-level cascader that blocks Save until a value is chosen;
-  - a signed-out tab takes ten uploads;
-  - two lines in one tab work when their material dialogs run one after the other;
-  - the material panel can keep the previous text after a click, so the tiles and the price are the truth;
-  - a full-colour material dialog has its own defaults (thread, packaging) to set by hand;
-  - the online chat answers without a login, and its answer can miss the question asked.
+  sequence). Record the recipe that worked in the round record (`templates/DFM_ROUND.md`), never here. The upload rules are
+  `dfm-printed-enclosure.md` §7 step 1. Pointers for the quote form only:
+  - The customs description is a two-level cascader. It blocks Save until a value is chosen.
+  - The material panel can keep the previous text after a click. The tiles and the price are the truth.
+  - A full-colour material dialog has its own defaults (thread, packaging). Set them by hand.
+  - The online chat answers without a login. Its answer can miss the question asked.
 
 ## 5. PCBA fab after the order: the engineer's questions (polarity, placement, "is it okay to proceed?")
 The assembly fab's engineer mails a numbered question with its own "corrected part placement" snapshots: top and bottom renders of the board as

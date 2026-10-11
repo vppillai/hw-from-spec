@@ -29,8 +29,8 @@ kickoff:                                      # the owner's kickoff answers, mac
     fit_result: {{C10_FIT_RESULT}}            # C10: the value the owner picked after the bracket print — "pending: bracket print" until then; ARRIVAL_CHECKLIST E-FIT closes it {{mech,both}}
     optimise: {{C11_OPTIMISE}}                # C11: speed | strength | surface | minimal waste — the default slicer knob set (references/fdm-print-optimisation.md §4) {{mech,both}}
     stands_free: {{C12_STANDS_FREE}}          # C12: yes -> a CoG-vs-support-polygon row at the worst pose is a gate (scripts/stability.py) {{mech,both}}
-  verification: {rounds: {{E1_ROUNDS}}, visual: {{E2_VISUAL}}, fea: {{E4_FEA}}}   # E1 / E2 / E4
-  coupons: {{E3_COUPONS}}                     # E3 {{mech,both}}
+  verification: {rounds: {{E1_ROUNDS}}, visual: {{E2_VISUAL}}, fea: {{E4_FEA}}, drop_stop: {{E4A_DROP_STOP}}, drop_inputs: {{E4A_DROP_INPUTS}}, thermal_close: {{E4B_THERMAL_CLOSE}}}   # E1 / E2 / E4 / E4a (derived | assumed INFO | none; "0.75 m, worst corner, rigid floor, one drop") / E4b (bench row | model only)
+  coupons: {plan: {{E3_COUPONS}}, hardware_measurer: {{E3A_MEASURER}}}   # E3 / E3a (who calipers the bought hardware before the case order) {{mech,both}}
   sourcing: {sources: {{F1_SOURCES}}, stock_floor: {{F2_STOCK}}, attrition: {{F2_ATTRITION}}}   # F1 / F2; attrition = the run multiplier on qty × boards (F2 recommends 1.2)
   software: {modes: {{G1_MODES}}, posture: {{G1_POSTURE}}, criteria: {{G2_CRITERIA}}}   # G1 / G2; posture = warn / throttle / refuse (G1 recommends warn + throttle until the criteria are approved) {{ee,both}}
   release: {reports: {{H1_REPORTS}}, cut: {{H2_CUT}}, ci: {{H3_CI}}, retro: {{H4_RETRO}}}   # H1–H4
@@ -225,7 +225,7 @@ gates:
     # - "$PY scripts/scad_lint.py 40-case/<set>/build/*.scad"        # no statement hidden behind a `//` in generated SCAD {{mech,both}}
     # Case order (a vendor-mapped target): the checker's verdict per STL md5 of record — the API reply and six 0 / 0 captures; uncomment with the first vendor round {{mech,both}}
     # - "$PY scripts/vendor_gate.py 60-orders/quotes/<date>/<round> --stl 40-case/<set>/parts/*.stl" {{mech,both}}
-    # - "$PY scripts/vendor_gate.py --newest '60-orders/quotes/*/<round>*' --stl 40-case/<set>/parts/*.stl" {{mech,both}}   # the newest round folder by version sort
+    # - "$PY scripts/vendor_gate.py --newest '60-orders/quotes/*/<round>*' --stl 40-case/<set>/parts/*.stl" {{mech,both}}   # the newest round folder by version sort; a round folder name ends in a digit, a probe / bisect / corner folder takes its own name
   clone:                                      # run inside `git archive HEAD`
     - "$PY scripts/known_issues.py --check"
     - "$PY scripts/release_report.py --check"

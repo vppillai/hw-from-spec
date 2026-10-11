@@ -60,7 +60,7 @@ print sheets are generated with spliced blocks (`<!-- gen:BEGIN name -->…<!-- 
 - A fix that turns out to be for every build belongs in the base block; prove "no geometry change" by diffing the merged dict key by key, not by
   re-exporting (CGAL STLs are not byte-stable).
 - A new base key reaches every preset through the merge. Pin a new key in every override that already pins its sibling. After a knob is added,
-  compare the volume of every untouched preset body against HEAD. A leaked wall value moved a sibling body by 36.7 mm³ on the first export.
+  compare the volume of every untouched preset body against HEAD. A leaked wall value moved a sibling body on its first export (`pitfalls.md`).
 - FDM (owner's printer, target `home_fdm`): printer-first rules are FAIL rows, with numbers from `project.yaml print_targets.home_fdm`. Worked
   example, 0.4 nozzle / 0.20 mm / PLA-PETG: walls ≥ 1.6 = 4 perimeters (a two-line 0.85 skirt failed as a product). Every external face is on the bed,
   vertical, or a clean top. Legends are RAISED: cap ≥ 5.1 / stroke ≥ 0.9 / air gaps ≥ 0.9 / 0.6 on a face-up top. The gap metric is an opening of the
@@ -219,15 +219,16 @@ geometry together), per-piece and assembly STEP (OCP/cadquery), `--check` = md5 
 
 ## Feature views (sections for what a flat face hides)
 - An orthographic face renders every flat face in one shade. A pocket, a boss, a chamfer, a deboss or a tab inside a wall does not show. Six
-  faces are not a signature of the body, and a picture column that names a face for such a row is not evidence.
-- One section per designed asymmetry: a 1 mm slab (`cut = xslab | yslab | zslab`, `cut_at`) through the feature. Render it orthographic, in a
-  light colour, through the same faces loop. The cut face renders in one shade and a floor below it in another, so a pocket floor reads at once. An
-  edge view (`--view=edges`) on the fast engine draws recess edges where a raking light on a dark body shows nothing.
+  faces do not show such a feature. A picture column that names a face for such a row is not evidence.
+- One section per designed asymmetry: a 1 mm slab through the feature. The generator takes a section axis and a cut position. The worked
+  example's generator has a slab mode per axis and a cut-position key. Render it orthographic, in a light colour, through the same faces
+  loop. The cut face renders in one shade and a floor below it in another. A pocket floor reads at once. An edge view on the fast engine
+  draws recess edges where a raking light on a dark body shows nothing.
 - Measure the feature on the mesh before you promise a picture. A land that fills 0.02 of a round shows in no render; the row states the
   number. Read the mesh for the value and cite the picture for the look. A top face renders +Y up, so its legends read upside down: turn the
   plot 180°, never mirror it.
-- A render-only run must not rewrite the check records. Render the views alone from the SCAD of record (`--features`), after a check that the
-  SCAD equals the yaml's SCAD.
+- A render-only run must not rewrite the check records. Check that the SCAD of record equals the yaml's SCAD. Then render the views alone
+  from it. The worked example's generator has a features-only flag for that.
 ## Process rules
 - The render + STL + interference chain runs through the job pool (`references/agent-ops.md` §8). Previews regenerate on every run on the fast engine.
   STL exports of record run on the preset's `engine:` (the one that passes the mesh gates). They are cached only on the inputs + engine key, with the
@@ -258,9 +259,9 @@ geometry together), per-piece and assembly STEP (OCP/cadquery), `--check` = md5 
   kit README and the render index. Commit the piece artefacts; leave the shared files to the full chain, or restore them before the commit.
 - A census VERSION bump makes every record at the old version a gate problem. Run every generator that writes a census, the ones outside the
   chains too, before the adopt gate.
-- The release kernel's preview aborts CSG normalisation past 100 000 elements, writes a blank PNG and exits 0. Render previews with the fast
-  engine, and fail the run on an empty frame.
-- A gate whose prerequisites are physical (a mock-up timed, a lift read) can be carried by the record, not closed. Its pins read `pending:` on
-  the owner's print record until the owner closes it (`release-and-cut.md` §3.1).
-- Read the case order's hardware lines live through the dealer's API on the locale site before the order sheet is final.
-  The rules are in `part-verification.md` §Bought hardware.
+- OpenSCAD 2021.01's preview aborts CSG normalisation past its `openCSGLimit` preference (100 000 elements by default). It writes a blank PNG
+  and exits 0. Render previews with the fast engine, and fail the run on an empty frame.
+- A merge can carry a SCAD of record from an intermediate generator state. Run the chains after every merge, before a vendor upload.
+- A gate whose prerequisites are physical (a mock-up timed, a lift read) is carried by the record: `release-and-cut.md` §3.1.
+- Read the case order's hardware lines live through the dealer's API before the order sheet is final.
+  The rules are in `part-verification.md` §Bought hardware; the API keys live in an untracked env file.
