@@ -97,6 +97,9 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - Filament colour NAMES as keys (yaml lists, slicer filament map, profile file names, expected hex, kit prose) made a palette change an 11-file edit. Key AMS slots by ROLE with name + hex as values, kit prose reads the names. Ask for the spool inventory (full vs small) at kickoff and give the ~60 % structure role a full spool — 2026-10-02 [fdm/colours].
 - Second-order legend checks: a legend body is checked against the LENGTH of the surface it sits on (a rail word at 3/4 of the rail would have run off the end as the cap grew). Label pitch is derived from the measured label width (pitch 19 nearly touched at cap 5.2; 20 mm labels need ≥ 23) — 2026-10-02 [fdm/legends].
 
+- The vendor's map paints a whole triangle by its thinnest sample. A 2.0 × 2.0 bar reads grey, a 1.2 land yellow. Read a band's end, not its length. Bisect with plane-cut slabs and section at the painted Z — 2026-10-10 [dfm/vendor-map] (`dfm-printed-enclosure.md` §7.1, §13.1).
+- The MJF quote form refuses a loose part outside a 2 × 2 × 10 mm box. The plain and the full-colour material read alike. The analysis still runs; only the price is missing — 2026-10-10 [dfm/vendor-form].
+- A land at the vendor's bound is painted (2.0 − 0.8 = 1.20 against 1.2; float32 reads 1.199). Gate every free-face land at the margin line — 2026-10-10 [dfm/gate-at-the-bound] (`dfm-printed-enclosure.md` §13.2).
 ## process / gates
 - A date-stamped artefact selftest (two dated packages, one expected STALE) run across midnight produced two dates and failed the PR gate for no design reason. Pin the date in the test or make the gate tolerate a rollover — 2026-09-29 [tooling/gates].
 - A DFM/DRC rule set at the fab's published limit passes DRC and still lights up the fab's DFM: mirror the fab's checks in-repo and gate on them — 127/128.
@@ -141,6 +144,13 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A lint with 1,569 hits in 59 old records cannot gate *(worked example)*. A dated baseline keyed on file md5 can: an unchanged file keeps its hits, and every new or edited file lints at 0. `scripts/style_gate.py --write` freezes it, and the plain call gates - 2026-10-09 [gates/style-baseline].
 - A delegation line that names `G0` also satisfies the backstop for a later artefact whose gate is a different `G0 (case v4 spec)` row, because the backstop knows gates by name. Name gates uniquely per product. `gates-required` matches a delegation by its full gate id, so a `G0 (case v4 spec)` delegation never counts as `G0` - 2026-10-09 [gates/gate-ids].
 
+- A number pinned in a traceability regex fails at the next geometry change. A backreference `(\d+\.\d) vs \1` checks the equality the row asserts, with no number — 2026-10-10 [process/traceability].
+- A gate pin that waits on a closed gate is never exercised. Thirty-four pins read FAILED the minute the gate opened. Run every pin of a stage against the evidence before the gate opens — 2026-10-10 [process/pins] (`release-and-cut.md` §3.1).
+- The record round stops at FAILED > 0, before the second report pass. The clone gate then reads the pre-round report. Fix the entries and run the round again; never patch the report — 2026-10-10 [process/record-round].
+- A blind-review bundle quotes the reviewers' artefact names. Freeze it in `reorg.frozen`, never edit a reviewer's report — 2026-10-10 [process/reorg].
+- A re-layout must grep every default-argument fallback, not only the writers. A label read from a pre-layout path wrote `*_unversioned` records — 2026-10-10 [process/reorg].
+- A hand-added row in a generated checklist reads STALE one round later, and a regeneration drops it. The row goes in the yaml — 2026-10-10 [process/generated].
+- A DECISIONS row with a missing cell stops `known_issues --check` and every entry that runs it. A merged row without its yaml entry reads unmapped. Count the cells and run a dry traceability before the round — 2026-10-10 [process/decisions-table].
 ## agents / git
 - Agents die when the machine sleeps or on API 500s; resume by message with the MEASURED state; heartbeat monitors ~25 min; time-box every long task; parallel router JVMs SIGTERM each other — STATUS 09-18…21.
 - Background-task watchers did not wake the coordinator: block in-process with `until ! kill -0 $pid; do sleep 20; done` (≤ 600 s per call, repeat) — 2026-09-22.
@@ -165,6 +175,8 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - Eight parallel OpenSCAD CGAL exports + four censuses + six offscreen PNG renders exhausted the process table (fork: EAGAIN, load > 70) and the host restarted a second time the same night. Every CAD export, mesh check and render takes a slot of the ONE host pool (cores // 4). Long chains run in the background with an `EXIT` line and are waited on by the harness, never by a foreground loop — 2026-09-30 [agents/machine].
 
 
+- A chain agent can end between its last gate and its record commit. Keep the gate logs under `build/_check/<chain>/`, so the successor writes the record from them — 2026-10-10 [agents/handover].
+- A fresh worktree has no gitignored caches (STL sidecars, mesh cache): every body re-exports and every FEA re-meshes. Copy the caches for the same keys, or treat the worktree's tables as proof only. The STL of record is the cached canonical export of the main chain. Drift under an unchanged key is a FAIL — 2026-10-10 [agents/worktree].
 ## tooling / determinism
 - Bambu Studio CLI (02.08.x): `sparse_infill_density` 100 % is rejected (rc -18) — use top / bottom shell thickness for a solid column. A two-filament slice with a prime tower SEGFAULTS (rc -11 / 133, "no filament colors found in projects") unless each slot's filament JSON carries `filament_colour` (or `--filament-colour '#..;#..'`). Bisect on the temp inputs one variable per run — 2026-09-29 [tooling/bambu].
 - Multi-material on the Bambu CLI = one multi-part object: Bambu-style 3MF with per-part `extruder` in `Metadata/model_settings.config` (or pre-placed STLs + `--load-filament-ids 1,2 --assemble --arrange 0`). Purge mass = used − solid-part volume × density, derivable for the SOLID colour mark only. The same STL path N times = N objects, count from the CLI's `objects`. `different_settings_to_system` omits values equal to the system default — prove from the embedded value — 2026-09-29 [tooling/bambu/ams].
@@ -215,6 +227,11 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 
 - A snapshot's `--backend=Manifold` (`tools.openscad_args`) exports a body in < 0.1 s where the release kernel took minutes. A 360-step sweep and an animation become affordable as previews (the exports of record keep the engine rule, [tooling/openscad] above). Two Manifold constructs break watertightness. `hull()` of two 0.01-high slabs (degenerate faces — a 45° transition is a solid wedge or a bevelled cut). A standing D-shaft as D-extrude + cylinder + ramp unions (13 shells — ONE cylinder minus bevelled flat cuts is manifold by construction) — 2026-10-01 [tooling/openscad].
 
+- OpenSCAD 2021.01's preview aborts CSG normalisation past its `openCSGLimit` preference (100 000 elements by default). It writes a blank PNG and exits 0; nine empty frames shipped for a day. Fail the run on an empty frame — 2026-10-10 [tooling/openscad].
+- A new base key leaked a wall value into a sibling preset. Its body moved by 36.7 mm³ on the first export. Pin a new key in every override that pins its sibling — 2026-10-10 [tooling/presets].
+- `slice_plane(cap=True)` fails to cap some planes. `process(validate=True)` after a cut re-opens the mesh. Merge vertices only, cap by hand with `shapely.polygonize`, pick material faces by containment, not by area — 2026-10-10 [tooling/mesh].
+- A check that imports yaml exits 1 under the stock python before it reads a path. Run every skill script with the project venv's python — 2026-10-10 [tooling/venv].
+- A README with two spliced blocks needs its mask and preserve keyed by the marker name. Use one regex with a backreference. A single-marker mask erases the second block on the next regen — 2026-10-10 [tooling/generators].
 ## kicad / drc / swig *(worked examples; the mechanism generalises to any CAD CLI)*
 - `kicad-cli pcb drc` honours ONLY explicit `netclass_assignments`, never `netclass_patterns`, and NO DRC exclusions. Emit per-net assignments from the generator, assert a canary rule fires exactly once. Accepted residue = a generated RULE (`enclosedByArea`, not `insideArea` which is an intersection test — prove with a negative construction in `--selftest`).
 - Enforcing net classes for the first time on a "DRC 0" board showed 202 errors. A class clearance larger than the fill's zone clearance is unenforceable by construction. Write the as-built geometry into scoped rules general → specific (later rule wins), log the relaxation.
@@ -352,6 +369,10 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - OpenSCAD 2021.01 writes the same geometry in a new triangle order on every export. A chain that copies the raw export moves its md5s on every re-run. Every chain writes the canonical STL. Prove the first canonical pass of an old raw file by triangle set, area and volume, then accept it once - 2026-10-09 [case/canonical-stl] (`dfm-printed-enclosure.md` §7.2).
 - CGAL triangulated one coplanar face of a print aid differently after a re-layout, with the same binary and fonts, and the result was deterministic across forced exports. A print aid's tessellation change is a baseline update with a determinism proof, never a geometry change - 2026-10-09 [case/determinism].
 
+- Two equal circles that overlap 0.01 in Z give a T-junction in one orientation's export. Draw both halves of a boss from one 2-D polygon and start the upper prism on the shared plane. A sliver pass that opens an edge or moves the volume over 0.5 mm³ fails. Keep the closed raw mesh — 2026-10-10 [mech/csg].
+- A bbox-minimum rule on one part (a 2.0 key bar) grows its pocket and moves every band below it. Re-derive the whole Z stack from the pocket, never edit the band knob — 2026-10-10 [mech/derivation].
+- A profile slice that overshoots its end by 0.01 moves the exported top face. A height gate at `lim + 0.05` passed it. End the slice at the face and gate at `lim + 1e-6`. Cast float32 extents to float64 before the subtraction — 2026-10-10 [mech/export].
+- A flat on a pillar clips the cylinder and its wall box only. Clipping the whole pillar union cut a web and left a 0.33 slot — 2026-10-10 [mech/csg].
 ## fea
 - Gmsh refuses CGAL STLs as volume boundaries; fTetWild meshes them; drop zero-volume slivers or K is singular.
 - Dropping tets leaves orphan nodes = zero rows in K (SuperLU "exactly singular", NaN): compact nodes (`np.unique(t, return_inverse=True)`) on the cache-load path too — fea/mesh.
@@ -361,6 +382,9 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - Caches keyed on the board FILE md5 re-solve on a silk-only hop: key on the copper signature + outline/hole digest.
 - Coupled cases drift with a rebuilt board mesh while board-alone numbers are bit-identical: report both — pcb_fea.
 
+- An assumed drop stop asked for twice the drop's energy. Derive the stop by energy balance on the real STL — 2026-10-10 [fea/drop] (`fea-stage.md` §Drop).
+- Gate the von Mises off the load, support and tie bands. A sliver tet on a tie node reads ten times its average — 2026-10-10 [fea/bands].
+- `--only <subset>` wiped the other cases of the record and the report. A subset run never writes the report of record — 2026-10-10 [fea/records].
 ## software
 - A fixed jig cap makes the WARN level unreachable when THROTTLE = min(alarm − margin, cap): make the interplay explicit and print both levels — software/thermal.
 - Manuals written before the software they describe: the "what you should see" lines go under an explicit banner naming the fake backend that produced them — 2026-09-22 [documentation].
@@ -399,6 +423,8 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A validation set with duplicate geometries counts one body several times: four uploads of one tray (triangle order, an ASCII twin) were four "agree" rows and a hash split twins at a rounding boundary. Group by geometry with tolerances (faces equal, volume / area / bbox within tolerance), count agreement on unique geometries, and state the coverage per mechanism — 2026-09-30 [dfm/validation].
 - Six bracket caps that differ by 0.05 mm of rib are indistinguishable once off the plate unless the value is printed on them. A coupon or variant without its own identifier and number on the part is a mix-up waiting for the bench - 2026-09-30 [kit/coupons].
 
+- A drawing matched its order line by the piece id. The order sheet labelled the piece by another name. The sheet printed "no line for this piece". Match both names and the file name — 2026-10-10 [documentation/sheets].
+- A renders record quoted a number from an earlier pass. Re-read the check file of record at the sign-off, not the brief — 2026-10-10 [records/stale-number].
 ## records / arrival / review
 - The fab adds an order-history "Confirm Parts Placement" step after the engineer mails, with a silent ~3-day timer after which the order is produced as drawn. Check Order History after every engineer reply. Its engineering file (`Smt_Hw_Bom_Merge` → `oc` / `ec` per designator) is the complete change list - diff it before any picture. Read the pictures with a mounting-hole calibration (0.1 px) and your pad 1 over the fab's marks for every polarity-flagged part — 2026-10-08 [fab/placement-confirm] (`vendor-review.md` §5 round 4).
 - The fab's engineer rows after an order are the free source of its package conventions. Group `ec − oc` by footprint, write the deltas into the rotation table with a selftest against the engineer rows. Vendor footprints: `-BL` / `-BR` = different offsets; LQFP +270 even from the fab's own library; package origins off the pad-bbox centre → a `shift` rule in the footprint frame; passives normalised 180° = ignore. The board file is right, the table was the missing design file — 2026-10-08 [fab/rotation-table] (`pcb-layout-dfm.md` §10).

@@ -1,6 +1,6 @@
 ---
 name: hw-from-spec
-version: 0.11.18
+version: 0.11.19
 description: Run a hardware project (a PCB, a printed or CNC enclosure, or both — scope chosen at kickoff; contract fab such as JLCPCB) from a written specification to a production cut with an owner-gated, generated-only, blind-reviewed workflow — a kickoff questionnaire that asks every owner decision up front with recommended answers, a zero-warning manufacturability bar, and a retro that folds each project's learnings back into the skill. Use this whenever someone starts a board or enclosure project from a spec, asks to set up gates, a decision log, generators, part verification, a fab DFM mirror, a case pipeline, FEA, blind reviews, a release report or a production cut for one, or resumes such a project, or wants the skill improved from a finished project — even if they only say "new KiCad board", "order this at JLC", "review the layout", "cut the release" or "what did we learn".
 ---
 
@@ -87,7 +87,7 @@ reference when you reach that step, not before. Nothing here is specific to one 
 
 Before the spec is read and before any CAD, ask **A0 Scope** alone (`ee` / `mech` / `both`). RECOMMENDED = what the brief implies, `both` when a
 board is designed and housed; each option says what it skips. Then ask **every decision class that scope needs**, grouped by phase. Ask them in up
-to twelve batches with the **`AskUserQuestion` tool** (≤ 4 questions per call, ≤ 4 options per question). "accept every recommended answer of this
+to thirteen batches with the **`AskUserQuestion` tool** (≤ 4 questions per call, ≤ 4 options per question). "accept every recommended answer of this
 batch" is the first option of the batch's first question. The classes are: product / process / material / quantity. PCB build [ee, both]:
 layers, copper, impedance, finish, min part size + link policy, assembly sides, test points, panel. Enclosure architecture [mech, both]: pieces,
 retention = screws + inserts / magnets / none, coupling, feet, labelling = deboss / plate / badge, fan, vents, light pipe, two targets, brand

@@ -54,6 +54,15 @@ source → `90-log/BLOCKERS.md` row per rule 10, with the exact URL and filter s
 number. Never promote a snippet to [V]. Fit numbers belong beside the part: pocket Ø − foot Ø margin at the tolerance limit, height above the sole,
 and adhesive area on an annulus when the pocket floor is opened by a counterbore. A count that disagrees between records (yaml five, guide four) is
 flagged in the decision row, not resolved silently.
+Dealer API reads (worked example: a locale dealer site through its API, 2026-10-10):
+- The API keys live in an untracked env file, never in a record, a commit or a chat report.
+- A keyword read is not stable for a short numeric MPN. The limit-10 read returned ten other parts the next day and no exact row. Read such
+  parts by the dealer's own part number, or raise the limit. A part in hand that is not an order line stays [K]. The table's [V] needs a live
+  fetch of the line.
+- Check the next price break before you fix a pack quantity. One hundred pieces at the lower unit price cost less than 88 at the higher one.
+  Write both numbers in the line, so the choice is visible.
+- One dealer did not carry the maker-class hardware (a heat-set insert, a plated pan-head screw). Check the hardware lines on the dealer
+  before you plan the order on it. Write a gap as a BLOCKER row, never as a substitute part.
 
 ## Fields on every symbol
 `MPN, Manufacturer, LCSC (or the fab's code field), Datasheet (the live URL of the fitted code), Confidence (V/K/S/N/A), Alt_MPN, Alt_LCSC`.
