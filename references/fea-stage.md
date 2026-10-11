@@ -61,6 +61,14 @@ elasticity, heat) · pyamg (SA-AMG + CG for > 60k DOF) · trimesh/rtree/shapely 
 - State the pass target in the model's own variable. In a sink-only model with constant `h` (W/m²K), the heat the sink sheds, `q`
   (W), is linear in `h`. One model measured the linearity to 0.1 %. So the `h` that passes is `h × limit / q`, with `limit` the dissipation
   the row must carry (W). A row the model cannot close needs a bench measurement row (kickoff E4b), not a geometry change.
+- An owner row with no test row stays open for ever. Write the arrival row the day the model row reads FAIL. The row names the pose,
+  the instrument and the reduction formula with its source line. It names the pass number, the record file and the fail action. The
+  owner closes by test; the model stays the bounding record. Two reads on the same unit, coupled and free, give the pose factor without
+  the absolute `h`. A thermocouple offset then cancels. Worked example (2026-10): `h = q / (A × ΔT)`, with `A` the exposed sink area the
+  model reads. Four reads of 15 min. Pass at the model's `h`, or at a measured factor written back into the yaml.
+- The drop owner row closes the same way, on the spare set at arrival. Name the pose of the drop record, the drop count and the
+  inspection per drop (crack, seam gap, white mark outside the contact zone, the unit still assembles). The crush depth against the
+  model is INFO.
 ## Cases that paid for themselves (worked examples)
 - Case torsion (two-hand twist): a single bottom dovetail is a hinge; two rail pairs ~17 mm apart gave ~2.5× stiffness.
 - Snap tab: the hand formula under-read peak stress by ~1.2× (slit-root concentration); peak ∝ deflection — reduce travel before thickening.
@@ -87,3 +95,4 @@ elasticity, heat) · pyamg (SA-AMG + CG for > 60k DOF) · trimesh/rtree/shapely 
   displacement field moves 0.2 %. Locate the peak elements before you read a move as a geometry effect.
 - Keep one unit system. This stack solves in mm–t–s: masses in tonnes, ρ in t/mm³, N = t mm/s². Convert at one line and name the unit in
   the comment. A point mass in grams added as kg gave a 60 g unit and a 935 g load.
+- A brief can name a row id that already exists. Check the checklist yaml before the id goes into the spec and the traceability greps.
