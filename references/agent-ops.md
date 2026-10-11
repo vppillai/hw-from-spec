@@ -124,8 +124,8 @@
   owner addition arrives through the coordinator.
 - **Rerun a flaky gate once before you read it as real.** One adopt run failed at its clone step. The standalone clone gate passed on the
   same HEAD, and the rerun passed every step. Report both runs in the chat report. A second failure is real; one is a rerun.
-- **A module loaded twice has two copies of every class**. A selftest or a shim that loads a module by path beside its package import gets
-  a second `Nack`, a second `Port`. An `except` on one copy misses the other. Load once, or rebind the shared classes after the load
+- **A module loaded twice has two copies of every class**. A shim that loads a module by path beside its package import gets a second
+  copy of `Nack` and `Port`. An `except` on one copy misses the other. Load once, or rebind the shared classes after the load
   (`references/software-track.md` §3).
 
 ## 6. Reporting

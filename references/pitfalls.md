@@ -411,7 +411,7 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A fake that inserted itself 0.3 s after the open hid the normal case. The first board would have read NOT-PRESENT on every cable. The fake's default is the field default — 2026-10-11 [software/fakes].
 - A brief asked for a register the standard does not have. Read the table index, then the body, before you name a register — 2026-10-11 [software/standards].
 - A lot loop over separate processes cannot hold a USB handle. One process, one open; a post-close verdict goes to `lot.json`, never the closed manifest — 2026-10-11 [software/lot].
-- Eight rows each listed the next spec revision and disagreed with the code. Revise the spec to the code after the review round, as one OPEN row with a veto hash — 2026-10-11 [software/spec].
+- Eight rows each listed the next spec revision and disagreed with the code. Revise the spec to the code after the review round. One OPEN row carries the deltas and a veto hash — 2026-10-11 [software/spec].
 - A path that climbs out of the package broke in the wheel; a symlink inside it did not. Prove the wheel in a throwaway venv — 2026-10-11 [software/packaging].
 - A package module named `inspect.py` shadowed the stdlib in script mode and a cached check still read PASS. No stdlib names for modules — 2026-10-11 [software/package].
 - An entry-point isolation check inside the selftest process proved nothing: the engineering module was already loaded. Check `sys.modules` in a fresh interpreter — 2026-10-11 [software/entry-point].
