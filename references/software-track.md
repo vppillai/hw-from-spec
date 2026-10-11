@@ -1,7 +1,7 @@
 # software-track.md — bring-up tool, package, criteria, codes, selftests
 
 The software exists before the hardware does. So you build it to run without hardware, and it generates the documents that describe it.
-Sections 1 and 2 give the order and the selftest pattern. Sections 3 to 13 hold the rules a package round proved. Each rule carries its
+Sections 1 and 2 give the order and the selftest pattern. Sections 3 to 17 hold the rules the package and bench-preparation rounds proved. Each rule carries its
 reason and one worked example.
 
 ## 1. Order
@@ -22,8 +22,10 @@ reason and one worked example.
    `required=True`.
 7. **udev / driver rules** ship with the tool. The first-plug hazard (default UART mode driving pins for ms) is documented and mitigated.
 8. **Package** (`tools/<pkg>/`): carve it out of the working tool once the tool's selftest passes (§3). The tool becomes a shim over the package.
-9. **Spec revision**: after the review round, revise the architecture note to the code as a dated revision (§10).
+9. **Spec revision**: after the review round, revise the architecture note to the code as a dated revision (§10). After several
+   code rounds the revision is a checklist from the decision rows (§17).
 10. **Hardware phase**: the first physical phase waits for boards. Name what the first boards will hit in the record before they arrive (§13).
+    Write the hardware runbook from the code of record before they arrive (§14). Build the calibration tool on cloned records (§15).
 
 ## 2. Selftest pattern
 - Fake sensor or EEPROM from a list of (offset, length) → bytes. Assert the identity and page reads keep their real values while the ramp
@@ -31,6 +33,7 @@ reason and one worked example.
 - One `--selftest` run in the adopt gates. It needs no hardware and no network.
 - The selftest patches `time.sleep` on module and instance attributes, never on a module global of the tool. A global of the tool is not
   visible from a package.
+- Under the patched `time.sleep` two samples share one timestamp, so a slope reads None. Assert the temperature, not the slope.
 
 ## 3. Carve a package out of the working tool
 - Move code verbatim. Keep the tool's selftest byte-identical as the fidelity proof. A moved line that changes is a decision, not a move.
@@ -113,6 +116,7 @@ reason and one worked example.
 - Read the code of record for every fact: the code list, the event calls, the parsers, the schemas. Cite the row that caused each change.
 - Keep an old sentence only when it carries a decision. One OPEN row with a veto hash is cheaper than a spec the next writer cannot trust.
 - List the deltas in the row: event types, codes, verbs and flags, record schemas, rule kinds, signatures.
+- After several code rounds the delta lines of the rows are the checklist of the next revision (§17).
 
 ## 11. Packaging: the wheel
 - A data file whose source of record lives elsewhere can be a symlink inside the package. The build tool copies the target into the wheel.
@@ -134,6 +138,71 @@ reason and one worked example.
   reviewer's list of untested paths is that list. *Example*: five items. The pre-inserted cable. A switch mode that makes every read NACK. The real open
   path and its OS driver. A signal inside a real sleep. The real numbers of the first SKU.
 - Each item gets a selftest where a fake can reach it, and an arrival row where only hardware can.
+
+## 14. The hardware runbook, written before the boards
+- Write the hardware runbook from the code of record, never from the spec. *Reason*: the code holds facts no document names.
+  *Example*: no document named the insertion window of the run verb (a 15 s constant). One unit-state field had no writer verb. Both
+  came out of a grep over the callers while the author filled the expected-lines column.
+- A runbook row has four cells. They are the command, the lines to expect, the record file and the pass rule by test id. A row
+  without one of them is a note, not a step.
+- Put the printed strings of the primitives (`say(...)`) into the expected column verbatim. The technician then diffs the screen
+  against the page.
+- The reviewer's list of what the first boards hit (§13) is the runbook's closing checklist. One row per item, with the observation
+  and where it shows.
+- Ship a fix-list template beside the runbook: id, observation, command, record file, severity, decision row. Pre-fill the rows the
+  writing found. A gap the runbook finds closes where it found it (one verb, one selftest line, one row).
+- The open questions of the spec become decide-after lines: the question and the measurement that decides it.
+- The runbook describes the tool as built. Rule 2 holds: no code change comes out of writing it, only fix-list rows.
+
+## 15. Re-judging records and calibration
+- A tool that re-judges old sessions must rebuild every input the live judge saw, not only the measured keys. *Reason*: the files
+  are not the live record. *Example*: the engine read the runner's interrupt passthrough list. The rebuild lacked it. A thermal
+  session that ran INCONCLUSIVE live re-judged FAIL, and the check called the cable "caught".
+- Diff the live observed dict against the rebuilt one key by key before the first statistic.
+- The report rows in the manifest carry no identity. Take the identity from the identity events. The events round the time axis,
+  so two soak samples inside one hundredth give no slope. Read the live source for each key.
+- Write the rebuild first. Judge one real session under the file of record and demand PASS with no NOT-MEASURED. Then compute a
+  statistic.
+- Clone one real session for the fixture (new serial, new error rate, new temperature, hashes recomputed), never typed manifests.
+  The shapes stay the runner's. Add one clone per live status the engine can emit, not only PASS clones. *Reason*: a selftest with
+  PASS clones of one shape stayed green through three review findings.
+- A calibration candidate never loosens a limit of record. Cap every candidate at the record's own limit and say "the lower wins" in
+  the method string.
+- A candidate skips rehearsal sessions. The runner marks a dry run in the manifest (`hardware.dry_run`), and the selection reads the
+  mark.
+- The candidate tool refuses the file of record as its output path, and opens every output with `'x'`.
+- Keep the candidates out of the keys the engine reads (`tightened`, a `calibration` block). Apply them only inside `--check`. The
+  file of record then changes only through a decision row the owner approves. The run verbs refuse a file with a `calibration` block.
+- A per-run writer collides with a selftest that runs the verb twice on one day. Remove both outputs, or use a second directory.
+
+## 16. A live screen for the technician
+- A live terminal page cannot take typed input while it runs. The prompt prints above the page and the echo lands under a hidden
+  cursor. Stop the page. Print one static copy, bounded to the terminal height, with the prompt as its bottom line. Read the answer.
+  Erase the answer line, move the cursor up by the copy's height, then restart. The live render overwrites the copy, so the page
+  does not scroll.
+- Feed the page from the session events, not from the `say` lines. One `on_event` hook on the session is one attribute and one
+  `if`. The verdict and close events of `close()` arrive through the same hook.
+- A screen hook never raises into the flow. Wrap the hook body in `try/except` and log the fault on the page. *Reason*: a screen
+  fault that reaches the flow closes the cable's record as ABORTED, and ends a lot.
+- A hook attribute set in `__init__` is absent on an `attach` that uses `cls.__new__`. Make it a class attribute.
+- Both user interfaces run on the same functions (`say`, `ask`, `read`). Without the console library or a TTY, one line says so and
+  the plain path runs.
+- Every screen check runs on a string console. So the real terminal (a short height, a resize, Ctrl-C at the prompt) goes on the
+  hardware list (§13).
+- A console control call takes `(code, param)` tuples, not positional codes. A record's direction names (`A_to_B`) can differ from
+  the verdict's (`AB`); map once.
+
+## 17. The spec revision as a checklist
+- A spec revision after several code rounds is a checklist, not a rewrite. The items are the "deltas for the next revision" lines
+  of the decision rows since the last revision. *Reason*: one row alone named nine sections.
+- Grep the code for every name before you write the sentence. The sources are the parser (`add_argument`), the docstring, the
+  manifest writer and the selftest print line. *Example*: three facts in the delta lists had drifted from the code. A rules file was
+  a symlink, not a copy. A named module never existed.
+- Keep the open questions table and every PROPOSED tag. Count the tags before and after.
+- Write the open questions the revision finds as new rows of that table, each with a recommended answer. Never as prose.
+- The revision is a dated row, OPEN for the owner, with a veto hash (§10).
+- Lint the added lines alone at the 20-word cap (`git diff | grep '^+'`). The whole-file gate at 40 hides a long new sentence.
+  Code-fence lines merge into false hits, so read the hit text before you fix it.
 
 ## Documents generated from the software
 Reason-code table, guard list (S1…Sn + override flags), supported-class table (from the criteria + FEA/thermal records), quick card (pinout +
