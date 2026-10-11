@@ -200,8 +200,8 @@ the merged blind reviews ("what the boards decide" = the CONFIRMED items whose c
 the parts arrive, never reconstructed afterwards. Every row carries `status` (TODO / DONE <date> / N/A / APPLIED <date> while the owner's veto
 window is open) and `evidence`; the script refuses a DONE without evidence, a duplicate id, a status outside the grammar. Closing a row = yaml edit,
 regenerate, commit.
-An owner row that only a model closes gets an arrival row the day the model row reads FAIL. The row names the pose, the instrument and
-the reduction formula with its source line. It names the pass number, the record file and the fail action (`fea-stage.md` §Thermal).
+An owner row that only a model closes gets an arrival row the day the model row reads FAIL. `fea-stage.md` §Thermal names the row's
+fields.
 
 ## 11. A frozen SPEC gets an errata file, never an edit (`templates/10-spec/SPEC_ERRATA.md`)
 `10-spec/SPEC_ERRATA.md` holds one E-row per deviation of the design of record from the frozen text. A row carries the SPEC text, the design
