@@ -68,10 +68,10 @@ elasticity, heat) · pyamg (SA-AMG + CG for > 60k DOF) · trimesh/rtree/shapely 
   the instrument and the reduction formula with its source line. It names the pass number, the record file and the fail action. The
   owner closes by test. The model stays the bounding record. Two reads on the same unit, coupled and free, give the pose factor as a
   ratio. With `h = q / (A × ΔT)` the ratio `h_coupled / h_free` cancels the sink area `A` and the absolute `h`. A constant probe offset
-  does not cancel in that ratio. It cancels only when one probe reads both temperatures of each `ΔT`. With two probes, one at the sink
-  base and one at the ambient, the offset between them stays in each `ΔT`. Calibrate the pair in one bath first, or read both points
-  with one probe. Planned reads (2026-10, written before the parts arrive): `A` is the exposed sink area the model reads, `q` the pad
-  power at the plateau. Four reads of 15 min: coupled hood off, coupled hood on, then the same unit free in both poses. Pass at the
+  does not cancel in that ratio. It cancels only when one probe reads both temperatures of each `ΔT`. Two probes, one at the sink base and
+  one at the ambient, keep their offset in each `ΔT`. Calibrate the pair in one bath first, or read both points with one probe.
+  Planned reads (2026-10, written before the parts arrive). `A` is the exposed sink area the model reads. `q` is the pad power at
+  the plateau. Four reads of 15 min: coupled hood off, coupled hood on, then the same unit free in both poses. Pass at the
   model's `h`, or at a measured factor written back into the yaml with the model rerun PASS.
 ## Cases that paid for themselves (worked examples)
 - Case torsion (two-hand twist): a single bottom dovetail is a hinge; two rail pairs ~17 mm apart gave ~2.5× stiffness.

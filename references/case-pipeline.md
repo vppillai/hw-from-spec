@@ -265,8 +265,8 @@ geometry together), per-piece and assembly STEP (OCP/cadquery), `--check` = md5 
   depth by the two probes of §Interference, cavity width 1 mm above the rim = nominal.
 - **A through-opening cutter runs past the face** **[K]**. Do not stack a coplanar overlap box on a frustum that ends at the face. A box
   0.001 wider than the frustum top leaves a 0.001 × 0.001 step ring around the opening. Every index read passed (shells, watertight,
-  volume, the vendor API). The vendor map painted the slivers beside it. Extrude one shape `c + 1` tall with the scale adjusted, `c`
-  the chamfer depth and the 1 the overlap past the face. One solid then cuts the chamfer and the air above it. Keep an overlap box
+  volume, the vendor API). The vendor map painted the slivers beside it. Extrude one shape `c + 1` tall with the scale adjusted. Here `c`
+  is the chamfer depth and the 1 the overlap past the face. One solid then cuts the chamfer and the air above it. Keep an overlap box
   only on a `hull()` mouth, where the box ends inside the cavity. That branch read 0 / 0 with its box. Count the vertical faces under
   0.002 mm tall before an export. The gate is 0. The 0.002 is twice the 0.001 overlap, so it catches the ring on either side. Worked
   example (JLC3DP analyser, 2026-10): 40 micro-faces around five slots. The ring split the chamfer faces into 12640 slivers. The fixed
