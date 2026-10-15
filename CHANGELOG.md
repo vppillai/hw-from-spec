@@ -1,6 +1,6 @@
 # CHANGELOG — hw-from-spec
 
-## Current state (0.11.22): read this instead of replaying the entries below
+## Current state (0.11.23): read this instead of replaying the entries below
 
 - **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
   thirteen batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
@@ -8,7 +8,8 @@
   blind reviews with a record-reading verifier, layout + fab DFM mirror, the case pipeline with two PURE mesh gates (census margin, print-DFM
   floor), the stability row for anything that stands free (kickoff C12) and the three assembly-model rows (every placement det +1, a fit row per
   mating pair, an orientation row per one-sided part type, a fit row pair per degree of freedom — renders are not evidence of buildability),
-  the double-blind drawing round at M1 of a printed part, the software track, release cut + production cut + the arrival checklist + spec errata, agent operations with a measured resource budget
+  the double-blind drawing round at M1 of a printed part, the printed-case fit round (one short locating feature per parting line with its bind angle, seams in notches off the
+  contact faces, a fit coupon before the parts, G-code as the evidence for every print claim), the software track, release cut + production cut + the arrival checklist + spec errata, agent operations with a measured resource budget
   (measure → audit → change; previews on the fast engine, geometry of record on the engine that passes the mesh gates; caches as determinism checks), the retro,
   the PCBA fab after the order (engineer questions answered on pad-1 positions, the production-file package diffed per layer) and its upfront
   half (`ASSEMBLY_NOTES` in the package, the fab's-eye silk pass, hole sizes in the order remark, arrival rows A-0 / A-5), the fab's second
@@ -40,6 +41,61 @@
 - **Generic by rule**: the skill names no project, part, board, order, account or person — `scripts/generic_lint.py` reads the whole repo
   (CHANGELOG and docs included; history keeps its measured numbers), a fenced worked example keeps numbers and kinds but never a name, and the
   repo carries no project retro (a retro report is folded, then deleted).
+
+## 0.11.23 - 2026-10-15 - The printed-case fit rounds: the parting line, the slot ends, the inlay strokes, the seams, the deep guide, G-code as evidence
+
+Source: a 10-board two-colour printed shipping case (PLA, 0.4 nozzle, 0.20 layers, printed face down with a two-colour inlay on the plate
+face), 20 learnings of two print rounds. The classification read GENERAL 20 and PROJECT 0. Every number was measured on exported meshes or
+sliced G-code. The reports were folded, then deleted (SKILL §13); the project keeps its copies under its reviews folder. The first round
+printed a lid that came off only with a wedge, two fit rings that left the plate mid print, inlay letters that printed scratchy, and boards
+that bound between the end blocks. A scratch clone of the skill lost files twice. The second round printed a lid that bound at 3° of tilt,
+teeth that caught leaning boards, boards that rattled, a seam bump on every rib's contact corner, and a lid that closed one way only.
+
+### Changed
+- `references/dfm-printed-enclosure.md` §8: elephant foot applies only to features that start on layer 1; list them before you blame it;
+  measure a slot from the G-code at the root layer and higher.
+- `references/dfm-printed-enclosure.md` §8.1 mark rows: an inlay stroke on the plate face is at least three first-layer lines wide, read as
+  2 × area / perimeter per piece; the inter-glyph gap is the minimum distance over ALL piece pairs, never x-neighbours only; track the glyphs
+  apart so inter-letter gaps stay ≥ 0.9. A lobed mark: scan size × erosion with the real processing function.
+- `references/fdm-print-optimisation.md` §3 brim row: a thin tall coupon needs an outer-only brim, proven from the layer-1 brim segments
+  (0 inside either ring); the kit text says to cut it off.
+- `SKILL.md` §8 step 5: two sentences pointing at §8.6 and the G-code evidence table.
+- `references/dfm-printed-enclosure.md` §8 seam rule: a seam on a sliding contact face is a bump; a 90° V-notch 1.0 × 0.5 down each rib end
+  face takes the aligned seam (9 of 9 ribs, every layer); the notch stops at the lead-in chamfer; the placer continues a seam string from a
+  neighbouring island (3 of 9 teeth at 1.0 from the fingers, 0 of 9 at 2.0), so 2 mm between islands whose seams differ; a coupon sliced with
+  the production seam already carries the bumps.
+- `references/dfm-printed-enclosure.md` §8.6: a deep guide binds at atan(2 × clearance / engagement) (24 mm pillars at 0.65: 3.1°; the 6 mm
+  lip at 0.35: 6.7°); the pillars end flush at the lip; 1.0 × 45° lead-ins on the lip and the lid rim.
+- `references/fdm-print-optimisation.md` §3 seam row: the per-rib notch count as the proof. §5: the seam read is the first extrusion after
+  the travel; a sliding tip's line count; five reader rules (`; Z_HEIGHT: `, the feature marker after the travel, full-length windows, probe
+  away from other features, the preview is not the read).
+- `references/case-pipeline.md` §Interference: a lid that closes either way (a palindrome slot pattern, the same magnet pole up at both ends).
+- `SKILL.md` §2 clean tree: `git describe` runs inside the release script, so commit the design, release, then a second commit for the release files (an amend changes the hash the manifest names).
+
+### Added
+- `references/dfm-printed-enclosure.md` §8.6 parting-line fit: printed PLA walls grow and cavities shrink about 0.1 per side, so 0.35 per
+  side (fallback 0.45 in the README). Only one short feature locates a parting line; everything taller is relieved. Four fit-test checks for
+  the relief. A 25-minute fit coupon of the parting line before the 3 h parts. A clearance change moves every derived feature.
+- `references/dfm-printed-enclosure.md` §8.5: end play ≥ 0.8 per end for a routed board held by a comb and teeth; every slot open at both
+  ends (comb and raised floors stop 1.5 short of the stop walls; gap-fill moves near the slot ends 70 → 22); the "does not go in" diagnosis
+  with two caliper readings before a value changes.
+- `references/fdm-print-optimisation.md` §1: one plate for a two-part two-colour set (changes 10 → 5, time and mass measured, a failed print
+  loses both, the first-layer sequence de-duplicated). §2: infill is not where the mass is; give the measured split. §5: G-code is the evidence
+  for every print claim, one table of reads (purge, changes, mass, per-layer x range, brim, gap fill, slot width, seam).
+- `references/print-dfm.md` §3 (e): rerun print DFM on every body after a clearance change; prefer shortening the approaching feature.
+- `references/case-pipeline.md` §Interference: fit-test shifts from the read values; a `NAME = value` reader strips comments and anchors with `\b`.
+- `references/agent-ops.md` §2: `git status` on a scratch clone before its scripts run; delete and clone again on deletions.
+- `references/print-kit.md` §4: the parting-line coupon in the kit.
+- `references/dfm-printed-enclosure.md` §8.5: a tip that must slide past an edge is at most two line widths with a 45° lead (flat 1.2 tips
+  at a 2.9° funnel caught boards leaning 1.1); end play needs a spring: cantilever fingers from the lid ceiling, k = E w t³ / (4 L³), about
+  0.2 N per finger, the wedge low point at the outer edge, 30° (a 45° wedge is a knife edge under rule K).
+- `references/case-pipeline.md` §Interference: a preload feature is tested with the parts shortened by the interference plus 0.2, plus
+  positive held-at-both-ends checks; a slab probe caught the wedge that sloped the wrong way.
+- `references/agent-ops.md`: a second agent writes the user guide from the geometry and the values; it caught the magnet-pole contradiction.
+- `references/pitfalls.md`: twelve dated case-print lines, then nine more (seam, seam island, coupon seam, deep guide, tooth tip, spring
+  finger, either-way lid, release manifest, G-code reader).
+- `smoke/run_smoke.sh`: four greps on the first-round rules, eight on the second.
+- No script changed.
 
 ## 0.11.22 - 2026-10-11 - The software track before the boards: the runbook, the re-judge, the live screen, the checklist revision
 
