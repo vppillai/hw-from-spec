@@ -84,6 +84,9 @@ README a repo path is allowed, every other class still fails); the run FAILS on 
   that cannot take the part on the bench is reprinted on the day it is needed.
 - A mark coupon proves GEOMETRY and first-layer behaviour, not the thermal state of a 99-minute print (warp, sag on a long span, colour
   opacity at depth). After the coupon, print **one part** (one cap, one plate) before the multi-object plate. START_HERE says so per step.
+- **A parting-line fit coupon prints before the parts** (`dfm-printed-enclosure.md` §8.6): a short slice of the base with its lip and a short
+  slice of the lid rim, side by side, about 25 minutes. Pass: the lid ring goes on and comes off by hand. Its project carries an outer-only
+  brim, and the sheet says to cut the brim off.
 - **Snug-fit features ship as a bracket plate** (`dfm-printed-enclosure.md` §8.5): for example crush ribs at 0.20 / 0.25 / 0.30, one object each, NAMED
   by its value in the 3MF (no digit deboss — the object name carries it). **The three variants are copies of the part that CARRIES the knob**
   (three caps with three holes, three sliders with three slots). The technician tries them on ONE production-size mating feature. A plate that

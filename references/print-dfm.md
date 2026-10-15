@@ -83,6 +83,9 @@ project has none yet), verdicts `60-orders/quotes/dfm_verdicts.yaml`, records `4
   VALIDATED rows as items to carry into the template.
 - **(d) Check rows read the MESH, never the yaml** — a row that quotes a design number proves nothing about the part; generated code is linted
   (`scad_lint.py` on every emitted SCAD) because the yaml and the mesh can disagree silently.
+- **(e) After any clearance or fit-knob change, rerun print DFM on every body**, not only the body whose knob moved. A derived feature moves
+  with the knob (a boss position derived from a lid clearance opened a 0.43 slot against the tooth ends, under the 0.45 void floor **[K]**).
+  Prefer shortening the feature that approaches to filling the gap: a filled gap left a crescent void of 0.03 (`dfm-printed-enclosure.md` §8.6).
 
 ## 4. Validation on record (the first validation set: 42 labelled JLC3DP MJF / SLA files = 37 geometries, 27 with a verdict)
 

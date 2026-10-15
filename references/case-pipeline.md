@@ -146,6 +146,10 @@ addition arrives. Budget the bump before promising "full release pipeline" in th
   low slots land on the high parts). The turned pose is a row, or the lid gets a key.
 - **A pocket that opens to air is probed twice**: a body as tall as the inserted part (magnet, insert) at the pocket must be EMPTY, and a thin
   body just BELOW the designed floor must OVERLAP. A probe taller than the pocket pokes into air and proves nothing about the depth.
+- **The fit-test shifts come from the values the test reads from the design source**, never from literals: clearance ± 0.05, end play ± 0.05.
+  A reader of `NAME = value` lines strips comments first and anchors the name with `\b`. Several values share one line, and a comment repeats a
+  value: a reader for `BOSS_H` matched inside `MAG_H = 3.0; ... BOSS_H = 2.6` **[K]**. A relieved parting line gets four checks: lift the
+  lid above the pillar tops so the teeth clear, then shift by the clearance ± 0.05 (`dfm-printed-enclosure.md` §8.6).
 - Every envelope (connector housings, cage, heat sink, fan, inserts, screws) is a yaml box; the census asserts each is either inside a piece or in
   a declared cut-out.
 - Planar linkages (mech): the body levels are a graph colouring. Sweep every body pair over the full cycle; an edge = an in-plane crossing, and levels

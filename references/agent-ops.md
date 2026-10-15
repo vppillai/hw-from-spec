@@ -43,6 +43,9 @@
   findings for the ignored files that live only in the main checkout.
 - `git checkout -- <set>` restores the tracked STLs too, not only the check records. Prove on a fresh export first, restore afterwards, and
   never commit a partial-run record.
+- **Run `git -C <clone> status` before you use scripts from a scratch clone.** If the folder is not a repository or shows deletions, delete it
+  and clone again. A scratch clone of the skill lost files twice in one day: 53 deletions with missing objects, then the whole `.git` **[K]**.
+  A script that runs from a clone fails loudly on a broken one (exit 2 with the missing path named), never with a silent skip.
 - Run the chains after every merge, before a vendor upload (`case-pipeline.md` §Process rules).
 
 ## 3. Regenerating shared records

@@ -31,6 +31,7 @@ guessed URLs — the live index is `wiki.bambulab.com/en/bambu-studio/parameter`
 | **Colour changes grouped on few layers** | every layer that holds two colours is a filament change pair (a two-filament plate is not "two colours without swaps") — grouping the coloured features into one Z band cuts the change count in proportion **[K, measured first article]** | geometry: colour only in one Z band per part (`case-pipeline.md` Presets) | every AMS plate; on a first-layer colour mark put the colour that must be pristine FIRST in `first_layer_print_sequence` — one change fewer, and the face colour is not the first lines after a change **[K]** | `M620` count in the g-code (= changes), per-plate | `other_layers_print_sequence` (Auto minimises swaps and flush per layer **[V]**), `first_layer_print_sequence` |
 | **Print by object (sequential)** | less travel → less stringing / oozing; one object's failure spares the others **[V]** | collision rules: objects ≥ `extruder_clearance_max_radius` apart; the first-printed object's height ≤ `extruder_clearance_height_to_rod` when another object shares its Y band; the prime tower cannot be used in by-object mode **[V]** | coupon plates and small single-filament parts; never with an AMS tower | the embedded `print_sequence: by object`; object order in `model_settings.config` | `print_sequence` [Prusa: *Complete individual objects*] |
 | **Reduce infill retraction** | fewer retractions inside infill = time and less wear | stringing inside the part (invisible) | sparse-infill-heavy bodies | `print_time_s` before / after | `reduce_infill_retraction` |
+| **One plate for a two-part two-colour set** | one prime tower and one purge set for both parts: ONE object with four parts (two bodies on the dark filament, two inlays on the light), the meshes shifted ± 35 mm in x IN THE VERTICES (no transform a slicer can read differently). Measured: filament changes 10 → 5, time 3h05 → 2h53, mass 148.5 → 145.3 g **[K]** | a failed print loses both parts: say so in the README and keep the single-part projects beside it; with four parts the `first_layer_print_sequence` must be de-duplicated to one entry per filament | a base and a lid, each about 50 × 110 face down, side by side on a 256 mm plate; any two-colour pair that fits one plate | `M620` count and header mass / time against the two single-part slices; per-layer x ranges from the G-code: an early layer spans both objects in x, a layer above the shorter part spans only the taller one | `first_layer_print_sequence`, the multi-part object of `dfm-printed-enclosure.md` §8.3 |
 
 ## 2. Strength
 
@@ -47,6 +48,10 @@ guessed URLs — the live index is `wiki.bambulab.com/en/bambu-studio/parameter`
 | **Infill / wall overlap** | the infill is widened into the inner wall ("riveting"); default 15 %, 50 % bulges the surface, negative leaves a gap **[V]** | surface bulge when too high | structural bodies: 15–25 %; mark faces: default | `infill_wall_overlap` in the config | `infill_wall_overlap` |
 | **Bridge flow / thick bridges** | lower bridge flow and thin bridges sag less under a plate land (§8.4) | a thin bridge is weaker — only where a land sits on it | every bridged strip under a glued plate; the dust-cap tip face | `bridge_flow`, `thick_bridges: false` read back (a measured project's default **[K]**) | `bridge_flow`, `thick_bridges` |
 
+**Infill is not where the mass is.** Gyroid 15 → 10 % saved 5.4 g of 91.5 on a case base and 1 g of 58.6 on its lid; the rest is walls,
+comb, end blocks and teeth **[K]**. When the user asks for a lighter part, give the measured split from the slice. Say that a real saving is a
+design change (an interrupted comb, shorter ribs), not a slicer setting.
+
 ## 3. Quality and accuracy
 
 | Knob | What it buys | What it costs | When it applies | How it is PROVEN | Keys |
@@ -62,7 +67,7 @@ guessed URLs — the live index is `wiki.bambulab.com/en/bambu-studio/parameter`
 | **Gap fill / thin-wall detection** (classic generator) | closes gaps between perimeters; prints single-line walls | under Arachne both are moot **[V]** | classic generator only | config keys present only when `wall_generator: classic` | `gap_infill_speed`, `detect_thin_wall` |
 | **Fuzzy skin** | a rough side texture that hides layer lines and seams and adds grip — on outer walls / contour only, never on fit faces or top / bottom (walls only by construction) **[V]**; apply by PAINT or a MODIFIER to a grip zone, not globally | dimensional accuracy of the fuzzed face (± thickness); a fit face must stay smooth | the grip band of a cap or a hood lift; never a lap | `fuzzy_skin` + `fuzzy_skin_thickness` / `fuzzy_skin_point_distance`; the painted region in `model_settings.config` | `fuzzy_skin` (contour / contour and hole / all walls), `fuzzy_skin_thickness`, `fuzzy_skin_point_distance` |
 | **Support interface and tree-support tuning** | a dedicated support filament on the INTERFACE only (Bambu Support for PLA / PETG; PETG and PLA support each other) gives a clean underside at low cost **[V]**; tree supports for interior cavities | an AMS slot; interface filament under a visible face still leaves a scar on a down-face — the geometry rule (no supports on visible faces, §8) stands | interior supports of a shell; never a visible face | `; FEATURE: Support` extrusions inside the outer-wall hull only (the g-code read of §8); `support_g` | `support_type`, `support_interface_filament`, `support_style`, `tree_support_*` |
-| **Brim / mouse ears for warp** | holds a tall or thin-footed part; `auto-brim` by object **[V]** | the brim mark on the first layer; a brim on a fit flange changes the EF reading | pillars, tall thin bodies, PETG | `brim_type` / `brim_width` read back; the first-article warp row | `brim_type`, `brim_width`, `brim_object_gap` |
+| **Brim / mouse ears for warp** | holds a tall or thin-footed part; `auto-brim` by object **[V]**. **A thin tall coupon needs an outer-only brim**: two fit rings (walls 2.4 thick, 10 and 12 tall) came off the plate mid print because the preset's automatic brim gave them none **[K]**. Set `brim_type: outer_only`, 5 mm, in that project, so no brim touches a mating face inside a ring. The kit text tells the user to cut the brim off | the brim mark on the first layer; a brim on a fit flange changes the EF reading | pillars, tall thin bodies, fit rings, PETG | `brim_type` / `brim_width` read back; the first-article warp row; from the sliced G-code: parse the `; FEATURE: Brim` segments of layer 1 and count those whose midpoint lies inside either ring (must be 0) | `brim_type`, `brim_width`, `brim_object_gap` |
 | **Per-object overrides** | every key above per object in one plate — the CLI applies `<metadata key= value=>` under `<object>` in `model_settings.config` (supports, ironing, top shell, EF, first-layer line width proven **[K, measured first article]**); the arranger re-places a generic 3MF, so positions are read BACK from the exported plate json | tagging the file as a Bambu project (`Application=BambuStudio-<ver>`) segfaults the CLI (rc −11) **[K]** | mixed plates: a coupon beside a case piece | the exported plate json footprints + feature points inside them | `Metadata/model_settings.config` object metadata |
 
 ## 4. Default knob sets per kickoff answer (C11 `kickoff.enclosure.optimise`)
@@ -76,3 +81,19 @@ guessed URLs — the live index is `wiki.bambulab.com/en/bambu-studio/parameter`
 
 The chosen set is the plate yaml's `optimise:` block; a plate that departs from it carries the reason on the line. The sidecar carries every key the
 set names; the kit text gate (`print-kit.md` §3) fails a START_HERE that claims a saving the sidecar does not show.
+
+## 5. G-code is the evidence for every print claim
+
+A claim about a print names the G-code read that proves it. The yaml, the sidecar and the slicer's preview are inputs, never evidence. Keep
+the previous G-code before a rebuild, so a before / after count is possible. The reads **[K]**:
+
+| Claim | Where it is in the G-code |
+|---|---|
+| purge volume | the `FLUSH_START` blocks: E mm × 2.405 = mm³ for 1.75 mm filament (a 700 mm³ purge appears as 4 × 175) |
+| filament changes | the `M620 S.A` lines, one per change |
+| mass and time | the header |
+| which objects a layer holds | the per-layer x range of the extrusion moves |
+| brim placement | the `; FEATURE: Brim` segments of layer 1 and their midpoints |
+| a closed slot end | the gap-fill move count within a few mm of the feature, per layer band |
+| a slot width | the outer-wall segments along the slot: centreline spacing minus the line width |
+| the seam | the first extrusion of each `; FEATURE: Outer wall` block (§3 seam row) |
