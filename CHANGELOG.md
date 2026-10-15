@@ -50,6 +50,7 @@ sliced G-code. The reports were folded, then deleted (SKILL §13); the project k
 printed a lid that came off only with a wedge, two fit rings that left the plate mid print, inlay letters that printed scratchy, and boards
 that bound between the end blocks. A scratch clone of the skill lost files twice. The second round printed a lid that bound at 3° of tilt,
 teeth that caught leaning boards, boards that rattled, a seam bump on every rib's contact corner, and a lid that closed one way only.
+The third print jammed on its twenty spring fingers, which passed every nominal-mesh check; the owner broke them off.
 
 ### Changed
 - `references/dfm-printed-enclosure.md` §8: elephant foot applies only to features that start on layer 1; list them before you blame it;
@@ -91,10 +92,15 @@ teeth that caught leaning boards, boards that rattled, a seam bump on every rib'
   0.2 N per finger, the wedge low point at the outer edge, 30° (a 45° wedge is a knife edge under rule K).
 - `references/case-pipeline.md` §Interference: a preload feature is tested with the parts shortened by the interference plus 0.2, plus
   positive held-at-both-ends checks; a slab probe caught the wedge that sloped the wrong way.
+- `references/dfm-printed-enclosure.md` §8.5 and `references/case-pipeline.md` §Interference: the printed fingers jammed the lid (a board
+  end 0.2 inside a finger corner, under the print tolerance of a tall thin island; the fingers reached 14 mm below the teeth) and were
+  removed. A printed spring keeps a margin above the print tolerance (≥ 0.5 on FDM) or reaches the part after it is guided; guide before
+  hold; passive fixes (foam, less play) before printed springs in a one-motion lid; a tolerance-shifted (± 0.3) fit check when a margin is
+  under 0.5. The fit test went 29 → 24 checks; the lid lost 2.5 g and 17 min of print time.
 - `references/agent-ops.md`: a second agent writes the user guide from the geometry and the values; it caught the magnet-pole contradiction.
 - `references/pitfalls.md`: twelve dated case-print lines, then nine more (seam, seam island, coupon seam, deep guide, tooth tip, spring
-  finger, either-way lid, release manifest, G-code reader).
-- `smoke/run_smoke.sh`: four greps on the first-round rules, eight on the second.
+  finger, either-way lid, release manifest, G-code reader), then the spring-finger jam.
+- `smoke/run_smoke.sh`: four greps on the first-round rules, eight on the second, one on the spring-finger jam.
 - No script changed.
 
 ## 0.11.22 - 2026-10-11 - The software track before the boards: the runbook, the re-judge, the live screen, the checklist revision

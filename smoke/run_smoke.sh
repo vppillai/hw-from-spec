@@ -75,6 +75,7 @@ grep -q 'down the middle of each rib end face' "$REF" && grep -q 'at least 2 mm 
 grep -q 'atan(2 × clearance / engagement)' "$REF" || { echo "FAIL: $REF lost the deep-guide bind-angle rule (§8.6)"; exit 1; }
 grep -q 'at most two line widths wide, with a 45° lead' "$REF" || { echo "FAIL: $REF lost the sliding-tip rule (§8.5)"; exit 1; }
 grep -q 'End play needs a spring' "$REF" && grep -q 'LOW point in use is the outer edge' "$REF" || { echo "FAIL: $REF lost the spring-finger rules (§8.5)"; exit 1; }
+grep -q 'Guide before hold' "$REF" && grep -q 'larger than the print tolerance' "$REF" || { echo "FAIL: $REF lost the spring-finger jam rules (§8.5: margin above the print tolerance, guide before hold)"; exit 1; }
 CP="$SKILL/references/case-pipeline.md"; grep -q 'A palindrome pattern' "$CP" && grep -q 'tested with the parts shortened' "$CP" || { echo "FAIL: $CP lost the either-way lid / preload fit-test rules (§Interference)"; exit 1; }
 grep -q 'runs inside the release script' "$SKILL/SKILL.md" || { echo "FAIL: SKILL.md lost the commit-release-commit rule (clean tree)"; exit 1; }
 grep -q 'Z_HEIGHT' "$FDM" && grep -q 'comes AFTER the travel move' "$FDM" || { echo "FAIL: $FDM lost the G-code reader rules (§5)"; exit 1; }
