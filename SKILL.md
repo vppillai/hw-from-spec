@@ -1,6 +1,6 @@
 ---
 name: hw-from-spec
-version: 0.11.22
+version: 0.11.23
 description: Run a hardware project (a PCB, a printed or CNC enclosure, or both — scope chosen at kickoff; contract fab such as JLCPCB) from a written specification to a production cut with an owner-gated, generated-only, blind-reviewed workflow — a kickoff questionnaire that asks every owner decision up front with recommended answers, a zero-warning manufacturability bar, and a retro that folds each project's learnings back into the skill. Use this whenever someone starts a board or enclosure project from a spec, asks to set up gates, a decision log, generators, part verification, a fab DFM mirror, a case pipeline, FEA, blind reviews, a release report or a production cut for one, or resumes such a project, or wants the skill improved from a finished project — even if they only say "new KiCad board", "order this at JLC", "review the layout", "cut the release" or "what did we learn".
 ---
 
@@ -416,7 +416,8 @@ list. The reference tags each **[checker]** / **[vendor sheet]** / **[physics]**
    emitted kit text, `print-kit.md` §3). Glued plates rest on the lands (the flat bed-face seats) with the bridged strips one layer below. Snug
    fits ship as a bracket plate the owner picks from: one object per candidate value, each a copy of the part that CARRIES the knob, tried on one
    production mating feature. The picked value lands in `kickoff.enclosure.fit_result` and closes its arrival-checklist row. Each STL has a
-   watertight row. Sidecars are drift-checked against the 3MF config.
+   watertight row. Sidecars are drift-checked against the 3MF config. Only one short feature locates a parting line, and a fit coupon of
+   that line prints before the parts (`dfm-printed-enclosure.md` §8.6). Every print claim names its G-code read (`fdm-print-optimisation.md` §5).
 6. **When a vendor reports a cracked part**: measure the RECEIVED part (caliper table → the target's tolerance), photo protocol, fractography
    basics. Then measure the ORDERED STL (sections + census with span and class). Separate design intent from defect with the vendor-fault table.
    Draft the reply from the template for the owner. Then apply the learning design-wide (every body, every preset), not to the failed feature
