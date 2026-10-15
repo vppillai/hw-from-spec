@@ -343,6 +343,10 @@ numbers are **[owner bar]** for a 0.4 nozzle at 0.20 mm and live in `print_targe
   **minimum feature = 2 × line width** (0.8–0.9 at 0.42 line) **[physics]**.
 - **Elephant foot**: the first 2–3 layers flare 0.1–0.15 mm on a textured plate at 55 °C. A 0.30 lap clearance loses that at the seam.
   Chamfer the bottom edge 0.3–0.5 × 45° on mating skirts, or use the slicer's elephant-foot compensation (the preset's `fits.ef` knob, default 0.15). Record the choice on the print sheet.
+  **Elephant foot applies only to features that start on layer 1.** Before you blame it, list which features start on layer 1. On a part
+  printed face down, a comb that starts on top of the floor and the teeth that start on a lid top never see the squish. The plate-edge chamfer
+  handles the outer foot. Measure a slot from the G-code: take the outer-wall segments along the slot, centreline spacing minus the line
+  width, at the root layer and higher up (a 1.70 slot read 1.70 at every height) **[K]**.
 - **Hole shrink**: vertical holes print 0.1–0.3 mm under nominal **[physics]** — compensate in the preset's `fits` block (per-preset, coupon-decided)
   or ream; state which on the print sheet. **Measured 2026-10-02** on the worked-example desktop printer (0.4 nozzle, 0.20 mm, PLA, 4 walls).
   It is the only recorded verdict so far. Holes read ~0.15–0.2 under nominal. Results: Ø5 round hole +0.3 = free pivot without wobble. D6
@@ -378,7 +382,7 @@ numbers are **[owner bar]** for a 0.4 nozzle at 0.20 mm and live in `print_targe
       return sum(1 for p in getattr(thin, "geoms", [thin]) if p.area > 0.5 * g * g)   # corner slivers ~0.05 g² at a right angle (≤ 0.2 on real glyphs), real gaps are elongated
   ```
   Selftest it against three fixtures before trusting a FAIL row: an `E` at cap 4 bold must FAIL at g = 0.9, a 1.2 mm slot between two bars must pass, a bare concave (L-shaped) corner must count 0.
-- **Colour bodies are their own print target** (`print_targets.home_fdm_colour` in the project.yaml template → process row `home_fdm_04_colour_body`, own STL set, own census). The wall gate is the body's THICKNESS: colour layers × layer height (default 2 × 0.20 = 0.4, §8.1; 3 layers = 0.6). Strokes are gated on the polygon and by print_dfm W. Censused against the host's 1.6 gate a colour body FAILs on itself. **Process each glyph on its own**: close (buffer +g/2 then −g/2, round joins) to fill crotches and the hairline necks of a traced outline. THEN erode by e per side to widen the gaps between glyphs. Do this per glyph, never on the whole word (a closing over the word fuses neighbouring letters). Do NOT close a mark whose negative space defines it (a logo with channels between lobes): erode it instead until the channels are ≥ two line widths. The inter-glyph gap is a row (§8.1 table).
+- **Colour bodies are their own print target** (`print_targets.home_fdm_colour` in the project.yaml template → process row `home_fdm_04_colour_body`, own STL set, own census). The wall gate is the body's THICKNESS: colour layers × layer height (default 2 × 0.20 = 0.4, §8.1; 3 layers = 0.6). Strokes are gated on the polygon and by print_dfm W. Censused against the host's 1.6 gate a colour body FAILs on itself. **Process each glyph on its own**: close (buffer +g/2 then −g/2, round joins) to fill crotches and the hairline necks of a traced outline. THEN erode by e per side to widen the gaps between glyphs. Do this per glyph, never on the whole word (a closing over the word fuses neighbouring letters). Do NOT close a mark whose negative space defines it (a logo with channels between lobes): erode it instead until the channels are ≥ two line widths. **Scan size × erosion with the real processing function** and pick the pair whose lobes clear three first-layer lines and whose channels clear two (worked example: 12 mm at erode 0.20 gave lobes 1.8 and channels 0.84) **[K]**. The inter-glyph gap is a row (§8.1 table).
 - No rigid bump on a slit tab (it blocks, F ∝ t³); screws + heat-set inserts in ≥ 1.6 boss walls, or magnets (§1.1), instead of snap tabs where the
   arm cannot be long enough.
 - **Fan boss count = fan hole count** (consumer 30 mm fans have 4 holes even when one SKU drawing shows 3); any point set drawn in two places is
@@ -478,8 +482,9 @@ Measure the FAILURE MODE instead:
 | recess span = largest inscribed circle of each recessed region | ≤ 6.0 mm wherever the recess ceiling is a bridge; kept on an ironed top-face recess (a compact recess irons flat) — reduce the mark width, never the depth | bridge sag / an un-ironed floor |
 | enclosed first-layer island (a solid region the recess or the colour body encloses), inscribed Ø | ≥ 2.5 mm, else close the recess over it | the island joins the body only above the recess |
 | colour-region width, EITHER colour (option b) | ≥ 0.84 mm = two 0.42 first-layer lines; separate lobes touching at points are fine (a colour region is not a void) | a one-line region does not print |
+| **inlay stroke width on the plate face**, per piece of the PROCESSED polygon, read as 2 × area / perimeter | **at least three first-layer lines wide** (1.8 mm at a 0.6 first-layer line); 1.1 mm strokes (under two 0.6 lines) printed thin and scratchy beside a 4 mm wordmark **[K]** | a two-line stroke is two perimeters with no fill between them |
 | point-contact necks | INFO: they fuse over ~one line width at the print | the artwork's own look |
-| inter-glyph gap on the PROCESSED polygons (sorted by x, pairwise shapely `distance`) | ≥ 0.84 mm = two 0.42 first-layer lines **[K]** | two letters fuse into one colour region |
+| inter-glyph gap on the PROCESSED polygons, the minimum shapely `distance` over ALL piece pairs, never x-neighbours only (an x-neighbour read predicted a 0.6 channel that was 0.84 over every pair) **[K]** | ≥ 0.84 mm = two 0.42 first-layer lines; track the glyphs apart (0.7 mm) so inter-letter gaps stay ≥ 0.9 **[K]** | two letters fuse into one colour region |
 | mark to every edge of its face (and to a lug root) | ≥ 1.5 mm (≥ 1.0 to a lug) | the face's perimeter lines |
 | depth / height | whole layers on the MESH (0.6 = 3.00 × 0.20) | a partial layer is a slicer guess |
 | material behind a recess | ≥ the target's `rib_gate` (1.2) AND ≥ the profile's top shell | strength; infill show-through |
@@ -607,6 +612,35 @@ ironing, fuzzy skin, per-object overrides) and how each is PROVEN from the g-cod
   `split` reports extra "bodies" of 1–2 faces, zero area. Fixes: overlap every union INTO its neighbour by 0.01, never past a design face (the
   slab of §1 "Overshoots become slabs"). Build an upper block as ONE solid, and cut the cavity through shell and block in ONE `difference()` so
   every inner face is one face. Put no face through a tangent point. Acceptance: 1 body and `watertight = true` after trimesh `split`.
+- **End play for a routed board in a printed cavity: ≥ 0.8 per end** when other features hold the part (a floor comb plus lid teeth). The
+  end stops only limit travel. A routed outline is about ± 0.2 and the printed cavity reads 0.1 to 0.2 short, so 0.3 per end bound on the
+  first print **[K]**. Verify the free length between the stops on the exported mesh (an 80 mm board gets 81.6).
+- **Every slot is open at both ends.** Comb ribs that run into the end-stop walls make each slot a dead-end pocket. The slicer closes such
+  a pocket end with gap-fill lines, and the nozzle slows and bulges at the concave corners. The slot is then narrowest where the part corner
+  lands. Symptom: the part has play in the middle of the slot but needs force to go flush to the end wall. Fix: stop the comb and every raised
+  slot floor 1.5 mm short of the stop walls. Evidence from the G-code: gap-fill moves within 4 mm of the slot ends in the comb layers fell
+  from 70 to 22 **[K]**.
+- **Diagnose "the part does not go in" before you change a value.** End stops run the full height and the comb only the bottom band, so the
+  two failures look different. A too-long part stops at the rim at once, at any angle. A too-thick part drops freely and stands on the comb
+  tips, about 32 mm proud instead of 18 or 26 when seated. A fit coupon with slots open at the front isolates slot width from length. When the
+  user has calipers, ask for two readings first: the part's length and thickness, and the cavity length. Otherwise state the default.
+
+### 8.6 Parting-line fit (a lid cap on a lip, a cover on a skirt)
+- **Printed PLA walls grow and cavities shrink about 0.1 per side each**. A lid cap over a lip modelled at 0.2 per side printed as a press
+  fit on the owner's printer: it came off only with a wedge **[K]**. Default clearance 0.35 per side. Fallback 0.45 when the coupon still
+  binds. Write the fallback value into the README.
+- **Only one short feature locates a parting line. Everything taller is relieved**. A 6 mm lip locates the lid. The 26 mm end pillars sit a
+  further 0.3 inside, so they never rub. A long engagement multiplies every print error along its length.
+- **The fit test gets four checks for the relief** (`case-pipeline.md` §Interference, OpenSCAD boolean intersections with controls): lift the
+  lid above the pillar tops so the teeth clear, then shift it by the clearance ± 0.05 in each direction. Tie the shifts to the clearance the
+  test reads from the design source, never to literals.
+- **A 25-minute fit coupon of the parting line prints before the 3 h parts.** 12 mm of the base with the lip and 10 mm of the lid rim, side
+  by side, about 20 g. Pass: the lid ring goes onto the base ring by hand and comes off by hand. Ship it in the kit (`print-kit.md` §4). A thin
+  tall ring needs an outer-only brim (`fdm-print-optimisation.md` §3 brim row).
+- **A clearance change moves every feature derived from it**. Raising the lid clearance by 0.15 moved a magnet boss 0.125 outward and
+  opened a 0.43 slot between the boss and the lid tooth ends, under the print-DFM void floor of 0.45. Extending the boss toward the teeth left
+  a crescent void (min 0.03). Shortening the teeth to end 1.5 from the cavity ends fixed it. Rerun print DFM on every body after any clearance
+  change (`print-dfm.md` §3 e). Prefer shortening the feature that approaches to filling the gap.
 
 ## 9. Two versions from one yaml (vendor MJF + home FDM)
 Presets are `base + overrides`, deep-merged before any module reads the yaml (`references/case-pipeline.md` §Presets). The geometry may differ
