@@ -157,6 +157,10 @@ addition arrives. Budget the bump before promising "full release pipeline" in th
   the nominal parts by the interference plus 0.2 for the clearance checks, so the preload does not read as a FAIL. Add positive checks: the
   closed lid holds each part at both ends, and a part shifted by the preload is held by the one finger. A probe on the tops of the end blocks
   caught a wedge that sloped the wrong way: "finger tips reach a 1.8 slab" came back empty **[K]** (`dfm-printed-enclosure.md` §8.5).
+  **A nominal-mesh preload test does not see print tolerance** **[K]**. Fingers that passed every check jammed the printed lid: a board end
+  sat 0.2 inside a finger corner, and the tall thin island printed ± 0.2 or more. When a feature's margin to a part edge is under 0.5, add a
+  check with the mating part shifted by the print tolerance (± 0.3) in each direction. Add a check that the guiding features reach lower
+  than the holding features (compare their lowest Z), so the parts are aligned before anything pushes on them.
 - Every envelope (connector housings, cage, heat sink, fan, inserts, screws) is a yaml box; the census asserts each is either inside a piece or in
   a declared cut-out.
 - Planar linkages (mech): the body levels are a graph colouring. Sweep every body pair over the full cycle; an edge = an in-plane crossing, and levels

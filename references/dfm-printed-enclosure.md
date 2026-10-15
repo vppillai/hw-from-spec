@@ -646,6 +646,15 @@ ironing, fuzzy skin, per-object overrides) and how each is PROVEN from the g-cod
   way. The eye did not catch it; a fit-test probe did (a slab on the end-block tops: "finger tips reach a 1.8 slab" came back empty) **[K]**.
   A 45° wedge is a knife edge under print DFM rule K (included angle under 53° over a sub-0.45 tip band); 30° passes **[K]**. The fit test
   treats the preload as designed interference (`case-pipeline.md` §Interference).
+  **The printed fingers jammed the lid and were removed** **[K]**. A board that rests against an end block had its end only 0.2 inside
+  the finger's low corner. A tall thin island prints ± 0.2 or more, so the tip landed on the board end head-on. The fingers also reached
+  14 mm further down than the teeth, so they pushed on the boards before the teeth aligned them. Twenty fingers were twenty chances to jam.
+  The owner broke them off. The play stays; a 1 mm self-adhesive foam strip on the end faces is the documented option. Four rules follow.
+  (a) A printed cantilever spring that acts on a part edge keeps a margin to that edge larger than the print tolerance, at least 0.5 on FDM.
+  Or its lead reaches the part only after another feature has guided it. (b) **Guide before hold**: a feature that pushes on a part starts
+  below (later than) the features that align it. (c) Prefer a passive fix (foam, less play) to printed springs in a lid that closes in one
+  motion against many parts at once. (d) A nominal-mesh fit test does not see print tolerance. When a margin is under 0.5, add a check with
+  the mating part shifted by the tolerance (± 0.3) (`case-pipeline.md` §Interference).
 
 ### 8.6 Parting-line fit (a lid cap on a lip, a cover on a skirt)
 - **Printed PLA walls grow and cavities shrink about 0.1 per side each**. A lid cap over a lip modelled at 0.2 per side printed as a press
