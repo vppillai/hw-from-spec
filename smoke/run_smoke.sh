@@ -76,7 +76,7 @@ grep -q 'atan(2 × clearance / engagement)' "$REF" || { echo "FAIL: $REF lost th
 grep -q 'at most two line widths wide, with a 45° lead' "$REF" || { echo "FAIL: $REF lost the sliding-tip rule (§8.5)"; exit 1; }
 grep -q 'End play needs a spring' "$REF" && grep -q 'LOW point in use is the outer edge' "$REF" || { echo "FAIL: $REF lost the spring-finger rules (§8.5)"; exit 1; }
 CP="$SKILL/references/case-pipeline.md"; grep -q 'A palindrome pattern' "$CP" && grep -q 'tested with the parts shortened' "$CP" || { echo "FAIL: $CP lost the either-way lid / preload fit-test rules (§Interference)"; exit 1; }
-grep -q 'runs inside the release script' "$SKILL/SKILL.md" || { echo "FAIL: SKILL.md lost the commit-release-amend rule (clean tree)"; exit 1; }
+grep -q 'runs inside the release script' "$SKILL/SKILL.md" || { echo "FAIL: SKILL.md lost the commit-release-commit rule (clean tree)"; exit 1; }
 grep -q 'Z_HEIGHT' "$FDM" && grep -q 'comes AFTER the travel move' "$FDM" || { echo "FAIL: $FDM lost the G-code reader rules (§5)"; exit 1; }
 grep -q 'writes the user guide from the geometry' "$SKILL/references/agent-ops.md" || { echo "FAIL: agent-ops.md lost the guide-agent cross-check rule"; exit 1; }
 grep -q 'Stack-and-mark polarity rule' "$KIT" && grep -q 'Dry attract check before any CA' "$KIT" && grep -q 'feet LAST' "$KIT" || { echo "FAIL: print-kit.md lost the magnet / feet sequence"; exit 1; }

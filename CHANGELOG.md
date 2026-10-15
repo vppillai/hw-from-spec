@@ -70,7 +70,7 @@ teeth that caught leaning boards, boards that rattled, a seam bump on every rib'
   the travel; a sliding tip's line count; five reader rules (`; Z_HEIGHT: `, the feature marker after the travel, full-length windows, probe
   away from other features, the preview is not the read).
 - `references/case-pipeline.md` §Interference: a lid that closes either way (a palindrome slot pattern, the same magnet pole up at both ends).
-- `SKILL.md` §2 clean tree: `git describe` runs inside the release script, so commit, release, amend.
+- `SKILL.md` §2 clean tree: `git describe` runs inside the release script, so commit the design, release, then a second commit for the release files (an amend changes the hash the manifest names).
 
 ### Added
 - `references/dfm-printed-enclosure.md` §8.6 parting-line fit: printed PLA walls grow and cavities shrink about 0.1 per side, so 0.35 per

@@ -162,7 +162,7 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A check-table item that carried a preset value was a different item per preset. The per-preset check-table diff dropped the row (12 of 71). Name a row by words; the value column carries the number — 2026-10-11 [records/item-text] (`case-pipeline.md` §Census).
 - A clearance-row item text change broke two traceability greps that quoted the old text. Grep the traceability yaml for the old item text in the same commit — 2026-10-11 [records/traceability].
 - A pin's `pending:` text named one record while its check read another. Read the generated check before you write a record template. Test the template by filling a scratch copy and running `traceability.py --only` per pin — 2026-10-11 [records/gate-pins] (`release-and-cut.md` §3.1).
-- `git describe` runs inside the release script: a release built before the commit stamped `-dirty` into the manifest. Commit, release, amend the commit — 2026-10-15 [release/manifest].
+- `git describe` runs inside the release script: a release built before the commit stamped `-dirty` into the manifest. Commit the design, release on the clean tree, commit the release files as a second commit; an amend changes the hash the manifest names — 2026-10-15 [release/manifest].
 - A kit mirror synced with `rsync --delete` lost about 105 generator copies that the repo keeps elsewhere. The mirror is a superset. Restore it with the generators, cache warm — 2026-10-11 [kits/mirror] (`print-kit.md` §5).
 ## agents / git
 - Agents die when the machine sleeps or on API 500s; resume by message with the MEASURED state; heartbeat monitors ~25 min; time-box every long task; parallel router JVMs SIGTERM each other — STATUS 09-18…21.
