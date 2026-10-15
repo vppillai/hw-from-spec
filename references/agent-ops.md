@@ -89,6 +89,9 @@
   and shipping; slicer and G-code; and the board art of the next revision. Each had a fixed input list, a report path, a ban on edits and on
   state-changing git commands, and the order to separate MEASURED from JUDGMENT. The double-blind drawing round followed (SKILL §5). Act first on a
   finding that two independent agents raise (the missing bosses came from two of them).
+- **A second agent writes the user guide from the geometry and the parameter values**, never from the author's description. The writing is
+  a cross-check of the design: the guide agent found that the two lid magnets had opposite poles up, a one-way key on a lid meant to close
+  either way, before the print **[K]** (`case-pipeline.md` §Interference).
 - **The standard protocol** has its home in SKILL.md §5; the mechanics live here. The reviewers are a second model family where one is available (Opus
   beside Claude Code, a second agent CLI's model) + the in-session agent. Brief them with the artefacts and the role's checklist ONLY: no decision
   log, no earlier reviews. Add **one verifier WITH record access** (DECISIONS, KNOWN_ISSUES, BLOCKERS, SPEC + `SPEC_ERRATA.md`, the test plan, netlist

@@ -358,6 +358,17 @@ numbers are **[owner bar]** for a 0.4 nozzle at 0.20 mm and live in `print_targe
   height) down ONE hidden vertical corner per part. The aligned seam snaps into the groove on every layer, and the groove reads as a design
   line. Two grooves per part split the choice: one part's seam took one groove, its mate's the other, and the seams did not form one line
   **[K]**. Put each part's groove on the SAME corner of the assembly. Proof from the g-code: `fdm-print-optimisation.md` §3 seam row.
+  **A seam on a sliding contact face is a bump the mating part feels**. The slicer's default `aligned` seam puts every outer-wall seam of a
+  thin rib or tooth (2.3 mm wide, a slot comb) on a vertical convex corner, where the face that touches the board meets the end face **[K]**.
+  Cut a 90° V-notch, 1.0 wide and 0.5 deep, down the middle of each rib end face. The seam placer prefers the concave corner. After the
+  notch, every rib seamed in its notch on every layer (9 of 9 base ribs) **[K]**. Two limits, both measured. (a) The notch cannot continue
+  into a tip narrower than the notch plus two 0.45 lands. It stops at the lead-in chamfer, and the last 3 to 5 layers of a tapered tip keep
+  a corner seam, set back by the chamfer. (b) The aligned placer continues a seam string from a neighbouring island when a feature splits
+  from a merged body (teeth that stand on pads become separate islands 8 mm up). With spring fingers 1.0 from the tooth ends, 3 of 9 teeth
+  seamed at the corner for 14 layers above the pads; at 2.0 every tooth seamed in its notch **[K]**.
+  Keep at least 2 mm between separate islands whose seams must differ. Check the seams in the G-code, never in the slicer preview
+  (`fdm-print-optimisation.md` §5). A fit coupon sliced with the production seam setting already carries the seam bumps: a slot width
+  measured on it stands after the seams move. Do not re-tune it.
 - **Layer anisotropy**: a tab or boss loaded across layers is 30–50 % weaker; boss walls shear along layers — orient bosses so the load is in-plane
   where possible, and read the FEA with the anisotropy factor.
 - **Legends RAISED**: **cap ≥ 5.1 / stroke ≥ 0.9 / AIR GAP between strokes ≥ 0.9** / height 0.6 on a face-up top (a 0.4-deep, 0.45-wide debossed void at cap 2.2 is illegible on a 0.4
@@ -624,13 +635,27 @@ ironing, fuzzy skin, per-object overrides) and how each is PROVEN from the g-cod
   two failures look different. A too-long part stops at the rim at once, at any angle. A too-thick part drops freely and stands on the comb
   tips, about 32 mm proud instead of 18 or 26 when seated. A fit coupon with slots open at the front isolates slot width from length. When the
   user has calipers, ask for two readings first: the part's length and thickness, and the cavity length. Otherwise state the default.
+- **A tip that must slide past an edge is at most two line widths wide, with a 45° lead**. Lid teeth with flat 1.2 tips and a near-vertical
+  funnel (2.9°) caught boards that leaned 1.1 mm **[K]**. Tips of 0.8 with a 45° lead pass. Check the tip layer in the G-code: one toolpath
+  line at the tip layer, three one layer down **[K]**.
+- **End play needs a spring, or the part rattles**. 0.8 of end play per board (needed for loading) let the boards rattle in the closed
+  case. Fix: a cantilever finger hangs from the lid ceiling at each end of each slot (1.6 × 2.6 × 25). Its face sits 0.6 inside the nominal board
+  end, so the closed lid holds each board between two fingers bent about 0.4 **[K]**. Cantilever stiffness k = E w t³ / (4 L³); PLA E about
+  2.3 GPa gives 0.58 N/mm and about 0.2 N per finger against a 0.12 N board. The tip is a wedge, so a board that rests against an end block
+  is pushed inward as the lid closes. **The wedge slopes so that its LOW point in use is the outer edge**. The first wedge pointed the wrong
+  way. The eye did not catch it; a fit-test probe did (a slab on the end-block tops: "finger tips reach a 1.8 slab" came back empty) **[K]**.
+  A 45° wedge is a knife edge under print DFM rule K (included angle under 53° over a sub-0.45 tip band); 30° passes **[K]**. The fit test
+  treats the preload as designed interference (`case-pipeline.md` §Interference).
 
 ### 8.6 Parting-line fit (a lid cap on a lip, a cover on a skirt)
 - **Printed PLA walls grow and cavities shrink about 0.1 per side each**. A lid cap over a lip modelled at 0.2 per side printed as a press
   fit on the owner's printer: it came off only with a wedge **[K]**. Default clearance 0.35 per side. Fallback 0.45 when the coupon still
   binds. Write the fallback value into the README.
-- **Only one short feature locates a parting line. Everything taller is relieved**. A 6 mm lip locates the lid. The 26 mm end pillars sit a
-  further 0.3 inside, so they never rub. A long engagement multiplies every print error along its length.
+- **Only one short feature locates a parting line. Everything taller is relieved**. A 6 mm lip locates the lid. The end pillars end at the
+  lip, flush, so they never rub. A long engagement multiplies every print error along its length. **A deep guide binds**: the bind angle
+  of a guide is atan(2 × clearance / engagement). End pillars 24 mm into the lid at 0.65 per side bound at 3.1° of tilt, and the lid needed
+  a jiggle to open; the 6 mm lip at 0.35 per side allows 6.7° **[K]**. Cut everything but the one locating feature flush. Give the lip and
+  the lid rim a 1.0 × 45° lead-in chamfer.
 - **The fit test gets four checks for the relief** (`case-pipeline.md` §Interference, OpenSCAD boolean intersections with controls): lift the
   lid above the pillar tops so the teeth clear, then shift it by the clearance ± 0.05 in each direction. Tie the shifts to the clearance the
   test reads from the design source, never to literals.

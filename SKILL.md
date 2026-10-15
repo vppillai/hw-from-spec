@@ -201,7 +201,9 @@ order. A WARN that is "known" is not a bar; it is either fixed or a dated, evide
   the tree replaces a record. Probe a script's usage from its docstring, never by running it without arguments.
 - **The tree is clean after every build** (`references/release-and-cut.md` §14). A build that rewrites a committed file of record without a design
   change (a re-saved board file, a stamp) is reverted with `git checkout -- <file>`; the file of record changes only in the commit that changes the
-  record. A dirty tree stamps `-dirty` into every `git describe` a drawing or a manifest prints. Before a release, delete every `build/` folder,
+  record. A dirty tree stamps `-dirty` into every `git describe` a drawing or a manifest prints.
+  `git describe` runs inside the release script: commit first, run the release, then amend the commit with the release files, or the
+  manifest says `-dirty` **[K]**. Before a release, delete every `build/` folder,
   regenerate from empty and read `git ls-files` for strays.
 - **Layout changes are generated too.** The docs/ layout the defaults name is in `references/project-yaml.md` §Layout. Moving files later is a
   decision row + a `reorg:` block + `scripts/reorg_paths.py --plan → --apply → regenerate → --check → --proof` (zero-loss on two `git ls-files -s`
