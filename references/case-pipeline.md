@@ -143,13 +143,20 @@ addition arrives. Budget the bump before promising "full release pipeline" in th
   (moved by more than the play: overlaps the stop meant to catch it). A degree of freedom without a stop is a design defect, not a missing row. A rib
   BETWEEN parts guides their faces; only a face ACROSS the slot stops a part along the slot **[K]**. Boards whose "end ribs" sat between the slots
   slid 6.6 mm along their length past a 14-row fit test that passed. A symmetric lid turned 180° about Z can seat on the wrong parts (pads over the
-  low slots land on the high parts). The turned pose is a row, or the lid gets a key.
+  low slots land on the high parts). The turned pose is a row, or the lid gets a key. Prefer a lid that closes either way: a user turns a lid
+  180° without looking. A stagger of every second slot high keyed the lid to one direction **[K]**. A palindrome pattern (low-high-low-high-low,
+  then its mirror image) keeps the pinch band on the high parts, and the lid closes either way. The magnets then go in with the SAME pole up
+  at both ends; opposite poles were the one-way key.
 - **A pocket that opens to air is probed twice**: a body as tall as the inserted part (magnet, insert) at the pocket must be EMPTY, and a thin
   body just BELOW the designed floor must OVERLAP. A probe taller than the pocket pokes into air and proves nothing about the depth.
 - **The fit-test shifts come from the values the test reads from the design source**, never from literals: clearance ± 0.05, end play ± 0.05.
   A reader of `NAME = value` lines strips comments first and anchors the name with `\b`. Several values share one line, and a comment repeats a
   value: a reader for `BOSS_H` matched inside `MAG_H = 3.0; ... BOSS_H = 2.6` **[K]**. A relieved parting line gets four checks: lift the
   lid above the pillar tops so the teeth clear, then shift by the clearance ± 0.05 (`dfm-printed-enclosure.md` §8.6).
+- **A feature that overlaps the nominal part by design (a preload: a spring finger, a crush rib) is tested with the parts shortened**. Shorten
+  the nominal parts by the interference plus 0.2 for the clearance checks, so the preload does not read as a FAIL. Add positive checks: the
+  closed lid holds each part at both ends, and a part shifted by the preload is held by the one finger. A probe on the tops of the end blocks
+  caught a wedge that sloped the wrong way: "finger tips reach a 1.8 slab" came back empty **[K]** (`dfm-printed-enclosure.md` §8.5).
 - Every envelope (connector housings, cage, heat sink, fan, inserts, screws) is a yaml box; the census asserts each is either inside a piece or in
   a declared cut-out.
 - Planar linkages (mech): the body levels are a graph colouring. Sweep every body pair over the full cycle; an edge = an in-plane crossing, and levels
