@@ -64,6 +64,20 @@
 - Read `git status` for untracked evidence before you read an adopt-gate FAIL as a record defect. An untracked folder from a concurrent vendor
   round makes a report `--check` STALE in the working tree. The HEAD archive still passes.
 - Run the style gate right before the round when another agent commits to the shared log. One line over the baseline fails the round.
+- Parallel branches that append rows at the same spot conflict in every record file. Resolve by union: both sides kept, one
+  `latest` mark in the status log (the newest), the yaml parsed and the known-issues table checked before the merge commit.
+- Name the selftest parts in the brief. Two agents both named their new block `part i`; the interpreter kept the later definition
+  and hid the first. The merger greps for duplicate definitions before the selftest runs, and keeps the file's main guard at
+  the end, after every part. A part defined after the guard raises a name error at the call.
+- A bare pipe inside a table cell splits the row. A merged row with a missing closing pipe fails the table reader the same way.
+  Count the cells of every row the round reads before the round, and write `or` for a pipe inside a cell.
+- A file that moves, even one file into a package, is a reorg row in the project file. Without it the path check reports every
+  frozen record that quotes the path it left. The live pins follow the file.
+- A merge can move a block out of the function that owns it. The product and identity read that belongs in the open path landed
+  in a re-clock function, and every run stopped at the revision check. Pin the ownership of such a block with a selftest that
+  reads the function source.
+- A worktree has no venv and no vendored skill unless you give it one. A gate that cannot run there reports nothing; the
+  coordinator's merge gate covers it, and the brief says so.
 
 ## 4. Blind reviews (the protocol; templates in `workflows/`)
 - Freeze: start from a clean tree (`git status --short --untracked-files=no` empty). Run `git worktree add --detach <frozen> HEAD`, then `git -C

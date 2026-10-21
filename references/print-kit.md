@@ -50,6 +50,14 @@ Rules the entry point makes checkable:
 - Ship what the texts cite: a `faces/` render cited → `faces/` in the kit; census artefacts and `.scad` out of the print folder; duplicate copies
   (caps inside the case kit) byte-identical or absent.
 
+- **Text on a part is checked in the pose of use, not in the file's frame.** A word placed upright in a dummy's model frame read inverted
+  once the dummy hung by its hole. The hole sat at the bottom of that frame. For every marked part, name the pose a person sees it in:
+  hanging by the hole, standing in its slot, lying on its back. Render the mesh of record in that pose with the recess floors dark. The
+  word must read left to right there. The real product's preview is the reference for the dummy's marking.
+- **Every fit part names its fit on its sheet, and the fit parts print alone.** A coupling bar was cut at a fallback prior because the fit knob
+  was null. It printed with 0.3 of play per side and read as "no grip" in the hand. The kit never said which bar it was. The sheet names the
+  fit value of every bar it holds. The bars of the fit bracket and any ribbed variant go on their own short plate, so a fit change
+  never costs a body reprint.
 ## 2. Magnet assembly (the one irreversible step)
 - **Stack-and-mark polarity rule**, generated from the yaml positions: stack the discs, mark the top face of the stack, slide one off, mark the
   next — marked face UP in the body pockets, marked face DOWN in the (upside-down) hood pockets. **Asymmetric boss keying** (Ø10 one side / Ø11
