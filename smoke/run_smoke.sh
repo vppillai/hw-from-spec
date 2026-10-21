@@ -67,6 +67,19 @@ grep -q 'Write the hardware runbook from the code of record, never from the spec
 grep -q 'must rebuild every input the live judge saw' "$SWT" && grep -q 'A calibration candidate never loosens a limit of record' "$SWT" || { echo "FAIL: $SWT lost the re-judge / calibration rules (§15)"; exit 1; }
 grep -q 'A screen hook never raises into the flow' "$SWT" || { echo "FAIL: $SWT lost the screen-hook rule (§16)"; exit 1; }
 grep -q 'is a checklist, not a rewrite' "$SWT" || { echo "FAIL: $SWT lost the checklist-revision rule (§17)"; exit 1; }
+grep -q 'Only one short feature locates a parting line' "$REF" && grep -q 'fit coupon of the parting line prints before' "$REF" || { echo "FAIL: $REF lost the parting-line fit rules (§8.6)"; exit 1; }
+grep -q 'Every slot is open at both ends' "$REF" && grep -q 'Elephant foot applies only to features that start on layer 1' "$REF" || { echo "FAIL: $REF lost the open-slot-ends / layer-1 elephant-foot rules (§8.5 / §8)"; exit 1; }
+grep -q 'at least three first-layer lines wide' "$REF" && grep -q 'over ALL piece pairs' "$REF" || { echo "FAIL: $REF lost the inlay stroke / all-pairs gap rows (§8.1)"; exit 1; }
+FDM="$SKILL/references/fdm-print-optimisation.md"; grep -q '^## 5. G-code is the evidence for every print claim' "$FDM" && grep -q 'A thin tall coupon needs an outer-only brim' "$FDM" || { echo "FAIL: $FDM lost the G-code evidence table (§5) / the outer-only brim rule (§3)"; exit 1; }
+grep -q 'down the middle of each rib end face' "$REF" && grep -q 'at least 2 mm between separate islands' "$REF" || { echo "FAIL: $REF lost the seam-notch / island-seam rules (§8 seam rule)"; exit 1; }
+grep -q 'atan(2 × clearance / engagement)' "$REF" || { echo "FAIL: $REF lost the deep-guide bind-angle rule (§8.6)"; exit 1; }
+grep -q 'at most two line widths wide, with a 45° lead' "$REF" || { echo "FAIL: $REF lost the sliding-tip rule (§8.5)"; exit 1; }
+grep -q 'End play needs a spring' "$REF" && grep -q 'LOW point in use is the outer edge' "$REF" || { echo "FAIL: $REF lost the spring-finger rules (§8.5)"; exit 1; }
+grep -q 'Guide before hold' "$REF" && grep -q 'larger than the print tolerance' "$REF" || { echo "FAIL: $REF lost the spring-finger jam rules (§8.5: margin above the print tolerance, guide before hold)"; exit 1; }
+CP="$SKILL/references/case-pipeline.md"; grep -q 'A palindrome pattern' "$CP" && grep -q 'tested with the parts shortened' "$CP" || { echo "FAIL: $CP lost the either-way lid / preload fit-test rules (§Interference)"; exit 1; }
+grep -q 'runs inside the release script' "$SKILL/SKILL.md" || { echo "FAIL: SKILL.md lost the commit-release-commit rule (clean tree)"; exit 1; }
+grep -q 'Z_HEIGHT' "$FDM" && grep -q 'comes AFTER the travel move' "$FDM" || { echo "FAIL: $FDM lost the G-code reader rules (§5)"; exit 1; }
+grep -q 'writes the user guide from the geometry' "$SKILL/references/agent-ops.md" || { echo "FAIL: agent-ops.md lost the guide-agent cross-check rule"; exit 1; }
 grep -q 'Stack-and-mark polarity rule' "$KIT" && grep -q 'Dry attract check before any CA' "$KIT" && grep -q 'feet LAST' "$KIT" || { echo "FAIL: print-kit.md lost the magnet / feet sequence"; exit 1; }
 grep -q '`None`, `nan`, a `{name}` brace' "$KIT" && grep -q 'Print-sheet names = project-file names' "$KIT" && grep -q 'Watertight row per exported STL' "$KIT" || { echo "FAIL: print-kit.md lost the kit text gate / naming / watertight rules"; exit 1; }
 grep -q 'bridged strips sit one layer BELOW them' "$REF" && grep -q 'exactly 45.0° is AT the overhang limit' "$REF" && grep -q 'Ship a bracket plate' "$REF" || { echo "FAIL: $REF lost §8.4 / §8.5 (plate seat, 45° limit, bracket plate)"; exit 1; }
