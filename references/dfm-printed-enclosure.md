@@ -506,6 +506,10 @@ VERTICES of the selected facets. **A mark COUPON prints first on the plate** —
 end with the identical mark). It checks the PRINTER-dependent part (first-layer squish, ironing quality / recess-floor finish, colour opacity);
 the geometry rows guarantee the rest — the report says which is which.
 
+- **A unit number field stays on every enclosure that holds a serialised board.** A recess for a hand-written number left a deck as
+  clutter. Three days later four programmed boards carried serials the tool names, and the case hid them. Keep the field, and keep its row
+  as a knob, so a later identity row cannot take its place.
+
 ### 8.2 Dust caps / protective covers (a cap for a cabled pluggable module as the example)
 - **No through-hole may open into the protected cavity** — a lanyard hole is a dust path. Tether = an **external lug outside the cavity**,
   support-free: standing on the bed, hole axis vertical, wall around the hole ≥ the wall gate (1.6) outboard and inboard to the mouth.

@@ -1,6 +1,6 @@
 # CHANGELOG — hw-from-spec
 
-## Current state (0.11.23): read this instead of replaying the entries below
+## Current state (0.11.24): read this instead of replaying the entries below
 
 - **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
   thirteen batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
@@ -41,6 +41,50 @@
 - **Generic by rule**: the skill names no project, part, board, order, account or person — `scripts/generic_lint.py` reads the whole repo
   (CHANGELOG and docs included; history keeps its measured numbers), a fenced worked example keeps numbers and kinds but never a name, and the
   repo carries no project retro (a retro report is folded, then deleted).
+
+## 0.11.24 - 2026-10-21 - The bring-up and test rounds of a management tester: the register map as data, pattern tests between two ends, the command block and a firmware download, the browser page
+
+Source: the first boards of a pluggable-module management tester. Three bench days with the owner at the keyboard and no instruments.
+Four module types, a two-end optical pair, a vendor firmware update over the command block, seven browser-page rounds, a printed case
+round. 67 learnings of the project's log, read GENERAL 52 and PROJECT 15; the project keeps the project ones. Also folded: the three
+rules and five pitfall lines of the open branch `learnings-manifest-measured-pose-2026-10` (PR #20, 0.11.17), which no later merge had
+carried.
+
+### Added
+- `references/software-track.md` §18, bring-up without instruments. The power order, the pull-up LEDs, the no-load hum. The identity in
+  the bridge chip's EEPROM: an all-zero base image, the board-info area in the unread span, the read in the open path, the re-plug. The
+  module EEPROM before the part search. Passive parts as EEPROM-only tests. The throttle path once per build. The latched-input
+  recovery. The power-source sense for the next revision.
+- `references/software-track.md` §19, the register map as data. One table per page, gated on revision and advertisement. The lower-page
+  buffer and the checksums. The flags read before the pin sense. Staged versus active application. One data path per lane group. The
+  init state that waits for a host signal, and the cross-connect lever. The feature matrix that finds hollow features. "Unknown" as
+  not advertised. The rotated application table after a firmware update. Two updates per two-ended cable.
+- `references/software-track.md` §20, pattern tests between two ends. The latched lock-loss flag. The arm, gate and disable steps. The
+  counter unit. The per-second lock view for a loopback. Settling before the gated measurement. The host-side generator on a
+  cross-connect. The gating timers.
+- `references/software-track.md` §21, the command block and a firmware download. The command shape and the check code. The reply-header
+  bytes. The password as step 0. The two halves of a download, every guard a refusal, the first hardware run a written gate. The
+  module-bound download time. The clock ramp gate after the identity read. The feature bitmap families. A 400 kHz functional pass
+  against a scope measurement.
+- `references/software-track.md` §22, the browser page. The say queue over server-sent events. The instance id. Screens from the
+  user's questions, task-named tabs, one label module. The pre-check instead of a switch checklist. The boundary normalisation. The
+  step card with a timer. Events kept by step, results per tab. The pin badge. The writing standard with a lint over the page text.
+  The check on real units. A second front end's cost. The derived criteria's two guesses. The proposed file's verdict. The kind rule.
+  The end-name literals.
+- `references/agent-ops.md` §3. Union merges with one latest mark. Selftest parts named in the brief, the main guard at the end. The
+  bare pipe and the missing closing pipe. A one-file move as a reorg row. A merge that moves a block out of its owner. The worktree
+  without a venv.
+- `references/print-kit.md` §1. Text checked in the pose of use (PR #20). Every fit part names its fit on its sheet, and the fit parts
+  print alone.
+- `references/release-and-cut.md` §11. The cut script writes the check counts it measured. Design values from the code, not the
+  comments (PR #20).
+- `references/dfm-printed-enclosure.md` §8.1. The unit number field stays on every enclosure that holds a serialised board.
+- `references/pitfalls.md`. Eleven software lines, four agents and records lines, two case lines, the five lines of PR #20.
+
+### Fixed
+- `scripts/generic_lint.py`: in a worktree `.git` is a file that carries the user's path; the lint read it as prose and the smoke failed. Skipped.
+- `evals/run_evals.py`: a bare `--python python3` resolved against the temp cwd and the smoke failed its evals step on every tree with
+  no venv beside it. The name now resolves on PATH.
 
 ## 0.11.23 - 2026-10-15 - The printed-case fit rounds: the parting line, the slot ends, the inlay strokes, the seams, the deep guide, G-code as evidence
 

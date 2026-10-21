@@ -160,7 +160,8 @@ the SOP's companion cell points at it (a pointer, no revision bump).
   halo cuts the drawing's own lines and reads as a sticker on the picture. One pin hidden by a part is an error, never a fallback. The
   crop box includes the pins with room for the head, so an arrow never runs out of the frame.
 - **Every number in the text comes from the design parameters** (the same file the meshes come from): counts, magnet size, the pinch band, the
-  recess below a face. The guide reads the parameter file the way the drawing does (a regex over `NAME = value;` lines, derived values by one
+  recess below a face. The guide reads the parameter file the way the drawing does (a regex over `NAME = value;` lines with the comments
+  stripped first, derived values by one
   `echo()` run); a design change moves the pictures AND the words. Counts are words ("four magnets"), dimensions are digits ("6 x 3 mm").
   Cameras are the one hand-tuned input: a size change that moves a feature out of frame trips the frame warning, not a wrong number.
 - **No picture tool keeps its own copy of a design value.** The board count, the magnet positions, the index of the board a step lifts:
@@ -209,6 +210,14 @@ of record, the decision that made the change, and where the evidence lives. Its 
 when the next SPEC revision's change log cites it. A rejected row is struck through with the reason. It records changes already decided
 (rule 2); it changes nothing. Readers: the blind-review verifier (a deviation already here is ALREADY DECIDED), the arrival checklist §E
 (OPEN rows with their trigger), the next spec author.
+
+- **The cut script runs the checks and writes their counts.** A check sentence typed into the manifest template is a claim, not a record. One
+  manifest said "self-check clean" for three releases while the drawing printed a warning on every run. The script runs the fit test, the
+  print DFM check and the drawing on the build, stops when one fails, and writes the counts it read from their output. A check that cannot
+  run (a missing tool) stops the cut with its message; it is never written as passed.
+- **Design values come from the code, not the comments.** A regex over the parameter file matched a zeroed value inside a comment before the
+  real line, and a published manifest said "magnets 0 x 3 mm". Strip the comments first, or read derived values by one `echo()` run of the
+  CAD, and compare one value in the manifest with the drawing by eye before the tag.
 
 ## 12. The release folder: copies, named by use, written by the cut
 - `70-release/<rev>/` (one subfolder per product in both scope: `board/`, `case/`) holds only copies of build outputs. Nothing in it is
