@@ -19,7 +19,7 @@ pattern that must spell a term, a fixture).
 import argparse, os, re, sys, tempfile
 
 BEGIN, END = "<!-- worked example: begin", "<!-- worked example: end -->"
-SKIP_DIRS, SKIP_FILES = {".git", ".venv", "__pycache__"}, {"LICENSE", "generic_lint_terms.yaml"}
+SKIP_DIRS, SKIP_FILES = {".git", ".venv", "__pycache__"}, {".git", "LICENSE", "generic_lint_terms.yaml"}  # .git is a file in a worktree
 HISTORY_OK = ("design_dimensions", "review_ids_as_citations")                     # CHANGELOG.md and docs/ keep numbers and the skill's review ids
 
 
