@@ -228,7 +228,9 @@ audit, then change.
    gates, item 3). When a release passes, the switch is one record round in one commit: "engine switch, md5s re-baselined". Never mix it with a
    geometry change, because tessellation differs and every STL md5 moves. Use `-q` always, and per-body exports, never a whole-assembly re-render.
    With the fast engine, the CAD export is not the slow step of a chain. A kinematic sweep (hundreds of poses) or an animation becomes affordable as
-   previews. The pool's slots (item 1) go to the mesh checks and the slicer.
+   previews. The pool's slots (item 1) go to the mesh checks and the slicer. A SolidCraft script builds a part in under a second on the B-rep kernel,
+   its 3MF export is byte-stable and its STL is stable after the canonical writer, so the same engine serves previews and record
+   (`references/solidcraft-pipeline.md` §5).
 7. **Preview, not render, for pictures**: concept / review / kit `faces/` PNGs use the OpenCSG preview (`openscad -o x.png --preview`, seconds). Use
    `--render` (the full kernel) only for geometry of record, that is STL exports and gates. Also use it for a picture whose rule needs the booleans
    resolved (a mark coupon's recess floor, a section view). The render set says which it is per image.

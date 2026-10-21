@@ -1,6 +1,6 @@
 ---
 name: hw-from-spec
-version: 0.11.23
+version: 0.11.24
 description: Run a hardware project (a PCB, a printed or CNC enclosure, or both — scope chosen at kickoff; contract fab such as JLCPCB) from a written specification to a production cut with an owner-gated, generated-only, blind-reviewed workflow — a kickoff questionnaire that asks every owner decision up front with recommended answers, a zero-warning manufacturability bar, and a retro that folds each project's learnings back into the skill. Use this whenever someone starts a board or enclosure project from a spec, asks to set up gates, a decision log, generators, part verification, a fab DFM mirror, a case pipeline, FEA, blind reviews, a release report or a production cut for one, or resumes such a project, or wants the skill improved from a finished project — even if they only say "new KiCad board", "order this at JLC", "review the layout", "cut the release" or "what did we learn".
 ---
 
@@ -324,7 +324,7 @@ the PANEL upload before the order and diff its counts against the mirror (`refer
 
 ## 8. Case pipeline and FEA [mech, both]
 
-`20-design/case.yaml` → OpenSCAD source → STL per piece → census (wall thickness by entry surface, connected components, membranes) → interference
+`20-design/case.yaml` → generated CAD source (OpenSCAD, or a SolidCraft command script: `references/solidcraft-pipeline.md`) → STL per piece → census (wall thickness by entry surface, connected components, membranes) → interference
 against the board mesh of record → FEA → drawings → print-service / CNC DFM + quotes. The interference step reads the provenance sidecar
 `paths.mesh_provenance`: board md5 + mesh md5 in `both`. In `mech` the sidecar holds the imported STEP / mesh or the owner's envelope with its
 source md5 and [V] / [K] tag. A [K] envelope is a KNOWN_ISSUES §2 item until measured. Print-target
@@ -562,6 +562,7 @@ row. The classifier is a keyword matcher: the report is the input to the change;
 | part tags, verification table | `references/part-verification.md` |
 | fab rules, panel, quote form, DFM export | `references/fab-dfm.md` |
 | case yaml → STL → checks → quotes | `references/case-pipeline.md` |
+| a parametric B-rep back end (SolidCraft): script format, presets on a saved design, byte-stable exports, the measured traps | `references/solidcraft-pipeline.md` |
 | printed-enclosure DFM: MJF / FDM / SLA rules tagged checker / vendor / physics / owner, inserts + magnets, post-processing, tolerance stack, census gate, heat-map procedure, probes, coupons, dummies, brand marks (ironed top face / AMS bed layers), dust caps, Bambu CLI facts, post-mortem | `references/dfm-printed-enclosure.md` |
 | the print kit as a deliverable: START_HERE, kit text gate, hardware from the knobs, magnet procedure, bracket plate, watertight / sidecar rows | `references/print-kit.md` |
 | slicer-level optimisation: waste (flush into infill / support, flush calibration, prime tower, grouped colour changes), strength (walls, infill, modifiers), quality (EF / XY compensation, seam, ironing, fuzzy skin, per-object overrides) — every knob with its proof row; kickoff C11 default sets | `references/fdm-print-optimisation.md` |

@@ -1,6 +1,6 @@
 # CHANGELOG — hw-from-spec
 
-## Current state (0.11.23): read this instead of replaying the entries below
+## Current state (0.11.24): read this instead of replaying the entries below
 
 - **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
   thirteen batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
@@ -33,7 +33,7 @@
   design/{traceability, erc_accept, dfm_processes, arrival_checklist}.yaml, production_cut.yaml, datasheet note, G1 pack, CI workflows + Makefile.
 - **References**: project-yaml, kickoff-questionnaire, schematic-phase, pcb-layout-dfm, fab-dfm, case-pipeline, dfm-printed-enclosure,
   print-dfm, print-kit, fdm-print-optimisation, cnc-enclosure, fea-stage, part-verification, software-track, release-and-cut, vendor-review,
-  agent-ops, pitfalls — one home per rule, the others link.
+  agent-ops, solidcraft-pipeline (a parametric B-rep back end beside OpenSCAD), pitfalls — one home per rule, the others link.
 - **Checks**: three read-only tiers — inner `scripts/iteration_gate.sh [-- <cmd> ...]` (a change's `--check` + grader set), standard
   `scripts/adopt_gates.sh --no-clone` (`make gates`), release `scripts/adopt_gates.sh` (`make check`); `smoke/run_smoke.sh` runs every script selftest, the rule greps, the enforcement negatives, both lints
   and the evals; 18 evals
@@ -41,6 +41,26 @@
 - **Generic by rule**: the skill names no project, part, board, order, account or person — `scripts/generic_lint.py` reads the whole repo
   (CHANGELOG and docs included; history keeps its measured numbers), a fenced worked example keeps numbers and kinds but never a name, and the
   repo carries no project retro (a retro report is folded, then deleted).
+
+## 0.11.24 - 2026-10-21 - A parametric B-rep CAD back end: SolidCraft scripts beside OpenSCAD
+
+Source: a capability run on SolidCraft 0.18.2 (headless CLI and its MCP server) with a parametric board tray: 21 parameters, 38 steps,
+walls, fillets, shell, patterned standoffs, a wall port, floor vents and a raised two-colour legend. Every number was measured: the kernel
+volume against the analytic sum, two parameter changes through the MCP, two exports of one script compared byte by byte, the skill's print
+gates on the meshes and one slicer run for a 0.4-nozzle multi-filament printer.
+
+### Added
+- `references/solidcraft-pipeline.md`: wire-up (`.mcp.json`, `--allow-path`), the script as the generated source (parameters first, every
+  dimension an expression, presets as `parameters.change` + `timeline.suppress` on the saved design), the build order, verification by
+  `eval` / `measure` against analytic values, the export determinism table (3MF byte-stable, STL stable after the canonical writer, STEP
+  stable per file name), pictures, the measured traps and the worked example.
+- `references/pitfalls.md`: a `solidcraft` group, eight dated lines.
+
+### Changed
+- `SKILL.md` §8 and `references/case-pipeline.md`: the chain reads "generated CAD source (OpenSCAD, or a SolidCraft script)"; a preset on
+  a SolidCraft source is a second script on the saved base design.
+- `references/agent-ops.md` §8 item 6: the B-rep back end serves previews and record with one engine.
+- `smoke/run_smoke.sh`: two greps keep the new reference and the chain sentence.
 
 ## 0.11.23 - 2026-10-15 - The printed-case fit rounds: the parting line, the slot ends, the inlay strokes, the seams, the deep guide, G-code as evidence
 
