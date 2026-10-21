@@ -83,7 +83,8 @@ The tray of §8 (38 steps) builds in 0.9 s, a block in 18 ms, so a parameter swe
   The slicer's CLI accepted the file assembled with one filament id per part and sliced it with no warning, but its G-code carried one
   filament and no tool change. Assign the filaments in the slicer project and count the tool changes in the G-code before the plate goes
   into the kit (`references/fdm-print-optimisation.md` §5).
-- `file.export bodies: [...]` writes one body alone (the legend's own STL for the colour-body DFM row).
+- `file.export bodies: [...]` writes one body alone (the legend's own STL for the colour-body DFM row). The CLI's `--out FILE` writes
+  every body into FILE, so a per-body mesh is always a `file.export` step inside the script.
 
 ## 6. Pictures
 
