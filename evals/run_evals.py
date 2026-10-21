@@ -9,6 +9,7 @@
       (they need an agent run against the prompt and a human reading the assertions). Exit 1 on any failed check.
 """
 import argparse, json, os, subprocess, sys, tempfile
+import shutil
 
 HERE = os.path.dirname(os.path.realpath(__file__)); SKILL = os.path.dirname(HERE)
 
@@ -18,7 +19,7 @@ def main():
     a = ap.parse_args()
     if a.selftest:
         return selftest()
-    py = os.path.abspath(a.python) if a.python else sys.executable   # checks run with cwd = a temp dir, so a relative --python must be absolutised; default = the interpreter running this file
+    py = (shutil.which(a.python) or os.path.abspath(a.python)) if a.python else sys.executable  # a bare name (python3) resolves on PATH, not in the temp cwd   # checks run with cwd = a temp dir, so a relative --python must be absolutised; default = the interpreter running this file
     mesh = subprocess.run([py, "-c", "import numpy, trimesh, scipy, shapely"], capture_output=True).returncode == 0
     evals = json.load(open(os.path.join(HERE, "evals.json")))["evals"]
     only = set(a.only.split(",")) if a.only else None

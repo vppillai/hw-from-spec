@@ -204,6 +204,136 @@ reason and one worked example.
 - Lint the added lines alone at the 20-word cap (`git diff | grep '^+'`). The whole-file gate at 40 hides a long new sentence.
   Code-fence lines merge into false hits, so read the hit text before you fix it.
 
+## 18. Bring-up without instruments, and the identity in the bridge chip
+- With no meter, the first power still has an order that limits the loss. Charger on the power-only port for five
+  seconds. Read the LEDs, touch the parts, smell. Then one minute. The host port comes last. *Reason*: a short on the
+  host port can take the computer's port with it.
+- A rail that is off still lights the LEDs on its pull-ups. Write that into the plan, so the first reading is not a fault.
+- A tester whose module rail is a buck converter hums at no load. The light-load mode makes the ceramic capacitors sing. Note it
+  for the next revision; it is not a fault.
+- The USB bridge chip's EEPROM carries the unit identity. Build the image from an all-zero base and set every field. A tool that
+  writes only the bytes you name leaves the rest at 0xFF on a blank chip, the vendor and product ids included. Print the image
+  before any write, and check a read-back of record in the selftest.
+- The bytes the bridge chip never reads hold a board-info area with its own checksum: the board revision, the order, the case preset.
+  Lay the whole chip out in one function. The tool reads that area at open, with the product string, before any revision check.
+  *Pitfall*: a merge moved the read out of the open path, and every run stopped at the revision check with no product.
+- After an EEPROM write the chip resets and leaves the USB stack. A re-plug of the host cable is part of the procedure, not a fault.
+- Read a module's EEPROM before you search for its part. A label can carry a typo; the EEPROM carries the catalogue number.
+- A passive loopback plug and a passive copper cable are EEPROM-only tests on a management tester. Check the length and attenuation
+  fields against the label: vendors leave them wrong or empty. A passive plug reads a flat memory, a zero temperature and a
+  reserved state; that is the plug, not the bus.
+- Run the thermal throttle path once on every tester build before you trust a long hold. A bare board with a cage sink and no air
+  sheds about 5 to 6 degrees per watt, with a time constant near five minutes. A posture table written from a model can be six
+  times too low; the module's own sensor and the throttle are the control.
+- A dead bridge chip with its USB power LED on points at a latched input, current forced into a pin at cable attachment. The recovery
+  is a full power removal: host cable, charger and module out for thirty seconds. A USB re-plug alone does not clear it. Isolate
+  every bridge I/O that leaves the chip in the next revision: series resistors, a clamp array, powered-off isolation, a
+  current-limited rail.
+- A tester that cannot see its own power source relies on an operator flag. Put a charger-present sense and a rail current monitor
+  on the next revision, and make the release step refuse itself when the budget is not there.
+
+## 19. The register map as data
+- A tester that reads only the bytes its tests need grows a pile of constants with holes. An audit read 7 of 18 page families
+  and the page showed about 25 fields of 300. Write one data table per page: byte, bits, kind, unit, the revision that defines
+  it, the advertisement bit that gates it. One decode loop then covers every page, and an unread block says "not advertised".
+- Gate a decode on the revision byte AND the advertisement bit. A module of an older revision advertises a page in that older
+  layout. Say "not in this revision" and keep the raw bytes, so a reader sees why the page is empty.
+- The lower page is its own buffer. An index of `byte - 128` into the upper page reads garbage without an error.
+- Page checksums are plain sums modulo 256 over the standard's byte ranges. A fake module needs them set, or every audit fails.
+- The flag bytes latch at power-up and clear on read. A pin sense before any register read shows the interrupt line low on every
+  fresh insert. Read the flag bytes first, name the bits, then sense the pins. "Interrupt pending" is true only when the line
+  stays low after that read. The page says "interrupt latched since insert, read the cable to clear it".
+- A module does not power up in its first application, and the staged application is not the active one. Read the active
+  application before you trust a lane count. A narrow application needs one data path per lane group, with the data path id as
+  the lowest lane of its group; one id on all lanes is rejected.
+- An active cable waits in its init state until a host-side signal arrives. On a tester with no host lanes the media flags read
+  zero and prove nothing. Read the data path state before you trust a media flag. The lever is the host signal: a cross-connect
+  between two cages on one board gives one end the other end's generator output, and the module leaves its init state.
+- An advertisement bit says a register exists, not that it works. A feature matrix finds the hollow ones in low power: a write, a
+  read-back and a restore per advertised row, or a read per monitor. The hollow ones seen: a user page that ignores writes,
+  monitors that read a constant, descriptor pages that read zero. The passport flags a hollow feature; it never lists the bit as a feature.
+- An advertised duration is a ceiling the host waits for, not a measurement. One module answered ten times faster than its bound.
+- A module may answer a feature query with "command unknown" and still run the commands of that family. "Unknown" reads as
+  "not advertised", never as a failure, and the exercise decides.
+- A firmware update can rotate the application table. One update moved the one-lane application to the first slot and made the
+  eight-lane one the second. Select an application by its interface name, never by its number, and key the criteria on the
+  firmware version.
+- A firmware update on a two-ended cable is two updates. Each end carries its own image banks, and the serial is shared. The
+  tool updates one end per insertion; the kit text says "swap the ends and repeat".
+
+## 20. Pattern tests between two ends
+- The checker's lock-loss flag latches from the moment the checker is enabled. Read it once after the far generator is up, reset
+  the counters, then open the gate.
+- A long pattern function hides three reusable steps: arm (setup, settle, clear the latched flags), end-of-gate statistics,
+  disable. Pull them out, and a per-second trend and a far-end loopback cost one loop each.
+- A module's bit counter may read a multiple of the line rate over the gate. Judge the ratio of errors to bits, which the
+  module's own selector agrees with, and ask the vendor about the unit.
+- A far-end loopback carries the pattern while the checker reports lock loss for the whole gate and still counts. Judge a loopback
+  run on a per-second lock view, never on the end flag alone.
+- A link settles after the modules warm: the per-second rate fell by an order of magnitude inside a minute. Let the link settle
+  before the gated measurement that judges it. Say which fibre or cable set the floor; the wrong fibre type still links.
+- A host-side generator points at the host, not at the cable. On a two-cage board with the host lanes cross-connected it drives
+  the other end's host input, and the far media-side checker measures the whole path with no host present.
+- Use the module's gating timers for an exact window, and read the error counters beside the derived rate.
+
+## 21. The command block and a firmware download
+- A command-block command is one write of the header and payload, then one write of the command id. The check code is the one's
+  complement of the sum of the header bytes and the payload; the standard's own example values confirm the formula. The status
+  query fails with a range error unless its delay payload is sent. One module folds the two reply-header bytes into its check
+  although the standard excludes them: write them as zero and every vendor agrees.
+- A firmware download lists the host password as step 0. The entry area is in the standard, so is the status code for a
+  password error, and the value is vendor-defined and clears at reset. A design note with every download step and no password step
+  fails on the first real module.
+- The download has two halves the standard splits on purpose: the command sequence, which a fake proves, and the vendor header,
+  which only the vendor can vouch for. Every guard is a refusal: no download unless the features command advertises it, a version
+  check, a header check, Run and Commit behind their own flags, a confirmation string for Commit, abort before Run on any failure,
+  verify after. The first hardware run is a written gate: serial, file hash, block count.
+- The download is bound by the module, not the bus. The same block count took the same time at 100 and 400 kHz: the module spends
+  about a second per block after the write. A faster clock buys nothing there; it buys reads.
+- Earn the faster clock with a ramp gate: open at the slow clock, read the identity there, then re-clock and run a short stress read
+  with page read-back. Keep the fast clock on zero misses, fall back with the reason, and put the clock into every record header.
+  Ramp after the identity read, so the first page shows before the clock steps up.
+- The module features bitmap stops at the first command family. The firmware family is advertised by the firmware-features reply,
+  the monitoring family by its own. A decoder that reads the bitmap alone shows no firmware command.
+- The management clock at a module's 400 kHz is a functional pass when checksummed blocks, the stress read and the identity reads
+  all pass. It is not a scope measurement; the instrument rows stay open.
+
+## 22. The browser page over the bench tool
+- A browser page is cheap when the tool has quiet functions with a `say` callback. Run the function in a thread, push every
+  line to a queue, stream the queue as server-sent events. The live chart parses the same line the terminal prints, so the
+  records stay one truth. The technician's `ask` becomes a blocking question the browser answers.
+- The server carries an instance id on its heartbeat. The page treats a changed id as a restart and reloads every cached
+  value. Without it an old tab shows yesterday's readings with today's clock.
+- Design the screens from the questions a user brings: which cable is this, is it healthy, run the test. A first page built
+  from the command line's shape shows raw JSON under empty panels. Name the tabs by task, never by skill level. Keep the raw
+  record behind a toggle, and every table goes through one label module with formatters, checked by a script run in the selftest.
+- A technician page never asks for a switch the product ships preset. The first real run read the engineering checklist as
+  instructions, and the operator moved switches the design hides on purpose. Read the state from the pins, show a pre-check
+  card, and ask only for the one fix. The strap and forced-air lines stay in the engineering path.
+- A form that sends an empty string for an unscanned field turns a missing value into a mismatch. Normalise at the engine
+  boundary, never in the judge. One early stop leaves one line, not one per unmeasured key.
+- A long step with no visible motion reads as a hung tool. Show the step name, what it does, a timer against the expected
+  duration and the last lines the engine printed, from the first event of the step.
+- The run streams every event; keep them by step from the first line. Every step is then a door to its results, live and on a
+  saved record. Each tab owns its result area, so a query result never follows the user to the next tab.
+- A pin badge must know what a read does to the pin (§19). A clock chip shows the clock in use; the ramp detail goes to a bubble.
+- Every string the page shows follows the writing standard, with a lint over the page's text sources in the selftest and the
+  record round. Help bubbles come from one glossary source, and the help page is task-first: a short how-to per tab, the long
+  text behind a toggle, a troubleshooting table.
+- Check a page round on the real units from its worktree before the merge. The real pair exposed a pins-low badge, a reset budget
+  field, a stacked chart and an undefined stop reason that the fake never showed. Measure overflow in the browser, element edge
+  against card edge, never by eye. A header cell styled `nowrap` with a 1% width is right for a key column and wrong for a
+  six-column table.
+- A second front end on the same server costs one handler subclass and a static fallback directory. The unit lock, the job
+  stream, the heartbeat and the record index stay in one module.
+- A criteria file derived from one dump guesses two things a run contradicts: the data path state with no host (§19) and the
+  thermal slope in the first minute, which is the step response. Derive the no-host expectation and a slope limit from the
+  thermal fit, judged after the first minute. A proposed file gives inconclusive, never a fail bin; the owner confirms it by
+  writing a name into it. Key the match on the firmware version.
+- A record index keyed on identity needs a kind rule decided by the records that carry the evidence: a record that states the
+  media technology sets the kind, a record without one never does. A flow written for two ends hides literal end names in
+  prompts, loops and the judge; grep for them before the first one-end run.
+
 ## Documents generated from the software
 Reason-code table, guard list (S1…Sn + override flags), supported-class table (from the criteria + FEA/thermal records), quick card (pinout +
 codes). Hand prose sits outside `gen:BEGIN/END` blocks.
