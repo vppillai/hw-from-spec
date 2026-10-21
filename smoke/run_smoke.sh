@@ -87,6 +87,8 @@ grep -q '^## Assembly model' "$SKILL/references/case-pipeline.md" && grep -q 'pr
 grep -q '^### 1.5 One-sided parts' "$REF" && grep -q 'a MIRROR BODY' "$REF" || { echo "FAIL: $REF lost §1.5 (one-sided flat parts: turn over / mirror body / separate pin)"; exit 1; }
 grep -q 'named by the mark pressed into them' "$KIT" || { echo "FAIL: print-kit.md lost the mark-naming rule"; exit 1; }
 grep -q 'improper_placements' "$SKILL/SKILL.md" || { echo "FAIL: SKILL.md §8 lost the assembly-model bullet"; exit 1; }
+grep -q 'or a SolidCraft command script' "$SKILL/SKILL.md" || { echo "FAIL: SKILL.md §8 lost the second CAD source (SolidCraft)"; exit 1; }
+grep -q '^## 7. Traps measured' "$SKILL/references/solidcraft-pipeline.md" && grep -q 'byte-identical' "$SKILL/references/solidcraft-pipeline.md" || { echo "FAIL: solidcraft-pipeline.md lost its traps or the determinism table"; exit 1; }
 grep -q 'print kit is a deliverable row' "$SKILL/references/release-and-cut.md" || { echo "FAIL: release-and-cut.md lost the kit deliverable row"; exit 1; }
 grep -q 'The machine can panic under load' "$SKILL/references/agent-ops.md" || { echo "FAIL: agent-ops.md lost the small-commits rule"; exit 1; }
 grep -q "the vendor's analysis API response, never a page" "$SKILL/SKILL.md" || { echo "FAIL: SKILL.md §8.1 lost the API-verdict rule"; exit 1; }

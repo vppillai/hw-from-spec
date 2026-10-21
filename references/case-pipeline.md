@@ -16,7 +16,7 @@ and `print_dfm.py --process <row> --out .../dfm` records of the same md5, six fa
 
 ## Chain (one yaml, one generator, every step keyed on content)
 ```
-20-design/case.yaml ──> OpenSCAD source (generated) ──> renders (views) ──> STL per piece
+20-design/case.yaml ──> CAD source (generated: OpenSCAD, or a SolidCraft script) ──> renders (views) ──> STL per piece
                  │                                          │
                  ├─> census (walls, components, membranes, support area, mass)
                  ├─> interference vs the board mesh of record (provenance sidecar)
@@ -56,7 +56,8 @@ print sheets are generated with spliced blocks (`<!-- gen:BEGIN name -->…<!-- 
 - `case.presets.<name>.overrides` deep-merged into `case:` BEFORE any module reads the yaml (generator, drawing, FEA all apply the same merge —
   otherwise one of them silently describes the other build). `preset_default` picks the build of record; `--preset fdm` writes to its own folder.
 - `case.presets.<name>.engine` names the geometry engine of the preset's STL exports of record (the one that passes the chain's mesh gates on its
-  bodies); previews use the fast engine regardless (`references/agent-ops.md` §8 item 6).
+  bodies); previews use the fast engine regardless (`references/agent-ops.md` §8 item 6). With a SolidCraft script as the source, a preset is a
+  second script of `parameters.change` and `timeline.suppress` steps run on the saved base design (`references/solidcraft-pipeline.md` §2).
 - A fix that turns out to be for every build belongs in the base block; prove "no geometry change" by diffing the merged dict key by key, not by
   re-exporting (CGAL STLs are not byte-stable).
 - A new base key reaches every preset through the merge. Pin a new key in every override that already pins its sibling. After a knob is added,
