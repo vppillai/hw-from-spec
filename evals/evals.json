@@ -439,7 +439,7 @@
    "id": 19,
    "name": "pattern-test-verdict-checks-its-counters",
    "prompt": "Our bench tool runs a 600 s pattern test between two modules and prints the module's reported error rate from the last read as the result. The result says 2e-7, MEASURED. Can I put that in the release record?",
-   "expected_output": "Not as it stands. The agent reads software-track §23: counter checks are the norm in every measurement, never a mode. It asks for (or makes the tool keep) the raw reads per window, with the counter unit and the FEC point (pre-FEC or post-FEC). It takes the lane rate from the checker's side, from the standard's table, with the encoding and FEC overhead. It checks that the bit counter grows at the lane rate × T; any other growth law is a counter fault and the window is INCONCLUSIVE. It uses counter deltas within one verified reset epoch and skips reads too soon after a reset. It bounds each window by the BER of the window before, so that a wrap cannot be missed; a proven wrap is a lower bound on the errors. It computes the BER two ways and compares both with the reported BER within a tolerance stated before the run. It asks for proof that the checker counts (known errors or a known-bad path), treats lock loss after the settling as verdict-bearing, and applies a settling rule fixed before the run, with a maximum time, excluded and reported. The verdict uses run totals per lane and per direction over every counted window, and a zero-error claim carries its bound (about 3 / N at 95 %) with a minimum bit count. It suggests testing each unit as sender and receiver before blaming one.",
+   "expected_output": "Not as it stands. The agent reads software-track §23: counter checks are the norm in every measurement, never a mode. It asks for (or makes the tool keep) the raw reads per window, with the counter unit and the FEC point (pre-FEC or post-FEC). It takes the lane rate from the checker's side, from the standard's table, with the encoding and FEC overhead. It checks that the bit counter grows at the lane rate × T; any other growth law is a counter fault and the window is INCONCLUSIVE. It uses counter deltas within one verified reset epoch and skips reads too soon after a reset. It bounds each window by the BER of the window before, so that a wrap cannot be missed; a proven wrap is a lower bound on the errors. It computes the BER two ways and compares both with the reported BER within a tolerance stated before the run. It asks for a challenge of the checker on every lane and direction (a pattern mismatch, an inverted polarity, error injection or a known-bad cable); an unchallenged lane is 'checker unproven' and stays out of the release record. It caps every window by the counter modulus at the worst ratio the checker can lock at, treats a saturated or wrapped count as a lower bound (a lower bound over the limit is a FAIL that wins over INCONCLUSIVE). It, treats lock loss after the settling as verdict-bearing, and applies a settling rule fixed before the run, with a maximum time, excluded and reported. The verdict uses run totals per lane and per direction over every counted window, and each run total is judged by its Poisson bounds: PASS only when the upper bound is under the limit, FAIL when the lower bound is over it, INCONCLUSIVE otherwise (about 3 / N at 95 % for zero errors). It suggests testing each unit as sender and receiver before blaming one.",
    "assertions": [
     "the agent refuses a verdict from the last read alone and asks for run totals per lane and per direction over every window after a predeclared settling rule",
     "the agent checks the bit counter against the lane rate × T and treats any other growth law as a counter fault (INCONCLUSIVE), never as a model to accept",
@@ -450,22 +450,32 @@
    ],
    "checks": [
     {
-     "name": "every core measurement rule of software-track §23 is present, every bullet guarded, no folklore, SKILL links it",
-     "run": "\"$PY\" \"$SKILL\"/scripts/rule_check.py \"$SKILL\"/evals/core_rules.yaml --only measurement,navigation"
+     "name": "every core rule group (measurement, navigation, studies, pockets, public-export) holds; no folklore",
+     "run": "\"$PY\" \"$SKILL\"/scripts/rule_check.py \"$SKILL\"/evals/core_rules.yaml"
     },
     {
-     "name": "mutation proof: each guarded rule deleted and each banned phrase inserted goes red",
-     "run": "\"$PY\" \"$SKILL\"/scripts/rule_check.py \"$SKILL\"/evals/core_rules.yaml --only measurement,navigation --mutate"
+     "name": "mutation proof over every group: each sentence deleted, one verdict word flipped per sentence, each banned phrase inserted, each goes red",
+     "run": "\"$PY\" \"$SKILL\"/scripts/rule_check.py \"$SKILL\"/evals/core_rules.yaml --mutate"
     },
     {
-     "name": "negative fixture: §23 with the run-totals rule deleted fails",
-     "run": "mkdir -p \"$T\"/s/references && cp \"$SKILL\"/references/pitfalls.md \"$T\"/s/references/ && sed '/Never average window rates/d' \"$SKILL\"/references/software-track.md > \"$T\"/s/references/software-track.md && \"$PY\" \"$SKILL\"/scripts/rule_check.py \"$SKILL\"/evals/core_rules.yaml --only measurement --skill \"$T\"/s",
-     "expect_rc": 1
+     "name": "negative fixture: the saturation rule deleted",
+     "run": "mkdir -p \"$T\"/s && (cd \"$SKILL\" && tar --exclude ./.git --exclude ./.venv -cf - .) | tar -xf - -C \"$T\"/s && \"$PY\" \"$SKILL\"/scripts/rule_check.py \"$SKILL\"/evals/core_rules.yaml --skill \"$T\"/s >/dev/null && \"$PY\" -c \"import sys;p,a,b=sys.argv[1:];s=open(p).read();assert a in s;open(p,'w').write(s.replace(a,b,1))\" \"$T\"/s/references/software-track.md 'A read at the saturation value makes that window and every later window INCONCLUSIVE. ' '' && out=$(\"$PY\" \"$SKILL\"/scripts/rule_check.py \"$SKILL\"/evals/core_rules.yaml --skill \"$T\"/s || true) && echo \"$out\" | grep -qF 'rule missing: `A read at the saturation value'"
     },
     {
-     "name": "negative fixture: the 5 s window folklore put back fails",
-     "run": "mkdir -p \"$T\"/s/references && cp \"$SKILL\"/references/pitfalls.md \"$SKILL\"/references/software-track.md \"$T\"/s/references/ && echo '- Use windows of 5 s or more.' >> \"$T\"/s/references/software-track.md && \"$PY\" \"$SKILL\"/scripts/rule_check.py \"$SKILL\"/evals/core_rules.yaml --only measurement --skill \"$T\"/s",
-     "expect_rc": 1
+     "name": "negative fixture: the run-totals sentence deleted",
+     "run": "mkdir -p \"$T\"/s && (cd \"$SKILL\" && tar --exclude ./.git --exclude ./.venv -cf - .) | tar -xf - -C \"$T\"/s && \"$PY\" \"$SKILL\"/scripts/rule_check.py \"$SKILL\"/evals/core_rules.yaml --skill \"$T\"/s >/dev/null && \"$PY\" -c \"import sys;p,a,b=sys.argv[1:];s=open(p).read();assert a in s;open(p,'w').write(s.replace(a,b,1))\" \"$T\"/s/references/software-track.md 'The verdict uses run totals per lane and per direction. ' '' && out=$(\"$PY\" \"$SKILL\"/scripts/rule_check.py \"$SKILL\"/evals/core_rules.yaml --skill \"$T\"/s || true) && echo \"$out\" | grep -qF 'rule missing: `The verdict uses run totals per lane and per direction.`'"
+    },
+    {
+     "name": "negative fixture: the lower-bound FAIL reversed to INCONCLUSIVE",
+     "run": "mkdir -p \"$T\"/s && (cd \"$SKILL\" && tar --exclude ./.git --exclude ./.venv -cf - .) | tar -xf - -C \"$T\"/s && \"$PY\" \"$SKILL\"/scripts/rule_check.py \"$SKILL\"/evals/core_rules.yaml --skill \"$T\"/s >/dev/null && \"$PY\" -c \"import sys;p,a,b=sys.argv[1:];s=open(p).read();assert a in s;open(p,'w').write(s.replace(a,b,1))\" \"$T\"/s/references/software-track.md 'A lower-bound ratio over the limit is a FAIL.' 'A lower-bound ratio over the limit is INCONCLUSIVE.' && out=$(\"$PY\" \"$SKILL\"/scripts/rule_check.py \"$SKILL\"/evals/core_rules.yaml --skill \"$T\"/s || true) && echo \"$out\" | grep -qF 'unguarded sentence'"
+    },
+    {
+     "name": "negative fixture: the deaf-checker gate deleted",
+     "run": "mkdir -p \"$T\"/s && (cd \"$SKILL\" && tar --exclude ./.git --exclude ./.venv -cf - .) | tar -xf - -C \"$T\"/s && \"$PY\" \"$SKILL\"/scripts/rule_check.py \"$SKILL\"/evals/core_rules.yaml --skill \"$T\"/s >/dev/null && \"$PY\" -c \"import sys;p,a,b=sys.argv[1:];s=open(p).read();assert a in s;open(p,'w').write(s.replace(a,b,1))\" \"$T\"/s/references/software-track.md 'An unproven lane cannot enter a release record.' '' && out=$(\"$PY\" \"$SKILL\"/scripts/rule_check.py \"$SKILL\"/evals/core_rules.yaml --skill \"$T\"/s || true) && echo \"$out\" | grep -qF 'rule missing: `An unproven lane cannot enter a release record.`'"
+    },
+    {
+     "name": "negative fixture: the 5 s folklore reworded and put back in §20",
+     "run": "mkdir -p \"$T\"/s && (cd \"$SKILL\" && tar --exclude ./.git --exclude ./.venv -cf - .) | tar -xf - -C \"$T\"/s && \"$PY\" \"$SKILL\"/scripts/rule_check.py \"$SKILL\"/evals/core_rules.yaml --skill \"$T\"/s >/dev/null && \"$PY\" -c \"import sys;p,a,b=sys.argv[1:];s=open(p).read();assert a in s;open(p,'w').write(s.replace(a,b,1))\" \"$T\"/s/references/software-track.md '- Use the module' '- Use windows of at least 5 s.\\n- Use the module' && out=$(\"$PY\" \"$SKILL\"/scripts/rule_check.py \"$SKILL\"/evals/core_rules.yaml --skill \"$T\"/s || true) && echo \"$out\" | grep -qF 'banned pattern present'"
     },
     {
      "name": "rule_check selftest",

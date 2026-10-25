@@ -52,7 +52,8 @@ for heights. Values read from curves are marked "not in datasheet text" with the
 - **Other paths to a PDF.** Some vendor sites refuse a scripted fetch. A distributor's part record often links the same PDF (worked example:
   the LCSC `pdfUrl` field). Some vendors keep a stable direct path (worked example: `ti.com/lit/ds/symlink/<part>.pdf`). Record the path that
   answered in `90-log/ENV.md`. Distributor metadata is not authoritative. A distributor API gives stock, price and
-  often a datasheet link. The linked manufacturer PDF is the primary source. The API never gives a drawing or curve that the PDF lacks.
+  often a datasheet link. The linked manufacturer PDF is the primary source. Verify every technical artifact against its
+  manufacturer-controlled source.
 - **The stocked sibling.** A distributor may stock a sibling ordering code, not the one in the design. Read the stocked part's own drawing
   before the footprint takes it. List what differs from the designed part: material, size, options. One option suffix changed only the
   material and the spring height; the footprint held.

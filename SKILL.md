@@ -426,7 +426,7 @@ list. The reference tags each **[checker]** / **[vendor sheet]** / **[physics]**
    production mating feature. The picked value lands in `kickoff.enclosure.fit_result` and closes its arrival-checklist row. Each STL has a
    watertight row. Sidecars are drift-checked against the 3MF config. Only one short feature locates a parting line, and a fit coupon of
    that line prints before the parts (`dfm-printed-enclosure.md` §8.6). Every print claim names its G-code read (`fdm-print-optimisation.md` §5).
-   Side pockets, bosses, screw wells and feet follow `dfm-printed-enclosure.md` §8.7.
+   Side pockets, bosses, screw wells and feet follow `references/dfm-printed-enclosure.md` §8.7.
 6. **When a vendor reports a cracked part**: measure the RECEIVED part (caliper table → the target's tolerance), photo protocol, fractography
    basics. Then measure the ORDERED STL (sections + census with span and class). Separate design intent from defect with the vendor-fault table.
    Draft the reply from the template for the owner. Then apply the learning design-wide (every body, every preset), not to the failed feature

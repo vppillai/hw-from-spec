@@ -5,6 +5,12 @@
       default files: every text file of the skill repo — SKILL.md, README.md, CHANGELOG.md, references/, templates/, scripts/, smoke/, evals/,
       workflows/, docs/ — except .git/, .venv/, __pycache__/, LICENSE (the copyright holder is a legal notice) and the term file itself.
       Exit 1 with one line per hit (file:line: <group> `<match>`), 0 when clean, 2 when the term file or a file is missing.
+  scripts/generic_lint.py --export DIR [--allow FILE] [--private-terms FILE]
+      Fail-closed scan of a public export tree. It needs the private terms (exit 2 without them). It reads every file and every
+      file name and symlink target, applies every group everywhere, and skips nothing: no `generic: ok` line, no worked example,
+      no history exemption. The allow file holds exact strings, one per line, stripped from a line before the match; a line
+      `binary: <relpath>` marks a binary as reviewed. A binary's printable strings are scanned, and an unreviewed binary is a hit
+      (its metadata needs a human read). CI writes the private terms from a secret and sets HWFS_PRIVATE_TERMS.
   scripts/generic_lint.py --selftest
 
 The repo is public, so `scripts/generic_lint_terms.yaml` holds only generic SHAPES (id formats, path shapes, a refdes scheme). The names
@@ -18,7 +24,7 @@ review findings, so `design_dimensions` and `review_ids_as_citations` do not app
 numbers and kinds, never a name) — at most ONE such block per file (a second one is a hit); a line carrying `generic: ok` is skipped (a lint
 pattern that must spell a term, a fixture).
 """
-import argparse, os, re, sys, tempfile
+import argparse, contextlib, io, os, re, sys, tempfile
 
 BEGIN, END = "<!-- worked example: begin", "<!-- worked example: end -->"
 SKIP_DIRS, SKIP_FILES = {".git", ".venv", "__pycache__"}, {".git", "LICENSE", "generic_lint_terms.yaml"}  # .git is a file in a worktree
@@ -38,9 +44,46 @@ def load_terms(*paths):
 
 
 def private_terms_path(arg=None):
-    """The private term file, or None when it does not exist (the lint then runs the generic patterns only)."""
-    p = os.path.expanduser(arg or os.environ.get("HWFS_PRIVATE_TERMS") or PRIVATE_DEFAULT)
-    return p if os.path.isfile(p) else None
+    """(path or None, source). An explicit --private-terms or HWFS_PRIVATE_TERMS that does not exist is an error (path None,
+    source 'MISSING <p>'); only the default home path may be absent (the lint then runs the generic patterns only)."""
+    explicit = arg or os.environ.get("HWFS_PRIVATE_TERMS")
+    p = os.path.expanduser(explicit or PRIVATE_DEFAULT)
+    if os.path.isfile(p):
+        return p, ("--private-terms" if arg else "HWFS_PRIVATE_TERMS" if explicit else "default path")
+    return None, (f"MISSING {p}" if explicit else "none")
+
+
+def lint_export(root, terms, allow):
+    """Every file under root (except .git): names, symlink targets, text lines with the allowed strings stripped, binary strings."""
+    strings = [x for x in allow if not x.startswith("binary: ")]
+    reviewed = {x[len("binary: "):].strip() for x in allow if x.startswith("binary: ")}
+    hits, n = [], 0
+
+    def scan(rel, ln, text):
+        for x in strings:
+            text = text.replace(x, "")
+        for g, rx in terms:
+            m = rx.search(text)
+            if m:
+                hits.append((rel, ln, g, m.group(0))); return
+
+    for dp, dns, fs in os.walk(root):
+        dns[:] = sorted(x for x in dns if x != ".git")
+        for f in sorted(fs + [d for d in dns if os.path.islink(os.path.join(dp, d))]):
+            p = os.path.join(dp, f); rel = os.path.relpath(p, root); n += 1
+            scan(rel, 0, rel)                                                   # the path itself
+            if os.path.islink(p):
+                scan(rel, 0, os.readlink(p)); continue
+            data = open(p, "rb").read()
+            if b"\0" in data[:4096]:
+                for s_ in re.findall(rb"[\x20-\x7e]{6,}", data):
+                    scan(rel, 0, s_.decode("ascii"))
+                if rel not in reviewed:
+                    hits.append((rel, 0, "binary-review", "binary: read its metadata, then list it in the allow file"))
+                continue
+            for ln, line in enumerate(data.decode("utf-8", "replace").split("\n"), 1):
+                scan(rel, ln, line)
+    return hits, n
 
 
 def default_files(skill):
@@ -114,14 +157,43 @@ def selftest():
     open(f"{d}/references/b.md", "w").write("Ask Qwyzzle.\n")
     gen_only = lint(default_files(d), terms, d)
     assert not any("references/b.md" in a for a, *_ in gen_only), "without the private file the private term is not known"
-    os.environ["HWFS_PRIVATE_TERMS"] = priv
+    old = os.environ.get("HWFS_PRIVATE_TERMS")
     try:
-        assert private_terms_path() == priv and private_terms_path(f"{d}/absent.yaml") is None
-        merged = lint(default_files(d), load_terms(f"{d}/scripts/generic_lint_terms.yaml", private_terms_path()), d)
-    finally:
+        os.environ["HWFS_PRIVATE_TERMS"] = priv
+        assert private_terms_path() == (priv, "HWFS_PRIVATE_TERMS") and private_terms_path(f"{d}/absent.yaml")[0] is None
+        merged = lint(default_files(d), load_terms(f"{d}/scripts/generic_lint_terms.yaml", private_terms_path()[0]), d)
+        os.environ["HWFS_PRIVATE_TERMS"] = f"{d}/typo.yaml"
+        assert private_terms_path() == (None, f"MISSING {d}/typo.yaml"), "a set but missing env var is an error, not a silent skip"
+        with contextlib.redirect_stderr(io.StringIO()):
+            assert main(["x", "--skill", d]) == 2
+        # export mode: fail-closed, every file type, no generic: ok skip, exact-string allow, binaries flagged
+        e = f"{d}/exp"; os.makedirs(f"{e}/src"); os.makedirs(f"{e}/docs")
+        open(f"{e}/src/a.py", "w").write("x = 1  # see CC-287 generic: ok\n")
+        open(f"{e}/src/b.js", "w").write("// ask qwyzzle\n")
+        open(f"{e}/CHANGELOG.md", "w").write("Fixed R1-05.\n")
+        open(f"{e}/README.md", "w").write("Repo: github.com/qwyzzle/pub (public)\n")
+        open(f"{e}/docs/qwyzzle_notes.txt", "w").write("plain\n")
+        open(f"{e}/logo.png", "wb").write(b"\x89PNG\0\0author=Qwyzzle Jones\0\0")
+        open(f"{d}/allow.txt", "w").write("github.com/qwyzzle/pub\n")
         del os.environ["HWFS_PRIVATE_TERMS"]
+        with contextlib.redirect_stderr(io.StringIO()):
+            assert main(["x", "--export", e, "--private-terms", f"{d}/typo.yaml"]) == 2, "export mode refuses to run without private terms"
+        h, _ = lint_export(e, load_terms(f"{d}/scripts/generic_lint_terms.yaml", priv) + load_terms(os.path.join(os.path.dirname(os.path.realpath(__file__)), "generic_lint_terms.yaml")),
+                           [x for x in open(f"{d}/allow.txt").read().split("\n") if x])
+        got = {(a, g) for a, _, g, _ in h}
+        for want in [("src/a.py", "record_ids_as_citations"), ("src/b.js", "people_names"), ("CHANGELOG.md", "review_ids_as_citations"),
+                     ("docs/qwyzzle_notes.txt", "people_names"), ("logo.png", "people_names"), ("logo.png", "binary-review")]:
+            assert want in got, (want, got)
+        assert not any(a == "README.md" for a, _, _, _ in h), ("the exact allowed string is stripped", h)
+        open(f"{d}/allow.txt", "a").write("binary: logo.png\n")
+        h2, _ = lint_export(e, load_terms(priv), [x for x in open(f"{d}/allow.txt").read().split("\n") if x])
+        assert ("logo.png", "binary-review") not in {(a, g) for a, _, g, _ in h2} and any(a == "logo.png" for a, *_ in h2), h2
+    finally:
+        os.environ.pop("HWFS_PRIVATE_TERMS", None)
+        if old is not None:
+            os.environ["HWFS_PRIVATE_TERMS"] = old
     assert any(a == "references/b.md" and g == "people_names" for a, _, g, _ in merged), merged
-    print("selftest OK (term groups, whole-repo file set, worked-example block keeps numbers not names, one block per file, history keeps numbers, generic: ok marker, private terms merged from outside the repo)")
+    print("selftest OK (term groups, whole-repo file set, worked-example block keeps numbers not names, one block per file, history keeps numbers, generic: ok marker, private terms merged from outside the repo, a missing explicit path fails, export mode fail-closed over code comments, history, names and binaries with an exact-string allow)")
     return 0
 
 
@@ -129,15 +201,26 @@ def main(argv):
     skill_default = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0]); ap.add_argument("--skill", default=skill_default)
     ap.add_argument("--terms"); ap.add_argument("--private-terms"); ap.add_argument("files", nargs="*"); ap.add_argument("--selftest", action="store_true")
+    ap.add_argument("--export"); ap.add_argument("--allow")
     a = ap.parse_args(argv[1:])
     if a.selftest:
         return selftest()
-    tp = a.terms or os.path.join(a.skill, "scripts", "generic_lint_terms.yaml")
+    tp = a.terms or os.path.join(skill_default if a.export else a.skill, "scripts", "generic_lint_terms.yaml")
     if not os.path.exists(tp):
         print(f"generic_lint: MISSING term file {tp}", file=sys.stderr); return 2
-    pp = private_terms_path(a.private_terms)
-    if a.private_terms and not pp:
-        print(f"generic_lint: MISSING private term file {a.private_terms}", file=sys.stderr); return 2
+    pp, src = private_terms_path(a.private_terms)
+    if src.startswith("MISSING"):
+        print(f"generic_lint: {src} (private term file named but absent)", file=sys.stderr); return 2
+    print(f"generic_lint: terms: generic ({os.path.basename(tp)}) + private: {src}", file=sys.stderr)
+    if a.export:
+        if not pp:
+            print("generic_lint: --export needs the private terms (CI: write them from a secret, set HWFS_PRIVATE_TERMS)", file=sys.stderr); return 2
+        allow = [x.rstrip("\n") for x in open(a.allow, encoding="utf-8") if x.strip()] if a.allow else []
+        hits, n = lint_export(os.path.abspath(a.export), load_terms(tp, pp), allow)
+        for rel, ln, g, m in hits:
+            print(f"{rel}:{ln}: {g} `{m}`")
+        print(f"generic_lint --export: {len(hits)} hit(s) in {n} file(s)")
+        return 1 if hits else 0
     if not pp:
         print("generic_lint: note: no private term file; generic patterns only (set HWFS_PRIVATE_TERMS)", file=sys.stderr)
     files = [os.path.abspath(f) for f in a.files] or default_files(a.skill)

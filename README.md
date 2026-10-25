@@ -184,5 +184,6 @@ text and in `project.yaml`, and re-fetched before use. MIT (`LICENSE`). Contribu
 PRs: run `scripts/skill_retro.py` on a finished project, fold its report into the references, add the
 evals, keep `smoke/run_smoke.sh` and the two lints (`scripts/doc_voice_lint.py`,
 `scripts/generic_lint.py`) green, bump the version, write the CHANGELOG entry, open the PR. This repo is public.
-Put a project, person, company, order or part name in the private term file (`scripts/generic_lint.py`). Never put it in
-`scripts/generic_lint_terms.yaml`.
+Put a private name in the private term file (`scripts/generic_lint.py`): a project, person, customer, employer, order or private
+part. Never put it in `scripts/generic_lint_terms.yaml`. Public dependencies stay nameable: a fab, a distributor, a tool, a model
+vendor. CI that runs the lint with names writes the private term file from a secret and sets `HWFS_PRIVATE_TERMS`.

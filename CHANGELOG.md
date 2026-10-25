@@ -86,11 +86,13 @@ already in the tree, and two owner rules. The project keeps its copy of the map;
 - `references/agent-ops.md` §5: the browser profile and the screenshot roots.
 - `smoke/README.md`: a mesh-dependent check carries `needs-mesh:` and runs in both venv kinds.
 - `references/pitfalls.md`: 34 dated lines.
-- `evals/evals.json`: eval 19, a pattern-test verdict that checks its counters (three mechanical checks).
-- `smoke/run_smoke.sh`: five greps on §23, schematic-phase §6, release-and-cut §15, dfm §8.7 and the search-before-BLOCKED rule.
-- `scripts/rule_check.py` and `evals/core_rules.yaml`: the core rules of §23, schematic-phase §6, release-and-cut §15, dfm §8.7 and the
-  SKILL links stay in the text, and the banned folklore stays out. `--mutate` deletes each guarded rule and inserts each banned
-  phrase in a scratch copy; the check fails when one stays green. Eval 19 and the smoke run it.
+- `evals/evals.json`: eval 19, a pattern-test verdict that checks its counters. Its checks run the whole rule file, the mutation
+  proof and five negative fixtures. Its assertions still need an agent run and a human grade.
+- `smoke/run_smoke.sh`: one `rule_check.py --mutate` over every group, and one grep for the search-before-BLOCKED rule.
+- `scripts/rule_check.py` and `evals/core_rules.yaml`: the guarded sections are software-track §23, schematic-phase §6,
+  release-and-cut §15 and dfm §8.7, each sentence by sentence. Also guarded: phrases of §18 and §20, and the SKILL links. Banned
+  phrases and patterns stay out. `--mutate` deletes each sentence, flips one verdict word per sentence and inserts each banned
+  phrase. It proves only what the guards cover; the rest of the skill has no such guard.
 
 ### Changed
 - `references/software-track.md` §20: the bit-counter bullet no longer says "judge the ratio and ask the vendor"; it points at the law
@@ -101,35 +103,39 @@ already in the tree, and two owner rules. The project keeps its copy of the map;
 - Past versions of `scripts/generic_lint_terms.yaml` in the git history still hold project names. A history rewrite is the owner's call.
 
 ### Review round
-Four blind reviews (two Claude, one GPT, one Grok) merged in `docs/reviews/REVIEW_0.11.25.md`. Every BLOCKER and MAJOR is fixed or
-recorded with its reason.
+Four blind reviews (two Claude, one GPT, one Grok) merged in `docs/reviews/REVIEW_0.11.25.md`. Each row carries its disposition.
+Three confirmation reviews (round 2) found open gaps; the round-2 section of the same file lists them and their dispositions.
 - **Leak.** `scripts/generic_lint_terms.yaml` keeps only generic shapes: id formats, path shapes, a refdes and fab-code scheme. Every
   project, person, company, order, part, preset and dimension term moved to a private file outside the repo. `generic_lint.py` reads it
   from `--private-terms`, `$HWFS_PRIVATE_TERMS` or `~/.config/hw-from-spec/private_terms.yaml`; without it the generic patterns run.
   The selftest uses synthetic terms. The smoke's own project-name grep is gone; the lint covers it. One old review lost a private path.
-- **§23 rewritten as general rules.** The bit counter grows at the lane rate × T; any other law is a counter fault. Deltas within one
-  verified reset epoch. A window bounded by the previous BER so that a wrap cannot be missed; a proven wrap is a lower bound. A
-  predeclared settling rule with a maximum time, excluded and reported. Run totals per lane and direction. A confidence bound on a
-  zero-error claim, with a minimum bit count. A stated tolerance between computed and reported BER. Lock loss after the settling bears
-  on the verdict. The FEC point and the counter unit. A known-error check against a deaf checker. The lane rate from the checker's side,
-  with the encoding. The record name checked before high power.
+- **§23 rewritten as general rules.** The opportunity counter grows at the lane rate × T in its own unit. Each error ratio has
+  a matching denominator. Deltas within one verified reset epoch, each counter on its own. Every window capped by the modulus at
+  the worst lockable ratio, whatever the window before. A saturated or wrapped count is a lower bound, and a lower bound over the
+  limit is a FAIL that wins over INCONCLUSIVE. A predeclared settling rule with a maximum time. Run totals per lane and direction,
+  judged by Poisson bounds. A stated ratio tolerance. Lock loss bears on the verdict. A challenged checker on every lane, else
+  "checker unproven". The lane rate at the counting point. The record name checked before high power.
+- **Leak gate.** `generic_lint.py --export` is fail-closed: it needs the private terms, reads every file, name and symlink, skips
+  nothing and flags unreviewed binaries. An exact-string allow file. A named but missing term file exits 2. The lint prints which
+  terms it used.
 - **Folklore removed.** The one-bit dark lane, the 5 s window minimum, the cold-start reading, T²/2 as a law, the host rate over the
   media lane count, the single-controller PD buffer and soft-reset claim (Get_Source_Cap first).
-- **Corrected.** The USB-C CC bands with the Default level and the PD contract. The SI loop rule: a pattern checker cannot prove the lane
-  map. The thermal claims: response time from the margin, airflow from the fan and system curves. The cell wall at `wall_gate +
-  design_margin`, and no "0.1 over the gate". The boss underside, the shear key, the proud height. The leak-gate allow rule strips an
-  exact string. The ground point, the back-power fix, the rail switch, the data path after low power, the application by descriptor.
-- **Navigation.** SKILL.md links release-and-cut §15 and dfm §8.7. The routing rows name the studies, §8.7 and the public export. The
+- **Corrected.** The USB-C CC bands, the Default current by USB version and state, the RDO under a contract. Get_Source_Cap as
+  the query; a soft reset only as the controller's recovery. The lane map: an identical-pattern lock cannot prove it, a
+  lane-unique pattern or one injected error can. The thermal claims: C from the initial slope, the whole detect-to-airflow time.
+  Back-power: a rated Ioff covers only its own paths. The cell wall and the boss tip at `wall_gate + design_margin`; depth +
+  proud = disc + bondline; the bridge layers from the validated process. The API metadata is not authoritative. The leak-gate
+  allow rule strips an exact string. The ground point, the rail switch, the data path, the application by descriptor.
+- **Navigation.** SKILL.md links release-and-cut §15 and dfm §8.7 by their full paths. The routing rows name the studies, §8.7 and the public export. The
   software-track intro names §3 to §23, §18 has its new title, schematic-phase names the studies in its title. The pitfall lines name
-  their home section. The CHANGELOG no longer names the source product type.
+  their home section. The CHANGELOG headings and source lines no longer name the source product type.
 
-## 0.11.24 - 2026-10-21 - The bring-up and test rounds of a management tester: the register map as data, pattern tests between two ends, the command block and a firmware download, the browser page
+## 0.11.24 - 2026-10-21 - The bring-up and test rounds of a two-ended test product: the register map as data, pattern tests between two ends, the command block and a firmware download, the browser page
 
 Source: the first boards of a two-ended test product. Three bench days with the owner at the keyboard and no instruments.
 Four module types, a two-end optical pair, a vendor firmware update over the command block, seven browser-page rounds, a printed case
 round. 67 learnings of the project's log, read GENERAL 52 and PROJECT 15; the project keeps the project ones. Also folded: the three
-rules and five pitfall lines of the open branch `learnings-manifest-measured-pose-2026-10` (PR #20, 0.11.17), which no later merge had
-carried.
+rules and five pitfall lines of an earlier open branch (0.11.17), which no later merge had carried.
 
 ### Added
 - `references/software-track.md` §18, bring-up without instruments. The power order, the pull-up LEDs, the no-load hum. The identity in
@@ -1502,7 +1508,7 @@ home-printer and vendor operations properly" (paraphrased: the owner named the p
 ### Added
 - **`dfm-printed-enclosure.md` §7.1 — the thin-wall metric is LENGTH-DEPENDENT** (an identical rim-over-lap-step profile passed at 48 mm, failed at 88
   and 147 mm while three ray-cast censuses found nothing under 1.37): calibrated MJF PA12 rule at ~150 mm parts — **rim above a skirt-lap step ≥ 2.0
-  (1.4 fails; 2.0 passes with step + inward undercut kept) OR the undercut filled so the inner wall runs straight to the rim top (`lap.ring_down`,
+  (1.4 fails; 2.0 passes with step + inward undercut kept) OR the undercut filled so the inner wall runs straight to the rim top (a generator key,
   then 1.25 … 1.3 above the step passed)**; grey set (plain 2.0 walls / floors, boss rings, chamfers into ≥ 1.2 walls, 45° dish ramps) and red set
   (free-standing wedges). **The probe method** that converges in one round: slice the failing body of record into capped slabs
   (`trimesh slice_mesh_plane`) to localise the feature and the length threshold, then plain-profile OpenSCAD polygon extrusions at **40 mm AND full

@@ -71,8 +71,9 @@ design change (an interrupted comb, shorter ribs), not a slicer setting.
 | **Finish block** | one named set of finish knobs that every case plate uses: outer wall speed and acceleration, the wall order, precise outer wall, the scarf seam, elephant-foot compensation **[K]**. A dry calibrated spool is a separate process row. A plate with a justified geometry exception names it. A profile tuned for speed printed a rough wall and a tight hole | print time on the outer walls | every visible case plate | the embedded config of each plate carries the block's values | the block's keys in the plate yaml |
 | **Per-object overrides** | every key above per object in one plate — the CLI applies `<metadata key= value=>` under `<object>` in `model_settings.config` (supports, ironing, top shell, EF, first-layer line width proven **[K, measured first article]**); the arranger re-places a generic 3MF, so positions are read BACK from the exported plate json | tagging the file as a Bambu project (`Application=BambuStudio-<ver>`) segfaults the CLI (rc −11) **[K]** | mixed plates: a coupon beside a case piece | the exported plate json footprints + feature points inside them | `Metadata/model_settings.config` object metadata |
 
-Keep hole sizing out of the slicer when the geometry already carries the measured shrink. Never compensate one hole in both places without tracking each. A coupon of three
-bores decides an insert fit in 16 minutes, not in a 72-minute body **[K]**.
+Keep hole sizing out of the slicer when the geometry already carries the measured shrink. Never compensate one hole in both places without tracking each. Worked example: a coupon of three
+bores decided one insert fit in 16 minutes, not in a 72-minute body **[K]**. Test the sizes, orientation, material and process
+that the part uses.
 
 ## 4. Default knob sets per kickoff answer (C11 `kickoff.enclosure.optimise`)
 

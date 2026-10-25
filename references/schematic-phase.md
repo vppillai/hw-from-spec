@@ -100,31 +100,36 @@ file run in parallel. Each one answers the owner's questions and ends in a recom
 - **The bench first.** A study starts from what the last revision measured: its power, its heat, its faults.
 
 Rules the studies found, for any next revision. The worked examples come from one two-ended test product.
-- **Power.** An end-to-end test of a two-ended product loads both ports at once; budget the sum of both ends. Size a protection switch by
-  its drop at the rail current. One 28 mΩ switch at 5 A on a 3.3 V rail drops 0.14 V and burns 0.7 W. Also check its safe operating
-  area, inrush, current limit, reverse current and fault energy. A high input voltage makes a failed regulator a load killer. Put an
-  overvoltage cut-off between the regulator and the load. Back-power through signal lines is not fixed by a rail part. A bus buffer with
-  powered-off isolation fixes it in hardware. A tristate state in the tool helps only while the tool runs; it is not fail-safe at reset.
+- **Power budget.** An end-to-end test of a two-ended product loads both ports at once. Budget the sum of both ends.
+- **Protection switch.** Size a protection switch by its drop at the rail current. One 28 mΩ switch at 5 A on a 3.3 V rail drops
+  0.14 V and burns 0.7 W. Also check its safe operating area, inrush, current limit, reverse current and fault energy.
+- **Overvoltage.** A high input voltage makes a failed regulator a load killer. Put an overvoltage cut-off between the regulator and
+  the load.
+- **Back-power.** A rail part does not stop back-power through signal lines. List every path that can feed the rail. Check each
+  path for isolation, voltage, direction and reset behaviour. A bus buffer with a rated Ioff isolates only the paths it covers.
+  A tristate state in the tool helps only while the tool runs; it is not fail-safe at reset.
 - **USB power sink.** Pick the sink controller by its fallback on a source with no PD. One kind reports the Type-C current there;
   another reports nothing. A PD source that offers only a 5 V PDO is a different case; test both. A sink controller may keep the source
   capabilities only until the next message overwrites its buffer. Read that behaviour in the chosen controller's datasheet. The firmware
-  copies the capabilities on the alert. To read them again, it sends Get_Source_Cap. Use a soft reset only when that fails, because a
-  soft reset restarts the negotiation.
+  copies the capabilities on the alert. To read them again, it sends Get_Source_Cap. A soft reset is protocol recovery, not a
+  query. Use it only as the PD policy engine and the controller's datasheet direct.
 - **Thermal.** A volatile fan curve leaves the fan at 0 % after a power cycle with no host. Use a part with an EEPROM, or a controller
   with the curve in flash. Give it a fail-safe start-up duty and an over-temperature path that needs no host. The airflow sits where the
   fan curve meets the impedance curve of the whole enclosure: grille, filters and path. Model or measure them together. Worked example:
-  212 mm² of slots gave 20 to 27 % of free flow in a 1-D estimate. A 30 mm fan sweeps about 600 mm², and a 40 mm fan about 1100 mm².
+  a 1-D estimate gave 20 to 27 % of free flow behind 212 mm² of slots; a curve model decides. A 30 mm fan's gross disc is about
+  700 mm², and a 40 mm fan's about 1250 mm².
 - **Heat capacity.** Measure the load's heat capacity on the bench before you set the fan's response. On one bench, 8 W raised a module
-  11 K in 60 s: about 44 J/K, with the losses neglected. The fan's response time follows from the margin: t ≤ ΔT_margin × C / P. At
-  44 J/K and 8 W, a 5 K margin gives about 27 s. Fit a thermal model with losses before you rely on the number. Size the electronics for
-  the top load power. Size the heat sink for the first build.
+  11 K in 60 s: about 44 J/K, with the losses neglected. Neglected losses overstate C, and so the allowed time. Take C from the
+  initial slope, or fit the net heat flow. The time from detection to full airflow follows from the margin: t ≤ ΔT_margin × C / P.
+  That time holds the sensing, the command and the spin-up. At 44 J/K and 8 W, a 5 K margin gives at most about 27 s. Size the
+  electronics for the top load power. Size the heat sink for the load of the first build, and leave room for the top load.
 - **Units.** Write GBd for a symbol rate and Gb/s for a bit rate, never one number for both. A PAM4 lane carries two bits per symbol.
-- **Loops on a connector.** Loop a transmit pair to a neighbour lane's receive pair. The loops stay on one layer only when each pad
-  row pairs a transmit and a receive pair. Check the drawing. A pattern checker cannot prove the lane map: it locks on any lane
-  that carries the pattern. Prove the map separately, with a per-lane marker or a per-lane error injection. Match the polarity and the
+- **Loops on a connector.** Loop a transmit pair to a neighbour lane's receive pair. Pair placement alone does not prove one-layer
+  routing. Check the drawing and the whole launch and routing geometry. A checker that locks on the same pattern from any lane cannot
+  prove the lane map. A lane-unique pattern or seed, or an error injected on one physical lane, proves it. Match the polarity and the
   precoding per lane on the loop. Check the crosstalk between neighbouring loops against the SI budget. Take the coupling capacitors
   from the interface specification and the data of both ends. A module that couples both directions inside needs none on the loop.
-- **Pads and the stack.** A wide pad over thin prepreg drops far below the line impedance (`references/pcb-layout-dfm.md` §3).
+- **Pads and the stack.** A wide pad over thin prepreg can drop far below the line impedance (`references/pcb-layout-dfm.md` §3).
   Connectors mirrored on both board faces set the board thickness and the termination. Read the fab's live thickness table by layer count
   before a study recommends them.
 - **The controller.** A module family can carry other temperature ratings per memory option. Pick by the quantity the datasheet rates

@@ -253,27 +253,32 @@ README alone did not answer the owner's "are the settings backed up" after the o
   VERSION in the order record. Main moves after the order without a red build.
 
 ## 15. A public export from the private tree
-- One generator builds the public tree from a yaml list of what goes out. A leak gate reads every exported file of the final tree. The
-  push depends on a clean gate. The skill ships no exporter: the generator is project code, like the cut generator (§7).
-  One usable scanner is `scripts/generic_lint.py --skill <export tree> --terms <generic terms> --private-terms <project terms>`.
-- The gate refuses decision and review ids, private paths, order numbers, vendor and person names, and the company name.
+A public export ships only what a fail-closed leak gate has read.
+- One generator builds the public tree from a yaml list of what goes out. The generator is project code, like the cut generator (§7).
+- A leak gate reads every exported file of the final tree. The push depends on a clean gate.
+- The skill's scanner is `scripts/generic_lint.py --export <tree> --allow <file>`. It fails without the private terms.
+- It reads every file, every file name and every symlink target. It skips no `generic: ok` line, no worked example and no history.
+- An unreviewed binary is a hit. Read its metadata, then list it as `binary: <path>` in the allow file.
+- CI writes the private terms from a secret to a temporary file and sets `HWFS_PRIVATE_TERMS`. Never commit the terms.
+- The gate refuses decision and review ids, private paths, order numbers, private vendor and person names, and the company name.
 - Two blind reviews come before every public push. The owner's word is the go.
-- Give the gate every id format the records use, the review finding ids included. Anchor each pattern on word boundaries: `E-[0-9]+`
-  matched `X-LANE-3`.
-- Allow the public repository address by an exact string. The address carries the account name, so the name pattern hits every page
-  link. Strip the exact allowed string before the match. Never skip the whole line that holds it.
-- The gate also hits data keys. Rename the label the user sees. Keep the key. Allow the exact key string the same way.
-- Docstrings and comments ship. Run the gate and the writing lint over them, or strip them in the export. A stripper must parse the
-  language. A nested `${}` in a JS template literal ended a string early, and 20 of 110 comments survived. Check the result with the
-  language's syntax check, and count the comments that stay.
+- Give the gate every id format the records use, the review finding ids included.
+- Anchor each pattern on word boundaries. The unanchored `E-[0-9]+` matched the `E-3` inside `X-LANE-3`.
+- Allow the public repository address by an exact string in the allow file. The address carries the account name, so the name
+  pattern hits every page link. The gate strips the exact allowed string before the match. It never skips the line that holds it.
+- The gate also hits data keys. Rename the label the user sees. Keep a key only when the owner approves it as public schema.
+  Allow that key by its exact string.
+- Docstrings and comments ship. Run the gate and the writing lint over them, or strip them in the export.
+- A stripper must parse the language. A nested `${}` in a JS template literal ended a string early, and 20 of 110 comments
+  survived. Check the result with the language's syntax check. Count the comments that stay.
 - Write the public pages from the generator yaml and the rendered pictures, not from the manual. A manual describes the version of its
   own date.
-- Name a control by the word printed on the part. The yaml, the software and the print can disagree. Keep one name table on the hardware
-  page, with the software word in brackets at first use.
+- Name a control by the word printed on the part. The yaml, the software and the print can disagree. Keep one name table on the
+  hardware page. Give the software word in brackets at first use.
 - An engineering drawing is not a user drawing. Its callouts carry ids, vendor names and private paths. A public sheet needs its own
-  generator option; until then, publish a dimension table and the rendered faces.
+  generator option. Until then, publish a dimension table and the rendered faces.
 - Before a public screenshot, replace the login name and the record paths in the page. A screenshot captured into the public tree is its
-  own source: the export keeps it and never rebuilds it. Record its capture command, date and page state in the export yaml. The leak
-  gate cannot read pixels, so each blind review reads every screenshot.
-- On GitHub Pages, enable the hosting before the first push of a Pages workflow. The configure step can also enable it. Otherwise the first
-  deploy fails while Pages does not exist.
+  own source: the export keeps it and never rebuilds it. Record its capture command, date and page state in the export yaml.
+- The leak gate cannot read pixels. Each blind review reads every screenshot.
+- On GitHub Pages, enable the hosting before the first push of a Pages workflow. The configure step can enable it only with a token
+  that has Pages admin rights. Otherwise the first deploy fails while Pages does not exist.

@@ -77,8 +77,9 @@ net classes must be exported into the router input — grep the DSN for them aft
 - Differential rules the CAD enforces: pair gap, uncoupled length ≤ N mm, skew ≤ N mm, no via stubs on the pair, reference plane continuous
   (an In2 signal over an In1 antipad edge is a route-quality HIGH, §10). Impedance control is an order option **[fab capability]**: ask for it
   on the quote form; if the form refuses it for the copper weight, that is a decision row, not a silent drop.
-- **Connector pads** **[physics]**: a wide pad over thin prepreg drops far below the line impedance. One 0.31 mm pad read about 52 Ω over
-  0.21 mm prepreg and about 26 Ω over 0.10 mm, in a field-solver estimate for one stack. Pick the prepreg for the pad as well as the
+- **Connector pads** **[physics]**: a wide pad over thin prepreg can drop far below the line impedance.
+  One 0.31 mm pad read about 52 Ω single-ended over 0.21 mm prepreg, against a 50 Ω line. Over 0.10 mm it read about 26 Ω.
+  Both are field-solver estimates for one stack. Pick the prepreg for the pad as well as the
   trace. A void under the pad changes the return path. Model the whole launch with the live stack-up and the connector model.
 
 ## 4. Trace / space / via / annular / drill minimums vs the fab table

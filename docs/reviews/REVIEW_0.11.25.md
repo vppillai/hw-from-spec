@@ -1,4 +1,3 @@
-<!-- merge: claude-skill-fix (Claude Opus); four blind reports + the frozen 0.11.25 tree; 2026-10-25 -->
 # Merged review — hw-from-spec 0.11.25 (A, B, C, D)
 
 Inputs: four blind reviews of the frozen 0.11.25 tree and the 0.11.24 → 0.11.25 diff. Each reviewer saw only the artefact and the brief.
@@ -25,14 +24,16 @@ Dispositions:
 | NOTE | 7 | 4 | 0 | 1 | 2 |
 | total | 85 | 71 | 11 | 1 | 2 |
 
-Every PARTLY row is fixed in its core. Its rejected remainder carries the reason in the row.
+Each PARTLY row names what it fixed and what it rejected, with the reason. Round 2 below reopened some round-1 rows.
 
-## Proof that the core rules are guarded
+## What the rule check proves
 
-`scripts/rule_check.py evals/core_rules.yaml --mutate` deletes each guarded rule and inserts each banned phrase, one at a time, in a scratch
-copy. Each mutation must turn the check red. Result on this branch: 67 of 67 mutations went red. Every bullet of software-track §23 holds a
-guard phrase (`every_bullet`), so a new §23 bullet without a guard also fails. Eval 19 runs the check and the mutation proof. It also runs two negative
-fixtures (`expect_rc: 1`): the run-totals rule deleted, and the 5 s window folklore put back. The smoke runs the whole rule file with `--mutate`.
+Round 1 guarded one phrase per bullet. Round 2 showed that 47 of 86 §23 sentences could then go unseen. The round-2 state is below.
+`scripts/rule_check.py evals/core_rules.yaml --mutate` runs in eval 19 and the smoke. Four sections are guarded sentence by sentence,
+intro included: software-track §23, schematic-phase §6, release-and-cut §15 and dfm §8.7. Phrase guards cover parts of §18, §20,
+the pitfalls and the SKILL links. Result on this branch: 393 of 393 mutations went red. They are 295 sentence deletions, 58 verdict
+flips, 28 banned-phrase insertions and 12 block deletions for phrase guards. The proof covers the guarded text only. A rule
+outside these sections, and a meaning kept in new words outside an every_sentence section, are not seen.
 
 ## Merged list
 
@@ -128,3 +129,70 @@ fixtures (`expect_rc: 1`): the run-totals rule deleted, and the 5 s window folkl
 
 Past versions of `scripts/generic_lint_terms.yaml` in the public history hold the private terms. Their hashes and term classes are in the
 branch's pull-request report to the owner. A history rewrite is the owner's decision.
+
+## Round 2: three confirmation reviews
+
+Inputs: three blind reviews of the round-1 tree and diff, the lint-terms hunk left out. Claude (29 findings: BLOCKER 1, MAJOR 6,
+MINOR 16, NOTE 6), GPT (38: BLOCKER 6, MAJOR 20, MINOR 10, NOTE 2) and Grok (21: BLOCKER 2, MAJOR 7, MINOR 7, NOTE 5). Ids: Claude
+F-nn, GPT by its own prefixes, Grok Rnn. 88 findings merge into 49 rows. Round 2 reopened round-1 rows M-07, M-10, M-11, M-12, M-13,
+M-15, M-20, M-40, M-41, M-43, M-55, M-56, M-72 and M-04: their round-1 fix was incomplete.
+
+| severity | rows | FIXED | PARTLY | REJECTED | ACCEPTED |
+|---|---|---|---|---|---|
+| BLOCKER | 6 | 4 | 2 | 0 | 0 |
+| MAJOR | 24 | 21 | 2 | 1 | 0 |
+| MINOR | 18 | 16 | 2 | 0 | 0 |
+| NOTE | 1 | 0 | 0 | 0 | 1 |
+| total | 49 | 41 | 6 | 1 | 1 |
+
+| id | sources | severity | finding | disposition |
+|---|---|---|---|---|
+| N-01 | F-01, R01 (BLOCKER) | BLOCKER | A saturating error counter reads zero deltas and can PASS a bad link. | FIXED: a read at the saturation value makes that window and every later one INCONCLUSIVE; the count is a lower bound; a lower bound over the limit is a FAIL. Eval 19 fixture. |
+| N-02 | BER-02, R02 (BLOCKER), F-02 | BLOCKER | The window bound follows the previous BER only; after a clean window a rise can wrap the counter several times. No first-window number. | FIXED: every window capped at (modulus / 2) / (lane rate × BER_max), and by the opportunity counter's width, whatever the window before. Numbers: about 40 ms at 0.5 and 20 s at 1e-3 for 32 bits at 106.25 Gb/s; the first window uses the cap. |
+| N-03 | F-03, BER-07 | MAJOR | Only a zero-error claim has a bound; k > 0 can PASS on the point estimate. The bound is stated as fact, its assumptions unstated. | FIXED: Poisson bounds at a stated CL for any k; PASS only when the upper bound is under the limit, FAIL when the lower bound is over it, else INCONCLUSIVE; independence stated, window spread reported; opportunities, not bits, for other units. |
+| N-04 | BER-05 (BLOCKER), F-04, R04 | BLOCKER | "Where the hardware allows" lets an unchallenged deaf checker pass. | FIXED: challenge every judged lane and direction; known-bad paths named (PRBS31 against PRBS15, inverted polarity, error injection, a known-bad cable); an unchallenged lane reads "checker unproven" and cannot enter a release record. Eval 19 fixture. |
+| N-05 | BER-01 (BLOCKER), R03, F-08 | BLOCKER | Symbol, block and codeword counts divided by the bit rate give a wrong ratio. | FIXED: event unit and opportunity count in the same unit; BER only for bit errors; compare a ratio only with a limit in its unit; the growth law in the counter's own unit. |
+| N-06 | BER-04, R16 | MAJOR | A proven-wrap FAIL and "any invalid window is INCONCLUSIVE" contradict; invalid states are scattered. | FIXED: one list of invalid states; the lower-bound FAIL wins over INCONCLUSIVE. |
+| N-07 | BER-03 | MAJOR | "Both counters falling" misses a reset of one counter and confuses wraps with resets. | FIXED: each counter on its own; a fall no wrap explains invalidates the window. |
+| N-08 | BER-06, F-10, F-09 | MAJOR | "The first window measures the lock-in" is vendor-specific; the example rule reads AND or OR. | FIXED: the first window can hold the lock-in; the rule decides; never drop a window by default; call the cause lock-in only when a control proves it; the rule uses observable lock signals where they exist; the example says AND. |
+| N-09 | BER-08 | MAJOR | The counting point and the counted interval T are not defined. | FIXED: the counting point (FEC, gearbox) recorded; the lane rate taken there; T is the enabled time from the verified reset. |
+| N-10 | BER-09 | MAJOR | One update interval of slack is not a bound on field skew. | FIXED: a frozen read or an atomic latch, else a timestamp per field and the total skew bounded and added. |
+| N-11 | BER-10 | MINOR | "At least two counted windows" is arbitrary. | FIXED: enough counted windows to apply the settling rule; two is the dated tool's need. |
+| N-12 | F-11 | MINOR | No rule for counts during lock loss, or without a reported ratio. | FIXED: a window with a lock loss stays out of the run totals; without a reported ratio the two computed ratios are compared. |
+| N-13 | R13 | MINOR | The 1.5 tolerance example is loose. | FIXED: the criteria state the tolerance; 1.5 is a dated tool value; tighter where the resolution allows. |
+| N-14 | R12 | MINOR | CC voltages between the bands are undefined. | FIXED: a reading between two bands is INCONCLUSIVE; measure again. |
+| N-15 | USB-01, F-25 | MAJOR | The Default current omits the USB version, configuration state and Battery Charging; the contract current is the RDO. | FIXED. |
+| N-16 | USB-02 | MAJOR | A soft reset is not a fallback query. | FIXED: Get_Source_Cap is the query; a soft reset is protocol recovery, used only as the policy engine and the datasheet direct. |
+| N-17 | THM-01, F-18 | MAJOR | Neglected losses overstate C and the safe time; the time omits sensing, command and spin-up. | FIXED: C from the initial slope or a net-flow fit; t covers detection to full airflow; "at most about 27 s". |
+| N-18 | THM-02, F-26 | MINOR | The 20–27 % figure is unsupported; the fan areas are gross discs. | PARTLY: labelled as a 1-D estimate that a curve model overrides; gross disc areas stated. Rejected: deleting the example; it shows the size of the error. |
+| N-19 | SI-01 | MAJOR | "A checker cannot prove the lane map" is overstated; pair placement does not prove one-layer routing. | FIXED: an identical-pattern lock cannot prove it; a lane-unique pattern or seed, or one injected error, can; the whole launch geometry is checked. |
+| N-20 | SI-02, F-20 | MINOR | "Drops far below" is not universal; the pad example omits single-ended and target. | FIXED: "can drop"; single-ended against a 50 Ω line; split. |
+| N-21 | PWR-01, R15 | MAJOR | A buffer with powered-off isolation covers only its own paths; the power bullet packs four rules. | FIXED: rated Ioff covers only its paths; list and check every feed path; the bullet split into four. |
+| N-22 | DFM-01 | MAJOR | "Sum to the disc thickness" contradicts the adhesive. | FIXED: depth + proud = disc + bondline, plus clearance and worst-case tolerances. |
+| N-23 | DFM-02 | MAJOR | "Blunt its tip to the wall gate" contradicts the design wall. | FIXED: blunt to `wall_gate + design_margin`; check the sliced minimum and the census margin. |
+| N-24 | DFM-03, R14 | MAJOR | The two-layer bridge is still a recipe. | FIXED: layers from the validated process, span and seat strength; the two layers are a worked FDM example. |
+| N-25 | DFM-04 | MINOR | The foot and shear-key rules are categorical. | FIXED: the screw-access need first, the foot beside its screw as one layout; the key only as tight as its fit. |
+| N-26 | DFM-05 | MINOR | The three-bore coupon is stated as proof. | FIXED: a worked example; test the part's sizes, orientation, material and process. |
+| N-27 | LEAK-01, LEAK-02 (BLOCKER), F-06, LEAK-03 | BLOCKER | The named scanner does not meet §15: `generic: ok` skips, no exact-string allow, ids only in `.md`, history skipped, binaries skipped, no names without the private file. | PARTLY. Fixed: `generic_lint.py --export` needs the private terms, reads every file, name and symlink target, skips nothing, strips exact allowed strings, scans the strings of binaries and flags each unreviewed binary; selftest per case. Rejected: OCR and archive extraction; an archive or image is a binary that a human must review before it is allowed. |
+| N-28 | F-07, F-12 | MAJOR | Without the private file nothing checks names; a typo in the env var skips silently. | PARTLY. Fixed: a named but missing term file exits 2; every run prints which terms it used; the export mode refuses to run without them; CI writes them from a secret (§15, README). Rejected: hashed terms; the terms are regexes, and a hash cannot match a pattern. |
+| N-29 | LEAK-05 | MAJOR | The README bans every company name while the skill names public vendors and tools. | FIXED: private names (project, person, customer, employer, order, private part) against public dependencies (fab, distributor, tool, model vendor). |
+| N-30 | F-05, TEST-01, R07 | MAJOR | One phrase per bullet leaves 47 of 86 §23 sentences unguarded; inversions and paraphrases stay green; the intro is unguarded. | FIXED: `every_sentence` mode; four sections guarded sentence by sentence, intro included; `--mutate` deletes each sentence and flips one verdict word per sentence; banned patterns (`never_re`) catch rewordings. Stable rule ids rejected: the sentence is its own id. |
+| N-31 | TEST-02, F-17 | MAJOR | Many changed rules have no guard (case-pipeline, part-verification, fdm, pcb rules). | PARTLY. Fixed: §6, §15 and §8.7 are now sentence-guarded too. Open: the other changed files have no guard; a guard there is the next step. |
+| N-32 | TEST-03 (BLOCKER), F-24 | BLOCKER | Eval 19 never grades an agent; its checks prove only the text. | PARTLY. Fixed: the runner counts the assertions of an eval with checks as needing an agent run and a human grade, and says the checks prove the text only. Rejected: an automatic agent grader and executable counter models; the runner has no agent, and the skill ships rules, not a measurement tool. |
+| N-33 | R06 | MAJOR | Eval 19 ran `--only measurement,navigation`. | FIXED: the whole rule file, and the mutation proof over every group. |
+| N-34 | TEST-04 | MINOR | The "run totals" fixture deleted another sentence. | FIXED: it deletes "The verdict uses run totals per lane and per direction." and asserts that exact rule. |
+| N-35 | R05 | MAJOR | "`E-[0-9]+` does not match `X-LANE-3`." | REJECTED: the reviewer is wrong. `re.search(r'E-[0-9]+', 'X-LANE-3')` returns `E-3`. The sentence now names the matched text. |
+| N-36 | R09 (MAJOR), LEAK-04 | MAJOR | The review record's first line named the agent workstream. | FIXED: the comment is gone. |
+| N-37 | F-13 | MINOR | One generator's yaml key stayed in a pitfall line. | FIXED in the pitfall, the CHANGELOG and an old review; the key is a private term. |
+| N-38 | F-14, R10 | MINOR | The 0.11.24 heading still named the product type. | FIXED. |
+| N-39 | R11 | MINOR | The 0.11.24 entry named a branch and its pull request. | FIXED: "an earlier open branch (0.11.17)". |
+| N-40 | F-15 | MINOR | "Five greps" overstated the smoke. | FIXED: one rule check over every group and one grep. |
+| N-41 | F-16, R08 (MAJOR) | MAJOR | The pitfall said "per discipline before each gate", against SKILL §5. | FIXED: "that a gate freezes, as roles inside its one round"; the old phrase is banned. |
+| N-42 | CLAIM-01 | MAJOR | "Every BLOCKER and MAJOR is fixed" and "each guarded rule" were not true. | FIXED: the CHANGELOG, this record and the rule_check docstring state what the guards cover and what stays open. |
+| N-43 | SRC-01 | MAJOR | "The API never gives a drawing the PDF lacks" is a universal claim. | FIXED: verify every technical artifact against its manufacturer-controlled source. |
+| N-44 | OPS-01 | MINOR | The `gh pr checkout` claim has no version. | FIXED: dated, with "read `--help` of the installed version". |
+| N-45 | NAV-01 | MINOR | The §8.7 link lacked the `references/` path. | FIXED in SKILL.md and the guard. |
+| N-46 | F-21, F-22, WRITE-01 | MINOR | Several sentences hold more than one instruction. | PARTLY. Fixed: §23, §6 power, §8.7 and §15 split, the flags named. Rejected for this branch: older CHANGELOG and pitfall lines outside the change. |
+| N-47 | F-19 | MINOR | The configure step can enable Pages only with an admin token. | FIXED. |
+| N-48 | F-23 | MINOR | "Size the heat sink for the first build" reads two ways. | FIXED: for the load of the first build, with room for the top load. |
+| N-49 | F-26, F-27, F-28, F-29, META-01, META-02, R17, R18, R19, R20, R21 | NOTE | Arithmetic, versions, navigation and the public terms file checked correct. | ACCEPTED. R19 is carried by "Key each limit to that point". |

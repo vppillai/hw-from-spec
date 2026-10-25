@@ -240,9 +240,12 @@ reason and one worked example.
   fix each one. On that board the feed was the signal lines, not the rail.
 - A laptop USB-C port may offer 1.5 A only. Read the source's current advertisement before you budget host power.
   Read CC with the plain DC range, never the low-impedance mode. Read it before a PD contract exists.
-  Over the sink's 5.1 kΩ pull-down, 0.25 to 0.61 V means Default USB power (500 or 900 mA).
+  Over the sink's 5.1 kΩ pull-down, 0.25 to 0.61 V means Default USB power.
   A reading of 0.70 to 1.16 V means 1.5 A. A reading of 1.31 to 2.04 V means 3 A.
-- Under a PD contract, the contract sets the current. Read it from the sink controller's accepted PDO, not from the CC voltage.
+  A reading between two bands is INCONCLUSIVE: measure again, never round it to a tier.
+- Default USB power is 500, 900 or 1500 mA by the USB version and the configuration state. Battery Charging can raise it.
+  Budget only what the port has granted.
+- Under a PD contract, the contract sets the current. Read it from the accepted request (RDO), not from the CC voltage.
   A PD 3.0 source also moves its Rp between the 3 A and 1.5 A levels to signal collision avoidance.
 - A fan that is off reads like a bad module. Three throttles in a row came from a fan with no power. Look at the fan before
   you blame the module, and give the next revision a tachometer read.
@@ -380,52 +383,79 @@ reason and one worked example.
 A pattern test gives a verdict only from counters it has checked. The rules below hold for any error counter on any link.
 - Counter checks are part of every measurement. No flag or mode turns them off. No name such as "high fidelity" sets them
   apart. The knobs are the window length and the gate mode.
-- Keep the raw reads of every window. A read holds the monotonic time, the error and bit counters, the reported rate and the
-  lock flags. It also holds the temperature of both ends.
-- Record what each counter counts: bits, symbols, blocks or codewords. Record the FEC point of each count: pre-FEC or post-FEC.
-  Key each limit to that point. A post-FEC count of zero does not prove the pre-FEC margin.
-- Take the lane rate from the side where the checker sits. Read it from the standard's table for the active configuration.
-  Include the encoding and FEC overhead. For example, one 100G PAM4 lane runs at 53.125 GBd, which is 106.25 Gb/s. A lane rate
-  the tool cannot look up makes the window INCONCLUSIVE. Never divide an aggregate rate by the other side's lane count.
-- The bit counter grows at the lane rate × T. Allow the clock tolerance and the read timing slack over T. Any other growth
-  law is a counter fault, and the window is INCONCLUSIVE with that reason. Test the linear law, not one named alternative.
-  Dated example (2026-10): one module's bit counter grew as rate × T² / 2.
-- Use counter deltas within one verified reset epoch. Reset the counters, read them back near zero, and record the reset time.
-  Skip the reads of the first update interval after a reset: they can hold the count from before it. Both counters falling
-  inside a window is a reset, and the window is invalid.
-- Bound the window length so that a wrap cannot be missed. Know the counter width and whether it wraps or saturates. Make the
-  first window short. Bound each later window by the BER of the window before, with a margin for a rise. An error count that
-  falls while the bits rise is a wrap. A step of half the modulus or more between two reads invalidates the window.
-- A proven wrap is a lower bound on the errors. A lower-bound BER above the limit is a FAIL, not only an invalid window.
-- Compute the BER two ways: errors over rate × T, and errors over the bit counter. Compare both with the reported BER. State
-  the tolerance before the run, for example a factor of 1.5. A mismatch beyond the tolerance makes the window INCONCLUSIVE.
-  Compare on a frozen read. An unfrozen read adds one update interval to the slack. A module that reports a BER only cannot
-  pass this check.
-- A deaf checker reads zero errors on any link. Before a result enters a release record, show that the checker counts. Inject
-  known errors, or run a known-bad path, per lane and direction where the hardware allows. Record that check with the run.
+- Keep the raw reads of every window. A read holds the monotonic time, the error and opportunity counters, the reported ratio
+  and the lock flags. It also holds the temperature of both ends.
+- Record the event unit of each error counter: bit, symbol, block or codeword. Record its opportunity count in the same unit.
+  A bit counter gives a BER: bit errors over bits. A symbol, block or codeword counter gives an error ratio over symbols,
+  blocks or codewords. Compare a ratio only with a limit in the same unit. Convert between units only by a stated model.
+- Record the counting point of each counter: before or after the FEC, and before or after a gearbox. Key each limit to that
+  point. A post-FEC count of zero does not prove the pre-FEC margin.
+- Take the lane rate at the counting point. Read it from the standard's table for the active configuration. Include the
+  encoding and FEC overhead that the counting point sees. For example, one 100G PAM4 lane runs at 53.125 GBd, which is
+  106.25 Gb/s. A lane rate the tool cannot look up makes the window INCONCLUSIVE. Never divide an aggregate rate by the other
+  side's lane count.
+- T is the time the counters were enabled, from the verified reset to the read.
+- The opportunity counter grows at the lane rate in its own unit × T. Allow the clock tolerance and the read timing slack over T.
+  Any other growth law is a counter fault, and the window is INCONCLUSIVE with that reason. Test the expected linear law,
+  not one named alternative. Dated example (2026-10): one module's bit counter grew as rate × T² / 2.
+- Use counter deltas within one verified reset epoch. Reset the counters. Read them back near zero. Record the reset time.
+  Skip the reads of the first update interval after a reset: they can hold the count from before it.
+- Treat each counter on its own. A fall of either counter that no wrap explains invalidates the window.
+- Know each counter's width, and whether it wraps or saturates.
+- Cap every window, whatever the ratio of the window before. The cap is (modulus / 2) / (lane rate × BER_max). BER_max is the
+  worst error ratio at which the checker still holds lock; take 0.5 when it is unknown. Also cap the window so that the
+  opportunity counter cannot pass half its own modulus.
+- Example: a 32-bit error counter on a 106.25 Gb/s lane. Its cap is about 40 ms at BER_max 0.5 and about 20 s at 1e-3. The
+  first window uses the cap at BER_max. A dated tool used a first window of 0.25 s, which holds up to a BER_max of about 0.08.
+- Inside the cap, shorten the next window when the ratio before calls for it. Keep a margin for a rise.
+- An error count that falls while the opportunity count rises is a wrap. A step of half the modulus or more between two reads
+  invalidates the window.
+- A read at the saturation value makes that window and every later window INCONCLUSIVE. The saturated count is a lower bound
+  on the errors.
+- A proven wrap or a saturation gives a lower bound on the errors. A lower-bound ratio over the limit is a FAIL. That FAIL wins
+  over the INCONCLUSIVE of the invalid window.
+- Compute the ratio two ways: errors over the rate × T, and errors over the opportunity counter. Compare both with the reported
+  ratio. With no reported ratio, compare the two computed values with each other. The criteria state the tolerance before the
+  run. A dated tool used a factor of 1.5; use a tighter factor when the reported ratio has the resolution. A mismatch beyond
+  the tolerance makes the window INCONCLUSIVE.
+- Compare on a frozen read or an atomic latch. Without one, timestamp each field read. Bound the total skew of all the fields,
+  and add it to the slack. A module that reports a ratio only cannot pass this check.
+- A deaf checker reads zero errors on any link. Challenge the checker on every judged lane and direction before a result
+  enters a release record. Known-bad paths: a pattern mismatch (PRBS31 at one end, PRBS15 at the other), an inverted polarity
+  at one end, an error-injection command, a known-bad cable. Record the challenge with the run. A lane with no challenge reads
+  "checker unproven". An unproven lane cannot enter a release record.
 - Keep the live lock state and the latched lock loss apart. OR a clear-on-read flag over every read of the window. A lock loss
-  after the settling is verdict-bearing. The criteria say whether it fails the lane or makes it INCONCLUSIVE; it is never dropped.
-- The start-up settling is a rule fixed before the run, with a maximum time from the criteria. Dated example rule
-  (2026-10): a settling window reads 10 errors or more. Its BER is over 3 times the median of the later windows. Exclude the settling windows from
-  the verdict and report them, with the time to a stable BER per direction. Never move the settling point after you see the
-  data. Every window after the settling counts, a later burst too. Settling past the maximum makes the run INCONCLUSIVE.
-- The first window after a release measures the checker lock-in, not the link.
-- The verdict uses run totals per lane and per direction. A run total is the errors over the bits, each summed over the
-  counted windows. Never average window rates. Never judge the last window alone. Keep at least two counted windows. Any invalid
-  window makes the run INCONCLUSIVE with the named reason.
-- A zero-error claim carries its confidence bound. The BER is below −ln(1 − CL) / N, about 3 / N at 95 %. Set the minimum bit
-  count from the limit, about 3 / limit at 95 %. Fewer bits give INCONCLUSIVE, never PASS.
-- Separate the lock-in from a temperature effect. Log the temperature per window. Claim a warm-up effect only when the rate
+  after the settling is verdict-bearing. The criteria say whether it fails the lane or makes it INCONCLUSIVE; it is never
+  dropped. The errors and opportunities of a window with a lock loss stay out of the run totals.
+- The start-up settling is a rule fixed before the run, with a maximum time from the criteria. Base the rule on observable
+  lock and state signals where the checker gives them. Dated example rule (2026-10): a settling window reads 10 errors or more,
+  and its ratio exceeds 3 times the later median. Exclude the settling windows from the
+  verdict. Report them, with the time to a stable ratio per direction. Never move the settling point after you see the data.
+  Every window after the settling counts, a later burst too. Settling past the maximum makes the run INCONCLUSIVE.
+- The first window after a release can hold the checker lock-in. The settling rule decides; never drop a window by default.
+  Call the cause lock-in only when a control proves it.
+- A window is invalid when the lane rate is unknown, the growth law fails, a counter falls unexplained, or a wrap cannot be
+  excluded. It is also invalid when a counter saturates, the ratios disagree, the gate does not complete or the settling
+  passes its maximum. An invalid window makes the run INCONCLUSIVE, unless a lower bound proves a FAIL.
+- The verdict uses run totals per lane and per direction. A run total is the errors over the opportunities, each summed over
+  the counted windows. Never average window ratios. Never judge the last window alone. Keep enough counted windows to apply
+  the settling rule; the dated tool needed two.
+- Judge each run total by its Poisson confidence bounds at a stated level CL. For k errors in N opportunities, the upper bound
+  is χ²(CL; 2k + 2) / (2N). The lower bound is χ²(1 − CL; 2k) / (2N). PASS needs the upper bound under the limit. FAIL needs
+  the lower bound over the limit. Otherwise the lane is INCONCLUSIVE. With zero errors the upper bound is −ln(1 − CL) / N,
+  about 3 / N at 95 %. The bounds assume independent errors; a burst makes them optimistic, so report the window spread too.
+  Set the minimum opportunity count from the limit, about 3 / limit at 95 %.
+- Separate the lock-in from a temperature effect. Log the temperature per window. Claim a warm-up effect only when the ratio
   tracks the temperature after the settling windows are excluded.
 - Test each unit as a sender and as a receiver. One module sent clean and received at 1e-4 on all lanes. Only a swap of the far
   unit showed which side failed.
-- Rule out one cause per run, and write each one down: temperature, supply, tool, method, unit, cable direction. The list keeps
+- Rule out one cause per run. Write each one down: temperature, supply, tool, method, unit, cable direction. The list keeps
   the hunt short and a vendor question factual.
 - Number every unit before a multi-unit session, on the unit and in the record. Four modules moved between three unmarked cases
   in one evening, and only the identity read told them apart.
-- Check the record name before the power goes up. Refuse a record name that exists. Open the record for exclusive create and
-  write the identity first. Check the path and the flags too. A run that fails at its record after the power-up leaves a hot
-  unit and no record.
+- Check the record name before the power goes up. Refuse a record name that exists. Open the record for exclusive create.
+  Write the identity first. Check the record path and every permission flag of the run before the power goes up. A run that
+  fails at its record after the power-up leaves a hot unit and no record.
 - A command that writes its record and then re-raises needs one handler at the command dispatch. A handler per command misses
   the next command.
 
