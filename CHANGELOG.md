@@ -1,6 +1,6 @@
 # CHANGELOG — hw-from-spec
 
-## Current state (0.11.24): read this instead of replaying the entries below
+## Current state (0.11.25): read this instead of replaying the entries below
 
 - **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
   thirteen batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
@@ -11,6 +11,7 @@
   the double-blind drawing round at M1 of a printed part, the printed-case fit round (one short locating feature per parting line with its bind angle, seams in notches off the
   contact faces, a fit coupon before the parts, G-code as the evidence for every print claim), the software track, release cut + production cut + the arrival checklist + spec errata, agent operations with a measured resource budget
   (measure → audit → change; previews on the fast engine, geometry of record on the engine that passes the mesh gates; caches as determinism checks), the retro,
+  the next revision (one study per open area; a blind pass per discipline per gate), measurements that check their own counters,
   the PCBA fab after the order (engineer questions answered on pad-1 positions, the production-file package diffed per layer) and its upfront
   half (`ASSEMBLY_NOTES` in the package, the fab's-eye silk pass, hole sizes in the order remark, arrival rows A-0 / A-5), the fab's second
   round pixel-diffed before an answer, colour / cosmetic inserts (the whole face, host frame + lip + sill, the edge budget, fused STL for DFM
@@ -36,11 +37,67 @@
   agent-ops, pitfalls — one home per rule, the others link.
 - **Checks**: three read-only tiers — inner `scripts/iteration_gate.sh [-- <cmd> ...]` (a change's `--check` + grader set), standard
   `scripts/adopt_gates.sh --no-clone` (`make gates`), release `scripts/adopt_gates.sh` (`make check`); `smoke/run_smoke.sh` runs every script selftest, the rule greps, the enforcement negatives, both lints
-  and the evals; 18 evals
+  and the evals; 19 evals
   with mechanical checks; `docs/reviews/INDEX.md` lists every blind review of the skill.
 - **Generic by rule**: the skill names no project, part, board, order, account or person — `scripts/generic_lint.py` reads the whole repo
   (CHANGELOG and docs included; history keeps its measured numbers), a fenced worked example keeps numbers and kinds but never a name, and the
   repo carries no project retro (a retro report is folded, then deleted).
+
+## 0.11.25 - 2026-10-24 - Measurements that check their own counters, the studies before a next revision, the public export, side pockets and feet
+
+Source: the bench, case and study days after the 0.11.24 cut of a pluggable-module management tester. The days held a long two-end
+pattern campaign, a first meter session and a printed-case DFM round. They also held a public release and four studies for the next
+revision. The input is 105 entries of the project's log (96 dated in the window and nine older lines folded from agent
+memory), plus ten items named by the coordinator: six tool review findings, the studies, one blocker filed for a file already in the tree,
+and two owner rules. Classes: GENERAL 92 folded, 7 already carried by 0.11.24, 3 near duplicates, 2 project-only, 1 meta line. The
+project keeps its copy of the map; the skill repo carries no retro report.
+
+### Added
+- `references/software-track.md` §23, a measurement checks its own counters, the norm and never a mode. Raw reads per window. The bits
+  law in every window, windows of 5 s or more. The lane rate from the active application. The wrap and the overflow risk. The rate
+  computed two ways against the reported one, on a frozen read. Clear-on-read flags ORed. INCONCLUSIVE with the named reason. The verdict
+  over every window after the settling time, with the run totals. The settling time measured and reported, the first windows kept, the
+  checker lock-in. Warm judging. Each unit as sender and receiver. The rule-out list. Unit numbers. Inputs checked before a hazardous
+  step. One handler at the command dispatch.
+- `references/software-track.md` §18: the first meter session. The low-impedance mode, the ground point, an "off" rail fed through the
+  pull-ups, the laptop port's current from the CC pin. The fan check, the health poll, the two gates, the heat of pattern traffic.
+- `references/software-track.md` §19: a flag that latches again, a success status is not "applied", a low-power pin is not a guard, leaving low
+  power does not start the data path.
+- `references/software-track.md` §20: the bit counter points at §23, the settling time is measured, the dark lane, the host loop as
+  a far-end loopback.
+- `references/software-track.md` §22: a browser's private-network rule by version, credentials over a radio provisioning link.
+- `references/schematic-phase.md` §6, studies before the next revision's spec: the shape, live parts, the bench first. Rules on power, the
+  USB power sink, thermal, heat capacity, units, loops on a connector, pads and the stack, the controller.
+- `SKILL.md` §5: the next revision gets one blind pass per discipline before each gate. Field findings are named checks. §9: one
+  sentence on the measurement norm.
+- `references/release-and-cut.md` §15, a public export. The leak gate and its id formats, the public address, data keys. Docstrings and
+  comments ship. Pages from the yaml and the renders, the printed word, the user drawing, screenshots, Pages before the first push.
+- `references/dfm-printed-enclosure.md` §8.7, side pockets, bosses, screw wells and feet. The magnet wall budget, the full wall behind a
+  pocket floor, the roof over the whole depth, the inward option first. The boss run to the bed, the hulled pad, the saddle at a step.
+  The light baffle as a wall, the counterbore bridge, a foot beside its screw. A local exception after the shared rule, the shear key.
+- `references/case-pipeline.md`: a preset nobody rebuilds goes stale. The stability row after every foot move. One yaml block per bought
+  part. A cache keyed on what its output reads, and export timestamps.
+- `references/fdm-print-optimisation.md` §3: the finish block row; hole sizing in one place; a three-bore coupon.
+- `references/part-verification.md`: the fab's keyword search endpoint; search the tree before a BLOCKED row; other paths to a PDF; the
+  stocked sibling's own drawing.
+- `references/pcb-layout-dfm.md`: connector pads over thin prepreg (§3). Fab capabilities move (§2). A single-reflow part on the side
+  reflowed last (§9). Test point names on the silk (§11).
+- `references/agent-ops.md` §2: `.venv` ignored before a venv symlink, the merge race before a tag, `gh pr checkout`, stacked pull
+  requests.
+- `references/agent-ops.md` §3: one home per rule. §4: a reviewer's measurement fix re-tested on real captures.
+- `references/agent-ops.md` §5: the browser profile and the screenshot roots.
+- `smoke/README.md`: a mesh-dependent check carries `needs-mesh:` and runs in both venv kinds.
+- `references/pitfalls.md`: 34 dated lines.
+- `evals/evals.json`: eval 19, a pattern-test verdict that checks its counters (three mechanical checks).
+- `smoke/run_smoke.sh`: five greps on §23, schematic-phase §6, release-and-cut §15, dfm §8.7 and the search-before-BLOCKED rule.
+- `scripts/generic_lint_terms.yaml`: four more part and vendor names.
+
+### Changed
+- `references/software-track.md` §20: the bit-counter bullet no longer says "judge the ratio and ask the vendor"; it points at the law
+  check of §23. The settle bullet no longer says "let the link settle"; it says measure the settling time and keep the first windows.
+
+### Not done
+- No script change. The measurement rules live in a project's tool; the skill carries them as rules and an eval.
 
 ## 0.11.24 - 2026-10-21 - The bring-up and test rounds of a management tester: the register map as data, pattern tests between two ends, the command block and a firmware download, the browser page
 

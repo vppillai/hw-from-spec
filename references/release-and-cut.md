@@ -251,3 +251,26 @@ README alone did not answer the owner's "are the settings backed up" after the o
   `git status --short --ignored` for strays.
 - CI compares a rebuild with the release archive only on the release tag: the step runs when `git describe --tags --exact-match` equals the
   VERSION in the order record. Main moves after the order without a red build.
+
+## 15. A public export from the private tree
+- One generator builds the public tree from a yaml list of what goes out. A leak gate reads every exported file. It refuses decision
+  and review ids, private paths, order numbers, vendor and person names, and the company name. Two blind reviews come before every public
+  push, and the owner's word is the go.
+- Give the gate every id format the records use, the review finding ids included. Anchor each pattern on word boundaries: `E-[0-9]+`
+  matched `BER-LANE-3`.
+- Allow the public repository address on its own line. The address carries the account name, so the name pattern hits every page link.
+  Allow the full address, never the bare name.
+- The gate also hits data keys. Rename the label the user sees, keep the key, and allow the key by a regex on its line.
+- Docstrings and comments ship. Run the gate and the writing lint over them, or strip them in the export. A stripper must parse the
+  language. A nested `${}` in a JS template literal ended a string early, and 20 of 110 comments survived. Check the result with the
+  language's syntax check, and count the comments that stay.
+- Write the public pages from the generator yaml and the rendered pictures, not from the manual. A manual describes the version of its
+  own date.
+- Name a control by the word printed on the part. The yaml, the software and the print can disagree. Keep one name table on the hardware
+  page, with the software word in brackets at first use.
+- An engineering drawing is not a user drawing. Its callouts carry ids, vendor names and private paths. A public sheet needs its own
+  generator option; until then, publish a dimension table and the rendered faces.
+- Before a public screenshot, replace the login name and the record paths in the page. A screenshot captured into the public tree is its
+  own source: the export keeps it and never rebuilds it.
+- Enable the hosting before the first push of a Pages workflow. The push starts the deploy at once, and the deploy fails while Pages
+  does not exist.

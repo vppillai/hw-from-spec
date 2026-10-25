@@ -67,6 +67,11 @@ grep -q 'Write the hardware runbook from the code of record, never from the spec
 grep -q 'must rebuild every input the live judge saw' "$SWT" && grep -q 'A calibration candidate never loosens a limit of record' "$SWT" || { echo "FAIL: $SWT lost the re-judge / calibration rules (§15)"; exit 1; }
 grep -q 'A screen hook never raises into the flow' "$SWT" || { echo "FAIL: $SWT lost the screen-hook rule (§16)"; exit 1; }
 grep -q 'is a checklist, not a rewrite' "$SWT" || { echo "FAIL: $SWT lost the checklist-revision rule (§17)"; exit 1; }
+grep -q '^## 23. A measurement checks its own counters: the norm, never a mode' "$SWT" && grep -q 'The verdict counts every window after the settling time' "$SWT" && grep -q 'A settling time is measured, never hidden' "$SWT" || { echo "FAIL: $SWT lost the measurement-integrity rules (§23)"; exit 1; }
+grep -q '^## 6. Studies before the next revision' "$SKILL/references/schematic-phase.md" || { echo "FAIL: schematic-phase.md lost the next-revision studies (§6)"; exit 1; }
+grep -q '^## 15. A public export from the private tree' "$SKILL/references/release-and-cut.md" && grep -q 'Docstrings and comments ship' "$SKILL/references/release-and-cut.md" || { echo "FAIL: release-and-cut.md lost the public-export rules (§15)"; exit 1; }
+grep -q '^### 8.7 Side pockets, bosses, screw wells and feet' "$REF" || { echo "FAIL: $REF lost the side-pocket / boss / foot rules (§8.7)"; exit 1; }
+grep -q 'Search the tree before a BLOCKED row' "$SKILL/references/part-verification.md" || { echo "FAIL: part-verification.md lost the search-before-BLOCKED rule"; exit 1; }
 grep -q 'Only one short feature locates a parting line' "$REF" && grep -q 'fit coupon of the parting line prints before' "$REF" || { echo "FAIL: $REF lost the parting-line fit rules (§8.6)"; exit 1; }
 grep -q 'Every slot is open at both ends' "$REF" && grep -q 'Elephant foot applies only to features that start on layer 1' "$REF" || { echo "FAIL: $REF lost the open-slot-ends / layer-1 elephant-foot rules (§8.5 / §8)"; exit 1; }
 grep -q 'at least three first-layer lines wide' "$REF" && grep -q 'over ALL piece pairs' "$REF" || { echo "FAIL: $REF lost the inlay stroke / all-pairs gap rows (§8.1)"; exit 1; }

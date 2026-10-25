@@ -434,6 +434,32 @@
      "run": "! grep -q 'objects_in_3mf' \"$SKILL\"/references/print-kit.md"
     }
    ]
+  },
+  {
+   "id": 19,
+   "name": "pattern-test-verdict-checks-its-counters",
+   "prompt": "Our bench tool runs a 600 s pattern test between two modules and prints the module's reported error rate from the last read as the result. The result says 2e-7, MEASURED. Can I put that in the release record?",
+   "expected_output": "Not as it stands. The agent reads software-track §23: counter checks are the norm in every measurement. It asks for (or makes the tool keep) the raw reads per window, checks the bits law (rate × T against rate × T² / 2, windows of 5 s or more), checks for an error counter that goes down (wrap or reset) or nears the counter width, computes the rate as errors over rate × T and over the bit counter and compares both with the reported rate on a frozen read, and makes any invalid window INCONCLUSIVE with the named reason. The verdict counts every window after a measured settling time and keeps the run totals; the first windows stay in the record. It suggests testing each unit as sender and receiver before blaming one.",
+   "assertions": [
+    "the agent refuses a verdict from the last read alone and asks for every window after the settling time plus the run totals",
+    "the agent checks the error counter for a wrap and the bit counter against the rate law",
+    "the agent computes the rate independently and compares it with the reported one",
+    "the settling time is measured and reported, never cut from the record, and the checks are not an optional mode"
+   ],
+   "checks": [
+    {
+     "name": "the measurement rules live in software-track §23",
+     "run": "grep -q '^## 23. A measurement checks its own counters' \"$SKILL\"/references/software-track.md && grep -q 'has wrapped or reset' \"$SKILL\"/references/software-track.md && grep -q 'Compute the error rate yourself' \"$SKILL\"/references/software-track.md"
+    },
+    {
+     "name": "the verdict and settling rules are present and §20 points at §23",
+     "run": "grep -q 'The verdict counts every window after the settling time' \"$SKILL\"/references/software-track.md && grep -q 'A settling time is measured, never hidden' \"$SKILL\"/references/software-track.md && grep -q 'Check its law in every window before you trust a rate from it (§23)' \"$SKILL\"/references/software-track.md"
+    },
+    {
+     "name": "SKILL.md §9 states the norm",
+     "run": "grep -q 'as the norm and never as a mode' \"$SKILL\"/SKILL.md"
+    }
+   ]
   }
  ]
 }

@@ -231,6 +231,21 @@ reason and one worked example.
   current-limited rail.
 - A tester that cannot see its own power source relies on an operator flag. Put a charger-present sense and a rail current monitor
   on the next revision, and make the release step refuse itself when the budget is not there.
+- The first meter session has its own traps. A meter's low-impedance mode loads the node with a few kΩ. It pulls a bled
+  rail or a pull-up line down. Use the plain DC volts range.
+- Use a large grounded metal part as the ground point. A press-fit connector cage holds a probe tip without slipping.
+- A switched-off rail is not at 0 V while the host is plugged. Idle-high bus lines feed it through their pull-ups into the
+  bleeder; one board read 0.57 V. Check a rail "off" with every source connected. The fix is on the signal lines, not the rail.
+- A laptop USB-C port may offer 1.5 A only. Read the CC pin before you budget host power. About 0.9 V on the sink's
+  pull-down means 1.5 A; about 1.6 V means 3 A.
+- A fan that is off reads like a bad module. Three throttles in a row came from a fan with no power. Look at the fan before
+  you blame the module, and give the next revision a tachometer read.
+- A high-power window without a health poll is a hazard. One run polled nothing between its windows. The module crossed its
+  warning limit and shut two lanes down. Poll both ends between windows, with the throttle limit.
+- A posture table and a power budget flag are two gates, and each lets other runs through. The record names the gate that
+  let a run through.
+- Pattern traffic adds heat over the idle hold at the same budget. One fit read 13 degrees and 1.6 degrees per watt more.
+  Size the cooling and the soak limits from a fit under traffic.
 
 ## 19. The register map as data
 - A tester that reads only the bytes its tests need grows a pile of constants with holes. An audit read 7 of 18 page families
@@ -255,6 +270,14 @@ reason and one worked example.
 - An advertised duration is a ceiling the host waits for, not a measurement. One module answered ten times faster than its bound.
 - A module may answer a feature query with "command unknown" and still run the commands of that family. "Unknown" reads as
   "not advertised", never as a failure, and the exercise decides.
+- A latched flag latches again while its condition holds. A loss-of-signal flag pulled the interrupt line low right after the
+  read, because the far transmitter was still off. Read the line a second time after the undo.
+- A success status on a write is not proof that the setting applied. One module answered "success" for every staged setting
+  and kept its active set unchanged. The read-back of the active set is the only proof.
+- A low-power pin is not a hardware guard when a register can override it. Any bus master can write the override. Only the
+  rail switch is an absolute stop.
+- A script that leaves low power does not bring the data path up. The data path then reads deactivated, and the receive
+  monitors read nothing. Read those monitors inside a pattern run or a trend run.
 - A firmware update can rotate the application table. One update moved the one-lane application to the first slot and made the
   eight-lane one the second. Select an application by its interface name, never by its number, and key the criteria on the
   firmware version.
@@ -266,12 +289,16 @@ reason and one worked example.
   the counters, then open the gate.
 - A long pattern function hides three reusable steps: arm (setup, settle, clear the latched flags), end-of-gate statistics,
   disable. Pull them out, and a per-second trend and a far-end loopback cost one loop each.
-- A module's bit counter may read a multiple of the line rate over the gate. Judge the ratio of errors to bits, which the
-  module's own selector agrees with, and ask the vendor about the unit.
+- A module's bit counter may not grow as rate × time. Check its law in every window before you trust a rate from it (§23).
 - A far-end loopback carries the pattern while the checker reports lock loss for the whole gate and still counts. Judge a loopback
   run on a per-second lock view, never on the end flag alone.
-- A link settles after the modules warm: the per-second rate fell by an order of magnitude inside a minute. Let the link settle
-  before the gated measurement that judges it. Say which fibre or cable set the floor; the wrong fibre type still links.
+- A link settles after the modules warm: the per-second rate fell by an order of magnitude inside a minute. Measure the
+  settling time and report it. Judge the windows after it, and keep the first windows in the record (§23). Say which fibre
+  or cable set the floor; the wrong fibre type still links.
+- Judge a dark lane on the checker's bit total, not on the latched lock-loss byte. A disabled lane stops at one bit, an odd
+  count. The lock-loss byte flickers on a marginal fibre in any short window.
+- A host-side loop also acts as a far-end loopback. A module in mission mode returns its media input through the loop to
+  its media output.
 - A host-side generator points at the host, not at the cable. On a two-cage board with the host lanes cross-connected it drives
   the other end's host input, and the far media-side checker measures the whole path with no host present.
 - Use the module's gating timers for an exact window, and read the error counters beside the derived rate.
@@ -333,6 +360,47 @@ reason and one worked example.
 - A record index keyed on identity needs a kind rule decided by the records that carry the evidence: a record that states the
   media technology sets the kind, a record without one never does. A flow written for two ends hides literal end names in
   prompts, loops and the judge; grep for them before the first one-end run.
+- A browser's private-network rule changes by version. One browser now lets an HTTPS page fetch a private address after one
+  prompt; two others still block it. Date the claim, and test each browser the users run.
+- A provisioning protocol over a radio link can send the network password in clear. Use a wired serial link for it, or wrap
+  it in an encrypted session.
+
+## 23. A measurement checks its own counters: the norm, never a mode
+- Counter checks are part of every measurement. No flag or mode turns them off, and no name such as "high fidelity" sets
+  them apart. The knobs are the window length and the gate mode. Add a sampling knob only when it helps.
+- Keep the raw reads of every window. A read holds the monotonic time, the error and bit counters, and the reported rate. It
+  also holds the lock flags and the temperature of both ends.
+- Check the bits law in every window. Compare the bit counter with rate × T and with rate × T² / 2, and record the model that
+  fits. One module's bit counter grew as rate × T² / 2 over 56 lane readings.
+- Use windows of 5 s or more. At T = 2 s, rate × T² / 2 equals rate × T, and the check cannot tell the two models apart.
+- Take the lane rate from the active application. It is the host interface rate over the media lane count, from the standard's
+  table. A rate written as a constant is right for one application only.
+- An error counter that goes down between reads has wrapped or reset. One count stayed under 2^32 and fell in about half of
+  380 reads over 600 s. Flag a count near the counter width, and bound the window length by it.
+- Compute the error rate yourself: errors over rate × T, and errors over the bit counter. Compare both with the reported rate.
+  A module that divides a wrapped count by its own bits reports a wrong rate that agrees with its counters. A mismatch names
+  the tool or the module counter as the fault, and the record keeps all three numbers.
+- Compare computed and reported rates on a frozen read, or on an unfrozen read of 1 s or more. An unfrozen read takes the
+  selectors tens of ms apart.
+- A flag that clears on read is ORed over every read of a loop. The read at the end covers only the last second.
+- Any invalid window makes the run INCONCLUSIVE with the named reason. A run with a wrapped counter is never MEASURED.
+- The verdict counts every window after the settling time. The record keeps the run totals beside each window. A verdict from
+  the last window alone hides a bad window in the middle.
+- A settling time is measured, never hidden. Report the time to a stable rate per direction, and keep the first windows in the
+  record. After a release or a transmitter restart, the first 1 s window read 1e5 times worse on every sender. That burst is the
+  checker lock-in, not a module property. A short window that starts at the release measures the lock-in, not the link.
+- A cumulative counter keeps the cold first seconds in every later read. Judge warm, from windows of 10 s after the settling
+  time. Cold 120 s runs read 1e-6; the same pairs read 1e-9 to 1e-10 warm.
+- Test each unit as a sender and as a receiver. One module sent clean and received at 1e-4 on all lanes. Only a swap of the far
+  unit showed which side failed.
+- Rule out one cause per run, and write each one down: temperature, supply, tool, method, unit, cable direction. The list keeps
+  the hunt short and a vendor question factual.
+- Number every unit before a multi-unit session, on the unit and in the record. Four modules moved between three unmarked cases
+  in one evening, and only the identity read told them apart.
+- Check every input of a hazardous step before the step. Validate the record name, its path and the flags before the power goes
+  up. A run that fails at its record after the power-up leaves a hot unit and no record.
+- A command that writes its record and then re-raises needs one handler at the command dispatch. A handler per command misses
+  the next command.
 
 ## Documents generated from the software
 Reason-code table, guard list (S1…Sn + override flags), supported-class table (from the criteria + FEA/thermal records), quick card (pinout +

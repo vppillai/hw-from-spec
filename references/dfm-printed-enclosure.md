@@ -680,6 +680,32 @@ ironing, fuzzy skin, per-object overrides) and how each is PROVEN from the g-cod
   a crescent void (min 0.03). Shortening the teeth to end 1.5 from the cavity ends fixed it. Rerun print DFM on every body after any clearance
   change (`print-dfm.md` §3 e). Prefer shortening the feature that approaches to filling the gap.
 
+### 8.7 Side pockets, bosses, screw wells and feet **[measured]**
+- A side-facing magnet disc needs its thickness plus a floor behind it. Check the wall budget before a magnet station is promised. In a
+  2.0 wall, a 3.175 disc needs an inward boss. The boss needs room under any deck ring and above the vents.
+- A side pocket needs a full wall behind its floor plane at every Z it spans. Find the Z band where the body is a full wall, and put the
+  pocket there. Derive any proud height from the pocket depth; never pick it.
+- Count the roof over a side pocket along its whole depth, not only inside the ring. A pocket that runs past the wall can sit under an
+  opening, over the board.
+- Evaluate the inward option first: the pocket into the wall with a local thickening. A proud boss breaks a flush pair, because two
+  coupled units then touch at the boss, not along their faces.
+- A boss on a vertical face of an upright FDM print cannot end round or in a V. A round underside is a flat overhang at its lowest
+  band. The V tip is a free edge. Run the boss down to the bed plane as a slab.
+- A pad disc that meets a boss ring leaves a narrow notch at the joint. The census reads the notch as a thin wall. Hull the pad to the ring.
+- Two features that meet on one plane at a step leave a saddle. One face points +X above the step, the other -X below it. The census
+  reads the saddle as a thin wall (0.32 on one deck). Run the fused feature to the outline instead of stopping it short.
+- A light baffle under a printed deck is a wall, so it cannot be thinner than the census gate. Make the cell wall the gate wall, and the
+  cell the pitch minus that wall. Trim a lip the baffle crosses from past the deck edge. A trim box that starts at the baffle face
+  leaves a sliver ahead of it.
+- A screw well printed sole down has a roof: the counterbore seat prints in air. Bridge it in two layers, a bore-wide slot and then a
+  bore-wide square. Each layer then spans wall to wall.
+- Put a foot beside its screw, with a land to the counterbore mouth. A foot over the counterbore hides the screw and comes off at every
+  screw removal. Rerun the stability row after every foot move (`references/case-pipeline.md` §Stability).
+- Apply a local exception after the shared rule it breaks. Drop a vent slot under a boss after the vent register is chosen. A boss added
+  to the register's input moves the register of every face.
+- A plain bar in a plain pocket is a shear key. It holds lift and twist, never a sideways pull. A clip that holds sideways must pull the
+  two outer faces together.
+
 ## 9. Two versions from one yaml (vendor MJF + home FDM)
 Presets are `base + overrides`, deep-merged before any module reads the yaml (`references/case-pipeline.md` §Presets). The geometry may differ
 wherever the printer needs it (split legend plate, raised legends, 1.6 walls, screws or magnets) while the envelope, bezel and windows stay

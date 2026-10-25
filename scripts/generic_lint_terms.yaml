@@ -54,6 +54,10 @@ parts_and_refdes:
   - '(?i)amphenol'
   - '\b74LVC14A\b'
   - '\bBAT54\b'
+  - '(?i)accelink'
+  - '(?i)\bcredo\b'
+  - '\bESP32-S3\b'
+  - '\bLSHM-'
 record_ids_as_citations:                           # a project's decision / change / blocker ids cited in prose
   - '\bCC-(?!001\b)\d{3}\b'                      # CC-001 / D-01 are the template's own seed rows (the process row, the spec row)
   - '\bD-(?!01\b)\d{2}[a-z]?\b'

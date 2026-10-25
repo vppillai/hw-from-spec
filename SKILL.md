@@ -1,6 +1,6 @@
 ---
 name: hw-from-spec
-version: 0.11.24
+version: 0.11.25
 description: Run a hardware project (a PCB, a printed or CNC enclosure, or both — scope chosen at kickoff; contract fab such as JLCPCB) from a written specification to a production cut with an owner-gated, generated-only, blind-reviewed workflow — a kickoff questionnaire that asks every owner decision up front with recommended answers, a zero-warning manufacturability bar, and a retro that folds each project's learnings back into the skill. Use this whenever someone starts a board or enclosure project from a spec, asks to set up gates, a decision log, generators, part verification, a fab DFM mirror, a case pipeline, FEA, blind reviews, a release report or a production cut for one, or resumes such a project, or wants the skill improved from a finished project — even if they only say "new KiCad board", "order this at JLC", "review the layout", "cut the release" or "what did we learn".
 ---
 
@@ -286,6 +286,11 @@ scope the M1 round's role set = `case_dfm` + mechanical intent. Its checklist is
 closed rims, retention present in the mesh). Its verifier re-runs `scripts/thin_wall_census.py --target <t>` on the frozen worktree's STLs and
 compares with the census JSON of record. Required before the case order (`templates/90-log/GATES.md`).
 
+**The next revision** gets one blind pass per discipline before each of its gates. The disciplines: schematic, layout, mechanical, the
+host link, firmware and tool, test plan and criteria, documentation. Every field finding of the last revision is a named check in the checklist of its discipline.
+One merged review at the end finds what a per-discipline pass would have found a gate earlier. The studies that open the revision follow
+`references/schematic-phase.md` §6.
+
 **The double-blind drawing round** [mech, both] (the M1 round for a printed part, beside `case_dfm`): the drawing sheet is generated from the
 exported meshes with its self-checks (`references/case-pipeline.md` §Drawings). Reviewer A gets ONLY the sheet and a one-paragraph design
 intent, and reports what the sheet says the part does and where it cannot. Verifier B measures every claim of A on the meshes of record and
@@ -429,6 +434,8 @@ list. The reference tags each **[checker]** / **[vendor sheet]** / **[physics]**
 
 Bring-up tool first (a `--selftest` that needs no hardware, `--dry-run`). Then the architecture note, criteria as YAML the tool reads, and PASS / FAIL
 / INCONCLUSIVE with reason codes the manuals are generated from. Safety guards stay optional flags before the owner's nod (`references/software-track.md`).
+A measurement checks its own counters in every run, as the norm and never as a mode. A settling time is measured and reported, never hidden
+(`references/software-track.md` §23).
 
 ## 10. Release cut and production cut
 
