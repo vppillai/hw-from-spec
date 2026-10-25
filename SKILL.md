@@ -435,9 +435,11 @@ list. The reference tags each **[checker]** / **[vendor sheet]** / **[physics]**
 ## 9. Software track [ee, both] (optional)
 
 Bring-up tool first (a `--selftest` that needs no hardware, `--dry-run`). Then the architecture note, criteria as YAML the tool reads, and PASS / FAIL
-/ INCONCLUSIVE with reason codes the manuals are generated from. Safety guards stay optional flags before the owner's nod (`references/software-track.md`).
+/ INCONCLUSIVE with reason codes the manuals are generated from. Safety guards on hardware actions stay optional flags before the owner's nod (`references/software-track.md`). Measurement checks, the
+checker challenge included, are never optional flags.
 A measurement checks its own counters in every run, as the norm and never as a mode. The start-up settling follows a rule fixed
-before the run, and the record reports it (`references/software-track.md` §23).
+before the run, and the record reports it (`references/software-track.md` §23). Bring-up and USB power, the register map and
+pattern tests follow `references/software-track.md` §18 to §20.
 
 ## 10. Release cut and production cut
 
@@ -580,7 +582,7 @@ row. The classifier is a keyword matcher: the report is the input to the change;
 | machined enclosure: corner radii, walls, threads, anodising, quote page, case-order gate | `references/cnc-enclosure.md` |
 | bought hardware: line schema, hardware classes (inserts, magnets, feet, labels), adhesive on PA12 | `references/part-verification.md` |
 | meshing, solving, caches, reporting | `references/fea-stage.md` |
-| bring-up tool, criteria, codes, measurement counter checks (§23) | `references/software-track.md` |
+| bring-up tool, criteria, codes; bring-up and USB power (§18), the register map (§19), pattern tests (§20), the browser page (§22), measurement counter checks (§23) | `references/software-track.md` |
 | reports, collateral, tag, cut yaml, one-round chain, assembly guide, re-layout, a public export (§15) | `references/release-and-cut.md` |
 | repository conventions: one folder per product, `assets/`, a README in every folder, build output ignored, release folder by use, order record, clean tree | §0 step 8, `references/project-yaml.md` §Layout, `references/release-and-cut.md` §12–§14 |
 | writing: sentences, voice, words, where the rules apply, how to fix a lint hit | `references/writing-style.md`, `scripts/style_lint.py`, `scripts/style_gate.py` |

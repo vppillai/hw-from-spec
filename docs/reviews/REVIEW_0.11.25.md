@@ -267,3 +267,84 @@ not seen. A rule deleted from the reference, the rule file and the manifest toge
 | P-46 | C3-F23 | NOTE | Scripted use of an undocumented endpoint. | FIXED: check the site's terms before scripted use. |
 | P-47 | C3-F24 | NOTE | `release_archive.sh` was silent with no package. | FIXED: a message and no early exit. |
 | P-48 | C3-F25, C3-F26, G3-R35, G3-R36, K3-R17, K3-R18 | NOTE | Versions, links, arithmetic and the leak sweep checked correct. | ACCEPTED. |
+
+## Round 4: the final fix pass
+
+Inputs: three blind reviews of the round-3 tree and diff. Claude (20 findings: BLOCKER 1, MAJOR 5, MINOR 9, NOTE 5), GPT (34:
+BLOCKER 6, MAJOR 17, MINOR 10, NOTE 1) and Grok (18: BLOCKER 3, MAJOR 7, MINOR 5, NOTE 3). Ids: Claude S4-nn, GPT G4-Rnn, Grok
+K4-Rnn. 72 findings merge into 44 rows. No review round follows this one, so nothing below is confirmed by a reviewer.
+
+| severity | rows | FIXED | PARTLY | RESIDUAL | ACCEPTED |
+|---|---|---|---|---|---|
+| BLOCKER | 9 | 8 | 1 | 0 | 0 |
+| MAJOR | 21 | 17 | 3 | 1 | 0 |
+| MINOR | 11 | 9 | 1 | 1 | 0 |
+| NOTE | 3 | 1 | 0 | 1 | 1 |
+| total | 44 | 35 | 5 | 3 | 1 |
+
+What the checks show on this branch: `rule_check.py --mutate` turns 2661 of 2661 mutations red. `--attacks` turns 33 of 33 red,
+the round-4 reviewer's attacks included. The reviewer's own attack files, run unchanged, give 11 of 11 and 3 of 3 red.
+
+| id | sources | severity | finding | disposition |
+|---|---|---|---|---|
+| Q-01 | S4-01 (BLOCKER), G4-R20 (BLOCKER) | BLOCKER | The export gate decompressed nothing: 3MF, zip, docx members, PDF Flate streams and svgz leaked. §15 asked only for exiftool. | PARTLY. Fixed: zip, 3MF, Office, gzip, svgz, bz2 and xz members and PDF Flate streams are decoded and matched; an undecodable part or PDF filter is a hit; §15 asks the reviewer to extract the text and the metadata and read both; the CHANGELOG claim corrected. Residual: tar, 7z, rar and image pixels are not extracted (R-06, R-07). |
+| Q-02 | S4-02 | MAJOR | A `binary:` path kept its review after the file changed. | FIXED: `binary: <path> <sha256>`; a changed file or an unused entry fails. |
+| Q-03 | G4-R19 | BLOCKER | An allow value that contained a private term was accepted. | FIXED: any private, generic or id match anywhere in the value refuses it; a `url:` must look like a URL. |
+| Q-04 | G4-R21 | MAJOR | Export mode needed only two private groups, and `--terms` could replace the generic rules. | FIXED: every promised private and generic group needs a pattern; `--terms` is refused with `--export`. |
+| Q-05 | S4-14 | MINOR | A group written as a string became one pattern per character. | FIXED: each group must be a list of non-empty strings; otherwise exit 2. |
+| Q-06 | K4-R09 (MAJOR), S4-13 | MAJOR | A phrase split over a line break, a soft hyphen, a zero-width space or fullwidth letters hid a name. | FIXED: NFKC and removal of invisible format characters in the export; names matched across each line break in both modes. Two real split phrases in the repo found and rewritten. |
+| Q-07 | S4-15, G4-R23 | MINOR | §15 said "`.git` in the export root" and "skips no history". | FIXED: a `.git` file or folder anywhere is refused; copy the tree to an empty folder; "no history file inside the export". |
+| Q-08 | G4-R22, K4-R14 | MAJOR | No required CI check runs the gate; a direct push bypasses it. | RESIDUAL R-01. §15 states the manual step and the CI conditions. |
+| Q-09 | S4-03 | MAJOR | A heading, comment or fence inside a guarded section stayed green. | FIXED: refused inside an every_sentence section; `--mutate` inserts each; the reviewer's B1, A1, A2 and B3 go red. |
+| Q-10 | S4-04, G4-R25, K4-R08 | MAJOR | The manifest held counts only; a same-count edit of a rule and its guard passed. | PARTLY. Fixed: the manifest holds a sha256 of each whole entry, and `--write-manifest` prints each changed entry. Residual R-04: an edit of the reference, the rule file and the manifest in one commit. |
+| Q-11 | S4-07, S4-08, G4-R26, K4-R08 | MAJOR | §19, §22, other files, a new overriding section, pitfalls overrides and eval 19's answer were unguarded. | PARTLY. Fixed: §19 and §22 sentence-guarded; the `## ` headings of software-track pinned (a new §24 goes red); override patterns banned in software-track, the pitfalls and SKILL; eval 19's answer and assertions pinned by sha256. Residual R-03 for the other files. |
+| Q-12 | G4-R01 (BLOCKER), S4-05, K4-R04 | BLOCKER | "At most one count" cannot hold for a running opportunity counter, and a stale read could start an epoch. | FIXED: stop or gate the count, reset, wait the documented update time, drop earlier reads, read a fresh baseline consistent with the time since the reset. |
+| Q-13 | S4-06, G4-R03 | MAJOR | A window longer than its cap was not invalid; a read cycle longer than the cap was not addressed; BER_max was trusted when only documented. | FIXED: such a window is invalid; a read cycle over the cap makes the run INCONCLUSIVE unless the counters are frozen or latched together; BER_max is 1 unless proven. |
+| Q-14 | G4-R02 | MAJOR | Epoch continuity missed lock loss, watchdog, gate expiry, low power and an application change. | FIXED: every documented clearing event is listed and covered by the proof. |
+| Q-15 | G4-R04, S4-09, G4-R29 | MAJOR | A lower bound from an unexplained step; two kinds of lower bound; the CHANGELOG called a wrap a lower bound. | FIXED: a lower bound only from a proven saturation or a proven wrap outside the cap; the Poisson lower limit applies to it; the CHANGELOG corrected. |
+| Q-16 | G4-R05 | BLOCKER | The lane map could pass with swapped injector and counter maps. | FIXED: anchored to a known physical lane; only the expected counter rises, every other stays unchanged. |
+| Q-17 | G4-R06 | MAJOR | The settling prefix could hide a start-up defect. | FIXED: the start-up is judged on its own against start-up limits; the verdict says what it covers. |
+| Q-18 | G4-R07 (BLOCKER), K4-R02 (BLOCKER) | BLOCKER | The pre-FEC waiver read as an escape. | FIXED: no waiver; without a measured pre-FEC margin the record says "pre-FEC margin not verified" and the lane cannot PASS into a release record. |
+| Q-19 | G4-R09 | MAJOR | "Bounds at CL" implied a two-sided interval. | FIXED: one-sided Poisson limits. |
+| Q-20 | G4-R10 (BLOCKER), S4-18 | BLOCKER | No dispersion test or model was defined. | FIXED: clustered errors give INCONCLUSIVE unless the criteria predeclare a test; a chi-square test against the opportunity-weighted expectation is named as an example. |
+| Q-21 | S4-19, K4-R12 | MINOR | No family-wise rule for many lanes. | FIXED: the Šidák rule as one way to set the level per lane. |
+| Q-22 | K4-R07 (MAJOR), S4-10 | MAJOR | SKILL §9 called safety guards optional, and an unproven lane kept its PASS. | FIXED: measurement checks, the challenge included, are never optional flags; an unproven lane is INCONCLUSIVE in the run verdict. |
+| Q-23 | S4-11 | MINOR | The challenge had no session or epoch scope. | FIXED: same session and configuration, its own epoch, out of the run totals, repeated after a firmware, application or pattern change. |
+| Q-24 | K4-R01 (BLOCKER), G4-R08 | BLOCKER | §20 said an enabled lane's opportunity counter grows at the lane rate, against §23. | FIXED: the delta matches the documented opportunity rate × the counted time; a disabled lane's rule depends on the counter semantics. |
+| Q-25 | K4-R03 | BLOCKER | The PD soft-reset sentence was ungrammatical. | FIXED: send a soft reset only when the policy engine and the datasheet call for recovery; Get_Source_Cap is the query. |
+| Q-26 | K4-R05, G4-R11, G4-R12, S4-12 | MAJOR | 1500 mA read as plain Default USB Power; no CC pin rule; Rp toggling universal. | FIXED: 1500 mA only in dual-lane USB 3.2 mode, checked against the live spec and the enumerated mode; read the CC pin with the Rp, under 0.2 V is no tier; the toggle is PD 3.x collision avoidance, a signal and not a tier. |
+| Q-27 | K4-R06, K4-R11 | MAJOR | The rate's unit and the counted time T were not tied to the counter. | FIXED: the rate at which the counter increments, in its unit; T is the counted time, also for gated counters. |
+| Q-28 | K4-R10, G4-R28 | MAJOR | SKILL did not route to §18–§20 or §22. | FIXED: §9 and the routing row name them. |
+| Q-29 | G4-R13 | MAJOR | "Well under the time constant" is not a poll bound. | FIXED: the poll period from margin, heating rate, sensor lag and shutdown latency, with a hardware cut-off kept. |
+| Q-30 | G4-R14 (BLOCKER) | BLOCKER | Sensor lag flattens the slope and overstates C. | FIXED: fit the lag with the net heat flow, or use an independent conservative C from masses and specific heats. |
+| Q-31 | G4-R15 | MAJOR | "Exactly one coupling stage" is overgeneral. | FIXED: the number, value and placement come from the interface specification and both schematics. |
+| Q-32 | G4-R17 | MAJOR | The magnet stacks were not signed worst cases. | FIXED: F_min = W_min − D_max; p_min and p_max; P_nom − P_tol − d_max ≥ c_min. |
+| Q-33 | G4-R16 | MINOR | The back-drill example has no source URL. | RESIDUAL R-09. |
+| Q-34 | G4-R18 | MINOR | One finish block for every plate. | FIXED: one block per validated process, material and nozzle class. |
+| Q-35 | G4-R24 | MAJOR | `release_archive.sh` only warned with no package of record. | FIXED: ee and both scopes fail; mech scope stages without one. |
+| Q-36 | G4-R27 | MAJOR | Eval 19 runs no agent; its assertions missed FEC, reset, lock, aggregation and start-up. | PARTLY. Fixed: the seven assertions cover them. Residual R-02: no agent run or grader. |
+| Q-37 | G4-R30 | MINOR | M-59 claimed a removable-plug alternative that §8.7 does not hold. | FIXED here: M-59 is superseded; §8.7 states the screw-access need and one layout that meets it. |
+| Q-38 | G4-R31, S4-16 | MINOR | A review-round id in an eval check; the account and PR numbers against "no account". | FIXED: the check renamed; the README and CHANGELOG state that the skill's own public address and PR numbers are not private terms. |
+| Q-39 | G4-R32, G4-R33, K4-R18 | MINOR | The endpoint lacked `https://`; packed sentences in the README and part-verification. | FIXED. |
+| Q-40 | K4-R13 | MINOR | "0.32 on one deck" read as general. | FIXED: labelled a dated worked example. |
+| Q-41 | K4-R15, S4-20 | MINOR | Long or packed sentences. | PARTLY. Fixed: the new sentences of §23, §6, §8.7 and §15 are 20 words or less. Residual R-10 for older lines. |
+| Q-42 | S4-17 | NOTE | The export selftest used realistic ids. | FIXED: plainly synthetic ids in the 9xx range. |
+| Q-43 | K4-R16 | NOTE | The public git history still holds the private terms. | RESIDUAL R-05. |
+| Q-44 | G4-R34, K4-R17 | NOTE | Versions agree; links resolve. | ACCEPTED. |
+
+## Residual list (open after the final pass)
+
+These are open. Nothing in this record closes them.
+
+| id | severity | residual |
+|---|---|---|
+| R-01 | MAJOR | No shipped CI template and no required check runs `generic_lint.py --export`. The gate is a manual step before each public push; a direct push bypasses it. |
+| R-02 | MAJOR | No eval grades an agent. Every eval's assertions need an agent run and a human grade; the mechanical checks prove the skill text only. |
+| R-03 | MAJOR | Guards cover software-track §18–§20, §22 and §23, schematic-phase §6, release-and-cut §15, dfm §8.7, the SKILL links and §9 sentence, banned patterns in the pitfalls, and eval 19. The other changed rules (case-pipeline, part-verification, fdm-print-optimisation, pcb-layout-dfm, agent-ops, SKILL §5) have no guard. |
+| R-04 | MAJOR | An edit of a reference, `evals/core_rules.yaml` and the manifest in one commit passes every check. Only the review of that commit catches it. |
+| R-05 | MAJOR | Past versions of `scripts/generic_lint_terms.yaml` in the public history hold private terms. A history rewrite is the owner's decision. |
+| R-06 | MINOR | The export gate does not extract tar, 7z, rar, JPEG, TIFF, STL or STEP content beyond their printable strings. Each is a hit until a human reads it and allows it by sha256. |
+| R-07 | MINOR | The export gate does not read text inside images (no OCR). The human read of each image is the control. |
+| R-08 | MINOR | The skill ships no executable counter model, so the §23 arithmetic is not tested by code here. A project's tool carries those tests. |
+| R-09 | MINOR | The dated back-drill example in pcb-layout-dfm §2 has no source URL. |
+| R-10 | MINOR | Some older sentences in software-track §18–§22 and the CHANGELOG exceed 20 words or hold two instructions. |

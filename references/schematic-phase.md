@@ -112,7 +112,7 @@ Rules the studies found, for any next revision. The worked examples come from on
   another reports nothing. A PD source that offers only a 5 V PDO is a different case; test both. A sink controller may keep the source
   capabilities only until the next message overwrites its buffer. Read that behaviour in the chosen controller's datasheet. The firmware
   copies the capabilities on the alert. To read them again, it sends Get_Source_Cap. A soft reset is protocol recovery, not a
-  query. Use it only as the PD policy engine and the controller's datasheet direct.
+  query. Send a soft reset only when the PD policy engine and the controller's datasheet call for recovery.
 - **Fan start-up.** A fan controller's duty after a power cycle is undefined until you verify it. A volatile curve can leave the fan
   at 0 % with no host. Use a part with an EEPROM, or a controller with the curve in flash. Verify a safe reset default duty.
 - **Over-temperature.** Give the load an over-temperature path that needs no host.
@@ -121,8 +121,9 @@ Rules the studies found, for any next revision. The worked examples come from on
   estimate gave 20 to 27 % of free flow behind 212 mm² of slots. A 30 mm fan's gross disc is about 700 mm², and a 40 mm fan's
   about 1250 mm².
 - **Heat capacity.** Measure the load's heat capacity on the bench before you set the fan's response. On one bench, 8 W raised a
-  module 11 K in 60 s, with the losses neglected. That reading, about 44 J/K, overstates C. Use a conservative lower bound on C:
-  the initial slope, or a fit of the net heat flow. Use the worst-case net heat. The time from detection to full airflow is at
+  module 11 K in 60 s, with the losses neglected. That reading, about 44 J/K, overstates C. Sensor lag flattens the measured
+  slope and overstates C again. Fit the sensor lag with the net heat flow. Otherwise use an independent conservative C, from
+  the masses and their specific heats. Use the worst-case net heat. The time from detection to full airflow is at
   most ΔT_margin × C_low / P_worst. That time holds the sensor lag, the command and the spin-up.
 - **Sizing.** Size the electronics for the top load power. Size the heat sink for every load and ambient the product supports.
   Otherwise enforce a lower power limit, with an independent thermal shutdown.
@@ -131,9 +132,9 @@ Rules the studies found, for any next revision. The worked examples come from on
   routing. Check the drawing and the whole launch and routing geometry. A checker that locks on the same pattern from any lane cannot
   prove the lane map. Challenge every physical lane on its own: a lane-unique pattern or seed, or an error injected on that lane.
   Verify the whole map: the lane order, the polarity and the direction. Match the polarity and the
-  precoding per lane on the loop. Check the crosstalk between neighbouring loops against the SI budget. Follow the interface
-  specification and the schematics of both ends for AC coupling. State where each path is coupled. Give each path exactly one
-  compliant coupling stage.
+  precoding per lane on the loop. Check the crosstalk between neighbouring loops against the SI budget. Take the number, value and
+  placement of the coupling stages from the interface specification and the schematics of both ends. State where each path is
+  coupled.
 - **Pads and the stack.** A wide pad over thin prepreg can drop below the target impedance (`references/pcb-layout-dfm.md` §3).
   Connectors mirrored on both board faces set the board thickness and the termination. Read the fab's live thickness table by layer count
   before a study recommends them.

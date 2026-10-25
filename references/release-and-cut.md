@@ -257,16 +257,26 @@ A public export ships only what a fail-closed leak gate has read.
 - One generator builds the public tree from a yaml list of what goes out. The generator is project code, like the cut generator (§7).
 - A leak gate reads every exported file of the final tree. The push depends on a clean gate.
 - Only `scripts/generic_lint.py --export <tree> --allow <file>` is the leak gate. The plain lint mode is not.
-- The export mode fails without a private term file that holds name patterns. It prints the pattern count of each group.
-- It reads every file, every file name and every symlink target. It skips no `generic: ok` line, no worked example and no history.
-- It refuses a `.git` folder in the export root. Scan the outgoing commit messages, authors and tags on their own.
-  Write them to a file in an empty folder, then run `--export` on that folder.
-- It sorts files by type. An archive, a PDF, an image, compressed text or UTF-16 text is a binary for review. It scans the
-  readable strings of each, the PNG text chunks included. Read the metadata of each binary with `exiftool -a -G1` before you
-  allow it as `binary: <path>`.
-- An allow entry is typed: `url: <exact string>` or `key: <exact string>`. A bare line, a short string or a private name is refused.
+- The export mode pins the skill's generic rules; `--terms` is refused with it. It fails without a private term file. That file
+  needs patterns in every promised group: people, project and company, order ids, private parts and vendors. It prints the
+  pattern count of each group.
+- It reads every file, every file name and every symlink target. Inside the export it skips no `generic: ok` line, no worked
+  example and no history file. It matches each line after Unicode normalisation, and across each line break.
+- It refuses a `.git` file or folder anywhere in the tree. Export or copy the tree to an empty folder, and scan that folder.
+- Scan the outgoing commit messages, authors and tags on their own. Write them to a file in an empty folder. Then run
+  `--export` on that folder.
+- It sorts files by type. It decompresses zip, 3MF, Office, gzip, svgz, bz2 and xz members, and PDF Flate streams, before the
+  match. It reads UTF-16 text and PNG text chunks. A file or stream it cannot decode is a hit.
+- Every binary needs a human read before it is allowed. Extract its text and its metadata: unzip, `pdftotext`, `exiftool -a -G1`.
+  Read both.
+- Allow a reviewed binary as `binary: <path> <sha256>`. A changed file fails its hash, so it is a hit again.
+- An allow entry is typed: `url: <exact string>`, `key: <exact string>` or `binary: <path> <sha256>`. A bare line or a short
+  string is refused. A value that contains any private, generic or id match is refused. An allow entry that matches no file
+  fails the run.
+- A public account name is not a private term. Keep it out of the private file, or the repository address cannot be allowed.
 - No shipped CI template runs this gate. Run it by hand before each public push. A CI job that runs it writes the private terms
-  from a secret to a temporary file and sets `HWFS_PRIVATE_TERMS`. A missing or empty secret must stop the job. Never commit the terms.
+  from a secret to a temporary file. It sets `HWFS_PRIVATE_TERMS`. A missing or empty secret stops the job. Never commit the
+  terms.
 - The gate refuses decision and review ids, private paths, order numbers, private vendor and person names, and the company name.
 - Two blind reviews come before every public push. The owner's word is the go.
 - Give the gate every id format the records use, the review finding ids included.

@@ -1,19 +1,25 @@
-# evals/core_rules_manifest.yaml — the expected groups, entries and guard counts of core_rules.yaml: [file, section,
-# must, never, never_re]. A rule deleted from core_rules.yaml goes red here. Update it only in a reviewed change.
+# evals/core_rules_manifest.yaml — the expected groups, entries, counts and hashes of core_rules.yaml: [file, section,
+# must, never, never_re, sha256 of the whole entry]. A rule changed or deleted in core_rules.yaml goes red here.
+# Update it only in a reviewed change.
 measurement:
-- [references/software-track.md, '## 23. ', 155, 13, 0]
-- [references/software-track.md, '## 20. ', 31, 0, 0]
-- [references/software-track.md, '## 18. ', 81, 2, 0]
-- [references/software-track.md, null, 0, 0, 4]
-- [references/pitfalls.md, null, 0, 4, 1]
-- [evals/evals.json, null, 0, 4, 0]
+- [references/software-track.md, '## 23. ', 179, 13, 0, f297d36effd62e7919a1c76c2d39d476f26670884b817495a1c2f848a613f3c7]
+- [references/software-track.md, '## 20. ', 31, 0, 0, 356f7a984908a07d03119598410c9a84240b3d2355c4f1fee23d64a2087d21f2]
+- [references/software-track.md, '## 19. ', 55, 0, 0, 2e4f295183abea7113007b2b4eed4c4c9df2bc631f586d4f4aaf30337c6c289b]
+- [references/software-track.md, '## 22. ', 45, 0, 0, 3a6d7e1cf377b0271871c39301fb13bcb7ae0f160b4bb8e5bad33661a40e8ce1]
+- [references/software-track.md, null, 0, 0, 0, ba3820cdc038b3bcdd8f4277030c1bd0bdb1948852a3592cc77f0265c53bcae4]
+- [references/software-track.md, '## 18. ', 86, 2, 0, 3d6e3e4869e89d7aa0e125b14e8378028e3a92c1fc2dd3fbf047feb4e14d35fb]
+- [references/software-track.md, null, 0, 0, 7, 743f29de6d723743966f0ad43a6100859818963bfc88b545fd86780b243c01d1]
+- [references/pitfalls.md, null, 0, 4, 3, 745579fdcc3866b2f0bb5e78841759ef71c21cacd5bda0bb9e590aeb81d6ca7f]
+- [SKILL.md, null, 0, 0, 2, 288f0d7e4368fe261f2ee879ec399d41471ccd094d4e12558b9fcd2b55cb293c]
+- [evals/evals.json, null, 0, 0, 0, 4c4010bbb84236fca74c56248955302c71017b821981ca419ede131b3acf5a92]
+- [evals/evals.json, null, 0, 4, 0, 5f599dede9fc7305f6b70e49d066be1d5ed24f4c23ce13007df39e034063cc35]
 navigation:
-- [SKILL.md, null, 6, 0, 0]
-- [references/software-track.md, null, 1, 0, 0]
+- [SKILL.md, null, 8, 0, 0, 765f1f528f2362228d2b52402b339e4fada0a4081e4f2977e46cde70c6f42d85]
+- [references/software-track.md, null, 1, 0, 0, 0a29d39e309de75370f597257e1b8a3cb8949ed9d99e2f5b8ecf56f022ead18b]
 studies:
-- [references/schematic-phase.md, '## 6. ', 76, 6, 0]
+- [references/schematic-phase.md, '## 6. ', 77, 6, 0, 5f91c8b9dd4fb2fe1d6d70d6fa1de925ed55be9c5c9c6eb222a129568ea06401]
 pockets:
-- [references/dfm-printed-enclosure.md, '### 8.7 ', 56, 5, 0]
-- [references/pitfalls.md, null, 0, 1, 0]
+- [references/dfm-printed-enclosure.md, '### 8.7 ', 60, 5, 0, e00f55cca21cee44a7fdfa885822ddff3d7753bf25f2e8c111b04d89dccfe158]
+- [references/pitfalls.md, null, 0, 1, 0, b8624be82a059aad1daeae3f1105b7601b133a73ee8a407087801b910fecb0a2]
 public-export:
-- [references/release-and-cut.md, '## 15. ', 63, 3, 0]
+- [references/release-and-cut.md, '## 15. ', 78, 3, 0, 4de55552777482a9a539b6f630e27a831a0a143c2181862f0042e42650110539]

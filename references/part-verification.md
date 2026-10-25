@@ -2,8 +2,8 @@
 
 ## The rule
 A fab/distributor part number enters the BOM only after a fetch of its live page **in this session** confirms MPN, package, stock and library
-class (basic/extended or the fab's equivalent). Cached numbers, hand-off numbers and memory are not evidence: the first hand-off of the source
-project carried wrong numbers and a stock of 4 passed a "> 0" gate for a 5-board run.
+class (basic/extended or the fab's equivalent). Cached numbers, hand-off numbers and memory are not evidence: one earlier hand-off carried
+wrong numbers and a stock of 4 passed a "> 0" gate for a 5-board run.
 
 ## Tags
 | Tag | Meaning | Allowed on a fitted part? |
@@ -28,9 +28,9 @@ Re-verify before every package build (`verify_parts` style script: machine endpo
 - `https://www.lcsc.com/product-detail/Cxxxx.html`, `https://jlcpcb.com/partdetail/Cxxxx` — server-rendered evidence pages.
 - EasyEDA component API needs a browser UA (403 with a bare one); `easyeda2kicad` fetches symbol/footprint/3D. Post-process converted footprints: zero-ring pegs → NPTH, `attr smd` when every numbered pad is SMD, real pin electrical types (ERC depends on them), duplicate-numbered pegs renumbered `MP<n>`.
 - The fab's keyword search answers a POST with a keyword, a page number and a page size. Worked example, 2026-10-24:
-  `jlcpcb.com/api/overseas-pcb-order/v1/shoppingCart/smtGood/selectSmtComponentList` <!-- style: ok -->
-  with the body `{"keyword": "<text>", "currentPage": 1, "pageSize": 25}`. The endpoint is undocumented: verify it live before use,
-  and check the site's terms before scripted use.
+  `https://jlcpcb.com/api/overseas-pcb-order/v1/shoppingCart/smtGood/selectSmtComponentList` <!-- style: ok -->
+  with the body `{"keyword": "<text>", "currentPage": 1, "pageSize": 25}`. The endpoint is undocumented. Verify it live before use.
+  Check the site's terms before scripted use.
   Use it to find codes. Then confirm each code on its detail endpoint.
 Record every endpoint that answered in `90-log/ENV.md`; a fab that changes its API is a BLOCKER row, not a guess.
 

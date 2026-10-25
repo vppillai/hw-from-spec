@@ -39,7 +39,8 @@
   `scripts/adopt_gates.sh --no-clone` (`make gates`), release `scripts/adopt_gates.sh` (`make check`); `smoke/run_smoke.sh` runs every script selftest, the rule greps, the enforcement negatives, both lints
   and the evals; 19 evals
   with mechanical checks; `docs/reviews/INDEX.md` lists every blind review of the skill.
-- **Generic by rule**: the skill names no project, part, board, order, account or person — `scripts/generic_lint.py` reads the whole repo
+- **Generic by rule**: the skill names no project, private part, board, order, private account or person (its own public repository
+  address and public pull-request numbers excepted) — `scripts/generic_lint.py` reads the whole repo
   (CHANGELOG and docs included; history keeps its measured numbers), a fenced worked example keeps numbers and kinds but never a name, and the
   repo carries no project retro (a retro report is folded, then deleted).
 
@@ -105,7 +106,7 @@ already in the tree, and two owner rules. The project keeps its copy of the map;
 
 ### Review round
 Four blind reviews (two Claude, one GPT, one Grok) merged in `docs/reviews/REVIEW_0.11.25.md`. Each row carries its disposition.
-Three confirmation reviews (round 2) and three more (round 3) found open gaps. Their sections in the same file list them and their
+Three confirmation reviews (round 2), three more (round 3) and a final fix pass (round 4) found open gaps. Their sections in the same file list them and their
 dispositions. Round 3 changed:
 - §23: each window's own baseline and time; BER_max 1 when undocumented (about 20 ms for 32 bits at 106.25 Gb/s); a challenge
   passes only when the error counter rises while lock holds; the run passes only when every required lane and direction passes;
@@ -117,16 +118,30 @@ dispositions. Round 3 changed:
 - `rule_check.py`: a sentence must equal its guard entry, a glued qualifier is its own sentence, a hidden or duplicate section is
   refused, the heading is guarded, an independent manifest catches a shrunk rule file, `--attacks` runs hand-written attacks.
 - `generic_lint.py --export`: refuses an empty or patternless private file, a missing or empty folder and a `.git`; sorts files
-  by type; reads UTF-16, PDF strings and PNG text chunks; reports every match; typed allow entries. No CI template runs it; it is
-  a manual step before each public push.
+  by type; reads UTF-16 and PNG text chunks; reports every match; typed allow entries. Round 3 read only the raw strings of a
+  PDF or a zip; round 4 decodes them (below). No CI template runs it; it is a manual step before each public push.
+Round 4 (the final fix pass) changed:
+- §23: a reset verified by stopping the count, waiting the update time and reading a time-consistent fresh baseline; a window
+  longer than its cap is invalid, and a read cycle longer than the cap makes the run INCONCLUSIVE; every documented clearing
+  event ends an epoch; a lower bound only from a proven saturation or wrap; the challenge anchored to a known physical lane, in
+  its own epoch; an unproven lane INCONCLUSIVE; the start-up judged on its own; no pre-FEC waiver; one-sided limits, the Šidák
+  level, clustering INCONCLUSIVE without a predeclared test. §19 and §22 are sentence-guarded too.
+- The USB tiers, the CC pin, the thermal poll period from margin and latency, a heat capacity that allows for sensor lag,
+  coupling stages from the interface specification, signed axial and radial stacks, the PD soft-reset sentence, SKILL §9.
+- `generic_lint.py --export`: zip, 3MF, Office, gzip, svgz, bz2 and xz members and PDF Flate streams decoded; an undecodable
+  part is a hit; Unicode NFKC and cross-line matches (also in the plain lint); `binary: <path> <sha256>`; an allow value with a
+  term inside, or an unused entry, fails; every promised group required; `--terms` refused.
+- `rule_check.py`: a heading, comment, fence or HTML tag inside a guarded section is refused; the `## ` headings of
+  software-track are pinned; eval 19's answer and assertions are pinned by sha256; the manifest hashes each whole entry.
 - **Leak.** `scripts/generic_lint_terms.yaml` keeps only generic shapes: id formats, path shapes, a refdes and fab-code scheme. Every
   project, person, company, order, part, preset and dimension term moved to a private file outside the repo. `generic_lint.py` reads it
   from `--private-terms`, `$HWFS_PRIVATE_TERMS` or `~/.config/hw-from-spec/private_terms.yaml`; without it the generic patterns run.
   The selftest uses synthetic terms. The smoke's own project-name grep is gone; the lint covers it. One old review lost a private path.
 - **§23 rewritten as general rules.** The opportunity counter grows at the lane rate × T in its own unit. Each error ratio has
   a matching denominator. Deltas within one verified reset epoch, each counter on its own. Every window capped by the modulus at
-  the worst lockable ratio, whatever the window before. A saturated or wrapped count is a lower bound, and a lower bound over the
-  limit is a FAIL that wins over INCONCLUSIVE. A predeclared settling rule with a maximum time. Run totals per lane and direction,
+  the worst lockable ratio, whatever the window before. A proven saturation, or a proven wrap outside the cap, gives a lower
+  bound; inside the cap one wrap is unwrapped and the count is exact. A lower bound over the limit is a FAIL that wins over
+  INCONCLUSIVE. A predeclared settling rule with a maximum time. Run totals per lane and direction,
   judged by Poisson bounds. A stated ratio tolerance. Lock loss bears on the verdict. A challenged checker on every lane, else
   "checker unproven". The lane rate at the counting point. The record name checked before high power.
 - **Leak gate.** `generic_lint.py --export` is fail-closed: it needs the private terms, reads every file, name and symlink, skips
@@ -1082,8 +1097,8 @@ three census / print-DFM rounds on the colour bodies and two aborted slices). Op
 
 ### Changed (corrects 0.10.0's engine rule)
 - **Manifold caveat** (`agent-ops.md` §8 item 6, `case-pipeline.md` Presets + Process rules, `pitfalls.md`): the snapshot's Manifold backend is
-  measured 100–270 × faster per body and byte-deterministic — the speed claim is [V] with the numbers in the worked example — but on the source
-  project's bodies it was NOT rule-equivalent to CGAL (odd edges = not watertight on two bodies in every export format, a membrane, sub-minimum
+  measured 100–270 × faster per body and byte-deterministic — the speed claim is [V] with the numbers in the worked example — but on one earlier
+  design's bodies it was NOT rule-equivalent to CGAL (odd edges = not watertight on two bodies in every export format, a membrane, sub-minimum
   regions under print DFM, a 18.6 mm³ spurious intersection, with bbox and volume equal). Rule: Manifold for every PREVIEW / PNG; STL exports OF
   RECORD stay on the engine that passes the chain's own mesh gates (watertight, census, print DFM, interference) — an engine is judged by those
   gates, never by bbox / volume agreement; `engine:` is a per-preset yaml key (`case.presets.<name>.engine`); re-test per OpenSCAD release.

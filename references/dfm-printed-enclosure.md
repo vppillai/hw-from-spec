@@ -537,8 +537,8 @@ ironing, fuzzy skin, per-object overrides) and how each is PROVEN from the g-cod
   change touched 11 files because colour names were the keys everywhere (2026-10-02). Match roles to SPOOL SIZE. The structure role takes ~60 %
   of the grams and needs a full spool. An accent (~5 %) fits a small one. The kickoff colour question asks which spools are full and which are
   small (questionnaire C5).
-- **Multi-material = ONE multi-part object with a per-part `extruder`.** The CLI has no flag for it but loads a Bambu-style 3MF (the source
-  project's `write_ams_3mf`; copy the package layout from a file Studio exported, ids are global):
+- **Multi-material = ONE multi-part object with a per-part `extruder`.** The CLI has no flag for it but loads a Bambu-style 3MF (one earlier
+  generator's `write_ams_3mf`; copy the package layout from a file Studio exported, ids are global):
   ```
   [Content_Types].xml, _rels/.rels                 standard OPC
   3D/3dmodel.model         <model … xmlns:p="…/3dmanufacturing/production/2015/06" requiredextensions="p">
@@ -681,15 +681,16 @@ ironing, fuzzy skin, per-object overrides) and how each is PROVEN from the g-cod
   change (`print-dfm.md` §3 e). Prefer shortening the feature that approaches to filling the gap.
 
 ### 8.7 Side pockets, bosses, screw wells and feet **[measured]**
-- Check the wall budget before a magnet station is promised. The axial stack is the disc thickness, the bondline, the floor
-  behind it and the worst-case print tolerance. It must fit the wall or the boss. Worked example: in a 2.0 wall, a 3.175 disc
-  needed an inward boss.
-- The radial fit is separate: the pocket diameter is the disc diameter plus the insertion clearance plus the print tolerance.
+- Check the wall budget before a magnet station is promised. Write the axial stack with signed worst cases. The wall W holds a
+  pocket of depth D and a floor F = W − D. The floor needs F_min = W_min − D_max ≥ the floor gate. Worked example: in a 2.0 wall,
+  a 3.175 disc needed an inward boss.
+- Write the radial fit with signed worst cases too. The smallest printed pocket minus the largest disc is at least the
+  insertion clearance. In symbols: P_nom − P_tol − d_max ≥ c_min.
 - The boss needs room under any deck ring. Where it crosses the vent band, drop the slots under it after the vent register is chosen.
 - A side pocket needs a full wall behind its floor plane at every Z it spans. Find the Z band where the body is a full wall. Put the
   pocket there.
-- On the axis, the pocket depth plus the proud height equals the disc thickness plus the bondline. Work out the minimum and
-  the maximum proud height from the worst-case depth, disc and bondline tolerances. Set the proud height from the mating need:
+- On the axis, take a disc of thickness t on a bondline b. Its proud height p is t + b − D. Its worst cases are
+  p_min = t_min + b_min − D_max and p_max = t_max + b_max − D_min. Set the proud height from the mating need:
   gap, adhesive and contact. Then check that the pocket depth fits the wall. Never pick either one alone.
 - Count the roof over a side pocket along its whole depth, not only inside the ring. A pocket that runs past the wall can sit under an
   opening, over the board.
@@ -702,7 +703,7 @@ ironing, fuzzy skin, per-object overrides) and how each is PROVEN from the g-cod
 - A pad disc that meets a boss ring leaves a narrow notch at the joint. The census reads the notch as a thin wall. Hull the pad to
   the ring where the clearance allows. Re-run the census.
 - Two features that meet on one plane at a step leave a saddle. One face points +X above the step, the other -X below it. The census
-  reads the saddle as a thin wall (0.32 on one deck). Run the fused feature to the outline where the function allows.
+  reads the saddle as a thin wall (0.32 on one deck, a dated worked example). Run the fused feature to the outline where the function allows.
 - A light baffle under a printed deck is a wall, so it cannot be thinner than the census gate. Make the cell wall the design wall
   (`wall_gate + design_margin`, §0). Make the cell the pitch minus that wall. Trim a lip the baffle crosses from past the deck edge.
   A trim box that starts at the baffle face leaves a sliver ahead of it.
