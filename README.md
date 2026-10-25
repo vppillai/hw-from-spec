@@ -186,4 +186,5 @@ evals, keep `smoke/run_smoke.sh` and the two lints (`scripts/doc_voice_lint.py`,
 `scripts/generic_lint.py`) green, bump the version, write the CHANGELOG entry, open the PR. This repo is public.
 Put a private name in the private term file (`scripts/generic_lint.py`): a project, person, customer, employer, order or private
 part. Never put it in `scripts/generic_lint_terms.yaml`. Public dependencies stay nameable: a fab, a distributor, a tool, a model
-vendor. CI that runs the lint with names writes the private term file from a secret and sets `HWFS_PRIVATE_TERMS`.
+vendor. No shipped CI template runs the lint with names; on a fresh clone it runs the generic patterns only. A CI job that
+needs the names writes the private term file from a secret, sets `HWFS_PRIVATE_TERMS`, and stops when the secret is empty.

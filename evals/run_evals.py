@@ -5,9 +5,9 @@
       Each eval may carry `checks: [{name, run, expect_rc?}]`: `run` is a shell snippet executed in a fresh temp dir with $SKILL (this repo),
       $PY and $PYTHON (the interpreter: --python made absolute, else the interpreter running this file) and $T (the temp dir) set.
   evals/run_evals.py --selftest      # evals.json schema: unique ids, prompt / expected_output / assertions / checks (name + run) on every eval A check whose `run` starts with
-      `needs-mesh:` is SKIPPED (not failed) when $PY lacks numpy / trimesh. Evals without checks are listed as manual with their assertion count
-      (they need an agent run against the prompt and a human reading the assertions). The assertions of an eval WITH checks need that run too:
-      the checks prove the skill text, not the agent's answer. Exit 1 on any failed check.
+      `needs-mesh:` is SKIPPED (not failed) when $PY lacks numpy / trimesh. Every eval carries checks (the selftest requires them) and
+      assertions. The assertions need an agent run against the prompt and a human grade: the checks prove the skill text, not the
+      agent's answer. Exit 1 on any failed check.
 """
 import argparse, json, os, subprocess, sys, tempfile
 import shutil

@@ -62,8 +62,8 @@ net classes must be exported into the router input — grep the DSN for them aft
 - Thickness tolerance ±10 % at ≥ 1.0 mm **[fab capability]** (1.6 → 1.44…1.76): a press-fit connector or a card-edge must accept the range.
 - Material grade / Tg is selected at order **[owner choice]** (JLC impedance profiles assume a TG155 laminate).
 - **Fab capabilities move** **[fab capability]**. Read the live capability page before a study recommends a stack. Worked example, JLC
-  2026-10-24 (that fab's table, that day; verify it live). Back-drilling ran on 4 to 32 layers from 0.8 mm board thickness.
-  Boards of 2.5 mm and more needed 12 layers or more, at ±10 %.
+  2026-10-24 (that fab's table, that day; verify it live). That fab back-drilled boards of 4 to 32 layers, from 0.8 mm thick.
+  For its back-drilled boards on that date, 2.5 mm and thicker needed 12 layers or more, at ±10 %.
 
 ## 3. Controlled impedance and differential pairs
 - **When it is required** **[physics]**: any pair whose length exceeds ~1/10 of the signal's rise-time wavelength on FR-4. Examples are USB 2.0
@@ -77,10 +77,9 @@ net classes must be exported into the router input — grep the DSN for them aft
 - Differential rules the CAD enforces: pair gap, uncoupled length ≤ N mm, skew ≤ N mm, no via stubs on the pair, reference plane continuous
   (an In2 signal over an In1 antipad edge is a route-quality HIGH, §10). Impedance control is an order option **[fab capability]**: ask for it
   on the quote form; if the form refuses it for the copper weight, that is a decision row, not a silent drop.
-- **Connector pads** **[physics]**: a wide pad over thin prepreg can drop far below the line impedance.
-  One 0.31 mm pad read about 52 Ω single-ended over 0.21 mm prepreg, against a 50 Ω line. Over 0.10 mm it read about 26 Ω.
-  Both are field-solver estimates for one stack. Pick the prepreg for the pad as well as the
-  trace. A void under the pad changes the return path. Model the whole launch with the live stack-up and the connector model.
+- **Connector pads** **[physics]**: a wide pad over thin prepreg can drop below the target impedance. A thinner prepreg lowers
+  the pad impedance further. Pick the prepreg for the pad as well as the trace. A void under the pad changes the return path.
+  Model the whole launch with the live stack-up and the connector model: εr, copper, mask, reference and pour gap.
 
 ## 4. Trace / space / via / annular / drill minimums vs the fab table
 Copy the fab's table into `20-design/dfm_thresholds.json` (source URL + date) and design strictly greater **[checker]**. Worked example

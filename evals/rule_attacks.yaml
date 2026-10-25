@@ -1,0 +1,25 @@
+# evals/rule_attacks.yaml — hand-written attacks on the guards (from a blind review, adapted to the current text). Each must turn
+# `scripts/rule_check.py evals/core_rules.yaml` red. A SETUP-MISS (the old text is gone) also fails: update the attack with the text.
+- {label: prefix qualifier via colon, file: references/software-track.md, old: '- Counter checks are part of every measurement.', new: '- In a release run only: Counter checks are part of every measurement.'}
+- {label: suffix after period, lowercase, file: references/software-track.md, old: 'No flag or mode turns them off.', new: 'No flag or mode turns them off. except --quick, which skips them.'}
+- {label: suffix em-dash new clause, file: references/software-track.md, old: 'A lane with no passed challenge reads "checker unproven".', new: 'A lane with no passed challenge reads "checker unproven". — a lane with a clean 600 s run counts as proven.'}
+- {label: flip FAIL to PASS inside glued suffix, file: references/software-track.md, old: "the limit is a\n  FAIL.", new: "the limit is a\n  FAIL. unless the run is short, then PASS."}
+- {label: folklore in new words in §20 (5 s), file: references/software-track.md, old: "- Use the module's gating timers", new: "- Keep every gate five seconds long or longer.\n- Use the module's gating timers"}
+- {label: folklore T^2/2 reworded in §20, file: references/software-track.md, old: "- Use the module's gating timers", new: "- Some bit counters grow as the square of time; fit a quadratic and accept it.\n- Use the module's gating timers"}
+- {label: folklore dark lane one bit reworded in §20, file: references/software-track.md, old: "- Use the module's gating timers", new: "- A disabled lane's counter halts at a single bit.\n- Use the module's gating timers"}
+- {label: folklore in pitfalls (judge warm reworded), file: references/pitfalls.md, old: null, new: "- 2026-10-24 Discard the cold windows and judge only warmed-up ones (software-track §23).\n"}
+- {label: folklore in §19 (lane rate = host/media), file: references/software-track.md, old: '## 20. Pattern tests between two ends', new: "- The lane rate is the host rate divided by the number of media lanes.\n\n## 20. Pattern tests between two ends"}
+- {label: '§20 enable map softened', file: references/software-track.md, old: '- Judge each lane against the expected enable map.', new: '- Judge each lane against the expected enable map (optional).'}
+- {label: §23 numeric change inside sentence, file: references/software-track.md, old: 'about 3 / N at 95 %.', new: 'about 0.3 / N at 95 %.'}
+- {label: §23 deaf checker weakened by a glued clause, file: references/software-track.md, old: "enters a release record. A challenge passes", new: "enters a release record. if time allows. A challenge passes"}
+- {label: §23 heading renamed, file: references/software-track.md, old: '## 23. A measurement checks its own counters: the norm, never a mode', new: '## 23. A measurement checks its own counters: an optional mode'}
+- {label: 'pockets: soften in parenthesis glue', file: references/dfm-printed-enclosure.md, old: 'Never pick either one alone.', new: 'Never pick either one alone. (in practice, pick the depth alone)'}
+- {label: SKILL §9 sentence reversed with the phrase kept, file: SKILL.md, old: 'A measurement checks its own counters in every run, as the norm and never as a mode.', new: 'A measurement checks its own counters only in a high-fidelity run, as the norm and never as a mode.'}
+- {label: '§15 export: allow by regex reworded', file: references/release-and-cut.md, old: '- Docstrings and comments ship.', new: "- Allow a key with a pattern that matches its whole line.\n- Docstrings and comments ship."}
+- {label: hidden §23 copy in a comment, file: references/software-track.md, old: '## 18. Bring-up', new: "<!--\n## 23. A measurement checks its own counters: the norm, never a mode\n-->\n## 18. Bring-up"}
+- {label: saturation rule deleted, file: references/software-track.md, old: 'A read at the saturation value makes that window and every later window of the epoch INCONCLUSIVE. ', new: ''}
+- {label: run-total rule deleted, file: references/software-track.md, old: 'The verdict of a lane and direction uses its run total. ', new: ''}
+- {label: lower-bound FAIL reversed, file: references/software-track.md, old: "the limit is a\n  FAIL.", new: "the limit is\n  INCONCLUSIVE."}
+- {label: challenge pass criterion deleted, file: references/software-track.md, old: "A challenge passes only when that lane's error counter rises while lock holds. ", new: ''}
+- {label: run aggregation weakened, file: references/software-track.md, old: 'The run passes only when every required lane and direction passes.', new: 'The run passes when most lanes pass.'}
+- {label: BER_max default set back to 0.5, file: references/software-track.md, old: "take the unit's maximum, 1.", new: 'take 0.5.'}

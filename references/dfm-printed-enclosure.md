@@ -681,14 +681,16 @@ ironing, fuzzy skin, per-object overrides) and how each is PROVEN from the g-cod
   change (`print-dfm.md` §3 e). Prefer shortening the feature that approaches to filling the gap.
 
 ### 8.7 Side pockets, bosses, screw wells and feet **[measured]**
-- A side magnet disc needs its thickness, the bondline, the insertion clearance, the print tolerance and a floor behind it.
-  Check the wall budget before a magnet station is promised. In a 2.0 wall, a 3.175 disc needs an inward boss.
+- Check the wall budget before a magnet station is promised. The axial stack is the disc thickness, the bondline, the floor
+  behind it and the worst-case print tolerance. It must fit the wall or the boss. Worked example: in a 2.0 wall, a 3.175 disc
+  needed an inward boss.
+- The radial fit is separate: the pocket diameter is the disc diameter plus the insertion clearance plus the print tolerance.
 - The boss needs room under any deck ring. Where it crosses the vent band, drop the slots under it after the vent register is chosen.
 - A side pocket needs a full wall behind its floor plane at every Z it spans. Find the Z band where the body is a full wall. Put the
   pocket there.
-- The pocket depth plus the proud height equals the disc thickness plus the bondline. Add the insertion clearance and the
-  worst-case tolerances. Set the proud height from the mating need: gap, adhesive and contact. Then check that the pocket depth
-  fits the wall. Never pick either one alone.
+- On the axis, the pocket depth plus the proud height equals the disc thickness plus the bondline. Work out the minimum and
+  the maximum proud height from the worst-case depth, disc and bondline tolerances. Set the proud height from the mating need:
+  gap, adhesive and contact. Then check that the pocket depth fits the wall. Never pick either one alone.
 - Count the roof over a side pocket along its whole depth, not only inside the ring. A pocket that runs past the wall can sit under an
   opening, over the board.
 - Evaluate the inward option first: the pocket into the wall with a local thickening. A proud boss breaks a flush pair, because two
@@ -706,14 +708,15 @@ ironing, fuzzy skin, per-object overrides) and how each is PROVEN from the g-cod
   A trim box that starts at the baffle face leaves a sliver ahead of it.
 - A screw well printed sole down has a roof: the counterbore seat prints in air. Set the bridge layers from the validated process,
   the span and the seat strength. Read the G-code (`fdm-print-optimisation.md` §5). Worked FDM example: two layers, a bore-wide
-  slot and then a bore-wide square, so that each layer spans wall to wall.
-- Give the screw a reachable head and the foot a full land. One layout that does both: a foot beside its screw, with a land to the
+  slot and then a bore-wide square. Each layer then spans wall to wall.
+- Give the screw a reachable head. Give the foot a full land. One layout does both: a foot beside its screw, with a land to the
   counterbore mouth. A foot over the counterbore hides the screw and comes off at every screw removal. Rerun the stability row
   after every foot move (`references/case-pipeline.md` §Stability).
 - Apply a local exception after the shared rule it breaks. Drop a vent slot under a boss after the vent register is chosen. A boss
   added to the register's input moves the register of every face.
-- A plain bar in a plain pocket is a shear key, as tight as its fit. It resists sliding and rotation in the joint plane. It does
-  not resist separation normal to the faces. A clip that holds against separation must pull the two outer faces together.
+- A plain bar in a plain pocket is a shear key, as tight as its fit. List the six degrees of freedom of the joint. Check each one
+  at the worst-case fit and engagement. A bar can still slide along its own axis, and it does not resist separation normal to
+  the faces. A clip that holds against separation must pull the two outer faces together.
 
 ## 9. Two versions from one yaml (vendor MJF + home FDM)
 Presets are `base + overrides`, deep-merged before any module reads the yaml (`references/case-pipeline.md` §Presets). The geometry may differ

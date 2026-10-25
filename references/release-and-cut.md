@@ -256,18 +256,25 @@ README alone did not answer the owner's "are the settings backed up" after the o
 A public export ships only what a fail-closed leak gate has read.
 - One generator builds the public tree from a yaml list of what goes out. The generator is project code, like the cut generator (§7).
 - A leak gate reads every exported file of the final tree. The push depends on a clean gate.
-- The skill's scanner is `scripts/generic_lint.py --export <tree> --allow <file>`. It fails without the private terms.
+- Only `scripts/generic_lint.py --export <tree> --allow <file>` is the leak gate. The plain lint mode is not.
+- The export mode fails without a private term file that holds name patterns. It prints the pattern count of each group.
 - It reads every file, every file name and every symlink target. It skips no `generic: ok` line, no worked example and no history.
-- An unreviewed binary is a hit. Read its metadata, then list it as `binary: <path>` in the allow file.
-- CI writes the private terms from a secret to a temporary file and sets `HWFS_PRIVATE_TERMS`. Never commit the terms.
+- It refuses a `.git` folder in the export root. Scan the outgoing commit messages, authors and tags on their own.
+  Write them to a file in an empty folder, then run `--export` on that folder.
+- It sorts files by type. An archive, a PDF, an image, compressed text or UTF-16 text is a binary for review. It scans the
+  readable strings of each, the PNG text chunks included. Read the metadata of each binary with `exiftool -a -G1` before you
+  allow it as `binary: <path>`.
+- An allow entry is typed: `url: <exact string>` or `key: <exact string>`. A bare line, a short string or a private name is refused.
+- No shipped CI template runs this gate. Run it by hand before each public push. A CI job that runs it writes the private terms
+  from a secret to a temporary file and sets `HWFS_PRIVATE_TERMS`. A missing or empty secret must stop the job. Never commit the terms.
 - The gate refuses decision and review ids, private paths, order numbers, private vendor and person names, and the company name.
 - Two blind reviews come before every public push. The owner's word is the go.
 - Give the gate every id format the records use, the review finding ids included.
 - Anchor each pattern on word boundaries. The unanchored `E-[0-9]+` matched the `E-3` inside `X-LANE-3`.
-- Allow the public repository address by an exact string in the allow file. The address carries the account name, so the name
-  pattern hits every page link. The gate strips the exact allowed string before the match. It never skips the line that holds it.
+- Allow the public repository address as a `url:` entry. The address carries the account name, so the name pattern hits every
+  page link. The gate strips the exact allowed string before the match. It never skips the line that holds it.
 - The gate also hits data keys. Rename the label the user sees. Keep a key only when the owner approves it as public schema.
-  Allow that key by its exact string.
+  Allow that key as a `key:` entry.
 - Docstrings and comments ship. Run the gate and the writing lint over them, or strip them in the export.
 - A stripper must parse the language. A nested `${}` in a JS template literal ended a string early, and 20 of 110 comments
   survived. Check the result with the language's syntax check. Count the comments that stay.

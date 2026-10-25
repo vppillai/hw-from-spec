@@ -1,6 +1,6 @@
 # Blind review — hw-from-spec 0.9.0 (cold `ee` user + enforcement sceptic)
 
-Worktree `/tmp/hwfs_review_wt` (read-only). Read: README.md, SKILL.md, references/, templates/, scripts/, smoke/, evals/, workflows/. Not read: CHANGELOG.md, docs/reviews, docs/retro, git history. Every finding below was reproduced by the command shown; scratch projects live under `…/scratchpad/review/p1…p8`, `skillcopy`, `skillcopy2`. Python 3.13 (`uv`), macOS, zsh.
+Worktree `<worktree>` (read-only). Read: README.md, SKILL.md, references/, templates/, scripts/, smoke/, evals/, workflows/. Not read: CHANGELOG.md, docs/reviews, docs/retro, git history. Every finding below was reproduced by the command shown; scratch projects live under `…/scratchpad/review/p1…p8`, `skillcopy`, `skillcopy2`. Python 3.13 (`uv`), macOS, zsh.
 
 ## What was run
 
@@ -137,8 +137,8 @@ A project that moves KICKOFF_ANSWERS.md and sets `kickoff.answers` is still chec
 
 ### F10 — MINOR — the documented selftest loop writes `__pycache__` into the submodule
 ```
-$ for s in scripts/*.py; do .venv/bin/python "$s" --selftest; done; ls -d /tmp/hwfs_review_wt/scripts/__pycache__
-/tmp/hwfs_review_wt/scripts/__pycache__
+$ for s in scripts/*.py; do .venv/bin/python "$s" --selftest; done; ls -d <worktree>/scripts/__pycache__
+<worktree>/scripts/__pycache__
 ```
 Harmless for git (the skill's `.gitignore` lists `__pycache__/`) but it is a write into `vendor/hw-from-spec` from a loop SKILL §2 calls read-only; `adopt_gates.sh` sets `PYTHONDONTWRITEBYTECODE=1`, the README loop does not. Fix: `PYTHONDONTWRITEBYTECODE=1 for s in …` in README step 3 / SKILL step 5. (Removed after the review.)
 

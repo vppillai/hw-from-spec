@@ -1,0 +1,19 @@
+# evals/core_rules_manifest.yaml — the expected groups, entries and guard counts of core_rules.yaml: [file, section,
+# must, never, never_re]. A rule deleted from core_rules.yaml goes red here. Update it only in a reviewed change.
+measurement:
+- [references/software-track.md, '## 23. ', 155, 13, 0]
+- [references/software-track.md, '## 20. ', 31, 0, 0]
+- [references/software-track.md, '## 18. ', 81, 2, 0]
+- [references/software-track.md, null, 0, 0, 4]
+- [references/pitfalls.md, null, 0, 4, 1]
+- [evals/evals.json, null, 0, 4, 0]
+navigation:
+- [SKILL.md, null, 6, 0, 0]
+- [references/software-track.md, null, 1, 0, 0]
+studies:
+- [references/schematic-phase.md, '## 6. ', 76, 6, 0]
+pockets:
+- [references/dfm-printed-enclosure.md, '### 8.7 ', 56, 5, 0]
+- [references/pitfalls.md, null, 0, 1, 0]
+public-export:
+- [references/release-and-cut.md, '## 15. ', 63, 3, 0]

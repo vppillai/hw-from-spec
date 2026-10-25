@@ -10,10 +10,6 @@
 # Extend the private file at a retro when a new project's names leak in; never shorten a list to make a hit go away — rewrite the sentence.
 project_names:
   - '(?i)\bsource[- ]project'                      # "the source project", "one source project": write the generic statement instead
-part_names:                                        # label SHAPES of one design's bodies and joints; the generic kind ("cap", "foot") is fine
-  - '\b[A-Z]\d+_m\b'                               # body ids of the T1_m kind
-  - '\b[a-z]–[a-z]–T\d\b'                          # a linkage's bar labels (c–k–T1)
-  - '\bJ\d–J\d\b'                                  # joint labels
 project_ids:                                       # order / account / quote id shapes
   - '\b[WD]20\d{6,}\b'                             # vendor order ids W2026…, D2026…
   - '\bSMT\d{10,}\b'
@@ -22,6 +18,7 @@ machine_paths:
   - '/Users/'
   - '/home/[a-z]'
   - '/private/tmp/'
+  - '(?<![\w$}])/tmp/[a-z]+_[a-z0-9_]*[a-z0-9]\b'   # a named scratch folder (a mktemp template ends in X and does not match)
   - '(?i)\b[A-Z]:\\Users\\'
 parts_and_refdes:
   - '\b(J|U|R|C|D|SW|TP|Q|L|H)\d{3}\b'            # a sheet x 100 + n refdes scheme

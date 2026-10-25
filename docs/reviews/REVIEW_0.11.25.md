@@ -110,7 +110,7 @@ outside these sections, and a meaning kept in new words outside an every_sentenc
 | M-69 | C HWFS-036, D R18 (MINOR), A-27, B-29 (NOTE) | MINOR | The back-drill and layer-count facts read as general. | FIXED: "that fab's table, that day; verify it live". Rejected: a source URL in the skill; the reference already says to read the live page. |
 | M-70 | C HWFS-049 | MAJOR | The search body `{"keyword", "currentPage", "pageSize"}` is not valid JSON; the endpoint is undocumented. | FIXED: a valid key/value body; verify live before use. |
 | M-71 | C HWFS-050 (MAJOR), A-17 (MINOR) | MAJOR | "A distributor API … never a drawing" contradicts the `pdfUrl` path. | FIXED: distributor metadata is not authoritative; the linked manufacturer PDF is the primary source. |
-| M-72 | C HWFS-053 (BLOCKER), D R22 (MINOR) | BLOCKER | §15 promises a leak gate, but the skill ships no exporter, scanner or CI gate. | PARTLY. Fixed: the gate reads the final exported tree and the push depends on it; the generator is project code, like the cut generator; `generic_lint.py --skill <export tree> --private-terms …` is named as a usable scanner. Rejected for this branch: a skill-side exporter. The skill ships contracts, not project generators (SKILL §10). |
+| M-72 | C HWFS-053 (BLOCKER), D R22 (MINOR) | BLOCKER | §15 promises a leak gate, but the skill ships no exporter, scanner or CI gate. | PARTLY. Fixed: the gate reads the final exported tree and the push depends on it; the generator is project code, like the cut generator; a scanner was named in round 1 (superseded: only `generic_lint.py --export` is the leak gate, round 2 and round 3). Rejected for this branch: a skill-side exporter. The skill ships contracts, not project generators (SKILL §10). |
 | M-73 | C HWFS-055 (MAJOR), A-18, B-27 (MINOR) | MAJOR | Allowing a key by a regex on its line hides a second leak on that line; screenshots have no provenance and pixels are not scanned. | PARTLY. Fixed: strip the exact allowed string before the match, never skip the line; record each screenshot's capture command, date and page state; each blind review reads every screenshot. Rejected: OCR in the gate; the skill has no OCR tool, and the human read covers it. |
 | M-74 | B-06 | MAJOR | §15 is an orphan: SKILL.md and the routing row never name the public export. | FIXED: SKILL §10 and the routing row link §15; guarded in `core_rules.yaml`. |
 | M-75 | B-16 | MINOR | §8.7 is not linked from SKILL.md. | FIXED: §8 step 5 and the routing row; guarded. |
@@ -196,3 +196,74 @@ M-15, M-20, M-40, M-41, M-43, M-55, M-56, M-72 and M-04: their round-1 fix was i
 | N-47 | F-19 | MINOR | The configure step can enable Pages only with an admin token. | FIXED. |
 | N-48 | F-23 | MINOR | "Size the heat sink for the first build" reads two ways. | FIXED: for the load of the first build, with room for the top load. |
 | N-49 | F-26, F-27, F-28, F-29, META-01, META-02, R17, R18, R19, R20, R21 | NOTE | Arithmetic, versions, navigation and the public terms file checked correct. | ACCEPTED. R19 is carried by "Key each limit to that point". |
+
+## Round 3: three confirmation reviews
+
+Inputs: three blind reviews of the round-2 tree and diff. Claude (26 findings: BLOCKER 2, MAJOR 6, MINOR 13, NOTE 5), GPT (36:
+BLOCKER 5, MAJOR 22, MINOR 7, NOTE 2) and Grok (19: BLOCKER 3, MAJOR 6, MINOR 7, NOTE 3). Ids: Claude C3-Fnn, GPT G3-Rnn, Grok
+K3-Rnn. 81 findings merge into 48 rows. Round 3 reopened round-2 rows N-02, N-03, N-04, N-08, N-15, N-27, N-28 and N-30.
+
+| severity | rows | FIXED | PARTLY | REJECTED | ACCEPTED |
+|---|---|---|---|---|---|
+| BLOCKER | 9 | 8 | 1 | 0 | 0 |
+| MAJOR | 22 | 19 | 3 | 0 | 0 |
+| MINOR | 14 | 13 | 1 | 0 | 0 |
+| NOTE | 3 | 2 | 0 | 0 | 1 |
+| total | 48 | 42 | 5 | 0 | 1 |
+
+What the guards prove now: `rule_check.py --mutate` turns 1996 of 1996 mutations red, and `--attacks` turns 23 of 23 attacks red.
+The guarded sections are software-track §18, §20 and §23, schematic-phase §6, release-and-cut §15 and dfm §8.7, sentence by
+sentence, headings included. The reviewer's own attack script, run unchanged on this tree, gives 13 RED and 3 SETUP-MISS: the
+text of those three moved, and their adapted copies in `evals/rule_attacks.yaml` go red. Text outside the guarded sections is
+not seen. A rule deleted from the reference, the rule file and the manifest together is not seen.
+
+| id | sources | severity | finding | disposition |
+|---|---|---|---|---|
+| P-01 | G3-R01 | BLOCKER | T ran from the reset to the read while the deltas were per window; a later window's ratio was understated. | FIXED: each window has its own reset or baseline and its own T over the same interval; deltas summed once each. |
+| P-02 | G3-R02 (BLOCKER), C3-F03, K3-R12 | BLOCKER | BER_max 0.5 is not the worst case; units of the cap are not stated. | FIXED: BER_max is the unit's maximum, 1, when undocumented; modulus, rate and BER_max share the counter's unit; 20 ms for 32 bits at 106.25 Gb/s. |
+| P-03 | C3-F02, K3-R02 (BLOCKER), G3-R05, C3-F19 | BLOCKER | The challenge had no pass criterion; lock loss alone could pass it; no lane identity proof. | FIXED: it passes only when the lane's error counter rises while lock holds, by the injected count when injected; lock loss alone proves nothing; the rise on the expected lane proves the counter's lane map. |
+| P-04 | G3-R08 | BLOCKER | No run aggregation over lanes and directions. | FIXED: PASS only when every required lane and direction passes; any FAIL fails the run; else INCONCLUSIVE; lanes never averaged. |
+| P-05 | G3-R06 | MAJOR | The settling example used the later median. | FIXED: a contiguous prefix from observable lock and state signals, fixed before the run, with a maximum time; never from later ratios. |
+| P-06 | G3-R07, C3-F22 | MAJOR | The Poisson bounds under-cover clustered errors; the notation is not defined. | FIXED: the window spread is compared with the Poisson spread; clustering makes the lane INCONCLUSIVE or moves the bound to windows; χ²(p; ν) defined as a quantile, k = 0 gives 0, CL stated per lane. |
+| P-07 | G3-R03, G3-R04, C3-F16, K3-R11 | MAJOR | A wrap was not told from a reset, a read-clear, a re-enable or a restart; gated counters; a capped window with one wrap; a reset read-back with no tolerance. | FIXED: proof of a continuing epoch before any modulo step; counters that count only while locked or gated; inside the cap one fall is one wrap and is unwrapped; read-back of at most one count; a new verified reset starts a new epoch. |
+| P-08 | K3-R05, C3-F15 | MAJOR | "Bit counter" stood for the opportunity counter; §20 and the pitfalls named the lock-in as the cause. | FIXED: "opportunity counter" in §20, §23, the eval and the pitfalls; the cause needs a control; the old pitfall phrases are banned. |
+| P-09 | K3-R01 (BLOCKER), C3-F04, G3-R30 | BLOCKER | Eval 19 still taught the window bound from the previous BER and a zero-error-only bound; a typo. | FIXED: the expected output and the seven assertions follow §23 as it stands; the old phrases are banned in `evals/evals.json`. |
+| P-10 | G3-R31 | MAJOR | Eval 19 proves prose only; assertions miss the reset arithmetic, BER = 1, clustering, aggregation and the challenge. | PARTLY. Fixed: the assertions now cover each of these, and the runner says they need an agent run and a human grade. Rejected: executable counter models and an automatic grader; the skill ships rules, not a measurement tool, and the runner has no agent. |
+| P-11 | C3-F05 | MAJOR | A qualifier glued to a guarded sentence stayed green. | FIXED: a sentence must equal its guard entry; the splitter ends a sentence at any end mark and a space; `--mutate` glues a prefix and two suffixes to each sentence. |
+| P-12 | C3-F06 | MAJOR | A hidden copy of the section in an HTML comment defeated the guard. | FIXED: comments and fences are blanked before the search; a section prefix that occurs twice is refused. |
+| P-13 | C3-F08 | MINOR | The heading was not guarded. | FIXED: each guarded section names its whole heading. |
+| P-14 | G3-R28, K3-R19 | MAJOR | Deleting a rule entry from the rule file stayed green. | FIXED: `evals/core_rules_manifest.yaml` holds the expected groups, entries and counts; a shrunk rule file goes red. A deletion from the reference, the rule file and the manifest together is still not seen; it needs a reviewed change. |
+| P-15 | G3-R29 | MINOR | `never_re` was never exercised. | FIXED: each `never_re` carries an example that must match, and `--mutate` inserts it. |
+| P-16 | G3-R27, K3-R07, C3-F07 | MAJOR | Many changed rules have no guard. | PARTLY. Fixed: §18 and §20 are sentence-guarded; banned patterns cover the meanings of the old folklore in the whole file and the pitfalls. Open: case-pipeline, part-verification, fdm, pcb and agent-ops rules have no guard. |
+| P-17 | C3-F01 (BLOCKER), G3-R23 | BLOCKER | An empty or patternless private file passed the export gate. | FIXED: refused unless `people_names` and `project_names` hold patterns; the count per group is printed. |
+| P-18 | G3-R20 | BLOCKER | A missing export folder scanned nothing and passed. | FIXED: the folder must exist and hold files; a scan of zero files exits 2. |
+| P-19 | G3-R21 (BLOCKER), C3-F11 | BLOCKER | Binaries were found by a NUL byte; archives, PDFs, compressed and UTF-16 text were missed. | PARTLY. Fixed: files sorted by name and content type; UTF-16 decoded; PDF strings and PNG text chunks (zTXt, iTXt) read; each binary flagged for a metadata read with `exiftool -a -G1`. Rejected: extracting archives; an archive is flagged and a human reviews it before it is allowed. |
+| P-20 | C3-F09, G3-R22 | MAJOR | The export skipped `.git`, so commit metadata went unscanned. | FIXED: a `.git` in the export tree is refused; §15 tells the user to scan the outgoing commit messages, authors and tags in their own folder. |
+| P-21 | C3-F10, G3-R24 | MAJOR | Any allow string, even a private name, turned the gate off. | PARTLY. Fixed: typed entries (`url:`, `key:`, `binary:`), 12 characters or more, refused when a private pattern matches the whole value; the use count is printed. Rejected: owner, expiry and digest fields; the allow file is a reviewed project record, and its history names who added each line. |
+| P-22 | C3-F14, G3-R25, K3-R09 | MAJOR | The docs claimed CI runs the gate; no template does. | FIXED: §15 and the README say no shipped CI template runs it; it is a manual step before each public push; a CI job that runs it stops on an empty secret. Only `--export` is the leak gate. |
+| P-23 | C3-F12 | MINOR | One hit per line hid the others. | FIXED: every match of every group is reported. |
+| P-24 | C3-F13 | MINOR | The seed ids CC-001 and D-01 were exempt in an export. | FIXED: the export adds strict id patterns without the exemption. |
+| P-25 | G3-R26 | MAJOR | A scratch path under `/tmp/` stayed in an old review. | FIXED: redacted; a generic named-scratch-folder pattern under `/tmp/` added. |
+| P-26 | K3-R16 | MINOR | The repo terms held one design's id shapes. | FIXED: moved to the private file. |
+| P-27 | K3-R03 (BLOCKER), G3-R09, G3-R10, C3-F17 | BLOCKER | Default USB Power listed 1.5 A; the unconfigured levels were missing; the RDO alone is not the limit. | FIXED: 100 / 500 mA on USB 2.0, 150 / 900 mA on USB 3.x, 1500 mA on a two-lane USB 3.2 port; Type-C Current and Battery Charging are separate grants; the RDO decoded against its PDO or APDO and the cable, a limit and not a measurement. The skill carries no PD decoder, and says so. |
+| P-28 | K3-R04 | MAJOR | A post-FEC-only limit could release a bad pre-FEC link. | FIXED: a pre-FEC limit beside it, or an owner waiver row. |
+| P-29 | K3-R08 | MAJOR | The 1.5 factor read as a default. | FIXED: the tolerance comes from the counter resolution and the read skew; 1.5 is a ceiling; a computed lower bound over the limit is a FAIL even when the reported ratio agrees. |
+| P-30 | G3-R11 | MAJOR | One lane-unique observation does not prove the whole map. | FIXED: every physical lane challenged on its own; order, polarity and direction verified. |
+| P-31 | G3-R12 | MAJOR | "A module that couples inside needs none on the loop" is vendor-specific. | FIXED: follow the interface and both endpoint schematics; one compliant coupling stage per path. |
+| P-32 | G3-R13 | MAJOR | "At most about 27 s" used an overstated C. | FIXED: a conservative lower bound on C, the worst-case net heat, the sensor lag, the command and the spin-up; the 27 s figure removed. |
+| P-33 | G3-R14 | MAJOR | A first-build sink does not make the top load safe. | FIXED: sized for every supported load and ambient, or a lower power limit with an independent thermal shutdown. |
+| P-34 | G3-R15, G3-R34 | MINOR | The fan reset duty is not always 0 %; packed sentences. | FIXED: undefined until verified; a safe reset default; the over-temperature path its own bullet. |
+| P-35 | K3-R06 | MAJOR | "Far below" survived the round-2 softening. | FIXED: "can drop below the target impedance" in both files. |
+| P-36 | C3-F18, G3-R16 | MINOR | The pad numbers had no stack parameters. | FIXED: the numbers removed; model the launch with εr, copper, mask, reference and pour gap. |
+| P-37 | G3-R17 | MINOR | The back-drill layer rule read as general. | FIXED: "for its back-drilled boards on that date". |
+| P-38 | G3-R18, K3-R10 | MAJOR | The radial clearance was mixed into the axial stack; the 3.175 case read as a rule. | FIXED: separate radial and axial stacks, the proud-height minimum and maximum from worst-case tolerances; the 3.175 case a worked example. |
+| P-39 | G3-R19 | MAJOR | A plain bar does not always resist sliding and rotation. | FIXED: list the six degrees of freedom and check each at the worst-case fit; a bar can slide along its own axis. |
+| P-40 | C3-F21, K3-R15, G3-R34 | MINOR | Guarded sentences over 20 words. | PARTLY. Fixed: every new sentence in §23, §6, §8.7 and §15 is 20 words or less. Open: older §18 and §20 sentences. |
+| P-41 | K3-R13 | MINOR | "Management tester" in a general rule. | FIXED: "bench tester". |
+| P-42 | K3-R14 | MINOR | The routing row omitted §23. | FIXED. |
+| P-43 | C3-F20 | MINOR | The runner's docstring and selftest disagreed. | FIXED. |
+| P-44 | G3-R32 | MINOR | The record still named the plain lint as a scanner. | FIXED: marked superseded by `--export`. |
+| P-45 | G3-R33 | MINOR | The release date preceded its review. | FIXED: the date is labelled a candidate date. |
+| P-46 | C3-F23 | NOTE | Scripted use of an undocumented endpoint. | FIXED: check the site's terms before scripted use. |
+| P-47 | C3-F24 | NOTE | `release_archive.sh` was silent with no package. | FIXED: a message and no early exit. |
+| P-48 | C3-F25, C3-F26, G3-R35, G3-R36, K3-R17, K3-R18 | NOTE | Versions, links, arithmetic and the leak sweep checked correct. | ACCEPTED. |

@@ -7,23 +7,28 @@
   scripts/rule_check.py --sentences FILE SECTION   # print the sentences of a section as yaml list items (to refresh an every_sentence guard)
   scripts/rule_check.py --selftest
 
-RULES.yaml maps a group name to a list of entries: {file, section?, every_bullet?, every_sentence?, must: [phrase], never: [phrase],
-never_re: [regex]}. `file` is relative to the skill. `section` is a heading prefix (`## 23. `); the section runs to the next heading of
-the same or a higher level. Without it the whole file is the section. A `must` phrase must occur in the section. A `never` phrase, or
-a `never_re` regex, must not occur anywhere in the file. Phrases match with the whitespace collapsed, so a phrase may wrap.
+RULES.yaml maps a group name to a list of entries: {file, section?, heading?, every_bullet?, every_sentence?, must: [phrase],
+never: [phrase], never_re: [regex], never_re_examples: [text]}. `file` is relative to the skill. `section` is a heading prefix
+(`## 23. `); the section runs to the next heading of the same or a higher level. HTML comments and code fences are blanked before
+the search, and a prefix that occurs more than once in the file (a hidden or duplicate copy) is refused. `heading` must equal the
+whole heading line. Without a section the whole file is the section. A `must` phrase must occur in the section. A `never` phrase,
+or a `never_re` regex, must not occur anywhere in the file. Phrases match with the whitespace collapsed, so a phrase may wrap.
 - `every_bullet: true`: every top-level bullet of the section holds a `must` phrase.
-- `every_sentence: true`: every sentence of the section (intro paragraphs included) holds a `must` phrase. With the whole sentences
-  as the must list (`--sentences`), any deletion, rewording or added sentence goes red; an edit of the section is a deliberate edit
-  of the guard file too.
-`--mutate` deletes each guarded block (every_bullet) or each sentence (every_sentence), or the block that holds each must phrase. In
-every_sentence mode it also flips one verdict word per sentence (PASS / FAIL / INCONCLUSIVE, never / always, not). It inserts each
-banned phrase. It reports the mutations that stayed green. It proves only what the guards cover: text outside a guarded section,
-and a meaning kept under new words outside an every_sentence section, are not seen.
+- `every_sentence: true`: every sentence of the section (intro paragraphs included) EQUALS one `must` entry, each entry used as
+  often as it is listed. A sentence ends at any `.`, `!` or `?` followed by a space (a few abbreviations excepted), so a glued
+  qualifier is its own sentence and goes red. Refresh a list with `--sentences`, in a reviewed change only.
+- `<RULES>_manifest.yaml` lists the expected groups, entries and guard counts. A shrunk rule file goes red against it.
+`--mutate` deletes each guarded block or sentence, glues a qualifier before or after each sentence, flips one verdict word per
+sentence, and inserts each banned phrase and each `never_re_examples` text. `--attacks FILE` applies hand-written edits and
+requires each to go red. The proof covers the guarded text only: a rule outside the guarded sections is not seen, and a rule
+deleted from both the reference and the rule file and the manifest is not seen.
 """
 import argparse, os, re, shutil, sys, tempfile
 
 HEAD = re.compile(r"^(#+) ")
-SPLIT = re.compile(r"(?<=[.!?])\s+(?=[A-Z0-9(`\"*−-])")
+SPLIT = re.compile(r"(?<!\be\.g\.)(?<!\bi\.e\.)(?<!\bvs\.)(?<!\betc\.)(?<!\bcf\.)(?<!\bFig\.)(?<!\bNo\.)(?<=[.!?])\s+")   # any end mark + space; no capital needed
+GLUE = (("Optionally: ", ""), ("", " unless the run is short."), ("", " — or skip it."))
+COMMENT = re.compile(r"<!--.*?-->", re.S)
 SWAPS = [(r"\bINCONCLUSIVE\b", "PASS"), (r"\bFAIL\b", "PASS"), (r"\bPASS\b", "FAIL"), (r"\bNever\b", "Always"), (r"\bnever\b", "always"),
          (r"\bnot\b ", ""), (r"\bcannot\b", "can"), (r"\bonly\b ", "")]
 
@@ -36,8 +41,19 @@ def sentences(text):
     return [x for x in SPLIT.split(norm(text)) if x]
 
 
+def visible(text):
+    """The text with HTML comments and code fences blanked, line numbers kept."""
+    text = COMMENT.sub(lambda m: "\n" * m.group(0).count("\n"), text)
+    out, fence = [], False
+    for l in text.split("\n"):
+        if l.lstrip().startswith("```"):
+            fence = not fence; out.append(""); continue
+        out.append("" if fence else l)
+    return "\n".join(out)
+
+
 def section_span(lines, prefix):
-    """(start, end) line indexes of the section, or None. No prefix = the whole file."""
+    """(start, end) line indexes of the section, or None. No prefix = the whole file. Call it on visible() lines."""
     if not prefix:
         return 0, len(lines)
     for i, l in enumerate(lines):
@@ -72,11 +88,17 @@ def block_text(lines, s, t):
 
 
 def check_text(text, e):
-    lines = text.split("\n")
+    raw = text.split("\n"); lines = visible(text).split("\n")
+    if e.get("section"):
+        n_all = sum(1 for l in raw if e["section"] in l)
+        if n_all != 1:
+            return [f"{e['file']}: section `{e['section']}` appears {n_all} times (a hidden or duplicate copy is refused)"]
     span = section_span(lines, e.get("section"))
     if span is None:
         return [f"{e['file']}: section `{e['section']}` missing"]
     a, b = span
+    if e.get("heading") and lines[a].rstrip() != e["heading"]:
+        return [f"{e['file']}: heading changed: `{lines[a].rstrip()}`"]
     sec, whole, probs = norm("\n".join(lines[a:b])), norm(text), []
     probs += [f"{e['file']}: rule missing: `{m}`" for m in e.get("must", []) if norm(m) not in sec]
     probs += [f"{e['file']}: banned phrase present: `{n}`" for n in e.get("never", []) if norm(n) in whole]
@@ -86,12 +108,64 @@ def check_text(text, e):
         for s, t in blocks(lines, a, b, True):
             if not any(m in block_text(lines, s, t) for m in must):
                 probs.append(f"{e['file']}:{s + 1}: unguarded bullet (add a must phrase): `{block_text(lines, s, t)[:70]}`")
-    if e.get("every_sentence"):
+    if e.get("every_sentence"):                                              # each sentence EQUALS one must entry, each entry used once
+        seen = []
         for s, t in blocks(lines, a + (1 if e.get("section") else 0), b, False):
             for x in sentences(block_text(lines, s, t)):
-                if not any(m in x for m in must):
-                    probs.append(f"{e['file']}:{s + 1}: unguarded sentence (add a must phrase): `{x[:70]}`")
+                seen.append(x)
+                if x not in must:
+                    probs.append(f"{e['file']}:{s + 1}: sentence not in the guard list (changed, glued or new): `{x[:70]}`")
+        extra = [m for m in set(must) if seen.count(m) != must.count(m)]
+        probs += [f"{e['file']}: guarded sentence count differs: `{m[:70]}`" for m in extra]
     return probs
+
+
+def check_manifest(entries_by_group, manifest_path):
+    """The independent manifest: the same groups, the same entries, the same counts of must / never / never_re."""
+    import yaml
+    if not os.path.exists(manifest_path):
+        return [f"MISSING manifest {manifest_path}"]
+    want = yaml.safe_load(open(manifest_path, encoding="utf-8")) or {}
+    have = {g: [(e["file"], e.get("section"), len(e.get("must", [])), len(e.get("never", [])), len(e.get("never_re", []))) for e in es]
+            for g, es in entries_by_group.items()}
+    probs = [f"manifest: group `{g}` missing from the rules" for g in want if g not in have]
+    probs += [f"manifest: group `{g}` not in the manifest" for g in have if g not in want]
+    for g in set(want) & set(have):
+        w = [tuple(x) for x in want[g]]
+        for x in w:
+            if x not in have[g]:
+                probs.append(f"manifest: {g} entry {x[0]} {x[1] or ''} expects must {x[2]} / never {x[3]} / never_re {x[4]}; the rules differ")
+        for x in have[g]:
+            if x not in w:
+                probs.append(f"manifest: {g} entry {x[0]} {x[1] or ''} (must {x[2]}) is not in the manifest")
+    return probs
+
+
+def write_manifest(entries_by_group, manifest_path):
+    import yaml
+    m = {g: [[e["file"], e.get("section"), len(e.get("must", [])), len(e.get("never", [])), len(e.get("never_re", []))] for e in es]
+         for g, es in entries_by_group.items()}
+    open(manifest_path, "w").write("# evals/core_rules_manifest.yaml — the expected groups, entries and guard counts of core_rules.yaml: [file, section,\n"
+                                   "# must, never, never_re]. A rule deleted from core_rules.yaml goes red here. Update it only in a reviewed change.\n"
+                                   + yaml.safe_dump(m, sort_keys=False, allow_unicode=True, default_flow_style=None, width=10000))
+
+
+def attacks(skill, entries, path):
+    """Each attack edits one file in memory; the check of that file's entries must go red. Returns (count, green labels)."""
+    import yaml
+    green, n = [], 0
+    for c in yaml.safe_load(open(path, encoding="utf-8")) or []:
+        n += 1
+        t = open(os.path.join(skill, c["file"]), encoding="utf-8").read()
+        if c.get("old") is None:
+            t = t + c["new"]
+        elif c["old"] not in t:
+            green.append(f"{c['label']} (SETUP-MISS: old text not found)"); continue
+        else:
+            t = t.replace(c["old"], c["new"], 1)
+        if not any(check_text(t, e) for e in entries if e["file"] == c["file"]):
+            green.append(c["label"])
+    return n, green
 
 
 def check_entry(skill, e):
@@ -108,8 +182,8 @@ def check(skill, entries):
 def mutations(text, e):
     """Yield (label, new_text) for one entry."""
     lines = text.split("\n")
-    a, b = section_span(lines, e.get("section"))
-    for n in e.get("never", []):
+    a, b = section_span(visible(text).split("\n"), e.get("section"))
+    for n in e.get("never", []) + e.get("never_re_examples", []):
         yield f"insert `{n}`", "\n".join(lines[:a + 1] + [f"- {n}"] + lines[a + 1:])
     if e.get("every_sentence"):
         body = blocks(lines, a + (1 if e.get("section") else 0), b, False)
@@ -128,6 +202,8 @@ def mutations(text, e):
         for i, pre, ss in units:
             for k, x in enumerate(ss):
                 yield f"delete sentence {e['file']}: `{x[:60]}`", rebuild(i, k, None)
+                for pre_, suf in GLUE:
+                    yield f"glue `{pre_ or suf}` to {e['file']}: `{x[:40]}`", rebuild(i, k, pre_ + x + suf)
                 for rx, rep in SWAPS:
                     if re.search(rx, x):
                         yield f"flip `{rx}` in {e['file']}: `{x[:50]}`", rebuild(i, k, re.sub(rx, rep, x, count=1))
@@ -161,14 +237,22 @@ def mutate(skill, entries):
     return n, green, bad_control
 
 
-def load(path, only):
+def load_groups(path):
     import yaml
-    groups = yaml.safe_load(open(path, encoding="utf-8")) or {}
+    return yaml.safe_load(open(path, encoding="utf-8")) or {}
+
+
+def load(path, only):
+    groups = load_groups(path)
     if only:
         missing = set(only) - set(groups)
         if missing:
             raise SystemExit(f"rule_check: unknown group(s) {sorted(missing)}")
         groups = {k: v for k, v in groups.items() if k in only}
+    for es in groups.values():
+        for e in es:
+            for ex in e.get("never_re_examples", []):
+                assert any(re.search(r, ex) for r in e.get("never_re", [])), f"never_re example matches no pattern: {ex}"
     return [e for v in groups.values() for e in v]
 
 
@@ -200,21 +284,33 @@ def selftest():
     E3 = [{"file": "references/y.md", "section": "## 3. ", "every_sentence": True,
            "must": ["Intro says why.", "A bad window is INCONCLUSIVE.", "Never average the ratios.", "Keep it."]}]
     assert check(d, E3) == [], check(d, E3)
-    n, green, bad = mutate(d, E3); assert n == 6 and green == [] and not bad, (n, green, bad)   # 4 deletions + 2 flips
+    n, green, bad = mutate(d, E3); assert n == 18 and green == [] and not bad, (n, green, bad)   # 4 deletions + 2 flips + 12 glues
     open(f"{d}/references/y.md", "a").write("")
     t = open(f"{d}/references/y.md").read().replace("- Keep it.", "- Keep it. Use short windows.")
-    assert any("unguarded sentence" in p for p in check_text(t, E3[0]))
+    assert any("not in the guard list" in p for p in check_text(t, E3[0]))
     t = open(f"{d}/references/y.md").read().replace("is INCONCLUSIVE", "is PASS")
     assert check_text(t, E3[0]), "a reversed verdict word goes red"
+    y = open(f"{d}/references/y.md").read()
+    for bad_t in [y.replace("Keep it.", "Keep it. except in a quick run."), y.replace("Keep it.", "In a quick run only: Keep it."),
+                  y.replace("Keep it.", "Keep it. — or skip it."), "<!--\n" + y + "\n-->\n" + y.replace("Keep it.", "Skip it."),
+                  y.replace("## 3. C", "## 3. C, an optional mode")]:
+        assert check_text(bad_t, dict(E3[0], heading="## 3. C")), bad_t[:80]
+    assert check_text(y, dict(E3[0], heading="## 3. C")) == []
+    mf = f"{d}/m.yaml"; write_manifest({"g": E3}, mf); assert check_manifest({"g": E3}, mf) == []
+    assert check_manifest({}, mf) and check_manifest({"g": [dict(E3[0], must=E3[0]["must"][:-1])]}, mf), "a shrunk rule file goes red"
+    open(f"{d}/att.yaml", "w").write("- {label: glue, file: references/y.md, old: 'Keep it.', new: 'Keep it. unless short.'}\n"
+                                      "- {label: miss, file: references/y.md, old: 'absent text', new: 'x'}\n")
+    n, green = attacks(d, E3, f"{d}/att.yaml"); assert n == 2 and green == ["miss (SETUP-MISS: old text not found)"], green
     E4 = [{"file": "references/y.md", "section": "## 3. ", "every_sentence": True, "must": ["window", "Never average", "Keep"]}]
     assert any("Intro" in p for p in check(d, E4)), "the intro paragraph is guarded too"
     open(f"{d}/SKILL.md", "w").write("Para one.\nstill one.\n\nPara two has the norm.\n")
     n, green, _ = mutate(d, [{"file": "SKILL.md", "must": ["has the norm"]}]); assert n == 1 and green == [], green
     assert check(d, [{"file": "references/x.md", "section": "## 9. "}]) and check(d, [{"file": "nope.md"}])
-    assert sentences("Rate 1.5 is fine. Then 53.125 GBd. (2026-10): ok. A step.") == ["Rate 1.5 is fine.", "Then 53.125 GBd.", "(2026-10): ok.", "A step."]
+    assert sentences("Rate 1.5 is fine. then 53.125 GBd. (2026-10): ok, e.g. this. A step.") == ["Rate 1.5 is fine.", "then 53.125 GBd.", "(2026-10): ok, e.g. this.", "A step."]
     shutil.rmtree(d)
     print("selftest OK (must phrases across a wrap, banned phrases and patterns, unguarded bullets and sentences, the intro guarded, "
-          "mutation proof incl. a duplicated rule, sentence deletions and verdict flips, paragraphs)")
+          "mutation proof incl. a duplicated rule, sentence deletions, verdict flips and glued qualifiers, a hidden copy and a heading change refused, "
+          "the manifest, attack fixtures, paragraphs)")
     return 0
 
 
@@ -223,6 +319,8 @@ def main(argv):
     ap.add_argument("rules", nargs="?"); ap.add_argument("--skill", default=os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
     ap.add_argument("--only"); ap.add_argument("--mutate", action="store_true"); ap.add_argument("--selftest", action="store_true")
     ap.add_argument("--sentences", nargs=2, metavar=("FILE", "SECTION"))
+    ap.add_argument("--attacks", help="a yaml list of {label, file, old, new} edits; each must turn the check red")
+    ap.add_argument("--write-manifest", action="store_true", help="rewrite <rules>_manifest.yaml from the rules (a reviewed change only)")
     a = ap.parse_args(argv[1:])
     if a.selftest:
         return selftest()
@@ -231,7 +329,17 @@ def main(argv):
     if not a.rules:
         ap.error("RULES.yaml is required")
     entries = load(a.rules, a.only.split(",") if a.only else None)
-    probs = check(a.skill, entries)
+    mpath = os.path.splitext(a.rules)[0] + "_manifest.yaml"
+    if a.write_manifest:
+        write_manifest(load_groups(a.rules), mpath); print(f"wrote {mpath}"); return 0
+    probs = ([] if a.only else check_manifest(load_groups(a.rules), mpath)) + check(a.skill, entries)
+    if a.attacks and not probs:
+        n, green = attacks(a.skill, entries, a.attacks)
+        for g in green:
+            print(f"ATTACK STAYED GREEN: {g}")
+        print(f"rule_check --attacks: {n - len(green)} of {n} attack(s) went red")
+        if green:
+            return 1
     for p in probs:
         print(p)
     if probs or not a.mutate:

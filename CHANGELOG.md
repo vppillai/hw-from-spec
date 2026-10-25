@@ -43,7 +43,7 @@
   (CHANGELOG and docs included; history keeps its measured numbers), a fenced worked example keeps numbers and kinds but never a name, and the
   repo carries no project retro (a retro report is folded, then deleted).
 
-## 0.11.25 - 2026-10-24 - Measurements that check their own counters, the studies before a next revision, the public export, side pockets and feet
+## 0.11.25 - 2026-10-24 (candidate; the tag date follows the review rounds of 2026-10-25) - Measurements that check their own counters, the studies before a next revision, the public export, side pockets and feet
 
 Source: the bench, case and study days of a two-ended test product after the 0.11.24 cut. The days held a long two-end
 pattern campaign, a first meter session and a printed-case DFM round. They also held a public release and four studies for the next
@@ -86,13 +86,14 @@ already in the tree, and two owner rules. The project keeps its copy of the map;
 - `references/agent-ops.md` §5: the browser profile and the screenshot roots.
 - `smoke/README.md`: a mesh-dependent check carries `needs-mesh:` and runs in both venv kinds.
 - `references/pitfalls.md`: 34 dated lines.
-- `evals/evals.json`: eval 19, a pattern-test verdict that checks its counters. Its checks run the whole rule file, the mutation
-  proof and five negative fixtures. Its assertions still need an agent run and a human grade.
-- `smoke/run_smoke.sh`: one `rule_check.py --mutate` over every group, and one grep for the search-before-BLOCKED rule.
-- `scripts/rule_check.py` and `evals/core_rules.yaml`: the guarded sections are software-track §23, schematic-phase §6,
-  release-and-cut §15 and dfm §8.7, each sentence by sentence. Also guarded: phrases of §18 and §20, and the SKILL links. Banned
-  phrases and patterns stay out. `--mutate` deletes each sentence, flips one verdict word per sentence and inserts each banned
-  phrase. It proves only what the guards cover; the rest of the skill has no such guard.
+- `evals/evals.json`: eval 19, a pattern-test verdict that checks its counters. Its checks run the whole rule file against its
+  manifest, the attack fixtures, the mutation proof and a shrunk-manifest fixture. Its assertions still need an agent run and a
+  human grade.
+- `smoke/run_smoke.sh`: `rule_check.py --mutate` and `--attacks` over every group, and one grep for the search-before-BLOCKED rule.
+- `scripts/rule_check.py`, `evals/core_rules.yaml`, `evals/core_rules_manifest.yaml` and `evals/rule_attacks.yaml`: software-track
+  §18, §20 and §23, schematic-phase §6, release-and-cut §15 and dfm §8.7 are guarded sentence by sentence, headings included.
+  Also guarded: the SKILL links and §9 sentence, banned phrases and patterns in the pitfalls and eval 19. The proof covers only
+  the guarded text; the rest of the skill has no such guard.
 
 ### Changed
 - `references/software-track.md` §20: the bit-counter bullet no longer says "judge the ratio and ask the vendor"; it points at the law
@@ -104,7 +105,20 @@ already in the tree, and two owner rules. The project keeps its copy of the map;
 
 ### Review round
 Four blind reviews (two Claude, one GPT, one Grok) merged in `docs/reviews/REVIEW_0.11.25.md`. Each row carries its disposition.
-Three confirmation reviews (round 2) found open gaps; the round-2 section of the same file lists them and their dispositions.
+Three confirmation reviews (round 2) and three more (round 3) found open gaps. Their sections in the same file list them and their
+dispositions. Round 3 changed:
+- §23: each window's own baseline and time; BER_max 1 when undocumented (about 20 ms for 32 bits at 106.25 Gb/s); a challenge
+  passes only when the error counter rises while lock holds; the run passes only when every required lane and direction passes;
+  the settling is a predeclared prefix from observable state; clustered errors make the lane INCONCLUSIVE; wrap, reset,
+  read-clear and re-enable told apart; a pre-FEC limit beside a post-FEC one. §18 and §20 are sentence-guarded too.
+- Default USB Power by version and configuration, Type-C Current as a separate grant, the RDO against its PDO or APDO and the
+  cable. The lane map challenged on every lane, AC coupling from both endpoint schematics, a conservative heat capacity, the sink
+  for every supported load, the radial and axial magnet stacks, the bar's degrees of freedom.
+- `rule_check.py`: a sentence must equal its guard entry, a glued qualifier is its own sentence, a hidden or duplicate section is
+  refused, the heading is guarded, an independent manifest catches a shrunk rule file, `--attacks` runs hand-written attacks.
+- `generic_lint.py --export`: refuses an empty or patternless private file, a missing or empty folder and a `.git`; sorts files
+  by type; reads UTF-16, PDF strings and PNG text chunks; reports every match; typed allow entries. No CI template runs it; it is
+  a manual step before each public push.
 - **Leak.** `scripts/generic_lint_terms.yaml` keeps only generic shapes: id formats, path shapes, a refdes and fab-code scheme. Every
   project, person, company, order, part, preset and dimension term moved to a private file outside the repo. `generic_lint.py` reads it
   from `--private-terms`, `$HWFS_PRIVATE_TERMS` or `~/.config/hw-from-spec/private_terms.yaml`; without it the generic patterns run.

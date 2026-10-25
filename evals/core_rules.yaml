@@ -6,6 +6,7 @@
 measurement:
 - file: references/software-track.md
   section: '## 23. '
+  heading: '## 23. A measurement checks its own counters: the norm, never a mode'
   every_sentence: true
   must:
   - A pattern test gives a verdict only from counters it has checked.
@@ -18,100 +19,132 @@ measurement:
   - A read holds the monotonic time, the error and opportunity counters, the reported ratio and the lock flags.
   - It also holds the temperature of both ends.
   - 'Record the event unit of each error counter: bit, symbol, block or codeword.'
-  - Record its opportunity count in the same unit.
-  - 'A bit counter gives a BER: bit errors over bits.'
-  - A symbol, block or codeword counter gives an error ratio over symbols, blocks or codewords.
+  - Record its opportunity counter in the same unit.
+  - 'A bit error counter gives a BER: bit errors over bits.'
+  - Other units give an error ratio over symbols, blocks or codewords.
   - Compare a ratio only with a limit in the same unit.
   - Convert between units only by a stated model.
+  - Record when each counter counts.
+  - Some count only while the checker holds lock, or only inside a gate.
+  - Unknown counting semantics make the window INCONCLUSIVE.
   - 'Record the counting point of each counter: before or after the FEC, and before or after a gearbox.'
   - Key each limit to that point.
   - A post-FEC count of zero does not prove the pre-FEC margin.
-  - Take the lane rate at the counting point.
+  - A release with only a post-FEC limit also needs a pre-FEC limit.
+  - The other way is an owner waiver row that says why.
+  - Take the lane rate at the counting point, in the counter's unit.
   - Read it from the standard's table for the active configuration.
   - Include the encoding and FEC overhead that the counting point sees.
   - For example, one 100G PAM4 lane runs at 53.125 GBd, which is 106.25 Gb/s.
   - A lane rate the tool cannot look up makes the window INCONCLUSIVE.
   - Never divide an aggregate rate by the other side's lane count.
-  - T is the time the counters were enabled, from the verified reset to the read.
-  - The opportunity counter grows at the lane rate in its own unit × T.
+  - Each window has its own baseline and its own time.
+  - Reset the counters, or take a baseline read, at the window start.
+  - T is the time from that verified reset or baseline to the window's closing read.
+  - The window's deltas and its T cover the same interval.
+  - Sum the windows' deltas once each, never a cumulative read twice.
+  - Verify a reset by a read-back of at most one count, or the datasheet's sticky maximum.
+  - A larger read-back means the reset failed, and the epoch is invalid.
+  - 'Skip the reads of the first update interval after a reset: they can hold the old count.'
+  - The opportunity counter grows at the documented opportunity rate × the time it counted.
   - Allow the clock tolerance and the read timing slack over T.
   - Any other growth law is a counter fault, and the window is INCONCLUSIVE with that reason.
   - Test the expected linear law, not one named alternative.
-  - 'Dated example (2026-10): one module''s bit counter grew as rate × T² / 2.'
-  - Use counter deltas within one verified reset epoch.
-  - Reset the counters.
-  - Read them back near zero.
-  - Record the reset time.
-  - 'Skip the reads of the first update interval after a reset: they can hold the count from before it.'
+  - 'Dated example (2026-10): one module''s opportunity (bit) counter grew as rate × T² / 2.'
+  - Tell a wrap from a reset, a read-clear, a re-enable and a firmware restart.
+  - Prove the epoch continues before any modulo step.
+  - 'The proof: no reset command, no clear-on-read, no enable change, and an unchanged uptime or restart count.'
+  - Without that proof, a fall of either counter invalidates the window.
   - Treat each counter on its own.
-  - A fall of either counter that no wrap explains invalidates the window.
   - Know each counter's width, and whether it wraps or saturates.
   - Cap every window, whatever the ratio of the window before.
-  - The cap is (modulus / 2) / (lane rate × BER_max).
-  - BER_max is the worst error ratio at which the checker still holds lock; take 0.5 when it is unknown.
+  - The cap is (modulus / 2) / (rate × BER_max).
+  - The modulus, the rate and BER_max share the counter's event unit.
+  - BER_max is the highest error ratio the counter can see while it counts.
+  - When it is not documented, take the unit's maximum, 1.
   - Also cap the window so that the opportunity counter cannot pass half its own modulus.
-  - 'Example: a 32-bit error counter on a 106.25 Gb/s lane.'
-  - Its cap is about 40 ms at BER_max 0.5 and about 20 s at 1e-3.
-  - The first window uses the cap at BER_max.
-  - A dated tool used a first window of 0.25 s, which holds up to a BER_max of about 0.08.
-  - Inside the cap, shorten the next window when the ratio before calls for it.
-  - Keep a margin for a rise.
-  - An error count that falls while the opportunity count rises is a wrap.
-  - A step of half the modulus or more between two reads invalidates the window.
-  - A read at the saturation value makes that window and every later window INCONCLUSIVE.
+  - 'Example: a 32-bit bit error counter on a 106.25 Gb/s lane.'
+  - Its cap is about 20 ms at BER_max 1.
+  - A documented BER_max of 1e-3 gives about 20 s.
+  - The first window uses the cap.
+  - Inside the cap, a shorter window is always allowed.
+  - Inside the cap, a fall in a continuing epoch is exactly one wrap.
+  - Unwrap it and count the window.
+  - A step of half the modulus or more invalidates the window.
+  - A read at the saturation value makes that window and every later window of the epoch INCONCLUSIVE.
+  - A new verified reset starts a new epoch.
   - The saturated count is a lower bound on the errors.
-  - A proven wrap or a saturation gives a lower bound on the errors.
+  - A saturation, or a window that a step invalidated, gives a lower bound on the errors.
   - A lower-bound ratio over the limit is a FAIL.
   - That FAIL wins over the INCONCLUSIVE of the invalid window.
   - 'Compute the ratio two ways: errors over the rate × T, and errors over the opportunity counter.'
   - Compare both with the reported ratio.
   - With no reported ratio, compare the two computed values with each other.
   - The criteria state the tolerance before the run.
-  - A dated tool used a factor of 1.5; use a tighter factor when the reported ratio has the resolution.
+  - Derive it from the counter resolution and the read skew.
+  - A dated tool used a factor of 1.5; that is a ceiling, not a default.
   - A mismatch beyond the tolerance makes the window INCONCLUSIVE.
+  - A computed lower bound over the limit is a FAIL even when the reported ratio agrees.
   - Compare on a frozen read or an atomic latch.
   - Without one, timestamp each field read.
   - Bound the total skew of all the fields, and add it to the slack.
   - A module that reports a ratio only cannot pass this check.
   - A deaf checker reads zero errors on any link.
   - Challenge the checker on every judged lane and direction before a result enters a release record.
-  - 'Known-bad paths: a pattern mismatch (PRBS31 at one end, PRBS15 at the other), an inverted polarity at one end, an error-injection command, a known-bad cable.'
+  - A challenge passes only when that lane's error counter rises while lock holds.
+  - With injected errors, the counter rises by the injected count within the stated tolerance.
+  - A challenge that ends in lock loss alone proves the lock detector, not the counter.
+  - A rise on the expected lane and direction also proves that counter's lane map.
+  - Prefer an error-injection command.
+  - A pattern mismatch, an inverted polarity or a known-bad cable counts only when the counter rises while lock holds.
   - Record the challenge with the run.
-  - A lane with no challenge reads "checker unproven".
+  - A lane with no passed challenge reads "checker unproven".
   - An unproven lane cannot enter a release record.
   - Keep the live lock state and the latched lock loss apart.
   - OR a clear-on-read flag over every read of the window.
   - A lock loss after the settling is verdict-bearing.
   - The criteria say whether it fails the lane or makes it INCONCLUSIVE; it is never dropped.
   - The errors and opportunities of a window with a lock loss stay out of the run totals.
-  - The start-up settling is a rule fixed before the run, with a maximum time from the criteria.
-  - Base the rule on observable lock and state signals where the checker gives them.
-  - 'Dated example rule (2026-10): a settling window reads 10 errors or more, and its ratio exceeds 3 times the later median.'
+  - The start-up settling is a contiguous prefix of windows from the release, fixed before the run.
+  - The criteria give its rule and its maximum time.
+  - 'The rule uses only observable state: the lock, the data path state, a stable read of the lock flags.'
+  - It never uses the ratios of later windows.
   - Exclude the settling windows from the verdict.
-  - Report them, with the time to a stable ratio per direction.
+  - Report them, with the time to the end of the settling per direction.
   - Never move the settling point after you see the data.
   - Every window after the settling counts, a later burst too.
   - Settling past the maximum makes the run INCONCLUSIVE.
-  - The first window after a release can hold the checker lock-in.
-  - The settling rule decides; never drop a window by default.
+  - The first windows after a release can read worse.
   - Call the cause lock-in only when a control proves it.
-  - A window is invalid when the lane rate is unknown, the growth law fails, a counter falls unexplained, or a wrap cannot be excluded.
-  - It is also invalid when a counter saturates, the ratios disagree, the gate does not complete or the settling passes its maximum.
+  - A window is invalid when the lane rate is unknown or the growth law fails.
+  - It is invalid when a counter falls with no proof of a wrap.
+  - It is invalid on a step of half the modulus or a saturation.
+  - It is invalid when the ratios disagree or the gate does not complete.
+  - It is invalid when the settling passes its maximum or the counting semantics are unknown.
   - An invalid window makes the run INCONCLUSIVE, unless a lower bound proves a FAIL.
-  - The verdict uses run totals per lane and per direction.
+  - The verdict of a lane and direction uses its run total.
   - A run total is the errors over the opportunities, each summed over the counted windows.
   - Never average window ratios.
+  - Never average lanes.
   - Never judge the last window alone.
-  - Keep enough counted windows to apply the settling rule; the dated tool needed two.
-  - Judge each run total by its Poisson confidence bounds at a stated level CL.
+  - Keep enough counted windows to apply the settling rule and the burst check.
+  - The run passes only when every required lane and direction passes.
+  - Any FAIL fails the run.
+  - Otherwise the run is INCONCLUSIVE.
+  - Judge each run total by its Poisson confidence bounds at a stated level CL, per lane and direction.
+  - Let χ²(p; ν) be the p-quantile of the chi-square law with ν degrees of freedom.
   - For k errors in N opportunities, the upper bound is χ²(CL; 2k + 2) / (2N).
-  - The lower bound is χ²(1 − CL; 2k) / (2N).
+  - The lower bound is χ²(1 − CL; 2k) / (2N), and 0 when k is 0.
   - PASS needs the upper bound under the limit.
   - FAIL needs the lower bound over the limit.
   - Otherwise the lane is INCONCLUSIVE.
   - With zero errors the upper bound is −ln(1 − CL) / N, about 3 / N at 95 %.
-  - The bounds assume independent errors; a burst makes them optimistic, so report the window spread too.
   - Set the minimum opportunity count from the limit, about 3 / limit at 95 %.
+  - Many lanes at one CL raise the chance of a false FAIL somewhere; the criteria state the level per lane.
+  - The Poisson bounds assume independent errors.
+  - Compare the spread of the window counts with the Poisson spread.
+  - When the windows spread wider, the errors cluster.
+  - Then the lane is INCONCLUSIVE, or the bound uses the windows as its unit.
   - Separate the lock-in from a temperature effect.
   - Log the temperature per window.
   - Claim a warm-up effect only when the ratio tracks the temperature after the settling windows are excluded.
@@ -143,46 +176,176 @@ measurement:
   - Let the link settle
   - The verdict counts every window after the settling time
   - where the hardware allows
-  never_re:
-  - (?i)windows? of (at least |more than )?\d+ ?s (or more|minimum)
-  - (?i)\bwindows? of at least \d+ ?s\b
-  - (?i)stops at one bit
-  - (?i)judge (only )?(the )?warm
-  - (?i)rate × T² / 2 (law|model)
+  - take 0.5 when it is unknown
+  - the median of the later windows
 - file: references/software-track.md
   section: '## 20. '
+  heading: '## 20. Pattern tests between two ends'
+  every_sentence: true
   must:
-  - Check its growth law in every window before you trust a rate from it (§23)
-  - Judge each lane against the expected enable map
-  - A host-loop result is not a media-link result
-  - Read back the pattern, the polarity and the enable at both
+  - The checker's lock-loss flag latches from the moment the checker is enabled.
+  - Read it once after the far generator is up.
+  - Then reset the counters, verify the reset by a read-back, and open the gate (§23).
+  - 'A long pattern function hides three reusable steps: arm, end-of-gate statistics, disable.'
+  - Arm is the setup and the clearing of the latched flags; the settling is judged inside the run (§23).
+  - Read back the pattern, the polarity and the enable at both ends before the gate.
+  - Pull the three steps out.
+  - A per-second trend and a far-end loopback then cost one loop each.
+  - A module's opportunity counter may not grow at the lane rate.
+  - Check its growth law in every window before you trust a rate from it (§23).
+  - A far-end loopback carries the pattern while the checker reports lock loss for the whole gate and still counts.
+  - Judge a loopback run on a per-second lock view, never on the end flag alone.
+  - A link reads worse in its first seconds.
+  - One per-second rate fell tenfold inside a minute.
+  - A control is needed before you call that lock-in.
+  - Apply the predeclared settling rule and report the settling (§23).
+  - Say which fibre or cable set the floor; the wrong fibre type still links.
+  - Judge each lane against the expected enable map.
+  - A disabled lane's opportunity count stays near zero.
+  - An enabled lane's opportunity counter grows at the lane rate (§23).
+  - 'Judge on the counters: the latched lock-loss byte flickers on a marginal fibre in any short window.'
+  - A host-side loop also acts as a far-end loopback.
+  - A module in mission mode returns its media input through the loop to its media output.
+  - The record names the topology.
+  - A host-loop result is not a media-link result.
+  - A host-side generator points at the host, not at the cable.
+  - On a two-cage board with the host lanes cross-connected it drives the other end's host input, and the far media-side checker measures the whole path with no host present.
+  - Use the module's gating timers for the window.
+  - Record the actual gate start and end.
+  - A gate that does not complete makes the window INCONCLUSIVE.
+  - Read the error counters beside the derived rate.
 - file: references/software-track.md
   section: '## 18. '
+  heading: '## 18. Bring-up with few instruments, and the identity in the bridge chip'
+  every_sentence: true
   must:
-  - 0.25 to 0.61 V means Default USB power
-  - A reading between two bands is INCONCLUSIVE
-  - Default USB power is 500, 900 or 1500 mA by the USB version and the configuration state
-  - Read it from the accepted request (RDO), not from the CC voltage
+  - With no meter, the first power still has an order that limits the loss.
+  - Charger on the power-only port for five seconds.
+  - Read the LEDs, touch the parts, smell.
+  - Then one minute.
+  - The host port comes last.
+  - '*Reason*: a short on the host port can take the computer''s port with it.'
+  - A rail that is off still lights the LEDs on its pull-ups.
+  - Write that into the plan, so the first reading is not a fault.
+  - A tester whose module rail is a buck converter hums at no load.
+  - The light-load mode makes the ceramic capacitors sing.
+  - Note it for the next revision; it is not a fault.
+  - The USB bridge chip's EEPROM carries the unit identity.
+  - Build the image from an all-zero base and set every field.
+  - A tool that writes only the bytes you name leaves the rest at 0xFF on a blank chip, the vendor and product ids included.
+  - Print the image before any write, and check a read-back of record in the selftest.
+  - 'The bytes the bridge chip never reads hold a board-info area with its own checksum: the board revision, the order, the case preset.'
+  - Lay the whole chip out in one function.
+  - The tool reads that area at open, with the product string, before any revision check.
+  - '*Pitfall*: a merge moved the read out of the open path, and every run stopped at the revision check with no product.'
+  - After an EEPROM write the chip resets and leaves the USB stack.
+  - A re-plug of the host cable is part of the procedure, not a fault.
+  - Read a module's EEPROM before you search for its part.
+  - A label can carry a typo; the EEPROM carries the catalogue number.
+  - A passive loopback plug and a passive copper cable are EEPROM-only tests on a bench tester.
+  - 'Check the length and attenuation fields against the label: vendors leave them wrong or empty.'
+  - A passive plug reads a flat memory, a zero temperature and a reserved state; that is the plug, not the bus.
+  - Run the thermal throttle path once on every tester build before you trust a long hold.
+  - A bare board with a cage sink and no air sheds about 5 to 6 degrees per watt, with a time constant near five minutes.
+  - A posture table written from a model can be six times too low; the module's own sensor and the throttle are the control.
+  - A dead bridge chip with its USB power LED on points at a latched input, current forced into a pin at cable attachment.
+  - 'The recovery is a full power removal: host cable, charger and module out for thirty seconds.'
+  - A USB re-plug alone does not clear it.
+  - 'Isolate every bridge I/O that leaves the chip in the next revision: series resistors, a clamp array, powered-off isolation, a current-limited rail.'
+  - A tester that cannot see its own power source relies on an operator flag.
+  - Put a charger-present sense and a rail current monitor on the next revision, and make the release step refuse itself when the budget is not there.
+  - The first meter session has its own traps.
+  - A meter's low-impedance mode loads the node with a few kΩ.
+  - It pulls a bled rail or a pull-up line down.
+  - Use the plain DC volts range.
+  - Use a designated circuit-ground test point as the ground point.
+  - A press-fit connector cage holds a probe tip without slipping.
+  - Use the cage only after you confirm that it ties to signal ground.
+  - Many cages go to chassis through an RC.
+  - A switched-off rail is not at 0 V while the host is plugged.
+  - Idle-high bus lines feed it through their pull-ups into the bleeder; one board read 0.57 V.
+  - Check a rail "off" with every source connected.
+  - Trace every path that feeds the rail, and fix each one.
+  - On that board the feed was the signal lines, not the rail.
+  - A laptop USB-C port may offer 1.5 A only.
+  - Read the source's current advertisement before you budget host power.
+  - Read CC with the plain DC range, never the low-impedance mode.
+  - Read it before a PD contract exists.
+  - Over the sink's 5.1 kΩ pull-down, 0.25 to 0.61 V means Default USB power.
+  - A reading of 0.70 to 1.16 V means 1.5 A.
+  - A reading of 1.31 to 2.04 V means 3 A.
+  - 'A reading between two bands is INCONCLUSIVE: measure again, never round it to a tier.'
+  - Default USB Power is 100 mA unconfigured and 500 mA configured on USB 2.0.
+  - On USB 3.x it is 150 mA unconfigured and 900 mA configured.
+  - A two-lane USB 3.2 port allows 1500 mA configured.
+  - Type-C Current at 1.5 A or 3 A is a separate grant, read only from the CC bands.
+  - Battery Charging is another separate grant.
+  - Budget only what the port has granted.
+  - Under a PD contract, the negotiated limit comes from the accepted request (RDO), not from the CC voltage.
+  - Decode the RDO against the PDO or APDO it selects and the cable's current capability.
+  - It is a limit, not a measured current.
+  - This skill carries no PD decoder; read the decoded contract from the sink controller's status.
+  - A PD 3.0 source also moves its Rp between the 3 A and 1.5 A levels to signal collision avoidance.
+  - A fan that is off reads like a bad module.
+  - Three throttles in a row came from a fan with no power.
+  - Look at the fan before you blame the module, and give the next revision a tachometer read.
+  - A high-power window without a health poll is a hazard.
+  - One run polled nothing between its windows.
+  - The module crossed its warning limit and shut two lanes down.
+  - Poll both ends between windows, with the throttle limit.
+  - Set the poll period well under the thermal time constant.
+  - A failed sensor read stops the run.
+  - 'Two gates can let a high-power run through: the posture table and the power budget flag.'
+  - The record names the gate that let the run through.
+  - Pattern traffic adds heat over the idle hold at the same budget.
+  - One fit under traffic read 13 K above the idle fit, with a slope 1.6 K/W steeper.
+  - Size the cooling and the soak limits from a fit under traffic.
   never:
   - about 1.6 V means 3 A
+  - Default USB power is 500, 900 or 1500 mA
+- file: references/software-track.md
+  never_re:
+  - (?i)host[^.\n]*divid[^.\n]*lane
+  - (?i)\b(five|5)\s*(s|seconds)\b[^.\n]*(longer|more|minimum)
+  - (?i)square of (the )?time|fit a quadratic
+  - (?i)(halts|stops) at (a single|one) bit
+  never_re_examples:
+  - The lane rate is the host rate divided by the number of media lanes.
+  - Keep every gate five seconds long or longer.
+  - Some bit counters grow as the square of time; fit a quadratic and accept it.
+  - A disabled lane's counter halts at a single bit.
 - file: references/pitfalls.md
   never:
   - Judge warm windows, never a cumulative counter from cold
   - per discipline before each gate
+  - was the checker lock-in
+  - held the lock-in burst
+  never_re:
+  - (?i)warm(ed)?[- ]up ones|judge (only )?(the )?warm
+  never_re_examples:
+  - Discard the cold windows and judge only warmed-up ones.
+- file: evals/evals.json
+  never:
+  - bounded by the previous BER
+  - bounds each window by the BER of the window before
+  - It, treats
+  - a confidence bound on a zero-error claim
 navigation:
 - file: SKILL.md
   must:
-  - as the norm and never as a mode
+  - A measurement checks its own counters in every run, as the norm and never as a mode.
   - (`references/software-track.md` §23)
   - follows `references/release-and-cut.md` §15
   - follow `references/dfm-printed-enclosure.md` §8.7
   - follow `references/schematic-phase.md` §6
+  - measurement counter checks (§23)
 - file: references/software-track.md
   must:
   - Sections 3 to 23 hold the rules
 studies:
 - file: references/schematic-phase.md
   section: '## 6. '
+  heading: '## 6. Studies before the next revision''s spec'
   every_sentence: true
   must:
   - 'A next revision opens with one study per open area: power, thermal and mechanics, signal integrity, the controller.'
@@ -219,34 +382,40 @@ studies:
   - To read them again, it sends Get_Source_Cap.
   - A soft reset is protocol recovery, not a query.
   - Use it only as the PD policy engine and the controller's datasheet direct.
-  - '**Thermal.** A volatile fan curve leaves the fan at 0 % after a power cycle with no host.'
+  - '**Fan start-up.** A fan controller''s duty after a power cycle is undefined until you verify it.'
+  - A volatile curve can leave the fan at 0 % with no host.
   - Use a part with an EEPROM, or a controller with the curve in flash.
-  - Give it a fail-safe start-up duty and an over-temperature path that needs no host.
-  - 'The airflow sits where the fan curve meets the impedance curve of the whole enclosure: grille, filters and path.'
+  - Verify a safe reset default duty.
+  - '**Over-temperature.** Give the load an over-temperature path that needs no host.'
+  - '**Airflow.** The airflow sits where the fan curve meets the impedance curve of the whole enclosure: grille, filters and path.'
   - Model or measure them together.
-  - 'Worked example: a 1-D estimate gave 20 to 27 % of free flow behind 212 mm² of slots; a curve model decides.'
+  - This skill carries no flow solver; a bench measurement decides.
+  - 'Worked example: a 1-D estimate gave 20 to 27 % of free flow behind 212 mm² of slots.'
   - A 30 mm fan's gross disc is about 700 mm², and a 40 mm fan's about 1250 mm².
   - '**Heat capacity.** Measure the load''s heat capacity on the bench before you set the fan''s response.'
-  - 'On one bench, 8 W raised a module 11 K in 60 s: about 44 J/K, with the losses neglected.'
-  - Neglected losses overstate C, and so the allowed time.
-  - Take C from the initial slope, or fit the net heat flow.
-  - 'The time from detection to full airflow follows from the margin: t ≤ ΔT_margin × C / P.'
-  - That time holds the sensing, the command and the spin-up.
-  - At 44 J/K and 8 W, a 5 K margin gives at most about 27 s.
-  - Size the electronics for the top load power.
-  - Size the heat sink for the load of the first build, and leave room for the top load.
+  - On one bench, 8 W raised a module 11 K in 60 s, with the losses neglected.
+  - That reading, about 44 J/K, overstates C.
+  - 'Use a conservative lower bound on C: the initial slope, or a fit of the net heat flow.'
+  - Use the worst-case net heat.
+  - The time from detection to full airflow is at most ΔT_margin × C_low / P_worst.
+  - That time holds the sensor lag, the command and the spin-up.
+  - '**Sizing.** Size the electronics for the top load power.'
+  - Size the heat sink for every load and ambient the product supports.
+  - Otherwise enforce a lower power limit, with an independent thermal shutdown.
   - '**Units.** Write GBd for a symbol rate and Gb/s for a bit rate, never one number for both.'
   - A PAM4 lane carries two bits per symbol.
   - '**Loops on a connector.** Loop a transmit pair to a neighbour lane''s receive pair.'
   - Pair placement alone does not prove one-layer routing.
   - Check the drawing and the whole launch and routing geometry.
   - A checker that locks on the same pattern from any lane cannot prove the lane map.
-  - A lane-unique pattern or seed, or an error injected on one physical lane, proves it.
+  - 'Challenge every physical lane on its own: a lane-unique pattern or seed, or an error injected on that lane.'
+  - 'Verify the whole map: the lane order, the polarity and the direction.'
   - Match the polarity and the precoding per lane on the loop.
   - Check the crosstalk between neighbouring loops against the SI budget.
-  - Take the coupling capacitors from the interface specification and the data of both ends.
-  - A module that couples both directions inside needs none on the loop.
-  - '**Pads and the stack.** A wide pad over thin prepreg can drop far below the line impedance (`references/pcb-layout-dfm.md` §3).'
+  - Follow the interface specification and the schematics of both ends for AC coupling.
+  - State where each path is coupled.
+  - Give each path exactly one compliant coupling stage.
+  - '**Pads and the stack.** A wide pad over thin prepreg can drop below the target impedance (`references/pcb-layout-dfm.md` §3).'
   - Connectors mirrored on both board faces set the board thickness and the termination.
   - Read the fab's live thickness table by layer count before a study recommends them.
   - '**The controller.** A module family can carry other temperature ratings per memory option.'
@@ -259,23 +428,27 @@ studies:
   - or sends a soft reset to get them again
   - Use a soft reset only when that fails
   - A pattern checker does not care which generator lane feeds it
-  - A pattern checker cannot prove the lane map
   - That fan must reach full speed inside 30 s
+  - gives at most about 27 s
+  - needs none on the loop
 pockets:
 - file: references/dfm-printed-enclosure.md
   section: '### 8.7 '
+  heading: '### 8.7 Side pockets, bosses, screw wells and feet **[measured]**'
   every_sentence: true
   must:
-  - A side magnet disc needs its thickness, the bondline, the insertion clearance, the print tolerance and a floor behind it.
   - Check the wall budget before a magnet station is promised.
-  - In a 2.0 wall, a 3.175 disc needs an inward boss.
+  - The axial stack is the disc thickness, the bondline, the floor behind it and the worst-case print tolerance.
+  - It must fit the wall or the boss.
+  - 'Worked example: in a 2.0 wall, a 3.175 disc needed an inward boss.'
+  - 'The radial fit is separate: the pocket diameter is the disc diameter plus the insertion clearance plus the print tolerance.'
   - The boss needs room under any deck ring.
   - Where it crosses the vent band, drop the slots under it after the vent register is chosen.
   - A side pocket needs a full wall behind its floor plane at every Z it spans.
   - Find the Z band where the body is a full wall.
   - Put the pocket there.
-  - The pocket depth plus the proud height equals the disc thickness plus the bondline.
-  - Add the insertion clearance and the worst-case tolerances.
+  - On the axis, the pocket depth plus the proud height equals the disc thickness plus the bondline.
+  - Work out the minimum and the maximum proud height from the worst-case depth, disc and bondline tolerances.
   - 'Set the proud height from the mating need: gap, adhesive and contact.'
   - Then check that the pocket depth fits the wall.
   - Never pick either one alone.
@@ -305,17 +478,20 @@ pockets:
   - 'A screw well printed sole down has a roof: the counterbore seat prints in air.'
   - Set the bridge layers from the validated process, the span and the seat strength.
   - Read the G-code (`fdm-print-optimisation.md` §5).
-  - 'Worked FDM example: two layers, a bore-wide slot and then a bore-wide square, so that each layer spans wall to wall.'
-  - Give the screw a reachable head and the foot a full land.
-  - 'One layout that does both: a foot beside its screw, with a land to the counterbore mouth.'
+  - 'Worked FDM example: two layers, a bore-wide slot and then a bore-wide square.'
+  - Each layer then spans wall to wall.
+  - Give the screw a reachable head.
+  - Give the foot a full land.
+  - 'One layout does both: a foot beside its screw, with a land to the counterbore mouth.'
   - A foot over the counterbore hides the screw and comes off at every screw removal.
   - Rerun the stability row after every foot move (`references/case-pipeline.md` §Stability).
   - Apply a local exception after the shared rule it breaks.
   - Drop a vent slot under a boss after the vent register is chosen.
   - A boss added to the register's input moves the register of every face.
   - A plain bar in a plain pocket is a shear key, as tight as its fit.
-  - It resists sliding and rotation in the joint plane.
-  - It does not resist separation normal to the faces.
+  - List the six degrees of freedom of the joint.
+  - Check each one at the worst-case fit and engagement.
+  - A bar can still slide along its own axis, and it does not resist separation normal to the faces.
   - A clip that holds against separation must pull the two outer faces together.
   never:
   - Make the cell wall the gate wall
@@ -329,6 +505,7 @@ pockets:
 public-export:
 - file: references/release-and-cut.md
   section: '## 15. '
+  heading: '## 15. A public export from the private tree'
   every_sentence: true
   must:
   - A public export ships only what a fail-closed leak gate has read.
@@ -336,13 +513,25 @@ public-export:
   - The generator is project code, like the cut generator (§7).
   - A leak gate reads every exported file of the final tree.
   - The push depends on a clean gate.
-  - The skill's scanner is `scripts/generic_lint.py --export <tree> --allow <file>`.
-  - It fails without the private terms.
+  - Only `scripts/generic_lint.py --export <tree> --allow <file>` is the leak gate.
+  - The plain lint mode is not.
+  - The export mode fails without a private term file that holds name patterns.
+  - It prints the pattern count of each group.
   - It reads every file, every file name and every symlink target.
   - 'It skips no `generic: ok` line, no worked example and no history.'
-  - An unreviewed binary is a hit.
-  - 'Read its metadata, then list it as `binary: <path>` in the allow file.'
-  - CI writes the private terms from a secret to a temporary file and sets `HWFS_PRIVATE_TERMS`.
+  - It refuses a `.git` folder in the export root.
+  - Scan the outgoing commit messages, authors and tags on their own.
+  - Write them to a file in an empty folder, then run `--export` on that folder.
+  - It sorts files by type.
+  - An archive, a PDF, an image, compressed text or UTF-16 text is a binary for review.
+  - It scans the readable strings of each, the PNG text chunks included.
+  - 'Read the metadata of each binary with `exiftool -a -G1` before you allow it as `binary: <path>`.'
+  - 'An allow entry is typed: `url: <exact string>` or `key: <exact string>`.'
+  - A bare line, a short string or a private name is refused.
+  - No shipped CI template runs this gate.
+  - Run it by hand before each public push.
+  - A CI job that runs it writes the private terms from a secret to a temporary file and sets `HWFS_PRIVATE_TERMS`.
+  - A missing or empty secret must stop the job.
   - Never commit the terms.
   - The gate refuses decision and review ids, private paths, order numbers, private vendor and person names, and the company name.
   - Two blind reviews come before every public push.
@@ -350,14 +539,14 @@ public-export:
   - Give the gate every id format the records use, the review finding ids included.
   - Anchor each pattern on word boundaries.
   - The unanchored `E-[0-9]+` matched the `E-3` inside `X-LANE-3`.
-  - Allow the public repository address by an exact string in the allow file.
+  - Allow the public repository address as a `url:` entry.
   - The address carries the account name, so the name pattern hits every page link.
   - The gate strips the exact allowed string before the match.
   - It never skips the line that holds it.
   - The gate also hits data keys.
   - Rename the label the user sees.
   - Keep a key only when the owner approves it as public schema.
-  - Allow that key by its exact string.
+  - Allow that key as a `key:` entry.
   - Docstrings and comments ship.
   - Run the gate and the writing lint over them, or strip them in the export.
   - A stripper must parse the language.
