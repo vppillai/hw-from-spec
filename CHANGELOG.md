@@ -20,7 +20,7 @@
   gates-required, record, env), `known_issues`, `traceability`, `release_report`, `collect_renders`, `assembly_guide`, `reorg_paths`, `dfm_check`,
   `erc_gate`, `gate_check`, `handoff_header`, `thin_wall_census` (`wall_gate` on the mesh; legend boxes with a Z band; accepted clusters re-matched by class and bbox), `print_dfm` (printability-floor gate + `--validate`),
   `thin_wall_check` (quick look + pinch), `heatmap_count` (yellow / red of a vendor map capture, stdlib), `vendor_gate` (the API flag + six 0 / 0 captures per STL of record; `--newest` picks the round folder), `stability` (CoG vs support hull at the worst pose; `improper_placements` = the det +1 row), `scad_lint`, `step2stl`, `arrival_checklist`, `skill_retro` (+ `--apply`), `jobs.sh` (the heavy-job
-  pool), `adopt_gates.sh`, `clone_gate.sh`, `doc_voice_lint`, `generic_lint`. The writing gates are `style_lint` and `style_gate` (the dated baseline). Mesh stack: `numpy trimesh scipy shapely rtree networkx
+  pool), `adopt_gates.sh`, `clone_gate.sh`, `doc_voice_lint`, `generic_lint` (generic shapes in the repo, names in a private term file), `rule_check` (core rules present, folklore absent, `--mutate` proof). The writing gates are `style_lint` and `style_gate` (the dated baseline). Mesh stack: `numpy trimesh scipy shapely rtree networkx
   mapbox-earcut embreex` (the Embree ray engine keeps a census in seconds under 1 GB).
 - **Layout** (`references/project-yaml.md` §Layout): ten numbered folders in the order of the project's life — `00-now` (five generated answer
   pages) `10-spec` `20-design` `30-board` `40-case` `50-kits` `60-orders` `70-release` `80-reviews` `90-log` — plus the machinery (`gen/ scripts/
@@ -45,26 +45,24 @@
 
 ## 0.11.25 - 2026-10-24 - Measurements that check their own counters, the studies before a next revision, the public export, side pockets and feet
 
-Source: the bench, case and study days after the 0.11.24 cut of a pluggable-module management tester. The days held a long two-end
+Source: the bench, case and study days of a two-ended test product after the 0.11.24 cut. The days held a long two-end
 pattern campaign, a first meter session and a printed-case DFM round. They also held a public release and four studies for the next
-revision. The input is 105 entries of the project's log (96 dated in the window and nine older lines folded from agent
-memory), plus ten items named by the coordinator: six tool review findings, the studies, one blocker filed for a file already in the tree,
-and two owner rules. Classes: GENERAL 92 folded, 7 already carried by 0.11.24, 3 near duplicates, 2 project-only, 1 meta line. The
-project keeps its copy of the map; the skill repo carries no retro report.
+revision. The input is 105 entries of the project's log: 96 dated in the window and nine older lines folded from agent memory.
+Classes of those 105: GENERAL 92 folded, 7 already carried by 0.11.24, 3 near duplicates, 2 project-only, 1 meta line. Ten more items
+came from the coordinator and sit outside that count. They are six tool review findings, the studies, one blocker filed for a file
+already in the tree, and two owner rules. The project keeps its copy of the map; the skill repo carries no retro report.
 
 ### Added
-- `references/software-track.md` §23, a measurement checks its own counters, the norm and never a mode. Raw reads per window. The bits
-  law in every window, windows of 5 s or more. The lane rate from the active application. The wrap and the overflow risk. The rate
-  computed two ways against the reported one, on a frozen read. Clear-on-read flags ORed. INCONCLUSIVE with the named reason. The verdict
-  over every window after the settling time, with the run totals. The settling time measured and reported, the first windows kept, the
-  checker lock-in. Warm judging. Each unit as sender and receiver. The rule-out list. Unit numbers. Inputs checked before a hazardous
-  step. One handler at the command dispatch.
+- `references/software-track.md` §23, a measurement checks its own counters, the norm and never a mode. Raw reads per window, the
+  counter unit and FEC point, the lane rate, the linear bit law, one reset epoch. The window bound against a wrap, computed
+  against reported BER, the deaf-checker check, lock loss, the settling rule, run totals, the confidence bound. Each unit as sender and
+  receiver. The rule-out list. Unit numbers. The record name before high power. One handler at the command dispatch.
 - `references/software-track.md` §18: the first meter session. The low-impedance mode, the ground point, an "off" rail fed through the
   pull-ups, the laptop port's current from the CC pin. The fan check, the health poll, the two gates, the heat of pattern traffic.
 - `references/software-track.md` §19: a flag that latches again, a success status is not "applied", a low-power pin is not a guard, leaving low
   power does not start the data path.
-- `references/software-track.md` §20: the bit counter points at §23, the settling time is measured, the dark lane, the host loop as
-  a far-end loopback.
+- `references/software-track.md` §20: the bit counter points at §23, the settling rule, each lane against its enable map, the host
+  loop as a far-end loopback and not a media-link result.
 - `references/software-track.md` §22: a browser's private-network rule by version, credentials over a radio provisioning link.
 - `references/schematic-phase.md` §6, studies before the next revision's spec: the shape, live parts, the bench first. Rules on power, the
   USB power sink, thermal, heat capacity, units, loops on a connector, pads and the stack, the controller.
@@ -90,18 +88,44 @@ project keeps its copy of the map; the skill repo carries no retro report.
 - `references/pitfalls.md`: 34 dated lines.
 - `evals/evals.json`: eval 19, a pattern-test verdict that checks its counters (three mechanical checks).
 - `smoke/run_smoke.sh`: five greps on §23, schematic-phase §6, release-and-cut §15, dfm §8.7 and the search-before-BLOCKED rule.
-- `scripts/generic_lint_terms.yaml`: four more part and vendor names.
+- `scripts/rule_check.py` and `evals/core_rules.yaml`: the core rules of §23, schematic-phase §6, release-and-cut §15, dfm §8.7 and the
+  SKILL links stay in the text, and the banned folklore stays out. `--mutate` deletes each guarded rule and inserts each banned
+  phrase in a scratch copy; the check fails when one stays green. Eval 19 and the smoke run it.
 
 ### Changed
 - `references/software-track.md` §20: the bit-counter bullet no longer says "judge the ratio and ask the vendor"; it points at the law
   check of §23. The settle bullet no longer says "let the link settle"; it says measure the settling time and keep the first windows.
 
 ### Not done
-- No script change. The measurement rules live in a project's tool; the skill carries them as rules and an eval.
+- The measurement rules live in a project's tool; the skill carries them as rules, an eval and the rule check.
+- Past versions of `scripts/generic_lint_terms.yaml` in the git history still hold project names. A history rewrite is the owner's call.
+
+### Review round
+Four blind reviews (two Claude, one GPT, one Grok) merged in `docs/reviews/REVIEW_0.11.25.md`. Every BLOCKER and MAJOR is fixed or
+recorded with its reason.
+- **Leak.** `scripts/generic_lint_terms.yaml` keeps only generic shapes: id formats, path shapes, a refdes and fab-code scheme. Every
+  project, person, company, order, part, preset and dimension term moved to a private file outside the repo. `generic_lint.py` reads it
+  from `--private-terms`, `$HWFS_PRIVATE_TERMS` or `~/.config/hw-from-spec/private_terms.yaml`; without it the generic patterns run.
+  The selftest uses synthetic terms. The smoke's own project-name grep is gone; the lint covers it. One old review lost a private path.
+- **§23 rewritten as general rules.** The bit counter grows at the lane rate × T; any other law is a counter fault. Deltas within one
+  verified reset epoch. A window bounded by the previous BER so that a wrap cannot be missed; a proven wrap is a lower bound. A
+  predeclared settling rule with a maximum time, excluded and reported. Run totals per lane and direction. A confidence bound on a
+  zero-error claim, with a minimum bit count. A stated tolerance between computed and reported BER. Lock loss after the settling bears
+  on the verdict. The FEC point and the counter unit. A known-error check against a deaf checker. The lane rate from the checker's side,
+  with the encoding. The record name checked before high power.
+- **Folklore removed.** The one-bit dark lane, the 5 s window minimum, the cold-start reading, T²/2 as a law, the host rate over the
+  media lane count, the single-controller PD buffer and soft-reset claim (Get_Source_Cap first).
+- **Corrected.** The USB-C CC bands with the Default level and the PD contract. The SI loop rule: a pattern checker cannot prove the lane
+  map. The thermal claims: response time from the margin, airflow from the fan and system curves. The cell wall at `wall_gate +
+  design_margin`, and no "0.1 over the gate". The boss underside, the shear key, the proud height. The leak-gate allow rule strips an
+  exact string. The ground point, the back-power fix, the rail switch, the data path after low power, the application by descriptor.
+- **Navigation.** SKILL.md links release-and-cut §15 and dfm §8.7. The routing rows name the studies, §8.7 and the public export. The
+  software-track intro names §3 to §23, §18 has its new title, schematic-phase names the studies in its title. The pitfall lines name
+  their home section. The CHANGELOG no longer names the source product type.
 
 ## 0.11.24 - 2026-10-21 - The bring-up and test rounds of a management tester: the register map as data, pattern tests between two ends, the command block and a firmware download, the browser page
 
-Source: the first boards of a pluggable-module management tester. Three bench days with the owner at the keyboard and no instruments.
+Source: the first boards of a two-ended test product. Three bench days with the owner at the keyboard and no instruments.
 Four module types, a two-end optical pair, a vendor firmware update over the command block, seven browser-page rounds, a printed case
 round. 67 learnings of the project's log, read GENERAL 52 and PROJECT 15; the project keeps the project ones. Also folded: the three
 rules and five pitfall lines of the open branch `learnings-manifest-measured-pose-2026-10` (PR #20, 0.11.17), which no later merge had

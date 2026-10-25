@@ -229,8 +229,9 @@ it before any render is trusted. They are pure arithmetic on the placement matri
   afterwards; then the row proves it. Kickoff **C12** asks whether the piece stands free; the row is mandatory when it does.
 - Lateral stability follows from symmetric feet; the longitudinal margin is the one that fails. State the mass model (solid density × infill
   factors) on the row so a heavier print (more walls) or a bought part (a band, a battery) is re-judged, not assumed.
-- A foot move changes the support hull. Rerun the stability row after every foot move. On one case, a foot move away from the cable end
-  cut the cable-on moment ratio from 2.63 to 1.09. A move toward it raised the ratio to 6.41.
+- A foot move changes the support hull. Rerun the stability row after every foot move. A cable that pulls on the piece is an external
+  force. State its size, direction and height on the row. State the minimum ratio of restoring to tipping moment. On one case, a foot
+  move away from the cable end cut the cable-on moment ratio from 2.63 to 1.09. A move toward it raised the ratio to 6.41.
 
 ## Drawings
 Silhouettes + sections from the STLs of record (trimesh/shapely), dimension lines carry the yaml numbers (so a yaml change moves the number and the

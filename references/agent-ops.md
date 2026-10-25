@@ -48,8 +48,8 @@
   A script that runs from a clone fails loudly on a broken one (exit 2 with the missing path named), never with a silent skip.
 - Run the chains after every merge, before a vendor upload (`case-pipeline.md` §Process rules).
 - Ignore `.venv` in the repository before any worktree gets a venv symlink. A broad add in such a worktree commits the link.
-- A pull-request merge can race another merge ("Base branch was modified"). Read the merge result before you tag. A tag set on the
-  old main needs a forced re-point.
+- A pull-request merge can race another merge ("Base branch was modified"). Read the merge result before you tag. Re-point a tag set on the
+  old main only while it is unpublished. A published tag stays; issue a new tag.
 - `gh pr checkout` has no quiet flag, and the failed call leaves you on the old branch. Read the current branch before you edit.
 - Merge a stacked base without deleting its branch. Retarget the child to main first, then delete the base branch. A closed stacked
   pull request cannot be retargeted; open a new one from the same branch.

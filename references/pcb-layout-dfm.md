@@ -62,7 +62,8 @@ net classes must be exported into the router input — grep the DSN for them aft
 - Thickness tolerance ±10 % at ≥ 1.0 mm **[fab capability]** (1.6 → 1.44…1.76): a press-fit connector or a card-edge must accept the range.
 - Material grade / Tg is selected at order **[owner choice]** (JLC impedance profiles assume a TG155 laminate).
 - **Fab capabilities move** **[fab capability]**. Read the live capability page before a study recommends a stack. Worked example, JLC
-  2026-10-24: back-drilling on 4 to 32 layers from 0.8 mm. Boards of 2.5 mm and more need 12 layers or more, at ±10 %.
+  2026-10-24 (that fab's table, that day; verify it live). Back-drilling ran on 4 to 32 layers from 0.8 mm board thickness.
+  Boards of 2.5 mm and more needed 12 layers or more, at ±10 %.
 
 ## 3. Controlled impedance and differential pairs
 - **When it is required** **[physics]**: any pair whose length exceeds ~1/10 of the signal's rise-time wavelength on FR-4. Examples are USB 2.0
@@ -77,7 +78,8 @@ net classes must be exported into the router input — grep the DSN for them aft
   (an In2 signal over an In1 antipad edge is a route-quality HIGH, §10). Impedance control is an order option **[fab capability]**: ask for it
   on the quote form; if the form refuses it for the copper weight, that is a decision row, not a silent drop.
 - **Connector pads** **[physics]**: a wide pad over thin prepreg drops far below the line impedance. One 0.31 mm pad read about 52 Ω over
-  0.21 mm prepreg and about 26 Ω over 0.10 mm. Pick the prepreg for the pad as well as the trace, or void the plane under the pad.
+  0.21 mm prepreg and about 26 Ω over 0.10 mm, in a field-solver estimate for one stack. Pick the prepreg for the pad as well as the
+  trace. A void under the pad changes the return path. Model the whole launch with the live stack-up and the connector model.
 
 ## 4. Trace / space / via / annular / drill minimums vs the fab table
 Copy the fab's table into `20-design/dfm_thresholds.json` (source URL + date) and design strictly greater **[checker]**. Worked example
@@ -146,7 +148,8 @@ Defaults the questionnaire proposes:
   time upside down. Parts heavier than ~30 g per square inch of pad area or tall parts (electrolytics, inductors > 4.5 mm) go on the second
   side or get glue. Glue is a remark, and the fab decides. Record per-side max height in the board yaml, because the case reads it.
 - THT: unused PTH stay solder-free (say so in the remark); hand-installed parts are DNP in the BOM and marked on the fab drawing.
-- A part whose datasheet allows a single reflow goes on the side reflowed last. A radio module is the usual case.
+- A part whose datasheet allows a single reflow goes on the side reflowed last. A radio module is the usual case. Confirm the order
+  with the assembler, and check its profile against the part's peak temperature and time above liquidus.
 
 ## 10. Polarity, rotation and the CPL **[convention + fab capability]**
 - CPL file: `Designator, Mid X, Mid Y, Rotation, Layer`, mm, 4 decimals. Position = pad-bounding-box centre relative to the drill/place origin,

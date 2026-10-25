@@ -1,4 +1,4 @@
-# schematic-phase.md — G0 → G1: what the design yaml holds, the ERC gate, map checks, the G1 review pack
+# schematic-phase.md — G0 → G1: what the design yaml holds, the ERC gate, map checks, the G1 review pack, the studies before a next revision
 
 The schematic generator is project code (`gen/build_sch.py`); this page fixes what it must consume and produce so the gates in `90-log/GATES.md`
 mean the same thing in every project. One generator of record (KiCad 10, sheet fragments instantiated per port) is the worked example; the
@@ -99,27 +99,35 @@ file run in parallel. Each one answers the owner's questions and ends in a recom
   table. A part that could not be read live sits in its own section, never in the recommendation.
 - **The bench first.** A study starts from what the last revision measured: its power, its heat, its faults.
 
-Rules the studies found, for any next revision:
+Rules the studies found, for any next revision. The worked examples come from one two-ended test product.
 - **Power.** An end-to-end test of a two-ended product loads both ports at once; budget the sum of both ends. Size a protection switch by
-  its drop at the rail current. One 28 mΩ switch at 5 A on a 3.3 V rail drops 0.14 V and burns 0.7 W. A high input voltage makes a failed
-  regulator a load killer. Put an overvoltage cut-off between the regulator and the load. Back-power through signal lines is not fixed by
-  a rail part. A bus buffer with powered-off isolation, and a tristate state in the tool, fix it.
-- **USB power sink.** Pick the sink controller by its fallback on a 5 V-only source. One kind reports the Type-C current there; another
-  reports nothing. A sink controller may keep the source capabilities only until the next message overwrites its buffer. The firmware
-  copies them on the alert, or sends a soft reset to get them again.
-- **Thermal.** A volatile fan curve leaves the fan at 0 % after a power cycle with no host. Use a part
-  with an EEPROM, or a controller with the curve in flash. A slot grille sized to "about the fan area" still chokes a small axial fan.
-  Behind 212 mm² of slots, a 30 or 40 mm fan gave 20 to 27 % of free flow. That is a 1-D estimate. Size the grille from the fan curve.
-- **Heat capacity.** Measure the load's heat capacity on the bench before you set the fan's response. On one bench, 8 W raised a module 11
-  degrees in 60 s: about 44 J/K. That fan must reach full speed inside 30 s. Size the electronics for the top load power and the heat sink for the
-  first build. A taller sink of the same family then needs a new carrier and a taller hood only.
+  its drop at the rail current. One 28 mΩ switch at 5 A on a 3.3 V rail drops 0.14 V and burns 0.7 W. Also check its safe operating
+  area, inrush, current limit, reverse current and fault energy. A high input voltage makes a failed regulator a load killer. Put an
+  overvoltage cut-off between the regulator and the load. Back-power through signal lines is not fixed by a rail part. A bus buffer with
+  powered-off isolation fixes it in hardware. A tristate state in the tool helps only while the tool runs; it is not fail-safe at reset.
+- **USB power sink.** Pick the sink controller by its fallback on a source with no PD. One kind reports the Type-C current there;
+  another reports nothing. A PD source that offers only a 5 V PDO is a different case; test both. A sink controller may keep the source
+  capabilities only until the next message overwrites its buffer. Read that behaviour in the chosen controller's datasheet. The firmware
+  copies the capabilities on the alert. To read them again, it sends Get_Source_Cap. Use a soft reset only when that fails, because a
+  soft reset restarts the negotiation.
+- **Thermal.** A volatile fan curve leaves the fan at 0 % after a power cycle with no host. Use a part with an EEPROM, or a controller
+  with the curve in flash. Give it a fail-safe start-up duty and an over-temperature path that needs no host. The airflow sits where the
+  fan curve meets the impedance curve of the whole enclosure: grille, filters and path. Model or measure them together. Worked example:
+  212 mm² of slots gave 20 to 27 % of free flow in a 1-D estimate. A 30 mm fan sweeps about 600 mm², and a 40 mm fan about 1100 mm².
+- **Heat capacity.** Measure the load's heat capacity on the bench before you set the fan's response. On one bench, 8 W raised a module
+  11 K in 60 s: about 44 J/K, with the losses neglected. The fan's response time follows from the margin: t ≤ ΔT_margin × C / P. At
+  44 J/K and 8 W, a 5 K margin gives about 27 s. Fit a thermal model with losses before you rely on the number. Size the electronics for
+  the top load power. Size the heat sink for the first build.
 - **Units.** Write GBd for a symbol rate and Gb/s for a bit rate, never one number for both. A PAM4 lane carries two bits per symbol.
-- **Loops on a connector.** Route each transmit pair to a neighbour lane's receive pair in the same pad row. All loops then fit on
-  one layer. A pattern checker does not care which generator lane feeds it. Read the connector standard for coupling capacitors first.
-  A module that couples both directions inside needs none on the loop.
+- **Loops on a connector.** Loop a transmit pair to a neighbour lane's receive pair. The loops stay on one layer only when each pad
+  row pairs a transmit and a receive pair. Check the drawing. A pattern checker cannot prove the lane map: it locks on any lane
+  that carries the pattern. Prove the map separately, with a per-lane marker or a per-lane error injection. Match the polarity and the
+  precoding per lane on the loop. Check the crosstalk between neighbouring loops against the SI budget. Take the coupling capacitors
+  from the interface specification and the data of both ends. A module that couples both directions inside needs none on the loop.
 - **Pads and the stack.** A wide pad over thin prepreg drops far below the line impedance (`references/pcb-layout-dfm.md` §3).
   Connectors mirrored on both board faces set the board thickness and the termination. Read the fab's live thickness table by layer count
   before a study recommends them.
-- **The controller.** A module family can carry other temperature ratings per memory option. Pick by the ambient, not by the deepest
-  stock. A part rated for a single reflow goes on the side reflowed last (`references/pcb-layout-dfm.md` §9). Read the controller's
-  errata for its USB download path, and keep the ROM recovery path and its pins free.
+- **The controller.** A module family can carry other temperature ratings per memory option. Pick by the quantity the datasheet rates
+  (ambient, case or junction) at the worst local temperature, with self-heating and margin. Never pick by the deepest stock. A part rated
+  for a single reflow goes on the side reflowed last. Confirm the order with the assembler (`references/pcb-layout-dfm.md` §9). Read the
+  controller's errata for its USB download path, and keep the ROM recovery path and its pins free.

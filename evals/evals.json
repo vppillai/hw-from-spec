@@ -439,25 +439,37 @@
    "id": 19,
    "name": "pattern-test-verdict-checks-its-counters",
    "prompt": "Our bench tool runs a 600 s pattern test between two modules and prints the module's reported error rate from the last read as the result. The result says 2e-7, MEASURED. Can I put that in the release record?",
-   "expected_output": "Not as it stands. The agent reads software-track §23: counter checks are the norm in every measurement. It asks for (or makes the tool keep) the raw reads per window, checks the bits law (rate × T against rate × T² / 2, windows of 5 s or more), checks for an error counter that goes down (wrap or reset) or nears the counter width, computes the rate as errors over rate × T and over the bit counter and compares both with the reported rate on a frozen read, and makes any invalid window INCONCLUSIVE with the named reason. The verdict counts every window after a measured settling time and keeps the run totals; the first windows stay in the record. It suggests testing each unit as sender and receiver before blaming one.",
+   "expected_output": "Not as it stands. The agent reads software-track §23: counter checks are the norm in every measurement, never a mode. It asks for (or makes the tool keep) the raw reads per window, with the counter unit and the FEC point (pre-FEC or post-FEC). It takes the lane rate from the checker's side, from the standard's table, with the encoding and FEC overhead. It checks that the bit counter grows at the lane rate × T; any other growth law is a counter fault and the window is INCONCLUSIVE. It uses counter deltas within one verified reset epoch and skips reads too soon after a reset. It bounds each window by the BER of the window before, so that a wrap cannot be missed; a proven wrap is a lower bound on the errors. It computes the BER two ways and compares both with the reported BER within a tolerance stated before the run. It asks for proof that the checker counts (known errors or a known-bad path), treats lock loss after the settling as verdict-bearing, and applies a settling rule fixed before the run, with a maximum time, excluded and reported. The verdict uses run totals per lane and per direction over every counted window, and a zero-error claim carries its bound (about 3 / N at 95 %) with a minimum bit count. It suggests testing each unit as sender and receiver before blaming one.",
    "assertions": [
-    "the agent refuses a verdict from the last read alone and asks for every window after the settling time plus the run totals",
-    "the agent checks the error counter for a wrap and the bit counter against the rate law",
-    "the agent computes the rate independently and compares it with the reported one",
-    "the settling time is measured and reported, never cut from the record, and the checks are not an optional mode"
+    "the agent refuses a verdict from the last read alone and asks for run totals per lane and per direction over every window after a predeclared settling rule",
+    "the agent checks the bit counter against the lane rate × T and treats any other growth law as a counter fault (INCONCLUSIVE), never as a model to accept",
+    "the agent checks the error counter for a wrap or a reset within one verified reset epoch, with the window bounded by the previous BER",
+    "the agent computes the BER independently and compares it with the reported one within a stated tolerance",
+    "the agent asks for a confidence bound on a zero-error claim, the FEC point of the count, and a known-error check of the checker",
+    "the settling is a rule fixed before the run, reported and never moved after the data, and the checks are not an optional mode"
    ],
    "checks": [
     {
-     "name": "the measurement rules live in software-track §23",
-     "run": "grep -q '^## 23. A measurement checks its own counters' \"$SKILL\"/references/software-track.md && grep -q 'has wrapped or reset' \"$SKILL\"/references/software-track.md && grep -q 'Compute the error rate yourself' \"$SKILL\"/references/software-track.md"
+     "name": "every core measurement rule of software-track §23 is present, every bullet guarded, no folklore, SKILL links it",
+     "run": "\"$PY\" \"$SKILL\"/scripts/rule_check.py \"$SKILL\"/evals/core_rules.yaml --only measurement,navigation"
     },
     {
-     "name": "the verdict and settling rules are present and §20 points at §23",
-     "run": "grep -q 'The verdict counts every window after the settling time' \"$SKILL\"/references/software-track.md && grep -q 'A settling time is measured, never hidden' \"$SKILL\"/references/software-track.md && grep -q 'Check its law in every window before you trust a rate from it (§23)' \"$SKILL\"/references/software-track.md"
+     "name": "mutation proof: each guarded rule deleted and each banned phrase inserted goes red",
+     "run": "\"$PY\" \"$SKILL\"/scripts/rule_check.py \"$SKILL\"/evals/core_rules.yaml --only measurement,navigation --mutate"
     },
     {
-     "name": "SKILL.md §9 states the norm",
-     "run": "grep -q 'as the norm and never as a mode' \"$SKILL\"/SKILL.md"
+     "name": "negative fixture: §23 with the run-totals rule deleted fails",
+     "run": "mkdir -p \"$T\"/s/references && cp \"$SKILL\"/references/pitfalls.md \"$T\"/s/references/ && sed '/Never average window rates/d' \"$SKILL\"/references/software-track.md > \"$T\"/s/references/software-track.md && \"$PY\" \"$SKILL\"/scripts/rule_check.py \"$SKILL\"/evals/core_rules.yaml --only measurement --skill \"$T\"/s",
+     "expect_rc": 1
+    },
+    {
+     "name": "negative fixture: the 5 s window folklore put back fails",
+     "run": "mkdir -p \"$T\"/s/references && cp \"$SKILL\"/references/pitfalls.md \"$SKILL\"/references/software-track.md \"$T\"/s/references/ && echo '- Use windows of 5 s or more.' >> \"$T\"/s/references/software-track.md && \"$PY\" \"$SKILL\"/scripts/rule_check.py \"$SKILL\"/evals/core_rules.yaml --only measurement --skill \"$T\"/s",
+     "expect_rc": 1
+    },
+    {
+     "name": "rule_check selftest",
+     "run": "\"$PY\" \"$SKILL\"/scripts/rule_check.py --selftest"
     }
    ]
   }

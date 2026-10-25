@@ -67,10 +67,7 @@ grep -q 'Write the hardware runbook from the code of record, never from the spec
 grep -q 'must rebuild every input the live judge saw' "$SWT" && grep -q 'A calibration candidate never loosens a limit of record' "$SWT" || { echo "FAIL: $SWT lost the re-judge / calibration rules (§15)"; exit 1; }
 grep -q 'A screen hook never raises into the flow' "$SWT" || { echo "FAIL: $SWT lost the screen-hook rule (§16)"; exit 1; }
 grep -q 'is a checklist, not a rewrite' "$SWT" || { echo "FAIL: $SWT lost the checklist-revision rule (§17)"; exit 1; }
-grep -q '^## 23. A measurement checks its own counters: the norm, never a mode' "$SWT" && grep -q 'The verdict counts every window after the settling time' "$SWT" && grep -q 'A settling time is measured, never hidden' "$SWT" || { echo "FAIL: $SWT lost the measurement-integrity rules (§23)"; exit 1; }
-grep -q '^## 6. Studies before the next revision' "$SKILL/references/schematic-phase.md" || { echo "FAIL: schematic-phase.md lost the next-revision studies (§6)"; exit 1; }
-grep -q '^## 15. A public export from the private tree' "$SKILL/references/release-and-cut.md" && grep -q 'Docstrings and comments ship' "$SKILL/references/release-and-cut.md" || { echo "FAIL: release-and-cut.md lost the public-export rules (§15)"; exit 1; }
-grep -q '^### 8.7 Side pockets, bosses, screw wells and feet' "$REF" || { echo "FAIL: $REF lost the side-pocket / boss / foot rules (§8.7)"; exit 1; }
+"$PY" "$SKILL/scripts/rule_check.py" --selftest >/dev/null && "$PY" "$SKILL/scripts/rule_check.py" "$SKILL/evals/core_rules.yaml" --mutate || { echo "FAIL: a core rule is missing, a banned phrase is back, or a rule deletion stays unseen (evals/core_rules.yaml: software-track §23, schematic-phase §6, release-and-cut §15, dfm §8.7, SKILL links)"; exit 1; }
 grep -q 'Search the tree before a BLOCKED row' "$SKILL/references/part-verification.md" || { echo "FAIL: part-verification.md lost the search-before-BLOCKED rule"; exit 1; }
 grep -q 'Only one short feature locates a parting line' "$REF" && grep -q 'fit coupon of the parting line prints before' "$REF" || { echo "FAIL: $REF lost the parting-line fit rules (§8.6)"; exit 1; }
 grep -q 'Every slot is open at both ends' "$REF" && grep -q 'Elephant foot applies only to features that start on layer 1' "$REF" || { echo "FAIL: $REF lost the open-slot-ends / layer-1 elephant-foot rules (§8.5 / §8)"; exit 1; }
@@ -132,8 +129,6 @@ grep -q 'AskUserQuestion' "$SKILL/SKILL.md" && grep -q '^### 0.1 The kickoff que
 grep -c 'RECOMMENDED' "$SKILL/references/kickoff-questionnaire.md" | awk '$1 >= 30 {ok=1} END {exit !ok}' || { echo "FAIL: the questionnaire lost its recommended answers"; exit 1; }
 grep -q '^| D1 | the manufacturability bar' "$SKILL/templates/10-spec/KICKOFF_ANSWERS.md" || { echo "FAIL: KICKOFF_ANSWERS.md lost the bar row"; exit 1; }
 grep -q 'references/pcb-layout-dfm.md' "$SKILL/SKILL.md" || { echo "FAIL: SKILL.md lost the layout reference (C-07)"; exit 1; }
-LEAK='(^|[^a-z0-9])p2s([^a-z0-9]|$)|presets\.P2S|lap\.ring_down'   # generic: ok (the lint patterns themselves; project names are generic_lint's term file)
-grep -rqiE "$LEAK" "$SKILL/SKILL.md" "$SKILL/README.md" "$SKILL/templates" "$SKILL/workflows" "$SKILL/evals" && { echo "FAIL: a project identifier leaked into SKILL / README / templates (C-15 / B-34)"; exit 1; }
 grep -q '^## 13. Retro' "$SKILL/SKILL.md" || { echo "FAIL: SKILL.md lost the retro phase (§13)"; exit 1; }
 grep -rnE '30-board/kicad/(kicad:|drc|gen)' "$SKILL/templates" "$SKILL/references" "$SKILL/SKILL.md" && { echo "FAIL: the kicad/ -> 30-board/kicad/ reorg rewrote a non-path (the CI image kicad/kicad:<tag> or a kicad/drc, kicad/gen domain tag) — restore the literal (0.11.0 A-8)"; exit 1; }
 # 0.10.0: the arrival checklist, the spec errata, the review protocol with a record-reading verifier, the owner-read tag, the slicer optimisation home
