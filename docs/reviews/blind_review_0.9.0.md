@@ -89,7 +89,7 @@ Template SPEC.md line 12 reads "sections tagged {{ee,both}} / {{mech,both}} are 
 README Install 2: "ONE venv, the project's `.venv` …; the smoke and every gate use it (a `vendor/hw-from-spec/.venv` is for developing the skill only)". SKILL.md §0 step 1: "the smoke falls back from the skill's own `.venv` to the project's". `smoke/README.md`: "needs the mesh libraries in the skill venv". Observed from a project that has its own `.venv`:
 ```
 $ vendor/hw-from-spec/smoke/run_smoke.sh | head -1
-python: /private/tmp/hwfs_review_wt/.venv/bin/python        # the SKILL's venv, not p1/.venv
+python: <worktree>/.venv/bin/python        # the SKILL's venv, not p1/.venv
 $ sed -n 11p vendor/hw-from-spec/smoke/run_smoke.sh
 VENV=""; for c in "$SKILL/.venv" "$CALLER/.venv"; do ...
 $ sed -n 18p vendor/hw-from-spec/evals/run_evals.py

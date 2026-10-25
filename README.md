@@ -183,4 +183,6 @@ reports drift. Numbers that come from a vendor (fab table, checker line, toleran
 text and in `project.yaml`, and re-fetched before use. MIT (`LICENSE`). Contributions arrive as retro
 PRs: run `scripts/skill_retro.py` on a finished project, fold its report into the references, add the
 evals, keep `smoke/run_smoke.sh` and the two lints (`scripts/doc_voice_lint.py`,
-`scripts/generic_lint.py`) green, bump the version, write the CHANGELOG entry, open the PR.
+`scripts/generic_lint.py`) green, bump the version, write the CHANGELOG entry, open the PR. This repo is public.
+Put a project, person, company, order or part name in the private term file (`scripts/generic_lint.py`). Never put it in
+`scripts/generic_lint_terms.yaml`.
