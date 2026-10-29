@@ -537,8 +537,8 @@ ironing, fuzzy skin, per-object overrides) and how each is PROVEN from the g-cod
   change touched 11 files because colour names were the keys everywhere (2026-10-02). Match roles to SPOOL SIZE. The structure role takes ~60 %
   of the grams and needs a full spool. An accent (~5 %) fits a small one. The kickoff colour question asks which spools are full and which are
   small (questionnaire C5).
-- **Multi-material = ONE multi-part object with a per-part `extruder`.** The CLI has no flag for it but loads a Bambu-style 3MF (the source
-  project's `write_ams_3mf`; copy the package layout from a file Studio exported, ids are global):
+- **Multi-material = ONE multi-part object with a per-part `extruder`.** The CLI has no flag for it but loads a Bambu-style 3MF (one earlier
+  generator's `write_ams_3mf`; copy the package layout from a file Studio exported, ids are global):
   ```
   [Content_Types].xml, _rels/.rels                 standard OPC
   3D/3dmodel.model         <model … xmlns:p="…/3dmanufacturing/production/2015/06" requiredextensions="p">
@@ -679,6 +679,45 @@ ironing, fuzzy skin, per-object overrides) and how each is PROVEN from the g-cod
   opened a 0.43 slot between the boss and the lid tooth ends, under the print-DFM void floor of 0.45. Extending the boss toward the teeth left
   a crescent void (min 0.03). Shortening the teeth to end 1.5 from the cavity ends fixed it. Rerun print DFM on every body after any clearance
   change (`print-dfm.md` §3 e). Prefer shortening the feature that approaches to filling the gap.
+
+### 8.7 Side pockets, bosses, screw wells and feet **[measured]**
+- Check the wall budget before a magnet station is promised. Write the axial stack with signed worst cases. The wall W holds a
+  pocket of depth D and a floor F = W − D. The floor needs F_min = W_min − D_max ≥ the floor gate. Worked example: in a 2.0 wall,
+  a 3.175 disc needed an inward boss.
+- Write the radial fit with signed worst cases too. The smallest printed pocket minus the largest disc is at least the
+  insertion clearance. In symbols: P_nom − P_tol − d_max ≥ c_min.
+- The boss needs room under any deck ring. Where it crosses the vent band, drop the slots under it after the vent register is chosen.
+- A side pocket needs a full wall behind its floor plane at every Z it spans. Find the Z band where the body is a full wall. Put the
+  pocket there.
+- On the axis, take a disc of thickness t on a bondline b. Its proud height p is t + b − D. Its worst cases are
+  p_min = t_min + b_min − D_max and p_max = t_max + b_max − D_min. Set the proud height from the mating need:
+  gap, adhesive and contact. Then check that the pocket depth fits the wall. Never pick either one alone.
+- Count the roof over a side pocket along its whole depth, not only inside the ring. A pocket that runs past the wall can sit under an
+  opening, over the board.
+- Evaluate the inward option first: the pocket into the wall with a local thickening. A proud boss breaks a flush pair, because two
+  coupled units then touch at the boss, not along their faces.
+- A boss on a vertical face of an upright FDM print needs a printable underside. A round underside is a flat overhang at its lowest
+  band. A V or teardrop underside works when its flanks stay within the overhang limit. Blunt its tip to the design wall
+  (`wall_gate + design_margin`). Then check the sliced minimum and the census margin. Otherwise run the boss down to the bed plane
+  as a slab.
+- A pad disc that meets a boss ring leaves a narrow notch at the joint. The census reads the notch as a thin wall. Hull the pad to
+  the ring where the clearance allows. Re-run the census.
+- Two features that meet on one plane at a step leave a saddle. One face points +X above the step, the other -X below it. The census
+  reads the saddle as a thin wall (0.32 on one deck, a dated worked example). Run the fused feature to the outline where the function allows.
+- A light baffle under a printed deck is a wall, so it cannot be thinner than the census gate. Make the cell wall the design wall
+  (`wall_gate + design_margin`, §0). Make the cell the pitch minus that wall. Trim a lip the baffle crosses from past the deck edge.
+  A trim box that starts at the baffle face leaves a sliver ahead of it.
+- A screw well printed sole down has a roof: the counterbore seat prints in air. Set the bridge layers from the validated process,
+  the span and the seat strength. Read the G-code (`fdm-print-optimisation.md` §5). Worked FDM example: two layers, a bore-wide
+  slot and then a bore-wide square. Each layer then spans wall to wall.
+- Give the screw a reachable head. Give the foot a full land. One layout does both: a foot beside its screw, with a land to the
+  counterbore mouth. A foot over the counterbore hides the screw and comes off at every screw removal. Rerun the stability row
+  after every foot move (`references/case-pipeline.md` §Stability).
+- Apply a local exception after the shared rule it breaks. Drop a vent slot under a boss after the vent register is chosen. A boss
+  added to the register's input moves the register of every face.
+- A plain bar in a plain pocket is a shear key, as tight as its fit. List the six degrees of freedom of the joint. Check each one
+  at the worst-case fit and engagement. A bar can still slide along its own axis, and it does not resist separation normal to
+  the faces. A clip that holds against separation must pull the two outer faces together.
 
 ## 9. Two versions from one yaml (vendor MJF + home FDM)
 Presets are `base + overrides`, deep-merged before any module reads the yaml (`references/case-pipeline.md` §Presets). The geometry may differ

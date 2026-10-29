@@ -434,6 +434,39 @@
      "run": "! grep -q 'objects_in_3mf' \"$SKILL\"/references/print-kit.md"
     }
    ]
+  },
+  {
+   "id": 19,
+   "name": "pattern-test-verdict-checks-its-counters",
+   "prompt": "Our bench tool runs a 600 s pattern test between two modules and prints the module's reported error rate from the last read as the result. The result says 2e-7, MEASURED. Can I put that in the release record?",
+   "expected_output": "Not as it stands. The agent reads software-track §23: counter checks are the norm in every measurement, never a mode. It asks for the raw reads per window, the event unit of each counter with its opportunity counter, the counting point (pre-FEC or post-FEC) and when each counter counts. A post-FEC limit needs a measured pre-FEC limit beside it; without one the record says 'pre-FEC margin not verified' and the lane cannot pass into a release record. Each window has its own fresh baseline: counting stopped, reset, the documented update time waited and stale reads dropped, then a baseline consistent with the time since the reset. T is that window's counted time, so the deltas and T match. The opportunity counter must grow at the documented rate in its own unit × T; any other law is a counter fault and the window is INCONCLUSIVE. Every window is capped at (modulus / 2) / (rate × BER_max), whatever the window before read; BER_max is 1 unless proven, about 20 ms for a 32-bit bit error counter at 106.25 Gb/s. A window longer than its cap is invalid, and a read cycle longer than the cap makes the run INCONCLUSIVE unless the counters are frozen or latched together. A modulo step needs proof that the epoch continues past every documented clearing event (reset, clear-on-read, enable change, restart, lock loss, watchdog, gate expiry, low power, application change). A lower bound comes only from a proven saturation or a proven wrap; its one-sided Poisson lower limit over the limit is a FAIL that wins over INCONCLUSIVE. It computes the ratio two ways and compares it with the reported one within a tolerance stated before the run. It challenges the checker on every lane and direction, in the same session and configuration, in its own epoch: the error counter must rise while lock holds, by the injected count when errors are injected, on a known physical lane with every other counter unchanged. An unchallenged lane is 'checker unproven' and INCONCLUSIVE. The start-up is a predeclared contiguous prefix from observable lock state, judged on its own against start-up limits; the verdict says what it covers. Each lane and direction is judged by its run total with one-sided Poisson limits for any error count: PASS only when the upper limit is under the limit, FAIL when the lower limit is over it, otherwise INCONCLUSIVE; clustered errors give INCONCLUSIVE unless a predeclared dispersion test says otherwise. The run passes only when every required lane and direction passes; any FAIL fails the run; lanes are never averaged. It suggests testing each unit as sender and receiver before blaming one.",
+   "assertions": [
+    "the agent refuses a verdict from the last read alone and asks for per-window deltas from a fresh, time-consistent baseline after a verified reset, with T as that window's counted time",
+    "the agent checks the opportunity counter against the documented rate in its own unit × T and treats any other growth law as a counter fault (INCONCLUSIVE)",
+    "the agent caps every window by (modulus / 2) / (rate × BER_max) with BER_max = 1 unless proven, marks a window longer than its cap invalid, and needs epoch continuity past every documented clearing event before a modulo step",
+    "the agent takes a lower bound only from a proven saturation or wrap, and a one-sided Poisson lower limit over the limit is a FAIL",
+    "the agent requires a checker challenge on every lane and direction, anchored to a known physical lane, in which the error counter rises while lock holds; an unchallenged lane is INCONCLUSIVE and stays out of the release record",
+    "the agent judges each lane and direction by one-sided Poisson limits for any error count, treats clustering as INCONCLUSIVE without a predeclared test, and passes the run only when every required lane and direction passes",
+    "the agent asks for a measured pre-FEC limit beside a post-FEC one, and judges the start-up on its own against a predeclared prefix rule"
+   ],
+   "checks": [
+    {
+     "name": "every core rule group holds against its manifest; no folklore; the hand-written attack fixtures go red",
+     "run": "\"$PY\" \"$SKILL\"/scripts/rule_check.py \"$SKILL\"/evals/core_rules.yaml --attacks \"$SKILL\"/evals/rule_attacks.yaml"
+    },
+    {
+     "name": "mutation proof over every group: each sentence deleted or glued to a qualifier, one verdict word flipped per sentence, each banned phrase and pattern inserted, each goes red",
+     "run": "\"$PY\" \"$SKILL\"/scripts/rule_check.py \"$SKILL\"/evals/core_rules.yaml --mutate"
+    },
+    {
+     "name": "negative fixture: a rule entry deleted from core_rules.yaml goes red against the manifest",
+     "run": "cp \"$SKILL\"/evals/core_rules.yaml \"$SKILL\"/evals/core_rules_manifest.yaml \"$T\"/ && \"$PY\" -c \"import sys,yaml;p=sys.argv[1];g=yaml.safe_load(open(p));g['pockets']=g['pockets'][:1];open(p,'w').write(yaml.safe_dump(g,allow_unicode=True))\" \"$T\"/core_rules.yaml && out=$(\"$PY\" \"$SKILL\"/scripts/rule_check.py \"$T\"/core_rules.yaml || true) && echo \"$out\" | grep -qF 'manifest:'"
+    },
+    {
+     "name": "rule_check selftest",
+     "run": "\"$PY\" \"$SKILL\"/scripts/rule_check.py --selftest"
+    }
+   ]
   }
  ]
 }

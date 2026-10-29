@@ -1,6 +1,6 @@
 ---
 name: hw-from-spec
-version: 0.11.24
+version: 0.11.25
 description: Run a hardware project (a PCB, a printed or CNC enclosure, or both — scope chosen at kickoff; contract fab such as JLCPCB) from a written specification to a production cut with an owner-gated, generated-only, blind-reviewed workflow — a kickoff questionnaire that asks every owner decision up front with recommended answers, a zero-warning manufacturability bar, and a retro that folds each project's learnings back into the skill. Use this whenever someone starts a board or enclosure project from a spec, asks to set up gates, a decision log, generators, part verification, a fab DFM mirror, a case pipeline, FEA, blind reviews, a release report or a production cut for one, or resumes such a project, or wants the skill improved from a finished project — even if they only say "new KiCad board", "order this at JLC", "review the layout", "cut the release" or "what did we learn".
 ---
 
@@ -286,6 +286,12 @@ scope the M1 round's role set = `case_dfm` + mechanical intent. Its checklist is
 closed rims, retention present in the mesh). Its verifier re-runs `scripts/thin_wall_census.py --target <t>` on the frozen worktree's STLs and
 compares with the census JSON of record. Required before the case order (`templates/90-log/GATES.md`).
 
+**The next revision** gets one blind pass per discipline that a gate freezes. Take the discipline list from the scope. An example list:
+schematic, layout, mechanical, the host link, firmware and tool, test plan and criteria, documentation. Each pass follows the protocol above,
+as roles inside the gate's one review round. Every field finding of the last revision is a named check in its discipline's checklist.
+The coordinator sets the role list by hand; `workflows/blind-deep-review.js` does not split by discipline. *Reason*: a pass per discipline finds
+a defect one gate earlier than one merged review at the end. The studies that open the revision follow `references/schematic-phase.md` §6.
+
 **The double-blind drawing round** [mech, both] (the M1 round for a printed part, beside `case_dfm`): the drawing sheet is generated from the
 exported meshes with its self-checks (`references/case-pipeline.md` §Drawings). Reviewer A gets ONLY the sheet and a one-paragraph design
 intent, and reports what the sheet says the part does and where it cannot. Verifier B measures every claim of A on the meshes of record and
@@ -420,6 +426,7 @@ list. The reference tags each **[checker]** / **[vendor sheet]** / **[physics]**
    production mating feature. The picked value lands in `kickoff.enclosure.fit_result` and closes its arrival-checklist row. Each STL has a
    watertight row. Sidecars are drift-checked against the 3MF config. Only one short feature locates a parting line, and a fit coupon of
    that line prints before the parts (`dfm-printed-enclosure.md` §8.6). Every print claim names its G-code read (`fdm-print-optimisation.md` §5).
+   Side pockets, bosses, screw wells and feet follow `references/dfm-printed-enclosure.md` §8.7.
 6. **When a vendor reports a cracked part**: measure the RECEIVED part (caliper table → the target's tolerance), photo protocol, fractography
    basics. Then measure the ORDERED STL (sections + census with span and class). Separate design intent from defect with the vendor-fault table.
    Draft the reply from the template for the owner. Then apply the learning design-wide (every body, every preset), not to the failed feature
@@ -428,7 +435,11 @@ list. The reference tags each **[checker]** / **[vendor sheet]** / **[physics]**
 ## 9. Software track [ee, both] (optional)
 
 Bring-up tool first (a `--selftest` that needs no hardware, `--dry-run`). Then the architecture note, criteria as YAML the tool reads, and PASS / FAIL
-/ INCONCLUSIVE with reason codes the manuals are generated from. Safety guards stay optional flags before the owner's nod (`references/software-track.md`).
+/ INCONCLUSIVE with reason codes the manuals are generated from. Safety guards on hardware actions stay optional flags before the owner's nod (`references/software-track.md`). Measurement checks, the
+checker challenge included, are never optional flags.
+A measurement checks its own counters in every run, as the norm and never as a mode. The start-up settling follows a rule fixed
+before the run, and the record reports it (`references/software-track.md` §23). Bring-up and USB power, the register map and
+pattern tests follow `references/software-track.md` §18 to §20.
 
 ## 10. Release cut and production cut
 
@@ -442,7 +453,8 @@ placeholders). **One project-side generator** (`gen/production_cut.py`) builds `
 `references/release-and-cut.md` §7; the skill ships the yaml and the contract, not the generator. `[OWNER: …]` fields are counted, never
 filled by an agent. Records (photos, press logs, the first-article caliper table, test results) are filed as they happen under **the one records
 folder `70-release/<rev>/records/`** (the cut yaml's `records_dir`; RELEASE_NOTES points there), or the cut cannot be written
-(`references/release-and-cut.md`).
+(`references/release-and-cut.md`). A public export from the private tree follows `references/release-and-cut.md` §15. It needs a leak gate,
+two blind reviews and the owner's word.
 
 - **The last round is an order, then a fixed-point pass:** records → renders → reports → matrix → reports → analysis index → PDFs → cut build LAST → commit;
   afterwards only `--check`s; run the round twice and diff after stripping the volatile cascade (`references/release-and-cut.md` §3.1). Whoever
@@ -557,12 +569,12 @@ row. The classifier is a keyword matcher: the report is the input to the change;
 | the evals and what is checked mechanically | `evals/evals.json`, `evals/run_evals.py` |
 | day 0: the kickoff questionnaire (every owner decision, recommended defaults, batches) | `references/kickoff-questionnaire.md`, `templates/10-spec/KICKOFF_ANSWERS.md` |
 | G0: SPEC / VERIFY skeletons, the spec review round | `templates/10-spec/SPEC.md`, `templates/20-design/VERIFY.md`, §5 |
-| G0→G1: design yaml shape, ERC gate (`erc_gate.py` + `20-design/erc_accept.yaml`), map checks, G1 pack | `references/schematic-phase.md`, `templates/G1/` |
+| G0→G1: design yaml shape, ERC gate (`erc_gate.py` + `20-design/erc_accept.yaml`), map checks, G1 pack, the studies before a next revision (§6) | `references/schematic-phase.md`, `templates/G1/` |
 | G1→G2: placement CSV, router session, G2 pack, PCB build rules (stack-up … panel), DRC census, route quality, parity, canary | `references/pcb-layout-dfm.md` |
 | part tags, verification table | `references/part-verification.md` |
 | fab rules, panel, quote form, DFM export | `references/fab-dfm.md` |
 | case yaml → STL → checks → quotes | `references/case-pipeline.md` |
-| printed-enclosure DFM: MJF / FDM / SLA rules tagged checker / vendor / physics / owner, inserts + magnets, post-processing, tolerance stack, census gate, heat-map procedure, probes, coupons, dummies, brand marks (ironed top face / AMS bed layers), dust caps, Bambu CLI facts, post-mortem | `references/dfm-printed-enclosure.md` |
+| printed-enclosure DFM: MJF / FDM / SLA rules tagged checker / vendor / physics / owner, inserts + magnets, side pockets, bosses, screw wells and feet (§8.7), post-processing, tolerance stack, census gate, heat-map procedure, probes, coupons, dummies, brand marks (ironed top face / AMS bed layers), dust caps, Bambu CLI facts, post-mortem | `references/dfm-printed-enclosure.md` |
 | the print kit as a deliverable: START_HERE, kit text gate, hardware from the knobs, magnet procedure, bracket plate, watertight / sidecar rows | `references/print-kit.md` |
 | slicer-level optimisation: waste (flush into infill / support, flush calibration, prime tower, grouped colour changes), strength (walls, infill, modifiers), quality (EF / XY compensation, seam, ironing, fuzzy skin, per-object overrides) — every knob with its proof row; kickoff C11 default sets | `references/fdm-print-optimisation.md` |
 | the arrival / first-article checklist (yaml → md, --check), the SPEC errata file | `scripts/arrival_checklist.py`, `templates/20-design/arrival_checklist.yaml`, `templates/10-spec/SPEC_ERRATA.md`, `references/release-and-cut.md` §10 |
@@ -570,8 +582,8 @@ row. The classifier is a keyword matcher: the report is the input to the change;
 | machined enclosure: corner radii, walls, threads, anodising, quote page, case-order gate | `references/cnc-enclosure.md` |
 | bought hardware: line schema, hardware classes (inserts, magnets, feet, labels), adhesive on PA12 | `references/part-verification.md` |
 | meshing, solving, caches, reporting | `references/fea-stage.md` |
-| bring-up tool, criteria, codes | `references/software-track.md` |
-| reports, collateral, tag, cut yaml, one-round chain, assembly guide, re-layout | `references/release-and-cut.md` |
+| bring-up tool, criteria, codes; bring-up and USB power (§18), the register map (§19), pattern tests (§20), the browser page (§22), measurement counter checks (§23) | `references/software-track.md` |
+| reports, collateral, tag, cut yaml, one-round chain, assembly guide, re-layout, a public export (§15) | `references/release-and-cut.md` |
 | repository conventions: one folder per product, `assets/`, a README in every folder, build output ignored, release folder by use, order record, clean tree | §0 step 8, `references/project-yaml.md` §Layout, `references/release-and-cut.md` §12–§14 |
 | writing: sentences, voice, words, where the rules apply, how to fix a lint hit | `references/writing-style.md`, `scripts/style_lint.py`, `scripts/style_gate.py` |
 | the fab's review mail after the order, Replace File boundaries, quote-page DFM mechanics | `references/vendor-review.md` |

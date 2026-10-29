@@ -61,6 +61,9 @@ net classes must be exported into the router input — grep the DSN for them aft
   thickness and therefore impedance geometry — pin one value in the spec before layout.
 - Thickness tolerance ±10 % at ≥ 1.0 mm **[fab capability]** (1.6 → 1.44…1.76): a press-fit connector or a card-edge must accept the range.
 - Material grade / Tg is selected at order **[owner choice]** (JLC impedance profiles assume a TG155 laminate).
+- **Fab capabilities move** **[fab capability]**. Read the live capability page before a study recommends a stack. Worked example, JLC
+  2026-10-24 (that fab's table, that day; verify it live). That fab back-drilled boards of 4 to 32 layers, from 0.8 mm thick.
+  For its back-drilled boards on that date, 2.5 mm and thicker needed 12 layers or more, at ±10 %.
 
 ## 3. Controlled impedance and differential pairs
 - **When it is required** **[physics]**: any pair whose length exceeds ~1/10 of the signal's rise-time wavelength on FR-4. Examples are USB 2.0
@@ -74,6 +77,9 @@ net classes must be exported into the router input — grep the DSN for them aft
 - Differential rules the CAD enforces: pair gap, uncoupled length ≤ N mm, skew ≤ N mm, no via stubs on the pair, reference plane continuous
   (an In2 signal over an In1 antipad edge is a route-quality HIGH, §10). Impedance control is an order option **[fab capability]**: ask for it
   on the quote form; if the form refuses it for the copper weight, that is a decision row, not a silent drop.
+- **Connector pads** **[physics]**: a wide pad over thin prepreg can drop below the target impedance. A thinner prepreg lowers
+  the pad impedance further. Pick the prepreg for the pad as well as the trace. A void under the pad changes the return path.
+  Model the whole launch with the live stack-up and the connector model: εr, copper, mask, reference and pour gap.
 
 ## 4. Trace / space / via / annular / drill minimums vs the fab table
 Copy the fab's table into `20-design/dfm_thresholds.json` (source URL + date) and design strictly greater **[checker]**. Worked example
@@ -142,6 +148,8 @@ Defaults the questionnaire proposes:
   time upside down. Parts heavier than ~30 g per square inch of pad area or tall parts (electrolytics, inductors > 4.5 mm) go on the second
   side or get glue. Glue is a remark, and the fab decides. Record per-side max height in the board yaml, because the case reads it.
 - THT: unused PTH stay solder-free (say so in the remark); hand-installed parts are DNP in the BOM and marked on the fab drawing.
+- A part whose datasheet allows a single reflow goes on the side reflowed last. A radio module is the usual case. Confirm the order
+  with the assembler, and check its profile against the part's peak temperature and time above liquidus.
 
 ## 10. Polarity, rotation and the CPL **[convention + fab capability]**
 - CPL file: `Designator, Mid X, Mid Y, Rotation, Layer`, mm, 4 decimals. Position = pad-bounding-box centre relative to the drill/place origin,
@@ -177,7 +185,8 @@ Defaults the questionnaire proposes:
   axis), on the panel rails when panelised; Standard PCBA requires them, Economic does not.
 - **Test points** **[owner choice + convention]**: one per rail and per bus line the bring-up tool reads (the criteria yaml names them). Pad
   ≥ 1.0 mm, ≥ 2.54 mm pitch where a probe clip is expected. Label each with the net name and purpose on the silk (self-documenting labels).
-  Group them in a field with a legend grid. The test plan lists the coverage (T-nn ↔ TP).
+  Group them in a field with a legend grid. The test plan lists the coverage (T-nn ↔ TP). Put each name on the silk, never on the
+  fabrication layer only: that layer is invisible at the bench. Check the test point card against a real board, not the layout file.
 - **Silk** **[fab capability + checker]**: line ≥ 0.15 (design 0.16+), text height ≥ 1.0 mm (labels 1.1–1.2), width:height 1:6, silk-to-pad /
   mask ≥ 0.15 (design 0.20). **No silk over pads, no via or PTH under a text cell.** Keep vias out of the text bbox at route time; clipping is
   for hairlines only. Check silk-to-edge against the TRUE outline polygon (notches). Check glyph stroke ≥ the minimum by a morphological

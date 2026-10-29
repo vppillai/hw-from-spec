@@ -1,7 +1,7 @@
 # software-track.md — bring-up tool, package, criteria, codes, selftests
 
 The software exists before the hardware does. So you build it to run without hardware, and it generates the documents that describe it.
-Sections 1 and 2 give the order and the selftest pattern. Sections 3 to 17 hold the rules the package and bench-preparation rounds proved. Each rule carries its
+Sections 1 and 2 give the order and the selftest pattern. Sections 3 to 23 hold the rules the package, bench-preparation and bring-up rounds proved. Each rule carries its
 reason and one worked example.
 
 ## 1. Order
@@ -204,7 +204,7 @@ reason and one worked example.
 - Lint the added lines alone at the 20-word cap (`git diff | grep '^+'`). The whole-file gate at 40 hides a long new sentence.
   Code-fence lines merge into false hits, so read the hit text before you fix it.
 
-## 18. Bring-up without instruments, and the identity in the bridge chip
+## 18. Bring-up with few instruments, and the identity in the bridge chip
 - With no meter, the first power still has an order that limits the loss. Charger on the power-only port for five
   seconds. Read the LEDs, touch the parts, smell. Then one minute. The host port comes last. *Reason*: a short on the
   host port can take the computer's port with it.
@@ -219,7 +219,7 @@ reason and one worked example.
   *Pitfall*: a merge moved the read out of the open path, and every run stopped at the revision check with no product.
 - After an EEPROM write the chip resets and leaves the USB stack. A re-plug of the host cable is part of the procedure, not a fault.
 - Read a module's EEPROM before you search for its part. A label can carry a typo; the EEPROM carries the catalogue number.
-- A passive loopback plug and a passive copper cable are EEPROM-only tests on a management tester. Check the length and attenuation
+- A passive loopback plug and a passive copper cable are EEPROM-only tests on a bench tester. Check the length and attenuation
   fields against the label: vendors leave them wrong or empty. A passive plug reads a flat memory, a zero temperature and a
   reserved state; that is the plug, not the bus.
 - Run the thermal throttle path once on every tester build before you trust a long hold. A bare board with a cage sink and no air
@@ -231,6 +231,38 @@ reason and one worked example.
   current-limited rail.
 - A tester that cannot see its own power source relies on an operator flag. Put a charger-present sense and a rail current monitor
   on the next revision, and make the release step refuse itself when the budget is not there.
+- The first meter session has its own traps. A meter's low-impedance mode loads the node with a few kΩ. It pulls a bled
+  rail or a pull-up line down. Use the plain DC volts range.
+- Use a designated circuit-ground test point as the ground point. A press-fit connector cage holds a probe tip without
+  slipping. Use the cage only after you confirm that it ties to signal ground. Many cages go to chassis through an RC.
+- A switched-off rail is not at 0 V while the host is plugged. Idle-high bus lines feed it through their pull-ups into the
+  bleeder; one board read 0.57 V. Check a rail "off" with every source connected. Trace every path that feeds the rail, and
+  fix each one. On that board the feed was the signal lines, not the rail.
+- A laptop USB-C port may offer 1.5 A only. Read the source's current advertisement before you budget host power.
+  Read CC with the plain DC range, never the low-impedance mode. Read it before a PD contract exists.
+  Over the sink's 5.1 kΩ pull-down, 0.25 to 0.61 V means Default USB power.
+  A reading of 0.70 to 1.16 V means 1.5 A. A reading of 1.31 to 2.04 V means 3 A. Read the CC pin that carries the source's
+  Rp. Under 0.2 V means no source or the other pin; it is never a tier.
+  A reading between two bands is INCONCLUSIVE: measure again, never round it to a tier.
+- Default USB Power is 100 mA unconfigured and 500 mA configured on USB 2.0. On single-lane USB 3.x it is 150 mA unconfigured
+  and 900 mA configured. The Type-C specification lists 1500 mA as Default USB Power only for a port configured in dual-lane
+  USB 3.2 mode. Check the live specification text and the enumerated mode before you budget it. Type-C Current at 1.5 A or 3 A
+  is a separate grant, read only from the CC bands. Battery Charging is another separate grant. Budget only what the port has granted.
+- Under a PD contract, the negotiated limit comes from the accepted request (RDO), not from the CC voltage. Decode the RDO
+  against the PDO or APDO it selects and the cable's current capability. It is a limit, not a measured current. This skill
+  carries no PD decoder; read the decoded contract from the sink controller's status.
+  Under PD 3.x collision avoidance, a source moves its Rp between the 3 A and 1.5 A levels. Read that move as a signal, never as a
+  new current tier.
+- A fan that is off reads like a bad module. Three throttles in a row came from a fan with no power. Look at the fan before
+  you blame the module, and give the next revision a tachometer read.
+- A high-power window without a health poll is a hazard. One run polled nothing between its windows. The module crossed its
+  warning limit and shut two lanes down. Poll both ends between windows, with the throttle limit. Compute the poll period: the
+  remaining margin over the heating rate, less the sensor lag and the shutdown latency, with a safety factor. A failed
+  sensor read stops the run. Keep an independent hardware over-temperature cut-off.
+- Two gates can let a high-power run through: the posture table and the power budget flag. The record names the gate that
+  let the run through.
+- Pattern traffic adds heat over the idle hold at the same budget. One fit under traffic read 13 K above the idle fit, with a slope 1.6 K/W steeper.
+  Size the cooling and the soak limits from a fit under traffic.
 
 ## 19. The register map as data
 - A tester that reads only the bytes its tests need grows a pile of constants with holes. An audit read 7 of 18 page families
@@ -255,26 +287,43 @@ reason and one worked example.
 - An advertised duration is a ceiling the host waits for, not a measurement. One module answered ten times faster than its bound.
 - A module may answer a feature query with "command unknown" and still run the commands of that family. "Unknown" reads as
   "not advertised", never as a failure, and the exercise decides.
+- A latched flag latches again while its condition holds. A loss-of-signal flag pulled the interrupt line low right after the
+  read, because the far transmitter was still off. Read the line a second time after the undo.
+- A success status on a write is not proof that the setting applied. One module answered "success" for every staged setting
+  and kept its active set unchanged. Read back the active set. Then read the configuration status and the data path state.
+- A low-power pin is not a hardware guard when a register can override it. Any bus master can write the override. Only the
+  rail switch with verified isolation is an absolute stop. Check that no signal line back-powers the rail (§18).
+- Leaving low power does not always bring the data path up. The result depends on the data path controls and the
+  standard's state machine. Read the data path state; never assume it. A deactivated data path leaves the receive monitors
+  blank. Read those monitors inside a pattern run or a trend run.
 - A firmware update can rotate the application table. One update moved the one-lane application to the first slot and made the
-  eight-lane one the second. Select an application by its interface name, never by its number, and key the criteria on the
-  firmware version.
+  eight-lane one the second. Select an application by its whole descriptor: the host and media interface codes and the lane
+  counts. Never select it by its number. Key the criteria on the firmware version.
 - A firmware update on a two-ended cable is two updates. Each end carries its own image banks, and the serial is shared. The
   tool updates one end per insertion; the kit text says "swap the ends and repeat".
 
 ## 20. Pattern tests between two ends
-- The checker's lock-loss flag latches from the moment the checker is enabled. Read it once after the far generator is up, reset
-  the counters, then open the gate.
-- A long pattern function hides three reusable steps: arm (setup, settle, clear the latched flags), end-of-gate statistics,
-  disable. Pull them out, and a per-second trend and a far-end loopback cost one loop each.
-- A module's bit counter may read a multiple of the line rate over the gate. Judge the ratio of errors to bits, which the
-  module's own selector agrees with, and ask the vendor about the unit.
+- The checker's lock-loss flag latches from the moment the checker is enabled. Read it once after the far generator is up.
+  Then reset the counters, verify the reset by a read-back, and open the gate (§23).
+- A long pattern function hides three reusable steps: arm, end-of-gate statistics, disable. Arm is the setup and the clearing
+  of the latched flags; the settling is judged inside the run (§23). Read back the pattern, the polarity and the enable at both
+  ends before the gate. Pull the three steps out. A per-second trend and a far-end loopback then cost one loop each.
+- A module's opportunity counter may not grow at the lane rate. Check its growth law in every window before you trust a
+  rate from it (§23).
 - A far-end loopback carries the pattern while the checker reports lock loss for the whole gate and still counts. Judge a loopback
   run on a per-second lock view, never on the end flag alone.
-- A link settles after the modules warm: the per-second rate fell by an order of magnitude inside a minute. Let the link settle
-  before the gated measurement that judges it. Say which fibre or cable set the floor; the wrong fibre type still links.
+- A link reads worse in its first seconds. One per-second rate fell tenfold inside a minute. A control is needed before you
+  call that lock-in. Apply the predeclared settling rule and report the settling (§23). Say which fibre or cable set the
+  floor; the wrong fibre type still links.
+- Judge each lane against the expected enable map and the documented counter semantics. A disabled lane's opportunity delta
+  stays near zero when its counter stops while disabled. An enabled lane's opportunity delta matches the documented
+  opportunity rate × the counted time (§23). Judge on the counters: the latched lock-loss byte flickers on a marginal fibre in any short window.
+- A host-side loop also acts as a far-end loopback. A module in mission mode returns its media input through the loop to
+  its media output. The record names the topology. A host-loop result is not a media-link result.
 - A host-side generator points at the host, not at the cable. On a two-cage board with the host lanes cross-connected it drives
   the other end's host input, and the far media-side checker measures the whole path with no host present.
-- Use the module's gating timers for an exact window, and read the error counters beside the derived rate.
+- Use the module's gating timers for the window. Record the actual gate start and end. A gate that does not complete makes
+  the window INCONCLUSIVE. Read the error counters beside the derived rate.
 
 ## 21. The command block and a firmware download
 - A command-block command is one write of the header and payload, then one write of the command id. The check code is the one's
@@ -333,6 +382,124 @@ reason and one worked example.
 - A record index keyed on identity needs a kind rule decided by the records that carry the evidence: a record that states the
   media technology sets the kind, a record without one never does. A flow written for two ends hides literal end names in
   prompts, loops and the judge; grep for them before the first one-end run.
+- A browser's private-network rule changes by version and by the page's origin. Name the browser, its version and the test
+  date with each claim. Test each browser the users run.
+- A provisioning protocol over a radio link can send the network password in clear. Protect it by an authenticated,
+  encrypted session. A wired serial link reduces the exposure; it does not replace the encryption.
+
+## 23. A measurement checks its own counters: the norm, never a mode
+A pattern test gives a verdict only from counters it has checked. The rules below hold for any error counter on any link.
+- Counter checks are part of every measurement. No flag or mode turns them off. No name such as "high fidelity" sets them
+  apart. The knobs are the window length and the gate mode.
+- Keep the raw reads of every window. A read holds the monotonic time, the error and opportunity counters, the reported ratio
+  and the lock flags. It also holds the temperature of both ends.
+- Record the event unit of each error counter: bit, symbol, block or codeword. Record its opportunity counter in the same unit.
+  A bit error counter gives a BER: bit errors over bits. Other units give an error ratio over symbols, blocks or codewords.
+  Compare a ratio only with a limit in the same unit. Convert between units only by a stated model.
+- Record when each counter counts. Some count only while the checker holds lock, or only inside a gate. Unknown counting
+  semantics make the window INCONCLUSIVE.
+- Record the counting point of each counter: before or after the FEC, and before or after a gearbox. Key each limit to that
+  point. A post-FEC count of zero does not prove the pre-FEC margin.
+- A release record with a post-FEC limit also needs a measured pre-FEC limit. No waiver replaces it. Without a measured pre-FEC
+  margin, the record says "pre-FEC margin not verified". That lane cannot PASS into a release record.
+- Use the rate at which the counter increments, in its own unit. Read it from the standard's table for the active
+  configuration and that counting point. Apply an encoding or FEC factor only as the standard defines it there. For example,
+  one 100G PAM4 lane runs at 53.125 GBd, which is 106.25 Gb/s. An unknown rate or unit makes the window INCONCLUSIVE. Never
+  divide an aggregate rate by the other side's lane count.
+- Each window has its own baseline and its own time. T is the time the counters counted, from the window's verified baseline
+  to its closing read. For a counter that counts only while locked or gated, T is that counted time. The window's deltas and
+  its T cover the same interval. Sum the windows' deltas once each, never a cumulative read twice.
+- Verify a reset in four steps. Stop or gate the counting. Reset. Wait the documented update time, and drop every read taken
+  before it. Then read a fresh baseline.
+- A fresh baseline is consistent with the time since the reset. The opportunity count is at most the rate × the elapsed time,
+  with the slack. The error count is zero, or the errors of that time are explained. Any other baseline means the reset
+  failed, and the epoch is invalid.
+- The opportunity counter grows at the documented opportunity rate × T. Allow the clock tolerance and the read timing slack
+  over T. Any other growth law is a counter fault, and the window is INCONCLUSIVE with that reason. Test the expected linear
+  law, not one named alternative. Dated example (2026-10): one module's opportunity (bit) counter grew as rate × T² / 2.
+- An epoch ends at every documented clearing event. List them from the datasheet: a reset command, a clear-on-read, an enable
+  change, a firmware restart. Lock loss, a watchdog, a gate expiry, low power and an application change can clear too.
+- Prove that the epoch continues before any modulo step. The proof covers every listed clearing event, and an unchanged uptime
+  or restart count. Without that proof, a fall of either counter invalidates the window. Treat each counter on its own.
+- Know each counter's width, and whether it wraps or saturates.
+- Cap every window, whatever the ratio of the window before. The cap is (modulus / 2) / (rate × BER_max). The modulus, the rate
+  and BER_max share the counter's event unit. BER_max is the highest error ratio the counter can see while it counts. When it
+  is not proven, take the unit's maximum, 1. Also cap the window so that the opportunity counter cannot pass half its own
+  modulus.
+- Example: a 32-bit bit error counter on a 106.25 Gb/s lane. Its cap is about 20 ms at BER_max 1. A proven BER_max of 1e-3
+  gives about 20 s. The first window uses the cap. Inside the cap, a shorter window is always allowed.
+- A window longer than its cap is invalid, the read skew included. When one read cycle over every lane takes longer than the
+  cap, the run is INCONCLUSIVE. The exception is counters that are frozen or latched together.
+- Inside the cap, a fall in a continuing epoch is exactly one wrap. Unwrap it and count the window. A step of half the
+  modulus or more invalidates the window.
+- A read at the saturation value makes that window and every later window of the epoch INCONCLUSIVE. A new verified reset
+  starts a new epoch.
+- A lower bound on the errors comes only from a proven saturation or a proven wrap. A saturated count is a lower bound. A fall
+  in a continuing epoch outside the cap proves at least one wrap. Then the delta plus one modulus is a lower bound. An unexplained
+  step, reset or corrupt read gives no bound; the window is INCONCLUSIVE.
+- Apply the Poisson lower limit to a lower-bound count over its opportunities. A lower Poisson limit over the criteria limit is a
+  FAIL. That
+  FAIL wins over the INCONCLUSIVE of the invalid window.
+- Compute the ratio two ways: errors over the rate × T, and errors over the opportunity counter. Compare both with the reported
+  ratio. With no reported ratio, compare the two computed values with each other. The criteria state the tolerance before the
+  run. Derive it from the counter resolution and the read skew. A dated tool used a factor of 1.5; that is a ceiling, not a
+  default. A mismatch beyond the tolerance makes the window INCONCLUSIVE.
+- Compare on a frozen read or an atomic latch. Without one, timestamp each field read. Bound the total skew of all the fields,
+  and add it to the slack. A module that reports a ratio only cannot pass this check.
+- A deaf checker reads zero errors on any link. Challenge the checker on every judged lane and direction before a PASS that can
+  enter a release record. Run the challenge in the same session and configuration as the run, in its own epoch. Keep its
+  errors out of the run totals. Repeat it after any firmware, application or pattern change.
+- A challenge passes only when the error counter rises while lock holds. With injected errors, the counter rises by the
+  injected count within the stated tolerance. A challenge that ends in lock loss alone proves the lock detector, not the
+  counter.
+- Anchor the challenge to a known physical lane: its connector pins, or a lane-unique pattern on that lane. Check that only the
+  expected counter rises and every other counter stays unchanged. That proves the counter's lane map.
+- Prefer an error-injection command. A pattern mismatch, an inverted polarity or a known-bad cable counts only when the counter
+  rises while lock holds. Record the challenge with the run.
+- A lane with no passed challenge reads "checker unproven". An unproven lane is INCONCLUSIVE in the run verdict. It cannot
+  enter a release record.
+- Keep the live lock state and the latched lock loss apart. OR a clear-on-read flag over every read of the window. A lock loss
+  after the settling is verdict-bearing. The criteria say whether it fails the lane or makes it INCONCLUSIVE; it is never
+  dropped. The errors and opportunities of a window with a lock loss stay out of the run totals.
+- The start-up settling is a contiguous prefix of windows from the release, fixed before the run. The criteria give its rule
+  and its maximum time. The rule uses only observable state: the lock, the data path state, a stable read of the lock flags.
+  It never uses the ratios of later windows. Never move the settling point after you see the data. Settling past the maximum
+  makes the run INCONCLUSIVE.
+- Judge the start-up on its own, against start-up limits in the criteria: its time, its errors and its lock losses. Judge the
+  windows after it as the steady state, a later burst included. The verdict says whether it covers the steady state, the
+  start-up or both.
+- The first windows after a release can read worse. Call the cause lock-in only when a control proves it.
+- A window is invalid when the rate is unknown or the growth law fails. It is invalid when a counter falls with no proof of a
+  continuing epoch. It is invalid on a step of half the modulus, a saturation or a window longer than its cap. It is invalid
+  when the ratios disagree or the gate does not complete. It is invalid when the settling passes its maximum or the counting
+  semantics are unknown. An invalid window makes the run INCONCLUSIVE, unless a lower bound proves a FAIL.
+- The verdict of a lane and direction uses its run total. A run total is the errors over the opportunities, each summed over
+  the counted windows. Never average window ratios. Never average lanes. Never judge the last window alone. Keep enough counted
+  windows to apply the settling rule and the dispersion check.
+- The run passes only when every required lane and direction passes. Any FAIL fails the run. Otherwise the run is INCONCLUSIVE.
+- Judge each run total by its one-sided Poisson limits at a stated level CL, per lane and direction. Let χ²(p; ν) be the
+  p-quantile of the chi-square law with ν degrees of freedom. For k errors in N opportunities, the upper limit is
+  χ²(CL; 2k + 2) / (2N). The lower limit is χ²(1 − CL; 2k) / (2N), and 0 when k is 0. PASS needs the upper limit under the
+  criteria limit. FAIL needs the lower limit over the criteria limit. Otherwise the lane is INCONCLUSIVE. With zero errors the upper limit is
+  −ln(1 − CL) / N, about 3 / N at 95 %. Set the minimum opportunity count from the limit, about 3 / limit at 95 %.
+- Many lanes at one CL raise the chance of a wrong verdict somewhere. The criteria state the level per lane. One way is the
+  Šidák rule: CL_lane = CL_run^(1/m) for m lanes and directions.
+- The Poisson limits assume independent errors. Clustered errors make the lane INCONCLUSIVE. The exception is a dispersion test
+  that the criteria predeclare. Example: a chi-square test of the window counts against their opportunity-weighted Poisson
+  expectation.
+- Separate the lock-in from a temperature effect. Log the temperature per window. Claim a warm-up effect only when the ratio
+  tracks the temperature after the settling windows are excluded.
+- Test each unit as a sender and as a receiver. One module sent clean and received at 1e-4 on all lanes. Only a swap of the far
+  unit showed which side failed.
+- Rule out one cause per run. Write each one down: temperature, supply, tool, method, unit, cable direction. The list keeps
+  the hunt short and a vendor question factual.
+- Number every unit before a multi-unit session, on the unit and in the record. Four modules moved between three unmarked cases
+  in one evening, and only the identity read told them apart.
+- Check the record name before the power goes up. Refuse a record name that exists. Open the record for exclusive create.
+  Write the identity first. Check the record path and every permission flag of the run before the power goes up. A run that
+  fails at its record after the power-up leaves a hot unit and no record.
+- A command that writes its record and then re-raises needs one handler at the command dispatch. A handler per command misses
+  the next command.
 
 ## Documents generated from the software
 Reason-code table, guard list (S1…Sn + override flags), supported-class table (from the criteria + FEA/thermal records), quick card (pinout +

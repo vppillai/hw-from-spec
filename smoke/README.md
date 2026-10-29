@@ -19,3 +19,7 @@ and `--check` catches the stale report until regenerated.
 
 Runtime: about two minutes on a laptop with the mesh libraries installed (the print-DFM selftest is ~50 s of it; without the libraries
 section 0d is skipped and the run takes ~1 min). Step 0c runs the two skill lints (`doc_voice_lint.py`, `generic_lint.py`); step 5d the arrival checklist.
+
+A new eval check that runs a mesh-dependent script starts its `run` with `needs-mesh:` (`evals/run_evals.py` reads the prefix).
+A new smoke check that runs one sits inside the smoke's mesh block.
+Run it in both venv kinds, mesh and pyyaml-only, before the merge.

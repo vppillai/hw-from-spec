@@ -1,6 +1,6 @@
 # Blind review — hw-from-spec 0.9.0 (cold `ee` user + enforcement sceptic)
 
-Worktree `/tmp/hwfs_review_wt` (read-only). Read: README.md, SKILL.md, references/, templates/, scripts/, smoke/, evals/, workflows/. Not read: CHANGELOG.md, docs/reviews, docs/retro, git history. Every finding below was reproduced by the command shown; scratch projects live under `…/scratchpad/review/p1…p8`, `skillcopy`, `skillcopy2`. Python 3.13 (`uv`), macOS, zsh.
+Worktree `<worktree>` (read-only). Read: README.md, SKILL.md, references/, templates/, scripts/, smoke/, evals/, workflows/. Not read: CHANGELOG.md, docs/reviews, docs/retro, git history. Every finding below was reproduced by the command shown; scratch projects live under `…/scratchpad/review/p1…p8`, `skillcopy`, `skillcopy2`. Python 3.13 (`uv`), macOS, zsh.
 
 ## What was run
 
@@ -89,7 +89,7 @@ Template SPEC.md line 12 reads "sections tagged {{ee,both}} / {{mech,both}} are 
 README Install 2: "ONE venv, the project's `.venv` …; the smoke and every gate use it (a `vendor/hw-from-spec/.venv` is for developing the skill only)". SKILL.md §0 step 1: "the smoke falls back from the skill's own `.venv` to the project's". `smoke/README.md`: "needs the mesh libraries in the skill venv". Observed from a project that has its own `.venv`:
 ```
 $ vendor/hw-from-spec/smoke/run_smoke.sh | head -1
-python: /private/tmp/hwfs_review_wt/.venv/bin/python        # the SKILL's venv, not p1/.venv
+python: <worktree>/.venv/bin/python        # the SKILL's venv, not p1/.venv
 $ sed -n 11p vendor/hw-from-spec/smoke/run_smoke.sh
 VENV=""; for c in "$SKILL/.venv" "$CALLER/.venv"; do ...
 $ sed -n 18p vendor/hw-from-spec/evals/run_evals.py
@@ -137,8 +137,8 @@ A project that moves KICKOFF_ANSWERS.md and sets `kickoff.answers` is still chec
 
 ### F10 — MINOR — the documented selftest loop writes `__pycache__` into the submodule
 ```
-$ for s in scripts/*.py; do .venv/bin/python "$s" --selftest; done; ls -d /tmp/hwfs_review_wt/scripts/__pycache__
-/tmp/hwfs_review_wt/scripts/__pycache__
+$ for s in scripts/*.py; do .venv/bin/python "$s" --selftest; done; ls -d <worktree>/scripts/__pycache__
+<worktree>/scripts/__pycache__
 ```
 Harmless for git (the skill's `.gitignore` lists `__pycache__/`) but it is a write into `vendor/hw-from-spec` from a loop SKILL §2 calls read-only; `adopt_gates.sh` sets `PYTHONDONTWRITEBYTECODE=1`, the README loop does not. Fix: `PYTHONDONTWRITEBYTECODE=1 for s in …` in README step 3 / SKILL step 5. (Removed after the review.)
 

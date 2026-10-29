@@ -2,8 +2,8 @@
 
 ## The rule
 A fab/distributor part number enters the BOM only after a fetch of its live page **in this session** confirms MPN, package, stock and library
-class (basic/extended or the fab's equivalent). Cached numbers, hand-off numbers and memory are not evidence: the first hand-off of the source
-project carried wrong numbers and a stock of 4 passed a "> 0" gate for a 5-board run.
+class (basic/extended or the fab's equivalent). Cached numbers, hand-off numbers and memory are not evidence: one earlier hand-off carried
+wrong numbers and a stock of 4 passed a "> 0" gate for a 5-board run.
 
 ## Tags
 | Tag | Meaning | Allowed on a fitted part? |
@@ -27,6 +27,11 @@ Re-verify before every package build (`verify_parts` style script: machine endpo
 - `https://cart.jlcpcb.com/shoppingCart/smtGood/getComponentDetail?componentCode=Cxxxx` — JSON (`componentModelEn`, `componentLibraryType`, stock, datasheet URL): the basic/extended + fab-stock check.
 - `https://www.lcsc.com/product-detail/Cxxxx.html`, `https://jlcpcb.com/partdetail/Cxxxx` — server-rendered evidence pages.
 - EasyEDA component API needs a browser UA (403 with a bare one); `easyeda2kicad` fetches symbol/footprint/3D. Post-process converted footprints: zero-ring pegs → NPTH, `attr smd` when every numbered pad is SMD, real pin electrical types (ERC depends on them), duplicate-numbered pegs renumbered `MP<n>`.
+- The fab's keyword search answers a POST with a keyword, a page number and a page size. Worked example, 2026-10-24:
+  `https://jlcpcb.com/api/overseas-pcb-order/v1/shoppingCart/smtGood/selectSmtComponentList` <!-- style: ok -->
+  with the body `{"keyword": "<text>", "currentPage": 1, "pageSize": 25}`. The endpoint is undocumented. Verify it live before use.
+  Check the site's terms before scripted use.
+  Use it to find codes. Then confirm each code on its detail endpoint.
 Record every endpoint that answered in `90-log/ENV.md`; a fab that changes its API is a BLOCKER row, not a guess.
 
 ## Gates that catch the usual mistakes
@@ -43,6 +48,16 @@ Every VERIFY item in the findings is closed by reading the primary datasheet, pa
 part is drawn. If the vendor site blocks the fetch: `90-log/BLOCKERS.md` row (what was tried, result, workaround — for example an older revision read through
 an archive with the deltas marked unknown). Vendor library footprint vs vendor drawing: the drawing governs; the vendor STEP is the only source
 for heights. Values read from curves are marked "not in datasheet text" with the reader named.
+- **Search the tree before a BLOCKED row.** First read the datasheet reference folder and the note source tables. One study
+  filed a vendor drawing as blocked; the same file had sat in the reference folder for six weeks.
+- **Other paths to a PDF.** Some vendor sites refuse a scripted fetch. A distributor's part record often links the same PDF (worked example:
+  the LCSC `pdfUrl` field). Some vendors keep a stable direct path (worked example: `ti.com/lit/ds/symlink/<part>.pdf`). Record the path that
+  answered in `90-log/ENV.md`. Distributor metadata is not authoritative. A distributor API gives stock, price and
+  often a datasheet link. The linked manufacturer PDF is the primary source. Verify every technical artifact against its
+  manufacturer-controlled source.
+- **The stocked sibling.** A distributor may stock a sibling ordering code, not the one in the design. Read the stocked part's own drawing
+  before the footprint takes it. List what differs from the designed part: material, size, options. One option suffix changed only the
+  material and the spring height; the footprint held.
 
 ## Bought hardware (feet, screws, inserts, labels) — where a live read is possible
 Rule 1 applies to every purchased item, not only fab codes — and for hardware the usual pages are closed to an agent: **McMaster-Carr answers every

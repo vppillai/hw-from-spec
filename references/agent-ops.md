@@ -47,6 +47,12 @@
   and clone again. A scratch clone of the skill lost files twice in one day: 53 deletions with missing objects, then the whole `.git` **[K]**.
   A script that runs from a clone fails loudly on a broken one (exit 2 with the missing path named), never with a silent skip.
 - Run the chains after every merge, before a vendor upload (`case-pipeline.md` §Process rules).
+- Ignore `.venv` in the repository before any worktree gets a venv symlink. A broad add in such a worktree commits the link.
+- A pull-request merge can race another merge ("Base branch was modified"). Read the merge result before you tag. Re-point a tag set on the
+  old main only while it is unpublished. A published tag stays; issue a new tag.
+- `gh pr checkout` (tested 2026-10) had no quiet flag; read `--help` of the installed version. A failed call leaves you on the old branch. Read the current branch before you edit.
+- Merge a stacked base without deleting its branch. Retarget the child to main first, then delete the base branch. A closed stacked
+  pull request cannot be retargeted; open a new one from the same branch.
 
 ## 3. Regenerating shared records
 - Re-read (re-grep) the row immediately before replacing a status cell; prefer a suffix append over a full-cell rewrite.
@@ -78,6 +84,7 @@
   reads the function source.
 - A worktree has no venv and no vendored skill unless you give it one. A gate that cannot run there reports nothing; the
   coordinator's merge gate covers it, and the brief says so.
+- One home per rule. A gate tier is an alias of the gate script with a flag, never a second yaml list.
 
 ## 4. Blind reviews (the protocol; templates in `workflows/`)
 - Freeze: start from a clean tree (`git status --short --untracked-files=no` empty). Run `git worktree add --detach <frozen> HEAD`, then `git -C
@@ -125,6 +132,8 @@
 - **A merged review record needs a closing pass after the fix wave**. One blind verifier closes it. Each finding gets one row: the disposition
   row, the artefact line read, and the verdict line in the pin's form. Write the findings as numbered rows in the merge; prose bullets make the
   count a reconstruction.
+- Re-test a reviewer's fix to a measurement on real captures before you adopt it. One proposed legend exclusion was wrong for the real
+  viewer; the old exclusion held.
 
 ## 5. Background jobs and the machine
 - **Long chains run in the BACKGROUND and are waited on by the harness, never by a foreground loop.** Every job writes its own log. It ends the log
@@ -140,6 +149,9 @@
   at the end. Use one worktree per agent. Never run two mesh / slicer pools at once. After a panic, resume from the MEASURED state (`git status`, last
   commit, the report file on disk), never from memory.
 - Parallel router JVMs SIGTERM each other; one JVM at a time, `-mt 1` for determinism.
+- The browser driver can report "browser already running". Stop the driver's own Chrome profile, and delete its `Singleton*` files.
+  Then list the pages again. The driver's screenshot tool writes only inside the workspace roots. Save under the main tree's ignored
+  build folder, and copy the file into a worktree outside those roots.
 - Owner offline: list owner-only items (orders, gate cells, hardware records) at the pause point, never attempt them; kill a long chain early when an
   owner addition arrives through the coordinator.
 - **Rerun a flaky gate once before you read it as real.** One adopt run failed at its clone step. The standalone clone gate passed on the

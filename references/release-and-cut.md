@@ -251,3 +251,51 @@ README alone did not answer the owner's "are the settings backed up" after the o
   `git status --short --ignored` for strays.
 - CI compares a rebuild with the release archive only on the release tag: the step runs when `git describe --tags --exact-match` equals the
   VERSION in the order record. Main moves after the order without a red build.
+
+## 15. A public export from the private tree
+A public export ships only what a fail-closed leak gate has read.
+- One generator builds the public tree from a yaml list of what goes out. The generator is project code, like the cut generator (§7).
+- A leak gate reads every exported file of the final tree. The push depends on a clean gate.
+- Only `scripts/generic_lint.py --export <tree> --allow <file>` is the leak gate. The plain lint mode is not.
+- The export mode pins the skill's generic rules; `--terms` is refused with it. It fails without a private term file. That file
+  needs patterns in every promised group: people, project and company, order ids, private parts and vendors. It prints the
+  pattern count of each group.
+- It reads every file, every file name and every symlink target. Inside the export it skips no `generic: ok` line, no worked
+  example and no history file. It matches each line after Unicode normalisation, and across each line break.
+- It refuses a `.git` file or folder anywhere in the tree. Export or copy the tree to an empty folder, and scan that folder.
+- Scan the outgoing commit messages, authors and tags on their own. Write them to a file in an empty folder. Then run
+  `--export` on that folder.
+- It sorts files by type. It decompresses zip, 3MF, Office, gzip, svgz, bz2 and xz members, and PDF Flate streams, before the
+  match. It reads UTF-16 text and PNG text chunks. A file or stream it cannot decode is a hit.
+- Every binary needs a human read before it is allowed. Extract its text and its metadata: unzip, `pdftotext`, `exiftool -a -G1`.
+  Read both.
+- Allow a reviewed binary as `binary: <path> <sha256>`. A changed file fails its hash, so it is a hit again.
+- An allow entry is typed: `url: <exact string>`, `key: <exact string>` or `binary: <path> <sha256>`. A bare line or a short
+  string is refused. A value that contains any private, generic or id match is refused. An allow entry that matches no file
+  fails the run.
+- A public account name is not a private term. Keep it out of the private file, or the repository address cannot be allowed.
+- No shipped CI template runs this gate. Run it by hand before each public push. A CI job that runs it writes the private terms
+  from a secret to a temporary file. It sets `HWFS_PRIVATE_TERMS`. A missing or empty secret stops the job. Never commit the
+  terms.
+- The gate refuses decision and review ids, private paths, order numbers, private vendor and person names, and the company name.
+- Two blind reviews come before every public push. The owner's word is the go.
+- Give the gate every id format the records use, the review finding ids included.
+- Anchor each pattern on word boundaries. The unanchored `E-[0-9]+` matched the `E-3` inside `X-LANE-3`.
+- Allow the public repository address as a `url:` entry. The address carries the account name, so the name pattern hits every
+  page link. The gate strips the exact allowed string before the match. It never skips the line that holds it.
+- The gate also hits data keys. Rename the label the user sees. Keep a key only when the owner approves it as public schema.
+  Allow that key as a `key:` entry.
+- Docstrings and comments ship. Run the gate and the writing lint over them, or strip them in the export.
+- A stripper must parse the language. A nested `${}` in a JS template literal ended a string early, and 20 of 110 comments
+  survived. Check the result with the language's syntax check. Count the comments that stay.
+- Write the public pages from the generator yaml and the rendered pictures, not from the manual. A manual describes the version of its
+  own date.
+- Name a control by the word printed on the part. The yaml, the software and the print can disagree. Keep one name table on the
+  hardware page. Give the software word in brackets at first use.
+- An engineering drawing is not a user drawing. Its callouts carry ids, vendor names and private paths. A public sheet needs its own
+  generator option. Until then, publish a dimension table and the rendered faces.
+- Before a public screenshot, replace the login name and the record paths in the page. A screenshot captured into the public tree is its
+  own source: the export keeps it and never rebuilds it. Record its capture command, date and page state in the export yaml.
+- The leak gate cannot read pixels. Each blind review reads every screenshot.
+- On GitHub Pages, enable the hosting before the first push of a Pages workflow. The configure step can enable it only with a token
+  that has Pages admin rights. Otherwise the first deploy fails while Pages does not exist.
