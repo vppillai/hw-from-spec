@@ -290,6 +290,22 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - An unsigned distance-to-outline test let placed art pass from outside the board. Marks across two tapered corners shipped 1.68 mm outside the outline and DRC did not flag the copper. Combine point-in-polygon with the distance, assert every placed item inside the outline. Gate the Gerber copper bbox inside the Edge.Cuts bbox per layer — 2026-10-08 [layout/art-outside-edge] (`pcb-layout-dfm.md` §11).
 - The test point names sat on the fabrication layer only, invisible at the bench. Put them on the silk; check the card against a real board — 2026-10-24 [layout/tp] (`pcb-layout-dfm.md` §11).
 
+## si / high-speed (`references/high-speed-si.md` carries the rules; one line each here)
+- A requirement closed on a simplified twin reopened on the launch of record: the twin had a solid plane and no contact posts, and read 9 dB better than the real launch. Solve the layout of record with ports that see the quantity — 2026-11-01 [si/model].
+- A field result that jumps several dB for a micron of width is a dropped cell row until proven otherwise. Dump the meshed copper, snap every copper edge to a mesh line and screen the whole model — 2026-11-01 [si/fdtd].
+- FDTD energy that stalls while every port voltage has died is a static field from the Gaussian's DC, not a bad model. Judge the port tail or use a DC-free pulse — 2026-10-31 [si/fdtd].
+- A via fence near an absorbing face diverged; a solid wall closed the same cavity — 2026-10-31 [si/fdtd].
+- Zero-thickness copper in a FEM cross-check made a 6.5 dB solver gap by itself. Give both solvers the copper thickness — 2026-10-31 [si/solver].
+- A home-made eye evaluator read 1.4 to 3.1 dB high with a channel-dependent bias, and that bias made a false finding. Run the official COM code — 2026-10-31 [si/com].
+- A vendor connector model with its own host pad counted the pad twice; single corrupt lines in vendor crosstalk files made the ICN several times the measured value. Check every vendor file — 2026-11-01 [si/data].
+- Tight length-tuning bumps bought a fifth of the path they added; compensate skew at the pin where it is created — 2026-10-30 [si/skew].
+- A coupon replica fed from its far end cannot check the board's mode conversion. Feed it where the real driver touches it — 2026-11-01 [si/coupon].
+- A bench through compliance fixtures cannot resolve a −33 dB conversion limit; keep it an analysis requirement — 2026-11-01 [si/bench].
+- A FEM model with every via pair of a group read far high while the single-pair cutouts were right: the adaptive mesh starved the narrow anti-pad gaps. Set a local length rule and match the cutout — 2026-11-02 [si/fem].
+- A stack-up thickness update broke a pad and barrel balance that had passed. Every stack-up change reruns every via — 2026-11-02 [si/stack-up].
+- Tool defaults for jitter and noise, ideal rails and a typical-only corner each made an eye look better than the part — 2026-11-02 [si/time-domain].
+- "Marginal, to be confirmed in the time domain" stayed open for good. Close each such item with a named number — 2026-11-02 [si/records].
+
 ## silk / dfm
 - The fab's DFM grades a value EQUAL to its warning threshold as Warning: design strictly greater — thresholds JSON.
 - "THT to SMD" applies to EVERY plated/non-plated pad incl. round header pins, mounting-hole annuli and slots (read as SMD).

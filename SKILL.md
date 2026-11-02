@@ -571,6 +571,7 @@ row. The classifier is a keyword matcher: the report is the input to the change;
 | G0: SPEC / VERIFY skeletons, the spec review round | `templates/10-spec/SPEC.md`, `templates/20-design/VERIFY.md`, §5 |
 | G0→G1: design yaml shape, ERC gate (`erc_gate.py` + `20-design/erc_accept.yaml`), map checks, G1 pack, the studies before a next revision (§6) | `references/schematic-phase.md`, `templates/G1/` |
 | G1→G2: placement CSV, router session, G2 pack, PCB build rules (stack-up … panel), DRC census, route quality, parity, canary | `references/pcb-layout-dfm.md` |
+| multi-gigabit lanes: stack-up at the fab tolerance, launch and skew, the solver chain, meshing artefacts, mixed-mode plots, COM, corners, margins, coupons, the bench, the SI review checklist | `references/high-speed-si.md` |
 | part tags, verification table | `references/part-verification.md` |
 | fab rules, panel, quote form, DFM export | `references/fab-dfm.md` |
 | case yaml → STL → checks → quotes | `references/case-pipeline.md` |

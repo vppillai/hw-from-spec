@@ -1,0 +1,460 @@
+# High-speed trace design and SI analysis
+
+Read this before you draw or judge any multi-gigabit lane: a host channel, a loopback, a connector launch or a test coupon. The general
+impedance rules of the board (when a pair needs control, how to record the calculation) live in `references/pcb-layout-dfm.md` §3. This page
+covers the rest, from the stack-up and the launch to the solvers, the coupon, the bench and the blind review. The rules are tagged **[physics]**, **[fab capability]**, **[method]** or **[owner choice]**. A worked number is
+labelled *(worked example)*; the mechanism generalises, the value does not.
+
+## 1. The rule of record
+
+- A number counts only when three things hold **[method]**. Its mesh has converged. A second solver agrees in band on the same geometry. The
+  evaluator behind any eye or COM figure is calibrated against the official code.
+- The model is the layout of record **[method]**. It holds every void, post, plane and pad, and every via. A simplified twin may screen a
+  variant. It never closes a requirement. One study read SCD21 −33.5 dB on a twin with a solid plane and no contact posts. The launch of record
+  read −24 dB *(worked example)*.
+- Build the port that sees the quantity before you simplify the geometry **[method]**. A differential port cannot see common mode, so it
+  cannot measure SCD21.
+- Every number in a record comes from a script that reads the design yaml. A study table is regenerated, never typed.
+
+## 2. Stack-up and impedance at the fab's tolerance
+
+- Read the fab's stack-up live: layer thicknesses, Dk per dielectric, copper finish thickness and mask thickness **[fab capability]**. Cite the
+  URL and date. A prepreg and a core of the same family differ in Dk; enter each.
+- Pick the prepreg for the launch pad, not only for the trace **[physics]**. A wide pad over a thin prepreg is a low-impedance section. It needs a
+  plane void under it, or a thicker dielectric.
+- Name the impedance tolerance in writing on the order **[fab capability]**. Many fabs give ±10 % by default and ±5 % on request. A symmetric
+  window is the usual offer. Ask for the impedance test report with the shipment.
+- Run the open-loop corners before you trust the window **[method]**. Vary the etch by ±20 % of each pair's own width and the prepreg by
+  ±10 %. Sweep the Dk span, the copper and the mask thickness. The open-loop span is wide. Only the fab's impedance control holds the pair inside the window.
+- Check the pair gap at the worst etch **[fab capability]**. A wider track narrows the gap. Keep the gap above the fab's minimum space with
+  margin at +20 % etch, or widen the pair.
+- Judge the window on every loop and every metric **[method]**. A lower window can help one structure's mode conversion and cost another its
+  return loss or COM.
+- Audit the stack-up as the solver sees it, layer by layer **[method]**. Check the thickness, Dk and Df per dielectric. Check the conductor
+  material, the etch shape and the roughness model. Check the conductor's material type, not only its conductivity value. In some tools a material typed as a
+  perfect conductor ignores the conductivity field.
+- Model the etch as a trapezoid (etch factor, which face is etched) in a cross-section solver. Model roughness with a physical nodule model,
+  set per surface: top, bottom and side **[physics]**.
+- Give the cross-section solver the copper thickness **[method]**. Zero-thickness sheet copper raised a narrow unmasked pair by about 15 ohm.
+  That alone made a 6.5 dB gap between two solvers *(worked example)*.
+- A Df that no primary source gives stays [K]. Sweep it. Close it with a coupon fit (§12).
+- Set the impedance target per interface, with its window **[owner choice]**. Two interfaces on one board can need different targets. A target
+  without a window cannot fail.
+- Model each dielectric wideband (Djordjevic-Sarkar), with Dk and Df quoted at a stated frequency **[physics]**. Resin content moves Dk: a
+  high-resin prepreg sits lower than its core.
+- A screening window may be tighter than the sign-off window, on purpose **[method]**. Say which is which. The reserve absorbs a later stack-up
+  or material change.
+- The same shift in ohms is a larger percentage at a lower target **[physics]**. Rank the risk of a material change per interface.
+- Any stack-up change invalidates every via and launch result **[physics]**. Re-optimise them all and mark the old results superseded. A barrel
+  that balanced a capacitive pad stops balancing when the dielectric thickness moves.
+- Screen a material swap with an old-to-new table per structure **[method]**. Give Z max, Z min, SDD21 and SDD11 at Nyquist, the delta and the
+  margin. Keep the geometry fixed for the screen, then retune the structures it flags.
+
+## 3. Launch, pad, void and via design
+
+- The launch sets the return loss of a short channel **[physics]**. Loss is rarely the risk on a short host loop; the reflection is.
+- A connector pad longer than the contact foot acts as a stub **[physics]**. Cutting the pad to the foot is the strongest cure. It changes the
+  vendor footprint, so it needs the vendor's word on solder-joint reliability.
+- A plane void under each signal pad raises the pad impedance **[physics]**. Reference the pad to the next plane down. Sweep the void margin.
+  The best margin is a value, not "as large as possible".
+- A void changes the reference of every trace that crosses it **[physics]**. A trace that runs over a void sees a different delay and impedance
+  from its partner that does not. That difference is a p/n delay and it converts modes (§4).
+- Keep the trace edge away from the edge of a plane void **[physics]**. Keep a wide, solid reference under every high-speed pair outside the
+  pad region.
+- Let the pair converge to its coupled pitch right below the pad **[physics]**. Long uncoupled legs reflect and convert.
+- Put one ground via in every ground pad of the launch, plated through every plane it passes **[physics]**. A via that stops at the first plane
+  leaves the plane pair floating.
+- A via transition reflects on its own **[physics]**. A two-via dive to the far side and back can set most of a section's reflection. Size the
+  antipad and the plane cut-out under any pad in a 3D sweep.
+- Tune the anti-pad per layer along the via, not one size for the whole barrel **[physics]**. The via sees a different reference on every
+  layer. The per-layer clearance is the main knob for a flat TDR.
+- Use the anti-pad shape as a tool **[physics]**. One oval round both barrels lowers the capacitance. Two separate circles keep copper between
+  the barrels and pull down a via that reads high.
+- A small drill and a small anti-pad protect the power planes but push the via impedance high **[physics]**. Record that SI against PI trade as
+  a decision.
+- The landing-pad size is the strongest knob near the landing layer **[physics]**. It does little for a high region deep in the barrel.
+- Expect the result of a via to get worse steadily with its depth **[physics]**. A trend that is not monotonic points at the model or the mesh.
+- A ground void next to a signal pad lowers the pad capacitance and adds an inductive peak beside it **[physics]**. Balance the two in the TDR.
+- A large fixed pad (a ball pad or a connector pad) can set a dip that board geometry cannot remove **[physics]**. Confirm the limit with the part
+  vendor. Record the mechanism, then carry the cure to the equaliser or the next part choice.
+- Simulate a back-drill at its longest allowed stub, not the nominal **[fab capability]**. The stub resonance comes from the longest stub
+  the fab can ship.
+- State the ground-via cage of every launch: count and pitch **[physics]**. The cage sets the via's impedance and its crosstalk.
+- Quote via sizes as the drill diameter, not the finished hole **[method]**. The field sees the barrel surface.
+- Where the pair spacing opens near a ball field, each leg runs nearly single-ended **[physics]**. Size each leg near half of Zdiff there.
+- Model a series AC-coupling capacitor, its pads and its vias as one block **[method]**. Judge it on S-parameters only: a step TDR sees an open
+  at DC. That block is often the worst reflector on the path.
+- Write down the direction convention of every lane **[method]**. A lane named from the host side can sit on the other physical path from one
+  named from the chip side.
+- A part cannot sit under a connector body unless its height clears the housing **[physics]**. Read the housing height from the STEP.
+
+### 3.1 Post-layout reality against the isolated optimisation
+
+- An isolated single-pair optimisation is not the routed structure **[method]**. The routed board adds neighbouring anti-pads, pours that pull
+  back or relieve, layers that reference a power plane, longer lead-ins and fab width trims. Re-extract from the real layout before sign-off.
+- A long lead-in lifts the TDR baseline **[physics]**. De-embed the lead-in before you read a via's impedance, or take it from a short cutout.
+- State the TDR rise time and the de-embedded length with every TDR number **[method]**. A number without its rise time cannot be compared.
+- Show a TDR profile for every net from its driving end. Mark the far port on the time axis, or stop the window there. Past the far port
+  the trace shows the port impedance, not the line.
+
+## 4. Differential skew and its compensation
+
+- Compensate skew at the pin where it is created **[physics]**. A back-jog does this: the short-path trace takes its detour at its own pin.
+  On a U-shaped loop the inner trace can leave its pad from the side that faces its partner. It then runs down the gap between the two pads.
+- Tight length-tuning bumps buy little delay **[physics]**. The two legs of a bump couple and cancel most of the added path. Six bumps added
+  1.56 mm of path and 0.28 mm of electrical length *(worked example)*.
+- Avoid serpentines next to the device edge **[physics]**. They degrade return loss most there. If matching is still needed, use few segments
+  with a small amplitude.
+- Neck down inside a pin field and return to the full pair geometry outside it. Keep the neck short.
+- Tune skew on the electrical delay, not the geometric length **[method]**. A void, a contact post or a pad section changes the delay of one
+  trace more than the other. The geometric target then differs from zero.
+- Sweep the skew target and read the whole band **[method]**. The conversion is not one skew. A 0.04 mm move can shift the null and change the
+  worst value by several dB *(worked example)*.
+- Read the shape of SCD21 **[physics]**. A rise of 20 dB per decade is a pure p/n delay, and a skew retune can null it. A flat or resonant
+  shape is a geometry or reference asymmetry; a retune does not fix it.
+- A p/n delay dt gives a conversion of about sin(π f dt) **[physics]**. A fraction of a picosecond already reads near −33 dB at 13 GHz. Use it
+  to size the fix and the bench limit (§13).
+- A length retune that compensates a reference asymmetry holds at one corner **[physics]**. Run it at the registration and dielectric corners
+  (§10) before you close it.
+- Record the variants that failed beside the one adopted. They are the reason for the adopted form.
+
+## 5. Breakout and routing patterns
+
+- Split the layout review into regions: device breakout, layer transition, open routing, connector. Give each region its own rule.
+- Route one pair per pin channel where the pitch allows. Keep the breakout short.
+- Single-ended routing inside a short breakout can give better loss than a forced coupled pair there **[physics]**.
+- The preferred breakout form changes with the data rate. Write the rate threshold into the rule, with its source.
+- Use 45 degree mitres or arcs at bends. The outer trace at a bend is longer; count it in the skew budget.
+
+## 6. The solver chain
+
+| Step | Tool kind | What it gives |
+|---|---|---|
+| Cross-section | 2D quasi-TEM field solver (finite elements) with roughness and wideband dielectric models | Zdiff, loss per length, the pair geometry |
+| Launch and local structure | 3D FDTD (openEMS) of the region with every pad, void, via and post | S-parameters of the launch and the loop |
+| Cross-check | 3D FEM (Palace) on the same isolated geometry | agreement in band; a second opinion on any corner |
+| Cascade | network tool (scikit-rf): P370 split, cascades, mixed-mode conversion | channel S-parameters, de-embedded parts |
+| Eye or COM | the official IEEE COM code (it runs under GNU Octave) | COM against a reference channel |
+
+- Validate each solver on a known case first **[method]**. Check the 2D solver against a closed-form microstrip. Check a 3D mixed-mode setup on
+  a mirror-symmetric pair: SCD21 must sit below −100 dB. Then a large SCD21 on the real geometry is physics, not a port bug.
+- Check reciprocity and the Tx and Rx drives of the same model **[method]**. They must agree.
+- Every script has `--selftest`. Heavy runs go through the host's job pool. Cache each finished sweep keyed on its inputs before the next step
+  starts; a crash in the last step then loses nothing.
+- Size the FEM memory before a run **[method]**. Second-order FEM needs tens of kB per tetrahedron. A full pad-row model can need far more
+  memory than one isolated loop. Record the size limit, then pick the cross-check case that fits.
+- Test each suspect of a solver disagreement on its own, on a cheap case. Compare a closed box with absorbing faces. Compare direct
+  solves with an adaptive sweep. Sweep the copper thickness in 2D.
+
+### 6.1 Partition the channel
+
+- Segment the channel; do not extract it in one 3D run **[method]**. Split it into the package, the near breakout, the routed line, the far breakout
+  and the measured connector model. Cascade the blocks in a circuit tool. A full multi-pair channel in one run can take days and never converge.
+- Keep the line a segment of its own **[method]**. Then fab corners rerun the line only. Cut it at the via edges when the breakout has no
+  width change.
+- List every via on the path with its segment **[method]**. No via may be counted twice or left out. Added blocks bring their own vias.
+- Agree the reference plane at every handoff with the owner of the next model: ball top, ball centre or board pad **[method]**. A package model
+  that holds the ball and the via of the board must not meet a board model that holds them again.
+- Draw the model chain in one figure: driver, package, board, package, receiver **[method]**. State the reference impedance at each joint. A
+  joint with two reference impedances adds a false reflection.
+- Cut each board block from pad to pad and keep every via, meander and neighbour of the group in it **[method]**.
+- Model a package with its S-parameters or a coupled RLGC model, never as a lossless delay **[physics]**. A delay line drops the package loss,
+  its impedance steps and its crosstalk.
+- Keep single-ended multi-port files and assign the pairs in the cascade **[method]**. Set the differential reference to the target and the
+  common-mode reference to a quarter of it. The files then keep every conversion and coupling term.
+- Terminate unused ports of a multi-port block in the reference impedance **[method]**. An open port reflects into the victim. State the
+  far-end termination of every run, and run each condition that occurs in service.
+- Keep a port table: net, then the port number at each end **[method]**. Name every port by reference designator, pin and net. Most mixed-up
+  results come from a wrong port order.
+- Report the solver convergence with every result: the adaptive passes, the final delta-S and the sweep type **[method]**.
+- Feed the same extracted file to the frequency-domain review and the time-domain run **[method]**. Two different models cannot check each
+  other.
+- Run a set-up pass before any performance run **[method]**. It proves the ports, the pair map, the segments and the lane direction. Mark its
+  numbers "preliminary, set-up check".
+- Sweep each block far enough: vias to about 2 to 2.5 times Nyquist, lines to about 3 times **[method]**. A line must roll off smoothly over
+  the span. A resonance there is a model fault.
+
+## 7. Convergence and meshing artefacts
+
+### 7.1 Mesh and time
+
+- Run three mesh levels at the copper (coarse, medium, fine) **[method]**. State the spread as the uncertainty. If the order is not monotonic,
+  keep the pessimistic level of record.
+- Judge mode conversion on the fine mesh only **[method]**. At nominal the medium mesh agreed with the fine one. At the impedance corners it was
+  10 dB off *(worked example)*.
+- Judge FDTD time convergence on the port tail, not only on the energy **[method]**. A Gaussian excitation carries DC, and an absorbing face
+  cannot remove a static field. The energy then stalls while every port voltage has died. A DC-free excitation (the derivative of a Gaussian)
+  converges fast and gives the same S-parameters.
+- Close an FDTD plane-pair cavity with a solid conducting wall, never a via fence near an absorbing face **[method]**. Field leaks between the
+  fence vias into a thin strip that ends on the absorbing face, and the run diverges.
+- A 2x-thru for de-embedding reuses the DUT's mesh at its ports **[method]**. With its own mesh the thru reads a flat loss that the de-embedded
+  part then shows as gain.
+
+### 7.2 Mesh starvation in an adaptive FEM model
+
+- An adaptive mesher in a large multi-pair model spends its budget on long traces and coupling regions **[method]**. A narrow anti-pad gap then
+  gets one element across. Its capacitance is low, so the via reads high. L is not mesh-sensitive; C is.
+- Fix it with a local length rule on the signal nets only **[method]**. Set the largest element to a third or a quarter of the smallest radial
+  gap, per gap group. Do not mesh inside conductors.
+- The isolated single-structure cutout is the golden reference **[method]**. Refine the multi-structure model until its feature matches the
+  cutout.
+- Accept a mesh on a convergence test, not on its smallest edge **[method]**. Tighten one more step. If the impedance barely moves, stop.
+- A refined feature can lower the total element count. A coarser far plane is fine while the copper ring next to the gap stays fine.
+- Runtime is a free warning. A run heading for a day on a model that should take hours is probably starved or ill-posed.
+- A change that fixes an impedance after an unrelated edit may only be the re-mesh it triggered **[method]**. Undo the edit and rerun. A
+  result that does not come back has a numerical cause.
+- Inspect every curve for features no physics makes: a vertical step, a one-point spike, a jagged band **[method]**. Confirm them with a
+  discrete sweep or a finer mesh before you judge the curve. Interpolation and meshing can invent resonances.
+- Below the numerical floor, report "negligible", not a number. A crosstalk value deep under the floor is solver noise.
+
+### 7.3 The voxel and dropped-cell artefact
+
+- An FDTD solver decides per cell whether copper is there **[method]**. When two drawn edges lie closer than the merge gap, the mesher merges
+  their lines. The merged line can land just outside a copper edge. Then a whole row of cells along that trace is dropped.
+- The symptom is a step: a result that jumps several dB for a micron of width. One SCD21 moved by 9 dB between two widths 0.001 mm apart
+  *(worked example)*. Mesh-line and polygon checks show nothing; the lines agree and the topology is the same.
+- Dump what the solver meshes when a result jumps with a tiny geometry change (openEMS: `debug_PEC` with a setup-only run). Measure the metal
+  width across the trace. Compare it with the drawn width.
+- A copper grow sized to half the merge gap is not enough **[method]**. A chain of close edges moves the running mean further. Coarser meshes
+  have larger gaps.
+
+### 7.4 The edge-snapped mesh and the whole-model voxel screen
+
+- Make every axis-parallel copper edge a mesh line of its own **[method]**. Drop other lines inside the merge gap of a hard edge. Then grow
+  the copper by about 1 µm so each such line falls inside the metal.
+- Screen the whole model, not one cut **[method]**. Cut every axis-parallel trace segment at a fixed step and every contact foot, on the
+  solver's own copper dump. Compare the meshed edge with the drawn edge. The gate is 0 cuts over half a cell.
+- Run the screen before any solver time on a new geometry, and on every model of record.
+- Never take a single-solver corner value as a pass or a fail **[method]**. A cliff with no physical cause is an artefact until a second
+  solver or the voxel screen says otherwise.
+
+## 8. Ports, reference planes and de-embedding
+
+- Put the port where the real driver is **[physics]**. A vertical port under a pad adds inductance at the launch. It overstated the launch
+  reflection by about 3 dB against contact posts with a port between their tops *(worked example)*. A lumped port on a ball or connector pad
+  forces a step that does not exist. One breakout read its return loss far worse until the full connector model replaced the port.
+- To see common mode at a contact, model the contact posts and a conducting bar joined to the ground posts. Run a single-ended port from each
+  signal post to the bar **[method]**. Single-ended ports to a bare ground post close the differential current through the pads and vias.
+  The insertion loss is then wrong. Check it against the differential-port model.
+- State the reference plane of every part in the cascade **[method]**. The 3D model ends at one plane. The connector model starts at another.
+  A gap or an overlap between them is a bias. Keep the overlap inside the span the de-embedding was tested over.
+- A vendor connector model can carry its own host pad **[method]**. A board model that holds the real pad then counts it twice.
+  Fit a shunt C to the host-end TDR dip and de-embed it. Check the result stays passive. Report the result over the fit span and with no
+  de-embedding; the sign of the margin must hold.
+- De-embed a differential fixture with the mixed-mode P370 class **[method]**. The single-ended split cannot remove the fixture's own p/n
+  terms.
+- Every fixture on a coupon is a copy of one 2x-thru half. Then one split removes all of them.
+- State the reference impedance of the mixed-mode conversion on every plot.
+
+## 9. Figures of merit and how to read them
+
+### 9.1 What to plot
+
+- One page per link group. Four panels: SDD21, SDD11, SCD21 and SDC21. Every lane of the group is overlaid, one colour per lane.
+- Add SCD11 when a module input has a common-mode limit. Plot SCD21 and SDC21 both: they differ when the structure is not symmetric end to end.
+- Put one marker at the Nyquist frequency of the target rate. Put the worst lane value at that marker in the panel title.
+- Name the two ends of the link on each page.
+- The overlay shows an outlier lane at once. Investigate the outlier, not the average.
+- Break the link into segments (each via, each trace, the connector) and give each its share of the loss at Nyquist.
+- Group links by type (chip to chip, connector to chip, long reach). Each group gets its own expectation.
+- Write the limit table before the runs: IL, RL, NEXT, FEXT and impedance at Nyquist **[method]**. A limit fixed first cannot move to fit the
+  result. Add a softer aim up to twice Nyquist; edges carry energy there.
+- Draw the limit line on every plot. A PASS word in a text box hides a curve 1 dB from the limit.
+- Give a table of the worst value and its frequency per net. Name and highlight a failing net, so the layout fix stays local.
+- Plot the return loss from both ends. The ends differ when the launches differ.
+- Plot every NEXT and FEXT pair at one end, then the power sum or ICN per victim. Several aggressors that each pass a pair limit can fail
+  together.
+- Bound every exception ("except at transitions") by its length and depth. An open exception lets a real discontinuity through.
+
+### 9.2 What the curves say
+
+- IL ripple on the insertion loss is a reflection between two discontinuities **[physics]**. Its period gives their distance. A standing wave
+  between two launches makes a length sweep non-monotonic.
+- A notch or roll-off above Nyquist marks a resonance: a stub, a long via or a plane-pair cavity. Keep it clear of the band you claim.
+- Narrow features in the return loss can be plane-pair resonances seen through voids. Their frequency moves with the model's plane size.
+  Until one is identified, the worst value with the feature is the number of record.
+- A resonance cluster in one band on every net usually belongs to the model. Look for a plane cavity, an open boundary or a gap in the
+  stitching. It can also be a real plane resonance that the board must fix. Explain it either way.
+- A deep, narrow IL notch whose frequency follows a stub length is a quarter-wave stub **[physics]**. Far above the band it is harmless. Near
+  Nyquist, remove it by back-drill, a shorter via or a layer change.
+- Meanders raise FEXT and shorten the delay less than their drawn length **[physics]**. Coupled parallel lines show a crosstalk ripple whose
+  period follows the coupled length; that ripple is expected.
+- Pick the crosstalk group as the worst arrangement on each layer, not a fixed lane set. Reduce a heavy run to the group that holds the
+  dominant aggressors.
+- A model that holds one via pair carries no coupling between vias **[physics]**. In a dense ball field the breakout vias and the package often dominate.
+  Extract the vias of several pairs together when crosstalk matters.
+- Return loss: compare the board alone with its own target, and the channel with the standard's mask. A short channel between two reflective
+  ends is echo-limited. Loss can help it.
+- Crosstalk: report the integrated crosstalk noise (ICN) with one parameter set for every source. Compare the connector model's ICN with any
+  measured report on the same set. Then give the COM cost of all crosstalk together.
+- A design limit that no standard clause sets is a design margin. Derive its basis (for example the common-mode voltage it puts at the module
+  input) and write it beside the limit.
+
+### 9.3 COM against the standard's reference
+
+- Judge a short channel by the difference to a reference **[method]**. The reference is the same channel padded with line to the standard's
+  loss budget, through the same transmitter, receiver and packages.
+- Run the official COM code **[method]**. A home-made evaluator read 1.4 to 3.1 dB high, and its bias depended on the channel. That bias
+  produced a finding the official code did not repeat *(worked example)*. A second open-source port also swung by several dB between
+  near-identical channels.
+- If no public calibration case exists at your rate, run the official code itself. Check your Touchstone writer against an original file
+  through it.
+- Run the module corners: typical packages, one end on the return-loss mask, both ends on it, and the slowest allowed transmitter edge. Report
+  the corners that fail; do not require them when no channel passes there, the reference included.
+
+### 9.4 Active sign-off in the time domain
+
+- Sign off in two stages: the passive channel (S-parameters per block) and the active link (transmitter and receiver models end to end)
+  **[method]**. The passive report proves the structures; the active report proves the link.
+- Run first-order compliance (COM, ERL) on the cascade before any bit-by-bit run. It finds a gross fault cheaply.
+- Draw the eye mask at its stated BER and give the margin as a number in mV and ps **[method]**. A margin nobody can read becomes "adequate".
+- Reach the target BER with a statistical eye or the receiver model's SNR, not a counted BER **[physics]**. Zero errors in N bits means a BER
+  under about 1/N only.
+- State the basis of the BER target and the alternatives: an internal target, the standard's pre-FEC limit, the silicon vendor's figure.
+- Use a long PRBS with a different seed per lane. Equal seeds make the lanes switch together. Add a worst-case pattern from the pulse response.
+- Drop the start-up transient and the equaliser training bits before you count. Use at least 32 samples per UI.
+- Probe at the die pad, after the package and the termination. The receiver decides there.
+- Enter jitter and noise as separate random and deterministic terms, from the silicon data or the model **[method]**. Cite the source. Tool
+  defaults make the eye look better than the part.
+- Add the package delay of every pin to the board delay before you judge skew **[physics]**.
+- State the aggressor alignment and run the worst one. Give the crosstalk penalty as the delta with aggressors on and off, same victim, same
+  extraction.
+- Read the equaliser state as a health check: gain stages not saturated, main tap near unity, the transmitter preset named. An equaliser at
+  its limit leaves no margin even when the eye opens.
+- Run the driver and receiver corners and every termination option, not typical only **[method]**. The slow corner sets the eye height; the
+  fast corner sets ringing and crosstalk.
+- Simulate each topology state of a shared net separately. An inactive load is an open stub.
+- Run at least one corner with the real power network when many lanes switch together **[physics]**. Ideal rails hide simultaneous switching
+  noise.
+- Close each marginal frequency-domain item with a named time-domain number. "To be confirmed in the time domain" is an open item until then.
+- A link that is symmetric by direction can be signed in one direction. Say so, so the reader can check the claim.
+
+### 9.5 Time-domain cross-checks
+
+- **Step response.** Compute the step response of each extracted file. It settles to the DC point and shows no response before the edge
+  arrives. A response before the edge is a causality fault.
+- **Measured skew against inferred skew.** Take the p/n delay from the single-ended transmission 50 % crossings or the phase delay. Infer the
+  delay from SCD21 with sin(π f dt). Compare both with the skew in the eye. A disagreement points at the ports or the model chain.
+- **Single-ended TDR overlay.** Overlay the p and n TDR profiles from the same end. Where the two traces part, the pair is asymmetric. That
+  place is where the conversion comes from.
+- **Conversion above Nyquist.** Read SCD21 and SCD11 to twice Nyquist. A pair clean at Nyquist that converts just above it still feeds common
+  mode to the receiver.
+
+## 10. Corners and Monte Carlo
+
+- Run the window edges exactly **[method]**. Compute the widths that give the two edges of the ordered impedance window, and solve both.
+- Monte Carlo over the fab spread: etch, prepreg, Dk, Df, roughness, mask, copper **[method]**. Use 1000 samples or more for a 99th percentile,
+  and state the 95 % bound on that percentile.
+- Vary the launch too: layer registration of the plane void against the pad, and a p/n etch difference **[method]**. A Monte Carlo that holds
+  the launch at nominal misses the term that sets the launch.
+- Know which route reaches a window edge **[physics]**. The dielectric spread alone may not reach it; a lot at the edge also has a different
+  track width. Model the edge the way it happens.
+- Choose the impedance window with the mode conversion, not only with the return loss **[physics]**. A side-entry launch converts more as the
+  pair narrows.
+
+### 10.1 Ranking layout options
+
+- Compare options on the same stack-up, solver settings, ports, limits and plots **[method]**. Show the layouts side by side, then overlay
+  their curves.
+- Rank by the margin number, the worst value against the limit, not by PASS or FAIL. Two passing options can differ by 10 dB.
+- Run the fab corners on the winning option before you adopt it. A winner at nominal can lose at a corner.
+
+## 11. Margin rules
+
+- Set a margin in reflection magnitude, not only in dB **[owner choice]**. For example, a target of 15 dB return loss with 20 % of |Γ| to spare.
+  Report the margin at the 99th percentile of the fab spread.
+- A margin smaller than the stated uncertainty (mesh, solver, fab) is MARGINAL, not MEETS.
+- A margin whose last term rests on one solver says so in the record.
+- A per-block return-loss figure is an aim, not a sign-off limit **[physics]**. In the assembled channel a reflection makes a round trip
+  through the line and drops by about twice the line loss. Judge a block that misses its aim at channel level.
+- Per-block loss is informational. Check the total against the budget in the cascade.
+- A waiver needs independent support: the channel-level result, an active margin on the same structure and a documented precedent. Confirm it
+  again after any design change.
+- Give every known model bias its sign. A receiver model that terminates twice is pessimistic; a pass with it stands, with the note.
+- Hold the loss of the channel under a margin rule well inside the standard's budget **[owner choice]**.
+- Margins are owner decisions. An agent proposes the row with the number; the owner accepts it.
+
+## 12. Coupon design that checks the model
+
+- Put the coupon on a breakaway rail of the same panel: same lot, same stack-up **[fab capability]**.
+- Draw four kinds of structure. A 2x-thru removes the fixtures. Two line lengths give a delta-L fit of Dk, Df and roughness. A TDR line gives
+  Zdiff. A replica holds the launch of record.
+- Feed each replica pad at the point where the real driver touches it **[physics]**. A far-end feed adds a p/n path that the board does not
+  have. Such a replica cannot check the board's conversion, even in principle.
+- Predict every coupon structure with the same model before the order. The pass mark is the prediction plus an allowance. Three remounts of the
+  2x-thru set that allowance.
+- The edge launch must be rated for the board thickness. Read its drawing first.
+- Fit the material from the delta-L lines. Put the fitted values into the design yaml and rerun the study.
+- A TDR reading within its own uncertainty of a window edge is re-measured, never a lot hold by itself.
+
+## 13. What a bench can and cannot resolve
+
+- A bench reading through compliance fixtures includes the fixtures' own mode conversion **[physics]**. A mated fixture set may convert more
+  than the board limit. A fraction of a picosecond of fixture p/n delay alone reads near −33 dB.
+- Keep a limit that the bench cannot resolve as an analysis requirement. Let the coupon check the model against its prediction. Record the bench
+  reading as a diagnostic with no mark.
+- Give the bench a gross-fault screen only: a reading far over its prediction holds the lot for analysis. Nothing close to the floor holds a lot.
+- Compare lane groups on the same module pair to read an echo penalty directly. A margin the simulation cannot close moves to that bench
+  comparison. Until it holds, a fail in that group reads INCONCLUSIVE, never a fail bin.
+
+## 14. Vendor models and data hygiene
+
+- Check every vendor Touchstone file for passivity point by point before use **[method]**. Single corrupt lines can hide in a crosstalk file. One
+  file set made a connector ICN several times its measured value *(worked example)*. Drop the non-passive points and record how many.
+- A vendor model of a similar part from another maker is a stand-in. Say so in the record. Compare it with any measured report for that part.
+- A measured report of a mated fixture set includes fixture traces. Do not compare its IL with a bare connector model.
+- Licensed vendor models and drawings stay local. Never commit them; record their path and licence.
+- Use the vendor's measurement-correlated model of a connector, not an approximation. If a vendor's 3D model is wrong, say so and ask for a
+  correct one.
+
+### 14.1 Model-export checks
+
+Run these on every Touchstone file before a cascade, a plot of record or any time-domain use.
+
+- **Passivity.** The largest singular value stays at or below 1 at every point. Record any point that is not.
+- **Causality.** No response before the edge arrives in the impulse or step response. Use causality- and passivity-fitted files, and label
+  them as fitted.
+- **DC point.** The file starts at or extrapolates cleanly to DC, with the right DC loss. A wrong DC point shifts the baseline of the eye.
+- **Reciprocity.** Sij equals Sji for a passive board structure. A large difference points at a port or an export fault.
+- **Round trip.** Overlay the solver's native result with the exported and re-imported file. The two curves lie on top of each other.
+
+## 15. Blind review checklist for SI
+
+Give each reviewer the frozen study, the yaml, the scripts and this list. Give no other reviewer's output.
+
+1. Does the model of record hold every void, post, plane, pad and every via of the layout of record? Is any requirement closed on a twin?
+2. Can the ports see the quantity each requirement names? Which port sees common mode?
+3. Three mesh levels: what spread, which level is of record, and is the conversion judged on the fine mesh?
+4. Does a voxel screen of the whole model show 0 cuts over half a cell? Is every copper edge a mesh line?
+5. Does a second solver agree in band on the same geometry? Which terms rest on one solver?
+6. Is the time convergence judged on the port tail?
+7. Are the stack-up values read live and cited? Are the impedance tolerance and the report named on the order?
+8. Are both window edges solved exactly? Does the Monte Carlo vary the launch (registration, p/n etch)?
+9. Is the skew tuned on electrical delay? Does the retune hold at the corners? Is the SCD21 shape a pure delay?
+10. Are SDD21, SDD11, SCD21, SDC21 and the crosstalk plotted for every lane, with the reference impedance stated?
+11. Is COM run with the official code, against a padded reference, at the module corners?
+12. Are the vendor files checked for passivity? Is any pad or fixture counted twice? Where is each reference plane?
+13. Is each margin larger than its uncertainty? Is each design limit's basis written beside it?
+14. Can the coupon check the model? Is each replica fed where the real driver touches it? Is there a prediction for each structure?
+15. What does the bench claim to resolve, and can it?
+16. Do the variants that failed stay in the record beside the one adopted?
+17. Does every extracted file pass the export checks of §14.1? Do the time-domain cross-checks of §9.5 agree?
+18. Is the limit line on every plot, with a worst-value table per net? Is every exception bounded?
+19. Is the channel partitioned, with every via listed once and every handoff plane agreed?
+20. Does a result for a via come from a starved FEM mesh? Does the multi-structure model match the isolated cutout?
+21. Do the active runs cover the corners, the real jitter values, the aggressor alignment and the power network?
+
+## 16. Records
+
+- One study file per board revision, with an iteration section per pass. A later iteration states which earlier sections it supersedes.
+  Superseded numbers stay in the history, marked at the top; they never sit beside the numbers of record.
+- Give each result section the same layout. Start with the date, stack-up, target and window, materials and via size. Then give the
+  per-layer anti-pads, the TDR markers with delta and margin, the S-parameters at Nyquist and a status table.
+- Keep the Touchstone files of record beside the sign-off, named by structure, layers and date. The cascade uses exactly those files.
+- Mark a set-up check "preliminary" in its first line.
+- Results borrowed from a sister board are a placeholder. Say so, and sign off again with the board's own models.
+- Each iteration ends with a verdict table (converged / cross-checked / verdict), a risk register, proposed decision rows and learnings.
+- Results of record live beside the study. Figures are generated. The solver export (Gerber, drill, stack-up and port table of exactly the
+  solved copper) lets a commercial tool repeat a run.
+- When a predecessor's runs are reused, read the diff of its last commit first. One slip in an indentation left every ground pad floating
+  *(worked example)*.
