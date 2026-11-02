@@ -34,7 +34,7 @@
   design/{traceability, erc_accept, dfm_processes, arrival_checklist}.yaml, production_cut.yaml, datasheet note, G1 pack, CI workflows + Makefile.
 - **References**: project-yaml, kickoff-questionnaire, schematic-phase, pcb-layout-dfm, fab-dfm, case-pipeline, dfm-printed-enclosure,
   print-dfm, print-kit, fdm-print-optimisation, cnc-enclosure, fea-stage, part-verification, software-track, release-and-cut, vendor-review,
-  agent-ops, pitfalls — one home per rule, the others link.
+  agent-ops, high-speed-si, pitfalls — one home per rule, the others link.
 - **Checks**: three read-only tiers — inner `scripts/iteration_gate.sh [-- <cmd> ...]` (a change's `--check` + grader set), standard
   `scripts/adopt_gates.sh --no-clone` (`make gates`), release `scripts/adopt_gates.sh` (`make check`); `smoke/run_smoke.sh` runs every script selftest, the rule greps, the enforcement negatives, both lints
   and the evals; 19 evals
