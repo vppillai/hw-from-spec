@@ -5,6 +5,23 @@ A fab/distributor part number enters the BOM only after a fetch of its live page
 class (basic/extended or the fab's equivalent). Cached numbers, hand-off numbers and memory are not evidence: one earlier hand-off carried
 wrong numbers and a stock of 4 passed a "> 0" gate for a 5-board run.
 
+## Every part fact, read live
+The rule covers every fact a design or a study takes from a part, not only the fab code: ratings, dimensions, curves, stock and maker.
+- Read each fact in this session and cite the URL, the page and the table. A fact that no fetch returns is BLOCKED, never a guess or an
+  older note. One study re-read its inputs and found four values from older files wrong *(worked example)*.
+- Read the maker field of the live reply. A code that matches the MPN can belong to another maker, and an MPN prefix does not name one. Take
+  every limit from that maker's own datasheet.
+- The drawing governs a distributor attribute. One listing gave 48 V where the maker's drawing said 20 V *(worked example)*.
+- Check the file before you read it. A datasheet link can return an HTML page with a 200 status; test the `%PDF` magic bytes. An image-only
+  PDF has no text layer: render the page and read the table.
+- A stock read holds on its day only. Re-read every part a new revision reuses, and re-read every thin part on the order day.
+- Read the rating that applies to the use, not the headline. A connector's "per pin" current can hold for one powered pin only; the block
+  rating sits in the qualification report. Take the end-of-life contact resistance from the product spec limit, not a measured delta.
+- A curve belongs to its example design. An efficiency curve holds for its switching frequency, input voltage and inductor only.
+- When a maker site refuses a scripted fetch, try a distributor's media list of the part. It often links the maker's own drawing. Keep a
+  local copy of any drawing a browser session reads, so the next review can check it.
+- Read the stock of the exact size you need. One family stocked its short part deeply and its long part thinly.
+
 ## Tags
 | Tag | Meaning | Allowed on a fitted part? |
 |---|---|---|

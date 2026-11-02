@@ -6,6 +6,10 @@
   each edit.
 - Hand a worker its record ID (`CC-nnn`) with the task; an ID is reserved only when its row is in HEAD; `grep -c '^| CC-nnn '` immediately before writing.
 - Long tasks are time-boxed; the coordinator keeps a heartbeat (~25 min) and a pause-point paragraph in STATUS with the resume list.
+- **Give each parallel agent its own number range for every shared id series.** Write the range in the brief: blockers, open questions,
+  finding ids. "The next free number" collided three times in one day *(worked example)*. Each merge then renumbered the rows and every
+  reference to them, file by file. A range works the way a refdes block per sheet works.
+- Give each agent a scratch folder named for it. The session scratch area is shared, and another agent overwrote a helper with a generic name.
 
 ## 2. Commits
 - Explicit paths only (`git commit -m … -- <paths>`), never `git add -A` in a shared tree. But explicit paths isolate FILES, not hunks: a shared record
@@ -72,6 +76,9 @@
 - Run the style gate right before the round when another agent commits to the shared log. One line over the baseline fails the round.
 - Parallel branches that append rows at the same spot conflict in every record file. Resolve by union: both sides kept, one
   `latest` mark in the status log (the newest), the yaml parsed and the known-issues table checked before the merge commit.
+- An append-only log conflicts on nearly every merge, because every branch appends at its end. Mark such logs `merge=union` in
+  `.gitattributes`, so git takes both sides. A union keeps an entry twice when two branches carried it. After the merge, list the duplicate
+  lines and the id collisions, and remove or renumber them in the merge commit. A history line never goes; only an exact copy does.
 - Name the selftest parts in the brief. Two agents both named their new block `part i`; the interpreter kept the later definition
   and hid the first. The merger greps for duplicate definitions before the selftest runs, and keeps the file's main guard at
   the end, after every part. A part defined after the guard raises a name error at the call.
@@ -134,6 +141,13 @@
   count a reconstruction.
 - Re-test a reviewer's fix to a measurement on real captures before you adopt it. One proposed legend exclusion was wrong for the real
   viewer; the old exclusion held.
+- **Brief every reviewer to be sceptical and to recompute.** A reviewer recomputes each headline number from the design yaml and the
+  scripts. It compares the model with the layout of record and asks what each closure rests on. It never takes a number from the record.
+  One round found a requirement closed on a simplified model; the owner's closure reversed *(worked example)*.
+- The author recomputes a reviewer's number too. One reviewer's figure came from a point of another window; the disposition says so.
+- **Run the cheap checks before each fix-check round.** Run the stale-number sweep over every document a decision batch touched. Run the
+  coverage script (every requirement named in the plan, every plan row traced). Check each stale hit's meaning before you replace it. Six
+  fix-check rounds ran before one found no MAJOR, and most of their findings were of this kind *(worked example)*.
 
 ## 5. Background jobs and the machine
 - **Long chains run in the BACKGROUND and are waited on by the harness, never by a foreground loop.** Every job writes its own log. It ends the log

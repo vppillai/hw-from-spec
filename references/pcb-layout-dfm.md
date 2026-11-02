@@ -65,6 +65,21 @@ net classes must be exported into the router input — grep the DSN for them aft
   2026-10-24 (that fab's table, that day; verify it live). That fab back-drilled boards of 4 to 32 layers, from 0.8 mm thick.
   For its back-drilled boards on that date, 2.5 mm and thicker needed 12 layers or more, at ±10 %.
 
+### 2.1 Fab tolerances against vendor limits **[fab capability]**
+- Read the fab's extremes against every vendor minimum before the stack-up is fixed. A 1.6 mm board at −10 % is 1.44 mm, exactly one
+  press-fit connector's minimum *(worked example)*. A ±0.075 mm hole position is wider than a fine connector's true-position tolerance.
+- The fab's page may not state the finished copper tolerance, the dielectric thickness tolerance or the layer registration. Ask for them at
+  the quote. Assume −20 % copper until the answer arrives.
+- Heavier inner copper changes the prepreg. One fab's 2 oz inner templates grew the outer prepreg from 0.20 to 0.29 mm, and a 90 Ω pair
+  widened from 0.28 to 0.38 mm *(worked example)*. Read the plies before you trade inner copper for current.
+- Start a board-to-board alignment budget at the contacts, not at the drilled holes. A peg that floats in its hole moves the connector
+  off its own holes. A REF dimension on the print caps how far the budget can tighten; ask the vendor for its tolerance.
+- Drill the tooling holes in the same program as the connector peg holes. Gate the in-program hole position at first article. A budget that
+  rests on a written fab statement stays open until the statement arrives (`references/vendor-review.md` §7).
+- Put each term of an angular budget on its own lever: peg play over the peg span, pin play over the tooling-pin span.
+- Count a pin map by position per row, not by pins. One map held the right pin count and still left a power block short of pairs.
+- A connector on the bottom face mirrors x in the top view. Check in the generator that pin 1 lands on the side of its nets.
+
 ## 3. Controlled impedance and differential pairs
 - **When it is required** **[physics]**: any pair whose length exceeds ~1/10 of the signal's rise-time wavelength on FR-4. Examples are USB 2.0
   90 Ω pairs longer than a few cm, any multi-Gb/s lane, and RF. Short pairs (a few cm) care more about skew and stubs than about ±10 %
