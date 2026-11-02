@@ -166,6 +166,9 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A kit mirror synced with `rsync --delete` lost about 105 generator copies that the repo keeps elsewhere. The mirror is a superset. Restore it with the generators, cache warm — 2026-10-11 [kits/mirror] (`print-kit.md` §5).
 - A volatile fan curve leaves the fan at 0 % after a power cycle with no host. A study picks an EEPROM part or a flash curve — 2026-10-22 [process/study] (`schematic-phase.md` §6).
 - The last revision learned by trial in the field: the light bleed, the lid words, the power budget. One blind pass per discipline that a gate freezes, as roles inside its one round, every field finding a named check — 2026-10-21 [process/review] (`SKILL.md` §5).
+- Six blind fix-check rounds ran before one found no MAJOR. Most findings were stale numbers and uncovered rows a script finds. Run the stale-number sweep and the coverage script before each round — 2026-11-01 [process/fix-check] (`agent-ops.md` §4).
+- A stale-number sweep nearly replaced a number that differed from the new value on purpose. Check each hit's meaning before you replace it — 2026-11-01 [process/stale].
+- A board was removed from an architecture before anyone named why it existed: for the display height, not the haptics. Name the reason first — 2026-11-02 [process/architecture] (`schematic-phase.md` §7).
 
 ## agents / git
 - Agents die when the machine sleeps or on API 500s; resume by message with the MEASURED state; heartbeat monitors ~25 min; time-box every long task; parallel router JVMs SIGTERM each other — STATUS 09-18…21.
@@ -196,6 +199,10 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A scratch clone of the skill lost files twice in one day (53 deletions with missing objects, then the whole `.git`). `git -C <clone> status` before its scripts run; not a repository or deletions = delete and clone again. The release script failed loudly both times — 2026-10-14 [agents/clone] (`agent-ops.md` §2).
 - Two parallel agents both named their new selftest block `part i`; the interpreter kept the later one and hid the first. Name the parts in the brief; grep duplicate defs before the run — 2026-10-20 [agents/selftest].
 - Four branches appended rows at the same spot in four record files. Union resolves it: both sides kept, one `latest` mark, the yaml parsed and the table cell count checked before the merge commit — 2026-10-20 [agents/merge].
+- Nearly every merge of a parallel branch conflicted on the learnings log, and the union kept some entries twice. Check for duplicate lines after a union — 2026-11-02 [agents/merge] (`agent-ops.md` §3).
+- Parallel agents that each took "the next free" blocker number collided three times in one day. Give each agent its own number range in the brief — 2026-11-02 [agents/ids] (`agent-ops.md` §1).
+- Another agent overwrote a helper with a generic name in the shared scratch area. Keep helpers in a folder named for the agent — 2026-11-01 [agents/scratch].
+- A review found a requirement closed on a simplified model, and the owner's closure reversed. Brief reviewers to recompute, not to read the record — 2026-11-01 [agents/review] (`agent-ops.md` §4).
 - A bare pipe in a decision row (`all|none|NAME`) and a row without its closing pipe each broke the known-issues reader at the round. Count the cells before the round — 2026-10-21 [records/table].
 - One file moved into a package without a reorg row: the path check reported every frozen record that quoted it. A move of one file is a reorg row too — 2026-10-20 [records/reorg].
 - A skill smoke check that ran a mesh script failed in a pyyaml-only venv. Start its `run` with `needs-mesh:` and run both venv kinds — 2026-10-02 [agents/smoke] (`smoke/README.md`).
@@ -305,6 +312,12 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A stack-up thickness update broke a pad and barrel balance that had passed. Every stack-up change reruns every via — 2026-11-02 [si/stack-up].
 - Tool defaults for jitter and noise, ideal rails and a typical-only corner each made an eye look better than the part — 2026-11-02 [si/time-domain].
 - "Marginal, to be confirmed in the time domain" stayed open for good. Close each such item with a named number — 2026-11-02 [si/records].
+- One SI loop took eight iterations to converge. Each later iteration found a fault a day-1 check catches. Run the playbook in order — 2026-11-02 [si/process] (`high-speed-si.md` §0).
+- A skew retune sized from SCD21 alone repeated three times. The step crossings measured half the delay SCD21 implied. Measure the p/n delay — 2026-11-02 [si/skew].
+- Straight contact posts and the real contact tails differed by about 2 ps of p/n delay on one loop. Solve the real contact once — 2026-11-02 [si/contact].
+- A pair clean at Nyquist converted at −10 to −14 dB just above it. Read every metric to twice Nyquist — 2026-11-02 [si/band].
+- A loss pad helped a short loop and cost the long loop its margin. Solve each distinct lane geometry — 2026-11-01 [si/lanes].
+- A resistor pad was solved in 3D before anyone found it taller than the gap under the connector body. Check the fit first — 2026-10-31 [si/fit].
 
 ## silk / dfm
 - The fab's DFM grades a value EQUAL to its warning threshold as Warning: design strictly greater — thresholds JSON.
@@ -358,6 +371,10 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A datasheet note from the `pdftotext` layer must mark curve-only values "not in datasheet text" and attribute figure readings to whoever read them — 2026-09-21.
 - A distributor stocked a sibling ordering code of the designed part. Read the stocked part's own drawing before the footprint takes it — 2026-10-24 [sourcing/variant] (`part-verification.md`).
 - A module family carried a 65 °C rating on its deepest-stock memory option and 85 °C on the others. Pick by the rated quantity, not the stock — 2026-10-24 [sourcing/rating] (`schematic-phase.md` §6).
+- A study re-read its part facts live and found four values from older files wrong: a loss, a junction temperature, a limit spread and a current. Read every fact live or mark it BLOCKED — 2026-11-02 [sourcing/live] (`part-verification.md`).
+- A fab code that read the right MPN belonged to another maker, and a distributor attribute gave 48 V where the drawing said 20 V. Read the brand field and the drawing — 2026-11-02 [sourcing/maker].
+- A connector headline rating held for one powered pin. The block rating in the qualification report was half of it. Size a rail block from the report — 2026-10-30 [sourcing/rating].
+- A port target of 12 A met a module connector with six 1.5 A power contacts: 9 A absolute. Read the contact limit before the target — 2026-11-02 [sourcing/connector] (`schematic-phase.md` §7).
 
 ## mechanical / case
 - A pluggable module is not a plain box (a cabled transceiver module: bottom open at the leading edge, latch recess on top, corners R 0.15..0.60). Anything that grips it bears on the faces the standard's drawing shows solid. A pocket corner radius comes from the drawing (R > 0.66 clips a legal module), not from a print rule of thumb — 2026-09-29 [mechanical/msa].

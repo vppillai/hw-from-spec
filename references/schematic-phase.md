@@ -57,6 +57,13 @@ GUI exclusion (a hidden waiver). There is no prose waiver table. Add `erc_gate.p
 `git archive HEAD`. Export the netlist in the same step (`<cad-cli> sch export netlist --format kicadxml -o 30-board/layout/<board>.xml …`): `paths.netlist`
 feeds the `netlist_net` checks of `scripts/traceability.py`.
 
+- A symbol that the CLI cannot load drops its whole child sheet from ERC, the netlist and the BOM. The only sign can be a hierarchical-label
+  mismatch on the root sheet. Load each child sheet alone with the netlist export, then remove one symbol type at a time to find it.
+- Read each library symbol's pin types against the datasheet, not only the pin numbers. Stock symbols have typed an open-drain reset as an
+  output and an exposed pad as unspecified *(worked example)*.
+- Two output pads of one part on one net read as a power-out conflict. Type the second pad passive in the pin-type yaml. Never put a power
+  flag on a net that a power-output pin drives.
+
 ## 3. Map checks
 
 A "map" is any table in the spec or in `20-design/` that says which pin, address or connector position carries what: an MCU / bridge GPIO map, an
@@ -142,3 +149,24 @@ Rules the studies found, for any next revision. The worked examples come from on
   (ambient, case or junction) at the worst local temperature, with self-heating and margin. Never pick by the deepest stock. A part rated
   for a single reflow goes on the side reflowed last. Confirm the order with the assembler (`references/pcb-layout-dfm.md` §9). Read the
   controller's errata for its USB download path, and keep the ROM recovery path and its pins free.
+
+## 7. Architecture and sizing rules for a next revision
+Run these before the spec fixes a target or a board split. A study of §6 cites them.
+- **First-time and reproducible success.** Ask the owner whether the revision may have a prototype. Without one, the study plan holds:
+  a simulation of every analog risk, at least 20 % derating at the fab extremes, an isolation link on the supply and control of every new
+  block, and test points on every rail. Reviews add three blind reviewers on the high-risk disciplines, a red team before each gate, and a
+  fresh fix-check until no MAJOR remains. Prefer the option that builds the same on every unit: a factory cable over a hand-crimped harness.
+  Size for realistic worst cases, not for stacked extreme corners. Ask the owner which disciplines keep the full rigour.
+- **The connector contact limit first.** Read the mating connector's rated current per power contact and its count of power contacts
+  before you set a current target. Six contacts at 1.5 A cap a port at 9 A *(worked example)*; a 12 A target died in a study after the
+  target was set. Derate each part at the current it sees. A power class can carry several currents (a 50 µs peak, a sustained peak and
+  the steady draw). Write the target as the class, then derive each current.
+- **A board exists for a reason.** Name the reason before a study splits or removes a board. One display board existed for the display
+  height under a tall section, not for its haptics. A stepped case, low where the user interface sits, removed the board and its cable.
+- **The user-interface height stack.** Compute the stack before you split boards: the display, its tail and its connector, the window,
+  and the tall parts beside it. A tall section in front of a low deck hides the deck from a seated user. The hidden depth is the step
+  height divided by the tangent of the viewing elevation. A haptic actuator on the main board shakes the whole unit, so the tap is lost.
+- **A removed switch removes a stop.** List each hard stop the switch held. Name its logic or firmware replacement, and say what the
+  replacement does not cover.
+- **A part change leaves old numbers behind.** Rewrite the clauses the decision names. Mark every other number derived from the old part
+  as superseded, with the re-run that replaces it.

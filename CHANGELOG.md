@@ -44,6 +44,31 @@
   (CHANGELOG and docs included; history keeps its measured numbers), a fenced worked example keeps numbers and kinds but never a name, and the
   repo carries no project retro (a retro report is folded, then deleted).
 
+## Unreleased - 2026-11-02 - The SI convergence playbook and the next-revision learnings (no version bump)
+
+Source: the next-revision study days of a two-ended test product. One SI loop took eight iterations to converge. The days also held a
+power study, an architecture study, a front-panel study, the live parts reads and the review rounds. The input is the project's log from
+2026-10-29 on, with the SI study, its run records, its decision rows and the review dispositions.
+
+### Added
+- `references/high-speed-si.md` §0, the SI convergence playbook. Its first table lists what cost the iterations: the symptom, the cost and
+  the check that catches it first. Twelve day-1 steps follow in order, then the stop rules. Sections 1 and 4 point at it. Section 4 adds
+  the measured p/n delay and the real contact. The §15 checklist gains items 22 to 26.
+- `references/part-verification.md`: every part fact read live, BLOCKED otherwise. The maker field, the drawing over a distributor
+  attribute, the file check, the stock day, the rating that applies, curves of an example design, the media list, the exact size.
+- `references/agent-ops.md` §1: an id number range per agent and a scratch folder per agent. In §3, append-only logs take `merge=union`,
+  then a duplicate and collision check. In §4, reviewers are sceptical and recompute, the author recomputes a reviewer's number,
+  and the cheap checks run before each fix-check round.
+- `references/schematic-phase.md` §2: a symbol the CLI cannot load, pin types against the datasheet, two output pads on one net. A new §7:
+  first-time and reproducible success, the connector contact limit first, the reason a board exists, the user-interface height stack, a
+  removed switch, a part change.
+- `references/pcb-layout-dfm.md` §2.1: fab tolerances against vendor limits. The extremes, the unstated tolerances, inner copper and the
+  prepreg, an alignment budget from the contacts, tooling holes in one drill program, angular levers, pin maps by position, the bottom-face
+  mirror.
+- `references/fab-dfm.md` §5: tolerances named in writing when the public pages disagree. `references/vendor-review.md` §7: quote
+  questions before the gate that rests on them.
+- `references/pitfalls.md`: dated lines in si, process, agents and sourcing. `SKILL.md`: the Where-to-look row names the playbook.
+
 ## 0.11.25 - 2026-10-24 (candidate; the tag date follows the review rounds of 2026-10-25) - Measurements that check their own counters, the studies before a next revision, the public export, side pockets and feet
 
 Source: the bench, case and study days of a two-ended test product after the 0.11.24 cut. The days held a long two-end

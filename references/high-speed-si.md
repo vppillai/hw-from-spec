@@ -5,13 +5,75 @@ impedance rules of the board (when a pair needs control, how to record the calcu
 covers the rest, from the stack-up and the launch to the solvers, the coupon, the bench and the blind review. The rules are tagged **[physics]**, **[fab capability]**, **[method]** or **[owner choice]**. A worked number is
 labelled *(worked example)*; the mechanism generalises, the value does not.
 
+## 0. The SI convergence playbook: what to run on day 1
+
+One SI loop ran eight iterations against its mode-conversion limit *(worked example)*. Most of them fixed a fault that a day-1 check
+catches in minutes. Run the steps of §0.2 in order, before the first performance number. Plan three iterations: build and
+screen, bounds and fixes, sign-off and review. The sections after this one hold the detail of each step.
+
+### 0.1 What cost the iterations
+
+| Fault | Symptom | Cost *(worked example)* | The check that catches it first |
+|---|---|---|---|
+| The model lacks features of the layout of record | A requirement closes, then a review reopens it. A twin with a solid plane and no contact posts read 9 dB better than the launch of record. | 2 iterations and a reversed owner decision | A feature census of the model against the layout source (step 3) |
+| A simplified contact stands in for the real one | The result moves by more than its uncertainty when the contact changes. A vertical port overstated the launch reflection by 3 dB. Contact posts and the real contact tails differed by up to 2 ps of measured p/n delay. | 1 to 2 iterations | One solve of the real contact from the vendor STEP at nominal (step 4) |
+| The voxel or dropped-cell artefact | A step of several dB for a micron of width, or a cliff at one corner that only one solver shows | 3 iterations; a two-day redesign sized and then dropped | The edge-snapped mesh and the whole-model voxel screen before any solver time (step 5) |
+| The bounds come late | A fix tuned at nominal fails at a window edge, a fab corner or a module corner. The pair gap fell under the fab minimum at the worst etch after the launch was tuned. | 2 iterations | Exact window edges, fab corners and module corners in the first sweep (step 8) |
+| Corrupt lines in a vendor Touchstone file | A crosstalk figure several times the measured report: 17.5 mV of connector ICN against 2.0 to 3.1 mV measured | A false conclusion carried for six iterations | Point-by-point passivity on every vendor file before use (step 6) |
+| Skew inferred, never measured | A skew retune moves the null but not the worst value, so the retune repeats. SCD21 implied 1.4 ps of p/n delay; the step crossings measured 0.7 ps. | 3 retune rounds | The p/n delay from the step response and the p and n TDR overlay (step 9) |
+| Judging only up to Nyquist | A pair clean at Nyquist converts at −10 to −14 dB just above it | Found in the last iteration | Every metric plotted to twice Nyquist from the first run (step 8) |
+| One lane solved for all | A fix that helps one loop hurts its neighbour. A loss pad helped the short loop and cost the long loop its return-loss margin. | Every fix ran twice | Each distinct lane geometry solved on its own (step 7) |
+| An uncalibrated evaluator | A home-made COM-like eye read 1.4 to 3.1 dB high with a bias that changed per channel. Its false finding drove a two-iteration fix study. | 2 iterations | The official code from the first eye (step 6) |
+| Bench limits found late | A limit that no fixture can resolve. The test plan was rewritten after the review. | 1 review round | The verification method written beside each limit before the runs (step 1) |
+| A coupon that cannot check the launch | A replica fed from its far end predicts −15 dB of conversion that the board does not have | 1 coupon redesign | Each coupon structure predicted with the same model, in the same iteration as the launch (step 10) |
+| A fix part that does not fit | A resistor pad solved in 3D, then found taller than the gap under the connector body | Most of an iteration | The housing height from the STEP read before you solve a fix (step 2) |
+
+### 0.2 Day 1, in order
+
+1. **Write the limit table with its basis and its verification method** (§9.1, §13). Give each limit its standard clause or its design
+   basis. Say how the bench or the coupon checks it. A limit that no fixture can resolve is an analysis requirement from the start.
+2. **Read the fab stack-up, the fab tolerances and the mechanical envelope live** (§2, §3). Compute the exact widths at both edges of the
+   impedance window. Check the pair gap at the worst etch. Read the housing heights over the routing from the STEP. Fix the pair geometry
+   before any 3D work.
+3. **Generate the field model from the layout source** (§1). The layout and the model read the same yaml. Run a feature census: every void,
+   plane, pad, post and stitch of the layout appears in the model, and every via. A twin may screen a variant. It never closes a requirement.
+4. **Model the real contact, and build ports that see every quantity** (§8). Solve the vendor contact geometry once at nominal. Compare it
+   with the post or port stand-in. Keep the stand-in only inside the difference you measured. Use single-ended ports to a ground bar, so the
+   common mode shows. Validate the setup on a mirror-symmetric pair: SCD21 below −100 dB.
+5. **Screen the mesh before you spend solver time** (§7). Make every copper edge a mesh line. Run the whole-model voxel screen: 0 cuts over
+   half a cell. Run three mesh levels on the first geometry. Use a DC-free excitation and judge the port tail. Close a plane cavity with a
+   solid wall.
+6. **Clean the inputs and fix the evaluator** (§9.3, §14). Check every vendor file for passivity, point by point. Agree every reference
+   plane, so no pad counts twice. Run the official COM code from the first eye. Calibrate any fast evaluator against it on your own channels.
+7. **List every distinct lane geometry and solve each one** (§6.1). Group lanes only by a symmetry you can state. Solve nested partner loops
+   and their neighbours together.
+8. **Put the bounds in the first sweep** (§10). Solve both window edges exactly. Add the registration and p/n etch corners. Add the module
+   corners: the return-loss mask at one end and at both ends, and the slowest transmitter edge. Turn crosstalk on. Plot every metric to twice
+   Nyquist.
+9. **Cross-check every run in the time domain** (§4, §9.5). Measure the p/n delay at the 50 % crossings of the step response. Compare it
+   with the delay that SCD21 implies. Overlay the p and n TDR. Tune the skew on the measured delay.
+10. **Design the coupon in the same iteration as the launch** (§12). Feed each replica pad where the real driver touches it. Predict every
+    structure with the model of record.
+11. **Run the second solver on the worst corner in the same iteration** (§6, §7.4). Size its memory first. Pick the isolated cutout that
+    fits. A single-solver corner value never closes a requirement.
+12. **Close with the verdict table** (§16). Each row says converged, cross-checked, and the margin against its uncertainty. A blind
+    reviewer recomputes the headline numbers from the yaml and the scripts before the owner sees a closure (§15).
+
+### 0.3 Stop rules
+
+- A result that moves by more than its stated uncertainty between iterations stops the loop. Find the step of §0.2 that missed it
+  before the next run.
+- A fix that holds at nominal only is half a fix. Rerun it at the bounds of step 8 before you report it.
+- A closure that rests on a twin, a stand-in contact or one solver goes to the owner with that note. It never reads MEETS.
+- Keep the inner loop cheap. Screen a variant on the medium mesh. Judge a margin on the fine mesh only (§7.1).
+
 ## 1. The rule of record
 
 - A number counts only when three things hold **[method]**. Its mesh has converged. A second solver agrees in band on the same geometry. The
   evaluator behind any eye or COM figure is calibrated against the official code.
 - The model is the layout of record **[method]**. It holds every void, post, plane and pad, and every via. A simplified twin may screen a
   variant. It never closes a requirement. One study read SCD21 −33.5 dB on a twin with a solid plane and no contact posts. The launch of record
-  read −24 dB *(worked example)*.
+  read −24 dB *(worked example)*. Generate the model from the layout source and census its features (§0 step 3).
 - Build the port that sees the quantity before you simplify the geometry **[method]**. A differential port cannot see common mode, so it
   cannot measure SCD21.
 - Every number in a record comes from a script that reads the design yaml. A study table is regenerated, never typed.
@@ -116,6 +178,10 @@ labelled *(worked example)*; the mechanism generalises, the value does not.
   to size the fix and the bench limit (§13).
 - A length retune that compensates a reference asymmetry holds at one corner **[physics]**. Run it at the registration and dielectric corners
   (§10) before you close it.
+- Measure the p/n delay in the time domain before a retune (§9.5). SCD21 holds the magnitude only, and part of it may not be delay. One
+  launch implied 1.4 ps from SCD21 and measured 0.7 ps at the step crossings *(worked example)*.
+- Tune against the real contact, not a post stand-in **[physics]**. The contact tail adds its own p/n path. On one loop the real tails moved
+  the measured p/n delay by about 2 ps against straight posts *(worked example)*.
 - Record the variants that failed beside the one adopted. They are the reason for the adopted form.
 
 ## 5. Breakout and routing patterns
@@ -443,6 +509,11 @@ Give each reviewer the frozen study, the yaml, the scripts and this list. Give n
 19. Is the channel partitioned, with every via listed once and every handoff plane agreed?
 20. Does a result for a via come from a starved FEM mesh? Does the multi-structure model match the isolated cutout?
 21. Do the active runs cover the corners, the real jitter values, the aggressor alignment and the power network?
+22. Which steps of the §0 playbook ran, and in what order? Which step did the study skip, and what does the skip cost?
+23. Is every distinct lane geometry solved, or does one lane stand for others? What symmetry argument covers the rest?
+24. Is the p/n delay measured in the time domain, and does the skew tuning use it? Is every metric read to twice Nyquist?
+25. Does every fix part fit the mechanical envelope (housing height, keep-outs) before its 3D run?
+26. Recompute three headline numbers from the yaml and the scripts. Do they match the record?
 
 ## 16. Records
 
