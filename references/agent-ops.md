@@ -79,6 +79,9 @@
 - An append-only log conflicts on nearly every merge, because every branch appends at its end. Mark such logs `merge=union` in
   `.gitattributes`, so git takes both sides. A union keeps an entry twice when two branches carried it. After the merge, list the duplicate
   lines and the id collisions, and remove or renumber them in the merge commit. A history line never goes; only an exact copy does.
+- A union is right for new rows and wrong for a row that one side edited in place. A blocker closed on one branch kept its old open
+  copy beside the closed one *(worked example)*. A duplicate-line check misses it, because the two lines differ. After every merge of a
+  table log, list the duplicate row ids (`grep -oE '^\| [A-Z]+-[0-9]+ ' <file> | sort | uniq -d`). Keep the newest status of each.
 - Name the selftest parts in the brief. Two agents both named their new block `part i`; the interpreter kept the later definition
   and hid the first. The merger greps for duplicate definitions before the selftest runs, and keeps the file's main guard at
   the end, after every part. A part defined after the guard raises a name error at the call.
@@ -173,6 +176,26 @@
 - **A module loaded twice has two copies of every class**. A shim that loads a module by path beside its package import gets a second
   copy of `Nack` and `Port`. An `except` on one copy misses the other. Load once, or rebind the shared classes after the load
   (`references/software-track.md` §3).
+
+### 5.1 A shared remote simulation host
+Heavy solvers can run on a second host beside the main machine. `references/high-speed-si.md` §6.2 says which jobs go there and how to
+prove the host. The rules below keep the host safe and the jobs alive.
+- **Install nothing on the host.** Every tool lives in a container image pinned by digest. A runner syncs the repo subset a job needs,
+  runs the job in the image and fetches the outputs.
+- **Publish no port, and never use host networking.** Run each job with the network off (`--network none`). A solver needs no network.
+- **Run the container as the caller's uid and gid** (`--user "$(id -u):$(id -g)"`). Output files then belong to the user, not to root.
+- **Keep licensed files out of every image.** Copy them to a private folder on the host for the run only, and never push them.
+- **A job outlives the link.** Start it detached on the host (`setsid nohup … < /dev/null &`), with its own log. Fetch the outputs
+  later. A sleeping laptop or a dropped link then stops nothing.
+- Put the detached command on its own line, with its own redirects. In `a && b && setsid cmd &` the shell backgrounds the whole list.
+  The subshell then holds the SSH channel open, and the client hangs.
+- Retry only on link errors: SSH exit 255, and the rsync codes for a dropped connection or a timeout. A missing remote path is an
+  answer, not a dropped link. A retry loop on it held one fetch for half an hour *(worked example)*.
+- **A multiplexed SSH session can hide a broken key login.** The open master connection keeps working after the server stops taking
+  the key. Test a login path with `-o ControlMaster=no -o ControlPath=none`.
+- Pipe a public key on stdin to append it (`ssh <host> 'cat >> ~/.ssh/authorized_keys' < key.pub`). A key comment with an apostrophe
+  breaks a quoted `echo`.
+- Use key login only. Write no password, key or token into any file, log or brief.
 
 ## 6. Reporting
 - Every report, record and README follows `references/writing-style.md`: lead with the result, second person, active voice, present tense,

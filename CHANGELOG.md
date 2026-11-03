@@ -68,6 +68,12 @@ power study, an architecture study, a front-panel study, the live parts reads an
 - `references/fab-dfm.md` §5: tolerances named in writing when the public pages disagree. `references/vendor-review.md` §7: quote
   questions before the gate that rests on them.
 - `references/pitfalls.md`: dated lines in si, process, agents and sourcing. `SKILL.md`: the Where-to-look row names the playbook.
+- `references/high-speed-si.md` §6.2: choose a simulation host by the solver bottleneck, measure a short run per solver class, and
+  prove a new host against results of record. It names the usual causes of a cross-host difference. Images are pinned by digest and
+  by package snapshot. A §0.3 stop rule and checklist item 27 point at it.
+- `references/agent-ops.md` §5.1: a shared remote simulation host. Containers with no port, no network and the caller's uid, jobs
+  that outlive the link, retries on link errors only, and a login test with SSH multiplexing off. In §3, a duplicate row id check after
+  a union merge. `references/pitfalls.md`: dated lines for each.
 
 ## 0.11.25 - 2026-10-24 (candidate; the tag date follows the review rounds of 2026-10-25) - Measurements that check their own counters, the studies before a next revision, the public export, side pockets and feet
 

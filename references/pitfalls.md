@@ -201,6 +201,9 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - Four branches appended rows at the same spot in four record files. Union resolves it: both sides kept, one `latest` mark, the yaml parsed and the table cell count checked before the merge commit — 2026-10-20 [agents/merge].
 - Nearly every merge of a parallel branch conflicted on the learnings log, and the union kept some entries twice. Check for duplicate lines after a union — 2026-11-02 [agents/merge] (`agent-ops.md` §3).
 - Parallel agents that each took "the next free" blocker number collided three times in one day. Give each agent its own number range in the brief — 2026-11-02 [agents/ids] (`agent-ops.md` §1).
+- A union merge kept a closed blocker beside its old open copy, because one branch edited the row in place. Check duplicate row ids after every merge of a table log — 2026-11-02 [agents/merge] (`agent-ops.md` §3).
+- An SSH master connection kept a host reachable after its key login broke. Test a login with multiplexing off — 2026-11-02 [agents/remote] (`agent-ops.md` §5.1).
+- A shell list ending in `setsid cmd &` sent the whole list to the background and hung the SSH client. Detach on a line of its own — 2026-11-02 [agents/remote] (`agent-ops.md` §5.1).
 - Another agent overwrote a helper with a generic name in the shared scratch area. Keep helpers in a folder named for the agent — 2026-11-01 [agents/scratch].
 - A review found a requirement closed on a simplified model, and the owner's closure reversed. Brief reviewers to recompute, not to read the record — 2026-11-01 [agents/review] (`agent-ops.md` §4).
 - A bare pipe in a decision row (`all|none|NAME`) and a row without its closing pipe each broke the known-issues reader at the round. Count the cells before the round — 2026-10-21 [records/table].
@@ -318,6 +321,9 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A pair clean at Nyquist converted at −10 to −14 dB just above it. Read every metric to twice Nyquist — 2026-11-02 [si/band].
 - A loss pad helped a short loop and cost the long loop its margin. Solve each distinct lane geometry — 2026-11-01 [si/lanes].
 - A resistor pad was solved in 3D before anyone found it taller than the gap under the connector body. Check the fit first — 2026-10-31 [si/fit].
+- A many-core host with two memory channels ran FDTD at half the speed of a laptop-class SoC, whatever the job split. Route each solver by its bottleneck and measure a short run first — 2026-11-02 [si/hosts] (`high-speed-si.md` §6.2).
+- Two hosts stopped one FDTD run at different steps, and the mesher gave another mesh on another CPU architecture. Prove a new host against results of record and name each difference — 2026-11-02 [si/hosts].
+- A bare container image ignored the package snapshot without an error: it had no CA certificates for the https URL. Install them first and read the package policy — 2026-11-02 [si/containers].
 
 ## silk / dfm
 - The fab's DFM grades a value EQUAL to its warning threshold as Warning: design strictly greater — thresholds JSON.
