@@ -95,6 +95,10 @@
 - A worktree has no venv and no vendored skill unless you give it one. Run the main checkout's lint on the worktree files.
   A gate that cannot run there reports nothing; the
   coordinator's merge gate covers it, and the brief says so.
+- An agent worktree can start on the default branch, not on the branch the brief names. Before any edit, check that the named
+  base commit is an ancestor of HEAD (`git merge-base --is-ancestor`). If not, reset the clean worktree to the named branch.
+- A file that a brief cites can live on another branch only. Read it with `git show <branch>:<path>`, and cite the branch and path.
+- A copied table header can outlive its data. When a header and the commit message disagree, trust the commit and the run log.
 - One home per rule. A gate tier is an alias of the gate script with a flag, never a second yaml list.
 
 ## 4. Blind reviews (the protocol; templates in `workflows/`)
@@ -152,6 +156,8 @@
 - **Run the cheap checks before each fix-check round.** Run the stale-number sweep over every document a decision batch touched. Run the
   coverage script (every requirement named in the plan, every plan row traced). Check each stale hit's meaning before you replace it. Six
   fix-check rounds ran before one found no MAJOR, and most of their findings were of this kind *(worked example)*.
+- External reviewers can grade on another scale (High / Medium / Low). State the mapping to BLOCKER / MAJOR / MINOR before you count
+  findings across rounds. A fix-check repeats old ids as closure rows. Count only the rows that are not in a closure state.
 
 ## 5. Background jobs and the machine
 - **Long chains run in the BACKGROUND and are waited on by the harness, never by a foreground loop.** Every job writes its own log. It ends the log
@@ -204,6 +210,15 @@ prove the host. The rules below keep the host safe and the jobs alive.
 - Pipe a public key on stdin to append it (`ssh <host> 'cat >> ~/.ssh/authorized_keys' < key.pub`). A key comment with an apostrophe
   breaks a quoted `echo`.
 - Use key login only. Write no password, key or token into any file, log or brief.
+- **A kill that removes only running containers leaves queued jobs waiting.** A queued job keeps polling for its lock and can
+  start hours later. Stale queued jobs held one serial lane for a day *(worked example)*. Purge the queue before new work. Stop
+  each waiting runner process, then list the processes and the containers again.
+- Never rewrite a queue file that a `while read` runner is reading. The shell reads ahead, so the runner has already taken the
+  removed line. Its offset then falls mid-line in the new file. Stop the runner and start a new one on a new file.
+- **Give each job its own output folder on the host.** A shared remote checkout lets a later job overwrite an earlier job's
+  result before the fetch. Otherwise, fetch each result before the next push.
+- A firmware build runs offline in a pinned toolchain image, with the network off. Start each run from an empty build folder.
+  A partial clean of the build folder breaks the next incremental run.
 
 ## 6. Reporting
 - Every report, record and README follows `references/writing-style.md`: lead with the result, second person, active voice, present tense,

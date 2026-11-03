@@ -144,6 +144,10 @@ reason and one worked example.
 - A loopback plug with an emulation EEPROM tests a host port, not a module. A tester that is the host needs no emulation,
   because the module answers for itself.
 - Keep a module-side debug header on the tester board. A stock board can then play the module later, with no new revision.
+  Put the signals and a ground in one row of the header, with no supply pin in that window. A stock board then plugs onto it.
+- An I2C target that emulates a module behind a bridge chip must never stretch the clock. Some bridge masters cannot see a
+  stretch, so a late byte reads as garbage. Keep the target's TX FIFO full from an interrupt, for example on the offset byte.
+  Compute the response window from the address phase at each bus speed. About ten SCL periods gives 25 µs at 400 kHz.
 
 ## 14. The hardware runbook, written before the boards
 - Write the hardware runbook from the code of record, never from the spec. *Reason*: the code holds facts no document names.

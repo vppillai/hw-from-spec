@@ -1,6 +1,6 @@
 # CHANGELOG — hw-from-spec
 
-## Current state (0.11.26): read this instead of replaying the entries below
+## Current state (0.11.27): read this instead of replaying the entries below
 
 - **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
   thirteen batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
@@ -43,6 +43,29 @@
   address and public pull-request numbers excepted) — `scripts/generic_lint.py` reads the whole repo
   (CHANGELOG and docs included; history keeps its measured numbers), a fenced worked example keeps numbers and kinds but never a name, and the
   repo carries no project retro (a retro report is folded, then deleted).
+
+## 0.11.27 - 2026-11-03 - Direction groups, short-loop TDR, coupon fixtures, queue hygiene
+
+Source: the later study work of 2026-11-03 on a two-ended test product. The input is the project's log for that day.
+
+### Added
+- `references/high-speed-si.md` §0.1 and §4: one-sided contact tails break the mirror. Solve one loop per direction group.
+  Set each skew target from its own solve. §0.2 step 7 says to read the tails first.
+- `references/high-speed-si.md` §9.5: a TDR window on a short loop stays inside the launch reflection. Read the line impedance
+  from the 2D cross-section.
+- `references/high-speed-si.md` §7.1: bound a dispersive dielectric by analysis over the launch, with the sign of the RL error.
+- `references/high-speed-si.md` §10: save every Monte Carlo sample set with its run.
+- `references/high-speed-si.md` §12: one coupon per panel with clamp-on edge launches. The delta-L pair runs in both weave
+  directions. Each replica follows its board loop. Key coupon data by the board's unique ID.
+- `references/high-speed-si.md` §16: label every figure and number simulated, calculated or measured. The §15 checklist gains
+  items 33 to 38.
+- `references/software-track.md` §13: an emulated I2C target never stretches the clock behind a bridge. A debug header row
+  holds the signals and a ground.
+- `references/agent-ops.md` §5.1: purge queued jobs, never rewrite a live queue file, one output folder per job, offline
+  firmware builds. §3: check the worktree base, read files from another branch. §4: map review severity scales.
+- `references/writing-style.md` §3 and §4: label figures for a reader, read times from the time column, check chat replies.
+- `SKILL.md` §0 step 6: label each figure for a reader.
+- `references/pitfalls.md`: dated lines in si, agents, software, documentation and records.
 
 ## 0.11.26 - 2026-11-03 - SI to layout, despiked vendor files, test planning for module testers, lent hosts
 
