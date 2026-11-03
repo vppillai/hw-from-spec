@@ -213,6 +213,10 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - One file moved into a package without a reorg row: the path check reported every frozen record that quoted it. A move of one file is a reorg row too — 2026-10-20 [records/reorg].
 - A skill smoke check that ran a mesh script failed in a pyyaml-only venv. Start its `run` with `needs-mesh:` and run both venv kinds — 2026-10-02 [agents/smoke] (`smoke/README.md`).
 - A tag chained onto a pull-request merge landed on the old main after a merge race. Read the merge result before the tag — 2026-10-04 [agents/git] (`agent-ops.md` §2).
+- A kill removed only the running containers; stale queued jobs held a serial lane for a day. Purge the queue before new work — 2026-11-03 [agents/remote] (`agent-ops.md` §5.1).
+- A rewritten queue file under a `while read` runner left its offset mid-line. Start a new runner on a new file — 2026-11-03 [agents/remote].
+- A later job overwrote an earlier job's result in a shared remote checkout before the fetch. Give each job its own output folder — 2026-11-03 [agents/remote].
+- An agent worktree started on the default branch, not on the named branch. Check the base commit is an ancestor of HEAD — 2026-11-03 [agents/worktree] (`agent-ops.md` §3).
 - A stacked pull request closed with its base and could not be retargeted. Retarget the child before the base branch is deleted — 2026-10-08 [agents/git] (`agent-ops.md` §2).
 
 ## tooling / determinism
@@ -336,6 +340,10 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - One memory module ran FDTD at two thirds of the speed of two, on the same CPU. Read the memory slots first — 2026-11-03 [si/hosts].
 - An older numeric interpreter ran the official COM code 27 times slower, with identical numbers. Match the interpreter version — 2026-11-02 [si/hosts].
 - MPI refused a FEM job for lack of slots under a container cpuset. Allow oversubscription and bound the ranks by the job's slots — 2026-11-03 [si/containers].
+- One-sided contact tails broke the mirror: a loop read −16.1 dB on the other direction's skew template. Solve each direction group and set its own target — 2026-11-03 [si/skew] (`high-speed-si.md` §4).
+- A TDR window between the pads of a short loop read 88 ohm on a 100 ohm pair. Read line impedance from the 2D cross-section — 2026-11-03 [si/tdr] (`high-speed-si.md` §9.5).
+- A dispersive dielectric ran about 100 times slower in FDTD. Bound its effect over the launch by analysis — 2026-11-03 [si/fdtd] (`high-speed-si.md` §7.1).
+- A figure needed the samples of a 1000-sample run, and only the summary existed. Save every sample set with its run — 2026-11-03 [si/records] (`high-speed-si.md` §10).
 
 ## silk / dfm
 - The fab's DFM grades a value EQUAL to its warning threshold as Warning: design strictly greater — thresholds JSON.
@@ -544,6 +552,8 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A switched-off rail read 0.57 V with the host plugged: idle-high bus lines fed it through the pull-ups. Check "off" with every source connected — 2026-10-24 [software/bench] (`software-track.md` §18).
 - A meter's low-impedance mode pulled a high-impedance node down. Use the plain DC range on a bring-up board — 2026-10-24 [software/bench] (`software-track.md` §18).
 - A spec binned only on a media-side pattern that the device could not generate. Read the PRBS capability matrix first — 2026-11-03 [software/prbs] (`software-track.md` §13).
+- An emulated I2C target behind a bridge that cannot see a stretch must answer in time. Keep its TX FIFO full from an interrupt — 2026-11-03 [software/i2c] (`software-track.md` §13).
+- A stock board fit a debug header only after one extra ground pin joined its signal row. Put signals and a ground in one row — 2026-11-03 [software/debug].
 
 ## documentation
 - Every mention of a retired string across live docs after a design change: grep, not memory; logs and reviews keep stale words on purpose.
@@ -583,6 +593,10 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A comment stripper misread a JS template literal. 20 of 110 comments reached the public tree. Parse the language; check the output — 2026-10-21 [documentation/public] (`release-and-cut.md` §15).
 - The leak gate hit the public repository address on every link. An unanchored id pattern hit a lane label. Allow the full address; anchor the patterns — 2026-10-21 [documentation/public] (`release-and-cut.md` §15).
 - A Pages deploy failed at its configure step on the first push. Enable Pages before the first push — 2026-10-21 [documentation/public] (`release-and-cut.md` §15).
+- A results row said a throttle came at 292 s; 292 was the sample count. Read a time from the time column — 2026-11-03 [documentation/data].
+- A GIF palette from the last frame dropped colours of earlier frames. Build the palette from a sheet of several frames — 2026-11-03 [documentation/figures].
+- A 3D animation rescaled its axes every frame, so a deflection sweep looked frozen. Fix the axis limits to the union of the shapes — 2026-11-03 [documentation/figures].
+- A finding count mixed two severity scales and counted closure rows. State the mapping and count open rows only — 2026-11-03 [records/review] (`agent-ops.md` §4).
 
 ## records / arrival / review
 - The fab adds an order-history "Confirm Parts Placement" step after the engineer mails, with a silent ~3-day timer after which the order is produced as drawn. Check Order History after every engineer reply. Its engineering file (`Smt_Hw_Bom_Merge` → `oc` / `ec` per designator) is the complete change list - diff it before any picture. Read the pictures with a mounting-hole calibration (0.1 px) and your pad 1 over the fab's marks for every polarity-flagged part — 2026-10-08 [fab/placement-confirm] (`vendor-review.md` §5 round 4).

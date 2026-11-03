@@ -23,6 +23,7 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 | Skew inferred, never measured | A skew retune moves the null but not the worst value, so the retune repeats. SCD21 implied 1.4 ps of p/n delay; the step crossings measured 0.7 ps. | 3 retune rounds | The p/n delay from the step response and the p and n TDR overlay (step 9) |
 | Judging only up to Nyquist | A pair clean at Nyquist converts at −10 to −14 dB just above it | Found in the last iteration | Every metric plotted to twice Nyquist from the first run (step 8) |
 | One lane solved for all | A fix that helps one loop hurts its neighbour. A loss pad helped the short loop and cost the long loop its return-loss margin. | Every fix ran twice | Each distinct lane geometry solved on its own (step 7) |
+| A skew target copied by symmetry | The contact tails rise on one side of their pads, so opposite loops are not mirrors. A loop read −16.1 dB on a template that read −38.8 dB on its own group. | 1 retune round | One solve per direction group, each with its own skew target (step 7) |
 | An uncalibrated evaluator | A home-made COM-like eye read 1.4 to 3.1 dB high with a bias that changed per channel. Its false finding drove a two-iteration fix study. | 2 iterations | The official code from the first eye (step 6) |
 | Bench limits found late | A limit that no fixture can resolve. The test plan was rewritten after the review. | 1 review round | The verification method written beside each limit before the runs (step 1) |
 | A coupon that cannot check the launch | A replica fed from its far end predicts −15 dB of conversion that the board does not have | 1 coupon redesign | Each coupon structure predicted with the same model, in the same iteration as the launch (step 10) |
@@ -48,7 +49,7 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
    plane, so no pad counts twice. Run the official COM code from the first eye. Calibrate any fast evaluator against it on your own channels.
 7. **List every distinct lane geometry and solve each one** (§6.1). Group lanes only by a symmetry you can state. Solve nested partner loops
    and their neighbours together. Solve every lane group, or prove with numbers that it matches a solved one. Extra room near a group
-   is no reason to skip it.
+   is no reason to skip it. Read the contact tails in the STEP. One-sided tails break the mirror: solve one loop per direction group.
 8. **Put the bounds in the first sweep** (§10). Solve both window edges exactly. Add the registration and p/n etch corners. Add the module
    corners: the return-loss mask at one end and at both ends, and the slowest transmitter edge. Turn crosstalk on. Plot every metric to twice
    Nyquist.
@@ -216,6 +217,10 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 - A port construct can flip the sign of a skew **[method]**. On box posts with a ground bar, one launch read the p trace early.
   With the real tails cut from the STEP, it read the p trace late. The retune sized on the posts made the conversion worse
   *(worked example)*. A fused STEP still gives the tails: cut the slab below the housing underside, one mesh per tail.
+- One-sided contact tails break the mirror argument **[physics]**. When every tail rises on one side of its pad, loops that run in
+  opposite directions see different p/n paths. Group the loops by direction. Solve one loop per direction group. Set each loop's
+  skew target from its own solve. Never copy a target to another loop by symmetry. One loop read −16.1 dB on the template of
+  the other direction, which read −38.8 dB there *(worked example)*.
 - Record the variants that failed beside the one adopted. They are the reason for the adopted form.
 
 ## 5. Breakout and routing patterns
@@ -323,6 +328,10 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
   17 % of the steps. It moved S by 0.23 dB above −30 dB, and by up to 3.1 dB on low-level ports. A 30 GHz excitation saved 32 %
   and cost up to 0.66 dB in band *(worked example)*. Use them for main-path screens only, never for mode conversion or crosstalk.
   Plot the error per frequency before you say where its maximum sits.
+- A frequency-dependent (Debye) dielectric can run about 100 times slower in an FDTD solver than a fitted conductivity
+  **[method]**. One 6-pole model ran at 1 % of the cell rate *(worked example)*. When the de-embed already restores the correct
+  line, only the short launch keeps the model material. Bound that error by analysis over the launch length instead of a full run.
+  State the sign too. Extra loss damps each reflection on its round trip, so a model with a higher loss tangent reads RL optimistic.
 - Close an FDTD plane-pair cavity with a solid conducting wall, never a via fence near an absorbing face **[method]**. Field leaks between the
   fence vias into a thin strip that ends on the absorbing face, and the run diverges.
 - A 2x-thru for de-embedding reuses the DUT's mesh at its ports **[method]**. With its own mesh the thru reads a flat loss that the de-embedded
@@ -475,6 +484,9 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
   delay from SCD21 with sin(π f dt). Compare both with the skew in the eye. A disagreement points at the ports or the model chain.
 - **Single-ended TDR overlay.** Overlay the p and n TDR profiles from the same end. Where the two traces part, the pair is asymmetric. That
   place is where the conversion comes from.
+- **TDR on a short loop.** A window between the pads of a short loop stays inside the launch reflection. The level there tracks the
+  edge rate and the contact model, not the line impedance. One loop read about 88 ohm there on a 100 ohm pair *(worked example)*.
+  Read the line impedance from the 2D cross-section. Quote a TDR level only where the line is long enough to settle.
 - **Conversion above Nyquist.** Read SCD21 and SCD11 to twice Nyquist. A pair clean at Nyquist that converts just above it still feeds common
   mode to the receiver.
 
@@ -483,6 +495,8 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 - Run the window edges exactly **[method]**. Compute the widths that give the two edges of the ordered impedance window, and solve both.
 - Monte Carlo over the fab spread: etch, prepreg, Dk, Df, roughness, mask, copper **[method]**. Use 1000 samples or more for a 99th percentile,
   and state the 95 % bound on that percentile.
+- Save every sample set with its run, not only the summary **[method]**. A later figure or check may need the samples. Check the
+  file on disk, not the code that writes it: one run predated the save line and left no samples.
 - Vary the launch too: layer registration of the plane void against the pad, and a p/n etch difference **[method]**. A Monte Carlo that holds
   the launch at nominal misses the term that sets the launch.
 - Know which route reaches a window edge **[physics]**. The dielectric spread alone may not reach it; a lot at the edge also has a different
@@ -522,6 +536,11 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 - Predict every coupon structure with the same model before the order. The pass mark is the prediction plus an allowance. Three remounts of the
   2x-thru set that allowance.
 - The edge launch must be rated for the board thickness. Read its drawing first.
+- Put one coupon on each panel, and use reusable clamp-on edge launches **[method]**. A soldered SMA varies from one fixture to the
+  next, and the 2x-thru de-embed needs identical fixture halves. It also limits the bandwidth. Probe pads need a probe station.
+- Put the delta-L pair in both weave directions **[physics]**. The glass weave differs along x and along y.
+- Run each loop replica in the same direction as its board loop. A loop with one-sided contact tails is not its own mirror (§4).
+- Key the coupon data of each board by the board's unique ID. Use this when the identity EEPROM has no room for the data.
 - Fit the material from the delta-L lines. Put the fitted values into the design yaml and rerun the study.
 - A TDR reading within its own uncertainty of a window edge is re-measured, never a lot hold by itself.
 
@@ -594,6 +613,12 @@ Give each reviewer the frozen study, the yaml, the scripts and this list. Give n
 30. Did any screening setting (a looser end criterion, a narrower excitation) produce a conversion or crosstalk number?
 31. Does the solved geometry carry a fab check that fails after the etch tolerance? Does the layout draw it from the solver's yaml?
 32. Was the launch re-extracted from the routed board and solved again before the layout sign-off?
+33. Are the contact tails one-sided? Does each direction group have its own solve and its own skew target?
+34. Does any line impedance come from a TDR window inside a launch reflection, not from the 2D cross-section?
+35. Is the effect of a dispersive dielectric bounded, with the sign of the RL error stated?
+36. Is every Monte Carlo sample set on disk beside its run?
+37. Does the coupon put the delta-L pair in both weave directions? Does each replica run in its board loop's direction?
+38. Is every figure and number labelled simulated, calculated or measured?
 
 ## 16. Records
 
@@ -603,6 +628,8 @@ Give each reviewer the frozen study, the yaml, the scripts and this list. Give n
   per-layer anti-pads, the TDR markers with delta and margin, the S-parameters at Nyquist and a status table.
 - Keep the Touchstone files of record beside the sign-off, named by structure, layers and date. The cascade uses exactly those files.
 - Mark a set-up check "preliminary" in its first line.
+- Label every figure and every number for a reader as simulated, calculated or measured. COM, ICN and ILD are software outputs.
+  Say so, and name what the bench measures instead: BER, a VNA sweep or a TDR. Give each gallery short notes for a beginner.
 - Results borrowed from a sister board are a placeholder. Say so, and sign off again with the board's own models.
 - Each iteration ends with a verdict table (converged / cross-checked / verdict), a risk register, proposed decision rows and learnings.
 - Results of record live beside the study. Figures are generated. The solver export (Gerber, drill, stack-up and port table of exactly the
