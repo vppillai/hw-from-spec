@@ -92,7 +92,8 @@
 - A merge can move a block out of the function that owns it. The product and identity read that belongs in the open path landed
   in a re-clock function, and every run stopped at the revision check. Pin the ownership of such a block with a selftest that
   reads the function source.
-- A worktree has no venv and no vendored skill unless you give it one. A gate that cannot run there reports nothing; the
+- A worktree has no venv and no vendored skill unless you give it one. Run the main checkout's lint on the worktree files.
+  A gate that cannot run there reports nothing; the
   coordinator's merge gate covers it, and the brief says so.
 - One home per rule. A gate tier is an alias of the gate script with a flag, never a second yaml list.
 
@@ -189,6 +190,13 @@ prove the host. The rules below keep the host safe and the jobs alive.
   later. A sleeping laptop or a dropped link then stops nothing.
 - Put the detached command on its own line, with its own redirects. In `a && b && setsid cmd &` the shell backgrounds the whole list.
   The subshell then holds the SSH channel open, and the client hangs.
+- A script run as `bash -s` reads itself from stdin. Give every inner `ssh` or container exec `</dev/null`. Otherwise the inner
+  command reads the rest of the script.
+- **A host with no Docker can still run the pinned image.** `docker export` gives the root filesystem. Add a `metadata.yaml`, and
+  import both as a split system-container image (LXD). The root filesystem has no init. Set the init command (`lxc.init.cmd`)
+  to `/bin/sleep infinity` in the profile. Run the container unprivileged, with no network device.
+- **Purge everything when a lent host goes back.** Delete the containers, the images, the profile and the job
+  storage. Then list each kind again and confirm that it is empty.
 - Retry only on link errors: SSH exit 255, and the rsync codes for a dropped connection or a timeout. A missing remote path is an
   answer, not a dropped link. A retry loop on it held one fetch for half an hour *(worked example)*.
 - **A multiplexed SSH session can hide a broken key login.** The open master connection keeps working after the server stops taking

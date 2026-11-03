@@ -204,6 +204,9 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A union merge kept a closed blocker beside its old open copy, because one branch edited the row in place. Check duplicate row ids after every merge of a table log — 2026-11-02 [agents/merge] (`agent-ops.md` §3).
 - An SSH master connection kept a host reachable after its key login broke. Test a login with multiplexing off — 2026-11-02 [agents/remote] (`agent-ops.md` §5.1).
 - A shell list ending in `setsid cmd &` sent the whole list to the background and hung the SSH client. Detach on a line of its own — 2026-11-02 [agents/remote] (`agent-ops.md` §5.1).
+- An inner `ssh` in a script run as `bash -s` read the rest of the script. Give every inner remote command `</dev/null` — 2026-11-03 [agents/remote] (`agent-ops.md` §5.1).
+- A pinned image ran on a host with no Docker after `docker export` and a metadata file. Purge every container, image and profile at the end — 2026-11-03 [agents/remote].
+- An agent worktree had an empty skill submodule, so its lint link dangled. Run the main checkout's lint on the worktree files — 2026-11-02 [agents/worktree].
 - Another agent overwrote a helper with a generic name in the shared scratch area. Keep helpers in a folder named for the agent — 2026-11-01 [agents/scratch].
 - A review found a requirement closed on a simplified model, and the owner's closure reversed. Brief reviewers to recompute, not to read the record — 2026-11-01 [agents/review] (`agent-ops.md` §4).
 - A bare pipe in a decision row (`all|none|NAME`) and a row without its closing pipe each broke the known-issues reader at the round. Count the cells before the round — 2026-10-21 [records/table].
@@ -324,6 +327,15 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A many-core host with two memory channels ran FDTD at half the speed of a laptop-class SoC, whatever the job split. Route each solver by its bottleneck and measure a short run first — 2026-11-02 [si/hosts] (`high-speed-si.md` §6.2).
 - Two hosts stopped one FDTD run at different steps, and the mesher gave another mesh on another CPU architecture. Prove a new host against results of record and name each difference — 2026-11-02 [si/hosts].
 - A bare container image ignored the package snapshot without an error: it had no CA certificates for the https URL. Install them first and read the package policy — 2026-11-02 [si/containers].
+- A retune sized on box posts made the conversion worse. The real contact tails flipped the skew sign. Model the real contact first — 2026-11-03 [si/contact].
+- One passive but spiked point in a vendor file moved the official COM by 0.25 dB. Despike as well as check passivity — 2026-11-03 [si/data] (`high-speed-si.md` §14).
+- A void edge near the trace made one registration corner several dB worse than the other. Pull the void back on that side — 2026-11-03 [si/void].
+- A model solved two of eight loops, and an unsolved group carried the least margin. Solve every group or prove sameness with numbers — 2026-11-03 [si/lanes].
+- A looser end criterion moved low-level ports by up to 3.1 dB. Keep screening settings out of conversion and crosstalk work — 2026-11-03 [si/fdtd] (`high-speed-si.md` §7.1).
+- An SI generator printed a clearance table that a person had to read. Make the fab check of a solved geometry fail on its own — 2026-11-03 [si/layout] (`high-speed-si.md` §3.2).
+- One memory module ran FDTD at two thirds of the speed of two, on the same CPU. Read the memory slots first — 2026-11-03 [si/hosts].
+- An older numeric interpreter ran the official COM code 27 times slower, with identical numbers. Match the interpreter version — 2026-11-02 [si/hosts].
+- MPI refused a FEM job for lack of slots under a container cpuset. Allow oversubscription and bound the ranks by the job's slots — 2026-11-03 [si/containers].
 
 ## silk / dfm
 - The fab's DFM grades a value EQUAL to its warning threshold as Warning: design strictly greater — thresholds JSON.
@@ -381,6 +393,7 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A fab code that read the right MPN belonged to another maker, and a distributor attribute gave 48 V where the drawing said 20 V. Read the brand field and the drawing — 2026-11-02 [sourcing/maker].
 - A connector headline rating held for one powered pin. The block rating in the qualification report was half of it. Size a rail block from the report — 2026-10-30 [sourcing/rating].
 - A port target of 12 A met a module connector with six 1.5 A power contacts: 9 A absolute. Read the contact limit before the target — 2026-11-02 [sourcing/connector] (`schematic-phase.md` §7).
+- A display datasheet table named two view angles horizontal, and its figure showed them vertical. Record the conflict and settle it on the bench — 2026-11-03 [sourcing/datasheet] (`part-verification.md`).
 
 ## mechanical / case
 - A pluggable module is not a plain box (a cabled transceiver module: bottom open at the leading edge, latch recess on top, corners R 0.15..0.60). Anything that grips it bears on the faces the standard's drawing shows solid. A pocket corner radius comes from the drawing (R > 0.66 clips a legal module), not from a print rule of thumb — 2026-09-29 [mechanical/msa].
@@ -530,6 +543,7 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A module answered "success" to every staged setting and kept its active set. Read the active set back — 2026-10-21 [software/registers] (`software-track.md` §19).
 - A switched-off rail read 0.57 V with the host plugged: idle-high bus lines fed it through the pull-ups. Check "off" with every source connected — 2026-10-24 [software/bench] (`software-track.md` §18).
 - A meter's low-impedance mode pulled a high-impedance node down. Use the plain DC range on a bring-up board — 2026-10-24 [software/bench] (`software-track.md` §18).
+- A spec binned only on a media-side pattern that the device could not generate. Read the PRBS capability matrix first — 2026-11-03 [software/prbs] (`software-track.md` §13).
 
 ## documentation
 - Every mention of a retired string across live docs after a design change: grep, not memory; logs and reviews keep stale words on purpose.
@@ -623,3 +637,4 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - Two coupon readings a day apart ("6.3 is ideal", then "6.2 is perfect"): the design file records the chosen value with its date beside the parameter, and the release carries both coupon results — 2026-10-09 [coupons/fit].
 - A study filed a vendor drawing as BLOCKED. The file had sat in the reference folder for six weeks. Search the tree first — 2026-10-24 [records/blocked] (`part-verification.md`).
 - Four modules moved between three unmarked cases in one evening; only the identity read told them apart. Number every unit first — 2026-10-24 [records/units] (`software-track.md` §23).
+- The cost of each study was never written down and could not be rebuilt later. Start the cost, prediction and dead-end ledgers on day 1 — 2026-11-03 [records/ledgers] (SKILL §0 step 6).

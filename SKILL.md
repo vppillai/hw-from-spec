@@ -1,6 +1,6 @@
 ---
 name: hw-from-spec
-version: 0.11.25
+version: 0.11.26
 description: Run a hardware project (a PCB, a printed or CNC enclosure, or both — scope chosen at kickoff; contract fab such as JLCPCB) from a written specification to a production cut with an owner-gated, generated-only, blind-reviewed workflow — a kickoff questionnaire that asks every owner decision up front with recommended answers, a zero-warning manufacturability bar, and a retro that folds each project's learnings back into the skill. Use this whenever someone starts a board or enclosure project from a spec, asks to set up gates, a decision log, generators, part verification, a fab DFM mirror, a case pipeline, FEA, blind reviews, a release report or a production cut for one, or resumes such a project, or wants the skill improved from a finished project — even if they only say "new KiCad board", "order this at JLC", "review the layout", "cut the release" or "what did we learn".
 ---
 
@@ -63,7 +63,8 @@ reference when you reach that step, not before. Nothing here is specific to one 
    (DRAFT, record MISSING: correct before G1 / M1) → `$PY scripts/now_pages.py` (the five answers of `00-now/`; `--check` is in the day-1 gate list)
    → commit. Then `scripts/adopt_gates.sh` (day-1 list + clone gate) green → `$PY scripts/project.py kickoff --check` green. That check passes when
    every answered kickoff row has landed in project.yaml with a real D row. Then fill the
-   CC-001 evidence cell and the first STATUS paragraph → commit. Only now read the spec. Fill 10-spec/SPEC.md / VERIFY / traceability. `scripts/project.py
+   CC-001 evidence cell and the first STATUS paragraph → commit. Start three ledgers the same day. They hold the cost of each study,
+   each prediction against its measurement, and each dead end with its cost. A cost not written at the time cannot be recovered. Only now read the spec. Fill 10-spec/SPEC.md / VERIFY / traceability. `scripts/project.py
    slots` reads 0 before the G0 ask (§1.1 says what happens at G0).
 7. **CI (optional, when the repo has a remote)**: `templates/ci/` holds pr-check / nightly / release workflows with `{{PROJECT_*}}` placeholders.
    Fill them with the recipe in `templates/ci/README.md`. The recipe copies `setup_linux.sh` / `nightly.sh` / `release_archive.sh` and writes

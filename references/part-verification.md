@@ -67,6 +67,9 @@ an archive with the deltas marked unknown). Vendor library footprint vs vendor d
 for heights. Values read from curves are marked "not in datasheet text" with the reader named.
 - **Search the tree before a BLOCKED row.** First read the datasheet reference folder and the note source tables. One study
   filed a vendor drawing as blocked; the same file had sat in the reference folder for six weeks.
+- **A table can contradict its own figure.** One display sheet labelled two view-angle symbols horizontal in its table. Its
+  figure showed them vertical. Read the symbols and the figure. Record the conflict in the datasheet note, and settle it on the
+  bench.
 - **Other paths to a PDF.** Some vendor sites refuse a scripted fetch. A distributor's part record often links the same PDF (worked example:
   the LCSC `pdfUrl` field). Some vendors keep a stable direct path (worked example: `ti.com/lit/ds/symlink/<part>.pdf`). Record the path that
   answered in `90-log/ENV.md`. Distributor metadata is not authoritative. A distributor API gives stock, price and

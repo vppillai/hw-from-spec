@@ -16,7 +16,7 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 | Fault | Symptom | Cost *(worked example)* | The check that catches it first |
 |---|---|---|---|
 | The model lacks features of the layout of record | A requirement closes, then a review reopens it. A twin with a solid plane and no contact posts read 9 dB better than the launch of record. | 2 iterations and a reversed owner decision | A feature census of the model against the layout source (step 3) |
-| A simplified contact stands in for the real one | The result moves by more than its uncertainty when the contact changes. A vertical port overstated the launch reflection by 3 dB. Contact posts and the real contact tails differed by up to 2 ps of measured p/n delay. | 1 to 2 iterations | One solve of the real contact from the vendor STEP at nominal (step 4) |
+| A simplified contact stands in for the real one | The result moves by more than its uncertainty when the contact changes. A vertical port overstated the launch reflection by 3 dB. Contact posts and the real contact tails differed by up to 2 ps of measured p/n delay. On posts the p trace led. On the real tails it lagged, and a retune sized on the posts made the conversion worse. | 1 to 2 iterations | One solve of the real contact from the vendor STEP at nominal (step 4) |
 | The voxel or dropped-cell artefact | A step of several dB for a micron of width, or a cliff at one corner that only one solver shows | 3 iterations; a two-day redesign sized and then dropped | The edge-snapped mesh and the whole-model voxel screen before any solver time (step 5) |
 | The bounds come late | A fix tuned at nominal fails at a window edge, a fab corner or a module corner. The pair gap fell under the fab minimum at the worst etch after the launch was tuned. | 2 iterations | Exact window edges, fab corners and module corners in the first sweep (step 8) |
 | Corrupt lines in a vendor Touchstone file | A crosstalk figure several times the measured report: 17.5 mV of connector ICN against 2.0 to 3.1 mV measured | A false conclusion carried for six iterations | Point-by-point passivity on every vendor file before use (step 6) |
@@ -43,15 +43,18 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 5. **Screen the mesh before you spend solver time** (§7). Make every copper edge a mesh line. Run the whole-model voxel screen: 0 cuts over
    half a cell. Run three mesh levels on the first geometry. Use a DC-free excitation and judge the port tail. Close a plane cavity with a
    solid wall.
-6. **Clean the inputs and fix the evaluator** (§9.3, §14). Check every vendor file for passivity, point by point. Agree every reference
+6. **Clean the inputs and fix the evaluator** (§9.3, §14). Check every vendor file for passivity, point by point. Drop isolated spikes too: a passive point
+   10 dB off its neighbours is still corrupt. Agree every reference
    plane, so no pad counts twice. Run the official COM code from the first eye. Calibrate any fast evaluator against it on your own channels.
 7. **List every distinct lane geometry and solve each one** (§6.1). Group lanes only by a symmetry you can state. Solve nested partner loops
-   and their neighbours together.
+   and their neighbours together. Solve every lane group, or prove with numbers that it matches a solved one. Extra room near a group
+   is no reason to skip it.
 8. **Put the bounds in the first sweep** (§10). Solve both window edges exactly. Add the registration and p/n etch corners. Add the module
    corners: the return-loss mask at one end and at both ends, and the slowest transmitter edge. Turn crosstalk on. Plot every metric to twice
    Nyquist.
 9. **Cross-check every run in the time domain** (§4, §9.5). Measure the p/n delay at the 50 % crossings of the step response. Compare it
-   with the delay that SCD21 implies. Overlay the p and n TDR. Tune the skew on the measured delay.
+   with the delay that SCD21 implies. Agreement means a pure skew, and a length retune fixes it. Disagreement points at an impedance
+   asymmetry first. Overlay the p and n TDR. Tune the skew on the measured delay.
 10. **Design the coupon in the same iteration as the launch** (§12). Feed each replica pad where the real driver touches it. Predict every
     structure with the model of record.
 11. **Run the second solver on the worst corner in the same iteration** (§6, §7.4). Size its memory first. Pick the isolated cutout that
@@ -66,6 +69,8 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 - A fix that holds at nominal only is half a fix. Rerun it at the bounds of step 8 before you report it.
 - A closure that rests on a twin, a stand-in contact or one solver goes to the owner with that note. It never reads MEETS.
 - Keep the inner loop cheap. Screen a variant on the medium mesh. Judge a margin on the fine mesh only (§7.1).
+- A screening setting (a looser FDTD end criterion, a narrower excitation) is for main-path screens only. Never use it for mode
+  conversion or crosstalk (§7.1).
 - A number from a new host or a new tool image counts only after that host reproduces a result of record (§6.2).
 
 ## 1. The rule of record
@@ -101,6 +106,10 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 - Give the cross-section solver the copper thickness **[method]**. Zero-thickness sheet copper raised a narrow unmasked pair by about 15 ohm.
   That alone made a 6.5 dB gap between two solvers *(worked example)*.
 - A Df that no primary source gives stays [K]. Sweep it. Close it with a coupon fit (§12).
+- Add a dielectric anisotropy corner **[physics]**. A glass-reinforced laminate has a different Dk in plane and through the
+  thickness. A single isotropic Dk hides that term.
+- Treat the glass weave as a skew term, not as noise **[physics]**. One leg can run over glass and its partner over resin. For a pair
+  with a tight skew budget, write a routing angle or an artwork rotation rule. Read the conversion on a coupon from each lot.
 - Set the impedance target per interface, with its window **[owner choice]**. Two interfaces on one board can need different targets. A target
   without a window cannot fail.
 - Model each dielectric wideband (Djordjevic-Sarkar), with Dk and Df quoted at a stated frequency **[physics]**. Resin content moves Dk: a
@@ -116,6 +125,11 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 ## 3. Launch, pad, void and via design
 
 - The launch sets the return loss of a short channel **[physics]**. Loss is rarely the risk on a short host loop; the reflection is.
+- Size a discontinuity with a rule of thumb before you spend solver time on it **[physics]**. Excess capacitance matters when
+  its value in fF exceeds about 10 times the rise time in ps. A corner matters when its width in mils exceeds about 5 times the
+  rise time in ps. Solve only the features above the threshold.
+- Two ground planes form a cavity **[physics]**. Stitch them near every discontinuity and around each connector. Write the stitch
+  pitch as a layout rule. A perfect-conductor wall in the model is a convenience: run one case with the real stitching vias too.
 - A connector pad longer than the contact foot acts as a stub **[physics]**. Cutting the pad to the foot is the strongest cure. It changes the
   vendor footprint, so it needs the vendor's word on solder-joint reliability.
 - A plane void under each signal pad raises the pad impedance **[physics]**. Reference the pad to the next plane down. Sweep the void margin.
@@ -124,6 +138,9 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
   from its partner that does not. That difference is a p/n delay and it converts modes (§4).
 - Keep the trace edge away from the edge of a plane void **[physics]**. Keep a wide, solid reference under every high-speed pair outside the
   pad region.
+- A void edge near the trace makes the registration sensitivity one-sided **[physics]**. One registration corner reads several dB
+  worse than the other. Pull the void back on that side until the two corners balance. One launch moved a void edge by 0.05 mm.
+  The two corners then balanced with no length change *(worked example)*.
 - Let the pair converge to its coupled pitch right below the pad **[physics]**. Long uncoupled legs reflect and convert.
 - Put one ground via in every ground pad of the launch, plated through every plane it passes **[physics]**. A via that stops at the first plane
   leaves the plane pair floating.
@@ -160,6 +177,17 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 - Show a TDR profile for every net from its driving end. Mark the far port on the time axis, or stop the window there. Past the far port
   the trace shows the port impedance, not the line.
 
+### 3.2 From the solved geometry to the layout
+
+- Give the solved geometry a fab check that fails **[fab capability]**. Check every clearance after the etch tolerance, against
+  the fab minimum. Check each plane void against the vias, and against the neck width it leaves. A printed table that a person
+  must read is not a check.
+- Draw the solved region from the same yaml the solver reads **[method]**. The layout and the field model then cannot drift apart.
+- Re-extract the launch from the routed board and solve it again before the layout sign-off (§3.1).
+- Keep the corners the solver solved on a skew-compensation jog **[physics]**. A mitre changes the jog length, and so the skew it
+  nulls. Solve the mitred variant and compare it before you change the corners.
+- Solve and compare a variant before you change any solved feature. An unsolved edit voids the result of record.
+
 ## 4. Differential skew and its compensation
 
 - Compensate skew at the pin where it is created **[physics]**. A back-jog does this: the short-path trace takes its detour at its own pin.
@@ -181,8 +209,13 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
   (§10) before you close it.
 - Measure the p/n delay in the time domain before a retune (§9.5). SCD21 holds the magnitude only, and part of it may not be delay. One
   launch implied 1.4 ps from SCD21 and measured 0.7 ps at the step crossings *(worked example)*.
+- Compare the measured p/n delay with the delay that SCD21 infers **[method]**. When they agree, the conversion is a pure skew and
+  a length retune works. When they disagree, overlay the p and n TDR and look for an impedance asymmetry first.
 - Tune against the real contact, not a post stand-in **[physics]**. The contact tail adds its own p/n path. On one loop the real tails moved
   the measured p/n delay by about 2 ps against straight posts *(worked example)*.
+- A port construct can flip the sign of a skew **[method]**. On box posts with a ground bar, one launch read the p trace early.
+  With the real tails cut from the STEP, it read the p trace late. The retune sized on the posts made the conversion worse
+  *(worked example)*. A fused STEP still gives the tails: cut the slab below the housing underside, one mesh per tail.
 - Record the variants that failed beside the one adopted. They are the reason for the adopted form.
 
 ## 5. Breakout and routing patterns
@@ -191,7 +224,8 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 - Route one pair per pin channel where the pitch allows. Keep the breakout short.
 - Single-ended routing inside a short breakout can give better loss than a forced coupled pair there **[physics]**.
 - The preferred breakout form changes with the data rate. Write the rate threshold into the rule, with its source.
-- Use 45 degree mitres or arcs at bends. The outer trace at a bend is longer; count it in the skew budget.
+- Use 45 degree mitres or arcs at bends. The outer trace at a bend is longer; count it in the skew budget. A solved
+  compensation jog keeps its solved corners (§3.2).
 
 ## 6. The solver chain
 
@@ -210,6 +244,8 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
   starts; a crash in the last step then loses nothing.
 - Size the FEM memory before a run **[method]**. Second-order FEM needs tens of kB per tetrahedron. A full pad-row model can need far more
   memory than one isolated loop. Record the size limit, then pick the cross-check case that fits.
+- Under a container cpuset, the MPI launcher can refuse a FEM job for lack of slots. Allow oversubscription (Open MPI:
+  `OMPI_MCA_rmaps_base_oversubscribe=1`), and let the job's slot count bound the ranks.
 - Test each suspect of a solver disagreement on its own, on a cheap case. Compare a closed box with absorbing faces. Compare direct
   solves with an adaptive sweep. Sweep the copper thickness in 2D.
 
@@ -248,6 +284,9 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 - Count the physical cores and the memory channels before you size a pool **[method]**. A many-core workstation with two memory channels
   ran one FDTD job at about half the speed of a laptop-class SoC with wide unified memory. One, two or four jobs shared the same total
   *(worked example)*. Run one bandwidth-bound job per such host, and give its other slots single-thread work.
+- Read the memory slots too. One module gives one channel. One module ran FDTD at two thirds of the speed of two, on
+  the same CPU *(worked example)*. Most Linux hosts list the modules without root (`udevadm info -e`,
+  `MEMORY_DEVICE_*_SIZE`).
 - Size the FEM memory per case before you pick the host (§6). A small VM ran out on a cutout that a large-memory host fits several times.
 - Measure a short run of each solver class on each host before you route work **[method]**. Record the speed and the peak memory per
   class, and route by that table.
@@ -256,6 +295,7 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 - Name the cause of each cross-host difference **[method]**. The usual causes are:
   - The FDTD end criterion meets floating-point noise, so two hosts stop at different steps. Cut both time records to the common
     length and compare again. The cut records agreed far inside the tolerance *(worked example)*.
+    Two hosts with the same CPU and thread count gave bit-identical results. The stop step is a property of the platform.
   - The FEM mesher gives a different mesh on another CPU architecture from the same geometry. Judge the difference against the mesh
     tolerance of §7, not against zero.
   - A CAD netlist export writes stacked pins of one unit in another order, because the sort is not stable across C++ libraries.
@@ -279,6 +319,10 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 - Judge FDTD time convergence on the port tail, not only on the energy **[method]**. A Gaussian excitation carries DC, and an absorbing face
   cannot remove a static field. The energy then stalls while every port voltage has died. A DC-free excitation (the derivative of a Gaussian)
   converges fast and gives the same S-parameters.
+- A looser FDTD end criterion and a narrower excitation are screening settings **[method]**. On one loop model, −50 dB saved
+  17 % of the steps. It moved S by 0.23 dB above −30 dB, and by up to 3.1 dB on low-level ports. A 30 GHz excitation saved 32 %
+  and cost up to 0.66 dB in band *(worked example)*. Use them for main-path screens only, never for mode conversion or crosstalk.
+  Plot the error per frequency before you say where its maximum sits.
 - Close an FDTD plane-pair cavity with a solid conducting wall, never a via fence near an absorbing face **[method]**. Field leaks between the
   fence vias into a thin strip that ends on the absorbing face, and the run diverges.
 - A 2x-thru for de-embedding reuses the DUT's mesh at its ports **[method]**. With its own mesh the thru reads a flat loss that the de-embedded
@@ -495,6 +539,8 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 
 - Check every vendor Touchstone file for passivity point by point before use **[method]**. Single corrupt lines can hide in a crosstalk file. One
   file set made a connector ICN several times its measured value *(worked example)*. Drop the non-passive points and record how many.
+- Despike every vendor file as well **[method]**. A point can be passive and still corrupt. One SDD11 point at −15 dB between
+  −34 dB neighbours moved the official COM by 0.25 dB *(worked example)*. Drop isolated spikes of about 10 dB, and record how many.
 - A vendor model of a similar part from another maker is a stand-in. Say so in the record. Compare it with any measured report for that part.
 - A measured report of a mated fixture set includes fixture traces. Do not compare its IL with a bare connector model.
 - Licensed vendor models and drawings stay local. Never commit them; record their path and licence.
@@ -543,6 +589,11 @@ Give each reviewer the frozen study, the yaml, the scripts and this list. Give n
 25. Does every fix part fit the mechanical envelope (housing height, keep-outs) before its 3D run?
 26. Recompute three headline numbers from the yaml and the scripts. Do they match the record?
 27. Did each host and image that produced a number first reproduce a result of record? Is each cross-host difference explained?
+28. Was each skew compensation sized on the real contact? Do the measured and the inferred p/n delays agree?
+29. Is every vendor file despiked as well as checked for passivity?
+30. Did any screening setting (a looser end criterion, a narrower excitation) produce a conversion or crosstalk number?
+31. Does the solved geometry carry a fab check that fails after the etch tolerance? Does the layout draw it from the solver's yaml?
+32. Was the launch re-extracted from the routed board and solved again before the layout sign-off?
 
 ## 16. Records
 
