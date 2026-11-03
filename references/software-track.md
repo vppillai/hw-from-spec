@@ -138,6 +138,12 @@ reason and one worked example.
   reviewer's list of untested paths is that list. *Example*: five items. The pre-inserted cable. A switch mode that makes every read NACK. The real open
   path and its OS driver. A signal inside a real sleep. The real numbers of the first SKU.
 - Each item gets a selftest where a fake can reach it, and an arrival row where only hardware can.
+- Read the PRBS capability matrix of the device under test before you pick the loop topology. The matrix names a generator
+  and a checker per side. One device had a host generator and checkers on both sides, but no media generator. A spec that
+  bins only on a media-side pattern can then never bin that device. Choose the binning path from the matrix.
+- A loopback plug with an emulation EEPROM tests a host port, not a module. A tester that is the host needs no emulation,
+  because the module answers for itself.
+- Keep a module-side debug header on the tester board. A stock board can then play the module later, with no new revision.
 
 ## 14. The hardware runbook, written before the boards
 - Write the hardware runbook from the code of record, never from the spec. *Reason*: the code holds facts no document names.

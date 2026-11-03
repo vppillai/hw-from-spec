@@ -1,6 +1,6 @@
 # CHANGELOG — hw-from-spec
 
-## Current state (0.11.25): read this instead of replaying the entries below
+## Current state (0.11.26): read this instead of replaying the entries below
 
 - **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
   thirteen batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
@@ -43,6 +43,33 @@
   address and public pull-request numbers excepted) — `scripts/generic_lint.py` reads the whole repo
   (CHANGELOG and docs included; history keeps its measured numbers), a fenced worked example keeps numbers and kinds but never a name, and the
   repo carries no project retro (a retro report is folded, then deleted).
+
+## 0.11.26 - 2026-11-03 - SI to layout, despiked vendor files, test planning for module testers, lent hosts
+
+Source: the next-revision study days of a two-ended test product, 2026-11-02 and 2026-11-03. The input is the project's log for those
+days, and a survey of public high-speed design practice. This version also carries the Unreleased entry of 2026-11-02 below.
+
+### Added
+- `references/high-speed-si.md`: a new §3.2, from the solved geometry to the layout. The solved geometry gets a fab check that fails.
+  The layout draws the solved region from the solver's yaml. The routed launch is solved again before sign-off. A compensation jog
+  keeps its solved corners.
+- `references/high-speed-si.md` §0 and §4: a port construct can flip the sign of a skew. Compare the measured p/n delay with the
+  SCD21 delay. Solve every lane group, or prove sameness with numbers. A new stop rule keeps screening settings out of conversion
+  and crosstalk work.
+- `references/high-speed-si.md` §2 gains an anisotropy corner and the glass weave as a skew term.
+- `references/high-speed-si.md` §3 gains a void edge near the trace and a rule of thumb for a discontinuity.
+  It also gains the plane cavity with its stitch pitch.
+- `references/high-speed-si.md` §6 gains MPI slots under a container cpuset. §6.2 gains the memory slots of a host.
+- `references/high-speed-si.md` §6.2 adds bit-identical results on the same CPU. §7.1 gives the cost of a looser end criterion.
+- `references/high-speed-si.md` §14 adds despiked vendor files.
+  The §15 checklist gains items 28 to 32.
+- `references/agent-ops.md` §5.1: a pinned image on a host with no Docker, and the purge at loan end.
+  Inner commands of a `bash -s` script take `</dev/null`. In §3, run the main checkout's lint on worktree files.
+- `references/software-track.md` §13: read the PRBS capability matrix before the loop topology. A loopback plug with an emulation
+  EEPROM tests a host port. Keep a module-side debug header.
+- `references/part-verification.md`: a datasheet table that contradicts its own figure.
+- `SKILL.md` §0 step 6: three ledgers from day 1 (study cost, prediction against measurement, dead ends).
+- `references/pitfalls.md`: dated lines in si, agents, sourcing, software and records.
 
 ## Unreleased - 2026-11-02 - The SI convergence playbook and the next-revision learnings (no version bump)
 
