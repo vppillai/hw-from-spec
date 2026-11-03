@@ -66,6 +66,7 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 - A fix that holds at nominal only is half a fix. Rerun it at the bounds of step 8 before you report it.
 - A closure that rests on a twin, a stand-in contact or one solver goes to the owner with that note. It never reads MEETS.
 - Keep the inner loop cheap. Screen a variant on the medium mesh. Judge a margin on the fine mesh only (§7.1).
+- A number from a new host or a new tool image counts only after that host reproduces a result of record (§6.2).
 
 ## 1. The rule of record
 
@@ -239,6 +240,33 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
   numbers "preliminary, set-up check".
 - Sweep each block far enough: vias to about 2 to 2.5 times Nyquist, lines to about 3 times **[method]**. A line must roll off smoothly over
   the span. A resonance there is a model fault.
+
+### 6.2 Choose and prove a simulation host
+
+- Route each job by the bottleneck of its solver, not by core count or memory size **[physics]**. FDTD is memory-bandwidth bound. FEM
+  is memory-capacity bound. SPICE and small numeric scripts are single-thread bound, so a fast core wins.
+- Count the physical cores and the memory channels before you size a pool **[method]**. A many-core workstation with two memory channels
+  ran one FDTD job at about half the speed of a laptop-class SoC with wide unified memory. One, two or four jobs shared the same total
+  *(worked example)*. Run one bandwidth-bound job per such host, and give its other slots single-thread work.
+- Size the FEM memory per case before you pick the host (§6). A small VM ran out on a cutout that a large-memory host fits several times.
+- Measure a short run of each solver class on each host before you route work **[method]**. Record the speed and the peak memory per
+  class, and route by that table.
+- Prove a new host against results of record before it produces one **[method]**. Rerun each solver class on a past case. A
+  deterministic tool must give byte-identical output. Any other tool must agree within a stated tolerance, with the cause named.
+- Name the cause of each cross-host difference **[method]**. The usual causes are:
+  - The FDTD end criterion meets floating-point noise, so two hosts stop at different steps. Cut both time records to the common
+    length and compare again. The cut records agreed far inside the tolerance *(worked example)*.
+  - The FEM mesher gives a different mesh on another CPU architecture from the same geometry. Judge the difference against the mesh
+    tolerance of §7, not against zero.
+  - A CAD netlist export writes stacked pins of one unit in another order, because the sort is not stable across C++ libraries.
+    Compare netlists with the pin lists sorted and the date lines dropped.
+- Match the interpreter version of the reference host, not only the code **[method]**. The official COM code ran over an order of
+  magnitude slower under an older numeric interpreter, with identical numbers *(worked example)*.
+- Run every solver in a container image, and pin the image by its digest **[method]**. Pin the distro package snapshot in the image
+  too. Then two hosts run the same binaries, and a rebuild a month later does as well.
+- Install the CA certificates before you point the package sources at an https snapshot. A bare base image has none, and the package
+  tool falls back to the live archive without an error. Read the package policy output to confirm the snapshot.
+- Keep one host of record per output kind. A second host checks parity. It does not replace the files of record.
 
 ## 7. Convergence and meshing artefacts
 
@@ -514,6 +542,7 @@ Give each reviewer the frozen study, the yaml, the scripts and this list. Give n
 24. Is the p/n delay measured in the time domain, and does the skew tuning use it? Is every metric read to twice Nyquist?
 25. Does every fix part fit the mechanical envelope (housing height, keep-outs) before its 3D run?
 26. Recompute three headline numbers from the yaml and the scripts. Do they match the record?
+27. Did each host and image that produced a number first reproduce a result of record? Is each cross-host difference explained?
 
 ## 16. Records
 
