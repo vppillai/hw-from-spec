@@ -99,6 +99,9 @@
   base commit is an ancestor of HEAD (`git merge-base --is-ancestor`). If not, reset the clean worktree to the named branch.
 - A file that a brief cites can live on another branch only. Read it with `git show <branch>:<path>`, and cite the branch and path.
 - A copied table header can outlive its data. When a header and the commit message disagree, trust the commit and the run log.
+- **A landed decision gets a copy sweep.** Search every document and every yaml for each copy of the old value. Update every copy in
+  the same pass as the decision row. Check each hit's meaning first (§4). A blind review found four stale copies that the decision
+  pass had missed *(worked example)*.
 - One home per rule. A gate tier is an alias of the gate script with a flag, never a second yaml list.
 
 ## 4. Blind reviews (the protocol; templates in `workflows/`)
@@ -158,6 +161,12 @@
   fix-check rounds ran before one found no MAJOR, and most of their findings were of this kind *(worked example)*.
 - External reviewers can grade on another scale (High / Medium / Low). State the mapping to BLOCKER / MAJOR / MINOR before you count
   findings across rounds. A fix-check repeats old ids as closure rows. Count only the rows that are not in a closure state.
+- **List an external CLI's models before a run.** The model names change. A name that no longer exists gives an empty report.
+- **Split a large upload for a web reviewer.** A browser reviewer can refuse or truncate a large file set. Send the package in parts.
+  When a run fails, retry on a smaller set, and record the split in the merge.
+- **A milestone gets a fresh double-blind round.** The milestones are a spec pass, a closed SI loop, a study and a tag. A fix-check round
+  with fresh reviewers follows the fixes. Merge into one disposition per discipline. Each row reads FIX, OWNER, CLOSED or REJECTED.
+  Check every BLOCKER and MAJOR against the frozen package before its row is written. Bring the owner one recommended option per OWNER row.
 
 ## 5. Background jobs and the machine
 - **Long chains run in the BACKGROUND and are waited on by the harness, never by a foreground loop.** Every job writes its own log. It ends the log
@@ -219,6 +228,11 @@ prove the host. The rules below keep the host safe and the jobs alive.
   result before the fetch. Otherwise, fetch each result before the next push.
 - A firmware build runs offline in a pinned toolchain image, with the network off. Start each run from an empty build folder.
   A partial clean of the build folder breaks the next incremental run.
+- **Never push a records folder with `--delete` to a shared remote checkout.** A later push deletes the records that an earlier job
+  wrote there before the fetch. Three records were lost that way in one day *(worked example)*. Write remote outputs under the
+  ignored build folder, and pull them from there. Rebuild a lost table from its job log.
+- **A lent host can reboot.** Keep each chain short. Keep a resubmit list in the checkpoint file. After a reboot, remove only the
+  locks of jobs that are dead. Check each lock's process before you remove it.
 
 ## 6. Reporting
 - Every report, record and README follows `references/writing-style.md`: lead with the result, second person, active voice, present tense,

@@ -169,6 +169,12 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - Six blind fix-check rounds ran before one found no MAJOR. Most findings were stale numbers and uncovered rows a script finds. Run the stale-number sweep and the coverage script before each round — 2026-11-01 [process/fix-check] (`agent-ops.md` §4).
 - A stale-number sweep nearly replaced a number that differed from the new value on purpose. Check each hit's meaning before you replace it — 2026-11-01 [process/stale].
 - A board was removed from an architecture before anyone named why it existed: for the display height, not the haptics. Name the reason first — 2026-11-02 [process/architecture] (`schematic-phase.md` §7).
+- A blind review found stale copies of four decided values: a power ceiling, a grant rule, a switch part and a buffer part. Sweep every copy when a decision lands — 2026-11-03 [records/stale] (`agent-ops.md` §3).
+- An RC filter on a start-up window comparator lagged past the gate FET's threshold spread and cleared the latch on a normal start. Count the lag against the spread — 2026-11-03 [power/startup] (`schematic-phase.md` §6).
+- A divider into a pin passed its limit only at the nominal input. Check the pin's absolute maximum at the TVS clamp voltage — 2026-11-03 [power/protection] (`schematic-phase.md` §6).
+- A PD under-voltage alert sat above the legal load dip plus the cable drop. Put the alert below that sum — 2026-11-03 [power/pd] (`schematic-phase.md` §6).
+- A sink PDO current above a common charger's rating dropped the contract to a lower voltage. Read the sink chip's matching rule and its request-current option — 2026-11-03 [power/pd] (`schematic-phase.md` §6).
+- A mezzanine lift under load was planned with presence pins as long as the power pins. Equal pins cannot sequence a live lift — 2026-11-03 [process/safety] (`schematic-phase.md` §7).
 
 ## agents / git
 - Agents die when the machine sleeps or on API 500s; resume by message with the MEASURED state; heartbeat monitors ~25 min; time-box every long task; parallel router JVMs SIGTERM each other — STATUS 09-18…21.
@@ -217,6 +223,10 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A rewritten queue file under a `while read` runner left its offset mid-line. Start a new runner on a new file — 2026-11-03 [agents/remote].
 - A later job overwrote an earlier job's result in a shared remote checkout before the fetch. Give each job its own output folder — 2026-11-03 [agents/remote].
 - An agent worktree started on the default branch, not on the named branch. Check the base commit is an ancestor of HEAD — 2026-11-03 [agents/worktree] (`agent-ops.md` §3).
+- A remote push with `--delete` removed three job records from a shared checkout before the fetch. Write remote outputs under the build folder — 2026-11-03 [agents/remote] (`agent-ops.md` §5.1).
+- A lent host rebooted mid-chain. Keep chains short, keep a resubmit list, and remove only the locks of dead jobs — 2026-11-03 [agents/remote] (`agent-ops.md` §5.1).
+- The model names of an external review CLI change between runs. List the CLI's models before a run — 2026-11-03 [agents/review] (`agent-ops.md` §4).
+- A large upload to a web reviewer failed. Split the package and retry on a smaller set — 2026-11-03 [agents/review] (`agent-ops.md` §4).
 - A stacked pull request closed with its base and could not be retargeted. Retarget the child before the base branch is deleted — 2026-10-08 [agents/git] (`agent-ops.md` §2).
 
 ## tooling / determinism
@@ -344,6 +354,8 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A TDR window between the pads of a short loop read 88 ohm on a 100 ohm pair. Read line impedance from the 2D cross-section — 2026-11-03 [si/tdr] (`high-speed-si.md` §9.5).
 - A dispersive dielectric ran about 100 times slower in FDTD. Bound its effect over the launch by analysis — 2026-11-03 [si/fdtd] (`high-speed-si.md` §7.1).
 - A figure needed the samples of a 1000-sample run, and only the summary existed. Save every sample set with its run — 2026-11-03 [si/records] (`high-speed-si.md` §10).
+- A length retune could not null one loop. A common-mode map along the loop showed a contact asymmetry that added to the route asymmetry in one direction — 2026-11-03 [si/skew] (`high-speed-si.md` §4).
+- A fixed module output setting was proposed to close a COM gap. COM already optimises the transmitter; the gap was in the channel — 2026-11-03 [si/com] (`high-speed-si.md` §9.3).
 
 ## silk / dfm
 - The fab's DFM grades a value EQUAL to its warning threshold as Warning: design strictly greater — thresholds JSON.
@@ -492,6 +504,11 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A foot moved away from the cable end cut the cable-on moment ratio from 2.63 to 1.09. Rerun the stability row after every foot move — 2026-10-24 [case/stability] (`case-pipeline.md` §Stability).
 - A second preset missed two days of shared changes, and its rebuild found a sliver. Rebuild every preset that shares the edited code — 2026-10-24 [case/presets] (`case-pipeline.md`).
 - Pockets were cut for a Ø6.0 disc, and the discs were Ø6.35. Keep a bought part's dimensions in one yaml block — 2026-10-21 [case/parts] (`case-pipeline.md`).
+- A bulk-air rise rule asked for about twice the flow and hid the fin pressure drop. Size the fan from the case limit through the sink curve — 2026-11-03 [mech/thermal] (`schematic-phase.md` §6).
+- A sink-only thermal model read 4 W low. A bare-board read gave the side path beside the sink — 2026-11-03 [mech/thermal] (`schematic-phase.md` §6).
+- A hood chamfer took 4.5 mm of roof at the fan wall, and the fan missed its hood by 8 mm. Check the fan in the real duct — 2026-11-03 [mech/fan] (`schematic-phase.md` §6).
+- A board-width change could leave a case envelope too narrow when the case copied the width. Generate the envelope from the board yaml — 2026-11-03 [mech/case] (`case-pipeline.md` §Chain).
+- One fan took PWM at 80 to 120 Hz only. Read the PWM window before a fan meets the drive frequency — 2026-11-03 [sourcing/fan].
 
 ## fea
 - Gmsh refuses CGAL STLs as volume boundaries; fTetWild meshes them; drop zero-volume slivers or K is singular.
@@ -554,6 +571,7 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A spec binned only on a media-side pattern that the device could not generate. Read the PRBS capability matrix first — 2026-11-03 [software/prbs] (`software-track.md` §13).
 - An emulated I2C target behind a bridge that cannot see a stretch must answer in time. Keep its TX FIFO full from an interrupt — 2026-11-03 [software/i2c] (`software-track.md` §13).
 - A stock board fit a debug header only after one extra ground pin joined its signal row. Put signals and a ground in one row — 2026-11-03 [software/debug].
+- A high-power log command looped for 60 s with no health poll and ran past the throttle limit. Put the hold stops inside the loop — 2026-11-03 [software/thermal] (`software-track.md` §18).
 
 ## documentation
 - Every mention of a retired string across live docs after a design change: grep, not memory; logs and reviews keep stale words on purpose.

@@ -31,7 +31,8 @@ make one folder per case version; the version is a field of the records and the 
 the kits copy from here. `checks/` holds the census + DFM records and the clearance and interference checks; it is the only place the gates look.
 `pictures/` holds previews, faces and assembly renders. `build/` holds scratch SCAD, logs, slicer scratch and caches. It is gitignored and recreated by every
 run. The SCAD of record stays tracked at the set root, because the assembly-guide renders and the traceability checks key on its md5.
-The determinism check compares a regenerated part with its recorded md5 in `checks/`. Everything under the set is generated. `ASSEMBLY.md` and
+Generate the case envelope from the board yaml: the board width, length and the tall parts. A board-width change then
+cannot leave the case too narrow. A case yaml that copies a board number goes stale at the next board change. The determinism check compares a regenerated part with its recorded md5 in `checks/`. Everything under the set is generated. `ASSEMBLY.md` and
 print sheets are generated with spliced blocks (`<!-- gen:BEGIN name -->…<!-- gen:END -->`) so prose survives regeneration.
 
 ## Board mesh of record (both) / fit input of record (mech)

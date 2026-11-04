@@ -269,6 +269,8 @@ reason and one worked example.
   warning limit and shut two lanes down. Poll both ends between windows, with the throttle limit. Compute the poll period: the
   remaining margin over the heating rate, less the sensor lag and the shutdown latency, with a safety factor. A failed
   sensor read stops the run. Keep an independent hardware over-temperature cut-off.
+- A command that loops in high power needs the hold stops inside its loop. Poll the health on each sample. Without them, one
+  60 s log ran past the throttle limit *(worked example)*.
 - Two gates can let a high-power run through: the posture table and the power budget flag. The record names the gate that
   let the run through.
 - Pattern traffic adds heat over the idle hold at the same budget. One fit under traffic read 13 K above the idle fit, with a slope 1.6 K/W steeper.
