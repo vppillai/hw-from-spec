@@ -63,6 +63,10 @@ Source: the last study and review work of 2026-11-03 on a two-ended test product
 - `SKILL.md` §5: milestone rounds.
 - `references/pitfalls.md`: dated lines in records, power, safety, agents, si, mechanical and software.
 
+### Changed
+- `evals/core_rules.yaml` and its manifest: the guard lists of `schematic-phase.md` §6 and `software-track.md` §18 carry the new
+  sentences.
+
 ## 0.11.27 - 2026-11-03 - Direction groups, short-loop TDR, coupon fixtures, queue hygiene
 
 Source: the later study work of 2026-11-03 on a two-ended test product. The input is the project's log for that day.

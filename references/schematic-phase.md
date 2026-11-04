@@ -137,7 +137,7 @@ Rules the studies found, for any next revision. The worked examples come from on
   about 1250 mm².
 - **Fan sizing.** Size the fan against the hottest part's case limit, through the real flow path. A bulk-air rise rule asked for
   about twice the flow and hid the pressure *(worked example)*. Read the heat-sink fin pressure drop at the operating point. A 1.0 mm
-  fin gap needed about 129 Pa at the need. A small fan stalled near 50 Pa *(worked example)*. Small fans are pressure-limited.
+  fin gap needed about 129 Pa at the needed flow. A small fan stalled near 50 Pa *(worked example)*. Small fans are pressure-limited.
   Pick the fan by its pressure at the need, never by its free flow.
 - **A side path beside the sink.** A bare-board bench read with no air gives the heat path beside the sink. Put it in the model.
   One sink-only model read 4 W low, because the side path carried about a third of the heat *(worked example)*.
