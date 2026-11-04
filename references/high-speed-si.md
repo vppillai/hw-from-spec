@@ -221,6 +221,11 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
   opposite directions see different p/n paths. Group the loops by direction. Solve one loop per direction group. Set each loop's
   skew target from its own solve. Never copy a target to another loop by symmetry. One loop read −16.1 dB on the template of
   the other direction, which read −38.8 dB there *(worked example)*.
+- When a length retune cannot null a loop, map the common mode along the loop **[method]**. Take a field dump and plot the common
+  mode against the distance along the loop. The plot shows where the conversion starts. A one-sided contact asymmetry can add to the
+  route asymmetry on loops in one direction and cancel it on the other *(worked example)*.
+- Probe the knobs one at a time **[method]**: the plane void, the pair coupling, the pad trim. Change one, solve, and read SCD21. The
+  knob that moves the conversion is the one to fix. A change of two knobs at once hides which one acts.
 - Record the variants that failed beside the one adopted. They are the reason for the adopted form.
 
 ## 5. Breakout and routing patterns
@@ -448,6 +453,8 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
   through it.
 - Run the module corners: typical packages, one end on the return-loss mask, both ends on it, and the slowest allowed transmitter edge. Report
   the corners that fail; do not require them when no channel passes there, the reference included.
+- A fixed module output setting cannot beat COM's own transmitter optimisation **[method]**. COM already searches the transmitter
+  equalisation for the best result. When a gap stays at COM's best, the gap is in the channel. Fix the channel, not the setting.
 
 ### 9.4 Active sign-off in the time domain
 
@@ -619,6 +626,9 @@ Give each reviewer the frozen study, the yaml, the scripts and this list. Give n
 36. Is every Monte Carlo sample set on disk beside its run?
 37. Does the coupon put the delta-L pair in both weave directions? Does each replica run in its board loop's direction?
 38. Is every figure and number labelled simulated, calculated or measured?
+39. When a retune did not null a loop, does a common-mode map along the loop show where the conversion starts?
+40. Was each knob (plane void, pair coupling, pad trim) probed on its own before a fix was chosen?
+41. Does any proposed fix try to close a COM gap with a fixed transmitter setting?
 
 ## 16. Records
 

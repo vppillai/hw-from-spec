@@ -1,6 +1,6 @@
 ---
 name: hw-from-spec
-version: 0.11.27
+version: 0.11.28
 description: Run a hardware project (a PCB, a printed or CNC enclosure, or both — scope chosen at kickoff; contract fab such as JLCPCB) from a written specification to a production cut with an owner-gated, generated-only, blind-reviewed workflow — a kickoff questionnaire that asks every owner decision up front with recommended answers, a zero-warning manufacturability bar, and a retro that folds each project's learnings back into the skill. Use this whenever someone starts a board or enclosure project from a spec, asks to set up gates, a decision log, generators, part verification, a fab DFM mirror, a case pipeline, FEA, blind reviews, a release report or a production cut for one, or resumes such a project, or wants the skill improved from a finished project — even if they only say "new KiCad board", "order this at JLC", "review the layout", "cut the release" or "what did we learn".
 ---
 
@@ -292,6 +292,10 @@ schematic, layout, mechanical, the host link, firmware and tool, test plan and c
 as roles inside the gate's one review round. Every field finding of the last revision is a named check in its discipline's checklist.
 The coordinator sets the role list by hand; `workflows/blind-deep-review.js` does not split by discipline. *Reason*: a pass per discipline finds
 a defect one gate earlier than one merged review at the end. The studies that open the revision follow `references/schematic-phase.md` §6.
+
+**Milestone rounds.** Run a fresh double-blind round at every milestone: a spec pass, a closed SI loop, a study, a tag. A fix-check
+round with fresh reviewers follows the fixes. Merge into one disposition per discipline (FIX / OWNER / CLOSED / REJECTED). Bring the
+owner one recommended option per OWNER row (`references/agent-ops.md` §4).
 
 **The double-blind drawing round** [mech, both] (the M1 round for a printed part, beside `case_dfm`): the drawing sheet is generated from the
 exported meshes with its self-checks (`references/case-pipeline.md` §Drawings). Reviewer A gets ONLY the sheet and a one-paragraph design

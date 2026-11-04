@@ -460,6 +460,9 @@ measurement:
   - 'Compute the poll period: the remaining margin over the heating rate, less the sensor lag and the shutdown latency, with a safety factor.'
   - A failed sensor read stops the run.
   - Keep an independent hardware over-temperature cut-off.
+  - 'A command that loops in high power needs the hold stops inside its loop.'
+  - 'Poll the health on each sample.'
+  - 'Without them, one 60 s log ran past the throttle limit *(worked example)*.'
   - 'Two gates can let a high-power run through: the posture table and the power budget flag.'
   - The record names the gate that let the run through.
   - Pattern traffic adds heat over the idle hold at the same budget.
@@ -555,6 +558,12 @@ studies:
   - Also check its safe operating area, inrush, current limit, reverse current and fault energy.
   - '**Overvoltage.** A high input voltage makes a failed regulator a load killer.'
   - Put an overvoltage cut-off between the regulator and the load.
+  - '**A window comparator with an RC gate.** An RC filter on a start-up window comparator delays its output.'
+  - 'Count that lag against the threshold spread of the gate FET.'
+  - 'Otherwise the comparator clears the latch on a normal start.'
+  - 'Run the check at both FET corners.'
+  - '**A divider into a pin.** Check a divider into a pin''s absolute maximum at the TVS clamp voltage, not at the nominal input.'
+  - 'A surge holds the input at the clamp voltage, and the divider passes its share to the pin.'
   - '**Back-power.** A rail part does not stop back-power through signal lines.'
   - List every path that can feed the rail.
   - Check each path for isolation, voltage, direction and reset behaviour.
@@ -569,6 +578,11 @@ studies:
   - To read them again, it sends Get_Source_Cap.
   - A soft reset is protocol recovery, not a query.
   - Send a soft reset only when the PD policy engine and the controller's datasheet call for recovery.
+  - '**The sink request current.** A sink PDO current above a common charger''s rating can drop the contract to a lower voltage.'
+  - 'Read the sink chip''s matching rule, and its "request source current" option.'
+  - 'Test the request against the chargers the product names.'
+  - '**The PD under-voltage alert.** Put the alert threshold below the legal load-step dip plus the cable drop.'
+  - 'Otherwise a normal load step trips the alert.'
   - '**Fan start-up.** A fan controller''s duty after a power cycle is undefined until you verify it.'
   - A volatile curve can leave the fan at 0 % with no host.
   - Use a part with an EEPROM, or a controller with the curve in flash.
@@ -579,6 +593,20 @@ studies:
   - This skill carries no flow solver; a bench measurement decides.
   - 'Worked example: a 1-D estimate gave 20 to 27 % of free flow behind 212 mm² of slots.'
   - A 30 mm fan's gross disc is about 700 mm², and a 40 mm fan's about 1250 mm².
+  - '**Fan sizing.** Size the fan against the hottest part''s case limit, through the real flow path.'
+  - 'A bulk-air rise rule asked for about twice the flow and hid the pressure *(worked example)*.'
+  - 'Read the heat-sink fin pressure drop at the operating point.'
+  - 'A 1.0 mm fin gap needed about 129 Pa at the needed flow.'
+  - 'A small fan stalled near 50 Pa *(worked example)*.'
+  - 'Small fans are pressure-limited.'
+  - 'Pick the fan by its pressure at the need, never by its free flow.'
+  - '**A side path beside the sink.** A bare-board bench read with no air gives the heat path beside the sink.'
+  - 'Put it in the model.'
+  - 'One sink-only model read 4 W low, because the side path carried about a third of the heat *(worked example)*.'
+  - '**The fan in its duct.** Check that the fan fits the duct in its real orientation, with every chamfer and rib of the hood.'
+  - 'One hood chamfer took 4.5 mm of roof at the fan wall, and a 40 mm fan missed its hood by 8 mm *(worked example)*.'
+  - 'Read the fan''s PWM frequency window against the drive.'
+  - 'One fan took 80 to 120 Hz only, and another took 20 to 30 kHz *(worked example)*.'
   - '**Heat capacity.** Measure the load''s heat capacity on the bench before you set the fan''s response.'
   - On one bench, 8 W raised a module 11 K in 60 s, with the losses neglected.
   - That reading, about 44 J/K, overstates C.

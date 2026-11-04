@@ -1,6 +1,6 @@
 # CHANGELOG — hw-from-spec
 
-## Current state (0.11.27): read this instead of replaying the entries below
+## Current state (0.11.28): read this instead of replaying the entries below
 
 - **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
   thirteen batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
@@ -43,6 +43,29 @@
   address and public pull-request numbers excepted) — `scripts/generic_lint.py` reads the whole repo
   (CHANGELOG and docs included; history keeps its measured numbers), a fenced worked example keeps numbers and kinds but never a name, and the
   repo carries no project retro (a retro report is folded, then deleted).
+
+## 0.11.28 - 2026-11-03 - Copy sweeps, power start-up checks, fan sizing, loop maps, milestone rounds
+
+Source: the last study and review work of 2026-11-03 on a two-ended test product. The input is the project's log for that day.
+
+### Added
+- `references/schematic-phase.md` §6: an RC-gated window comparator counts its lag against the gate FET spread. A divider is checked
+  at the TVS clamp voltage. The sink request current and the PD under-voltage alert get their own rules.
+- `references/schematic-phase.md` §6: size a fan by pressure through the real flow path. Model the side path beside the sink.
+  Check the fan in its duct and its PWM window.
+- `references/schematic-phase.md` §7: a decision gets a copy sweep. A live lift of a mezzanine connector needs sequenced pins.
+- `references/case-pipeline.md` §Chain: generate the case envelope from the board yaml.
+- `references/high-speed-si.md` §4: map the common mode along a loop, and probe each knob on its own. §9.3: a fixed transmitter
+  setting cannot beat COM. The §15 checklist gains items 39 to 41.
+- `references/agent-ops.md` §3: the copy sweep. §4: list a CLI's models, split a web upload, milestone rounds with one
+  disposition per discipline. §5.1: no `--delete` push of records, and lent hosts that reboot.
+- `references/software-track.md` §18: hold stops inside a high-power loop.
+- `SKILL.md` §5: milestone rounds.
+- `references/pitfalls.md`: dated lines in records, power, safety, agents, si, mechanical and software.
+
+### Changed
+- `evals/core_rules.yaml` and its manifest: the guard lists of `schematic-phase.md` §6 and `software-track.md` §18 carry the new
+  sentences.
 
 ## 0.11.27 - 2026-11-03 - Direction groups, short-loop TDR, coupon fixtures, queue hygiene
 

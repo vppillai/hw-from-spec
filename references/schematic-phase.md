@@ -112,6 +112,10 @@ Rules the studies found, for any next revision. The worked examples come from on
   0.14 V and burns 0.7 W. Also check its safe operating area, inrush, current limit, reverse current and fault energy.
 - **Overvoltage.** A high input voltage makes a failed regulator a load killer. Put an overvoltage cut-off between the regulator and
   the load.
+- **A window comparator with an RC gate.** An RC filter on a start-up window comparator delays its output. Count that lag against
+  the threshold spread of the gate FET. Otherwise the comparator clears the latch on a normal start. Run the check at both FET corners.
+- **A divider into a pin.** Check a divider into a pin's absolute maximum at the TVS clamp voltage, not at the nominal input.
+  A surge holds the input at the clamp voltage, and the divider passes its share to the pin.
 - **Back-power.** A rail part does not stop back-power through signal lines. List every path that can feed the rail. Check each
   path for isolation, voltage, direction and reset behaviour. A bus buffer with a rated Ioff isolates only the paths it covers.
   A tristate state in the tool helps only while the tool runs; it is not fail-safe at reset.
@@ -120,6 +124,10 @@ Rules the studies found, for any next revision. The worked examples come from on
   capabilities only until the next message overwrites its buffer. Read that behaviour in the chosen controller's datasheet. The firmware
   copies the capabilities on the alert. To read them again, it sends Get_Source_Cap. A soft reset is protocol recovery, not a
   query. Send a soft reset only when the PD policy engine and the controller's datasheet call for recovery.
+- **The sink request current.** A sink PDO current above a common charger's rating can drop the contract to a lower voltage. Read the
+  sink chip's matching rule, and its "request source current" option. Test the request against the chargers the product names.
+- **The PD under-voltage alert.** Put the alert threshold below the legal load-step dip plus the cable drop. Otherwise a normal load step
+  trips the alert.
 - **Fan start-up.** A fan controller's duty after a power cycle is undefined until you verify it. A volatile curve can leave the fan
   at 0 % with no host. Use a part with an EEPROM, or a controller with the curve in flash. Verify a safe reset default duty.
 - **Over-temperature.** Give the load an over-temperature path that needs no host.
@@ -127,6 +135,15 @@ Rules the studies found, for any next revision. The worked examples come from on
   Model or measure them together. This skill carries no flow solver; a bench measurement decides. Worked example: a 1-D
   estimate gave 20 to 27 % of free flow behind 212 mm² of slots. A 30 mm fan's gross disc is about 700 mm², and a 40 mm fan's
   about 1250 mm².
+- **Fan sizing.** Size the fan against the hottest part's case limit, through the real flow path. A bulk-air rise rule asked for
+  about twice the flow and hid the pressure *(worked example)*. Read the heat-sink fin pressure drop at the operating point. A 1.0 mm
+  fin gap needed about 129 Pa at the needed flow. A small fan stalled near 50 Pa *(worked example)*. Small fans are pressure-limited.
+  Pick the fan by its pressure at the need, never by its free flow.
+- **A side path beside the sink.** A bare-board bench read with no air gives the heat path beside the sink. Put it in the model.
+  One sink-only model read 4 W low, because the side path carried about a third of the heat *(worked example)*.
+- **The fan in its duct.** Check that the fan fits the duct in its real orientation, with every chamfer and rib of the hood. One hood
+  chamfer took 4.5 mm of roof at the fan wall, and a 40 mm fan missed its hood by 8 mm *(worked example)*. Read the fan's PWM frequency
+  window against the drive. One fan took 80 to 120 Hz only, and another took 20 to 30 kHz *(worked example)*.
 - **Heat capacity.** Measure the load's heat capacity on the bench before you set the fan's response. On one bench, 8 W raised a
   module 11 K in 60 s, with the losses neglected. That reading, about 44 J/K, overstates C. Sensor lag flattens the measured
   slope and overstates C again. Fit the sensor lag with the net heat flow. Otherwise use an independent conservative C, from
@@ -170,3 +187,9 @@ Run these before the spec fixes a target or a board split. A study of §6 cites 
   replacement does not cover.
 - **A part change leaves old numbers behind.** Rewrite the clauses the decision names. Mark every other number derived from the old part
   as superseded, with the re-run that replaces it.
+- **A decision leaves old copies behind.** When a decision lands, search every document and every yaml for each copy of the old value.
+  Update them all in the same pass. One blind review found stale copies of a power ceiling, a grant rule, a switch part and a buffer
+  part *(worked example)*.
+- **A live lift needs sequenced pins.** A test that lifts a mezzanine connector under load is unsafe when its presence pins have the same
+  contact length as its power pins. Equal pins cannot break the power before the presence signal. Remove power first, or use a connector
+  with a short presence pin. Put this item in the safety review of the test plan.
