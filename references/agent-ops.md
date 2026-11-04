@@ -161,7 +161,7 @@
   fix-check rounds ran before one found no MAJOR, and most of their findings were of this kind *(worked example)*.
 - External reviewers can grade on another scale (High / Medium / Low). State the mapping to BLOCKER / MAJOR / MINOR before you count
   findings across rounds. A fix-check repeats old ids as closure rows. Count only the rows that are not in a closure state.
-- **List an external CLI's models before a run.** The model names change. A name that no longer exists gives an empty report.
+- **List an external CLI's models before a run.** The model names change. A retired model name gives an empty report.
 - **Split a large upload for a web reviewer.** A browser reviewer can refuse or truncate a large file set. Send the package in parts.
   When a run fails, retry on a smaller set, and record the split in the merge.
 - **A milestone gets a fresh double-blind round.** The milestones are a spec pass, a closed SI loop, a study and a tag. A fix-check round
