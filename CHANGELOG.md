@@ -44,22 +44,30 @@
 
 ## 0.12.0 - 2026-11-05 - The SI convergence playbook and five checks on every owner option
 
-Source: the field-solver study of a short board-level loop for a high-speed pluggable host port, two solvers on four hosts, the official
-COM code, and one G0 review round. The learnings log since the last harvest and 19 decision rows were read for general lessons. The owner
-asked for the SI playbook first. Case, slicer, bench and firmware lines of the same period are not folded here; a later harvest takes them.
+Source: a field-solver study of a multi-Gb/s board-level channel, two solver classes, the official COM code, and one review round.
+The owner asked for the SI playbook first. Case, slicer, bench and firmware lines of the same period are not folded here; a later harvest takes them.
 
 ### Added
-- `references/pcb-layout-dfm.md` §19, the SI simulation convergence playbook. §19.1 mesh convergence: two meshes and a mesh band, no
-  low-level margin on the medium mesh, the bias with no fixed sign, the meshed-metal dump, the copper edge lines, the port-signal end
-  criterion, the de-embedding thru on the device mesh, cross-host noise. §19.2 two solvers: equal models, copper thickness, one suspect per
-  cheap case, the symmetric-pair proof, ports that see the quantity, skew against other conversion, double-counted pads, clean Touchstone
-  files. §19.3 COM: software output, the official code and calibration, sheet hygiene, the frozen reference with a noise band, every case in
-  every table, absolute values per case. §19.4 the model and the board both ways: vias from the board with ground vias, the negative
-  control, the board union per channel, every lane group, a failing fab check, solved corners kept, yaml keys in copied tables, the
-  impedance window on every metric. §19.5 YAML 1.1 numbers. §19.6 delegated SI decisions with complete tables.
-- `SKILL.md` §3, five checks on every option given to the owner: no hardware gate below the part's real capability (policy limits in
-  firmware with a lab override, a removed physical stop listed), both bounds of every min / max window, yields that multiply, the value
-  proven on the previous revision, a label on every number.
+- `references/pcb-layout-dfm.md` §19, the SI simulation convergence playbook:
+  - §19.1 mesh convergence. Two meshes and a mesh band. No low-level margin on the medium mesh. The bias with no fixed sign. The
+    meshed-metal dump. The copper edge lines. The port-signal end criterion. Conductors clear of the absorbing boundary. The
+    de-embedding thru on the device mesh. Cross-host noise.
+  - §19.2 two solvers. Equal models and copper thickness. One suspect per cheap case. The mirrored symmetric-pair proof. Ports that see
+    the quantity. Skew against other conversion. Double-counted pads. Touchstone cleaning by passivity enforcement, recorded.
+  - §19.3 COM. Software output. The official code and calibration. The reference sheet left unedited. The frozen reference with a noise
+    band. Every case in every table. Absolute values per case.
+  - §19.4 the model and the board both ways. Vias from the board, ground vias included. The negative control. The board union per
+    channel. Every lane group. A fab check that can fail. Solved corners kept. Yaml keys in copied tables. The impedance window on
+    every metric.
+  - §19.5 YAML 1.1 numbers.
+  - §19.6 delegated SI decisions with complete tables, provisional until the fine mesh confirms.
+- `SKILL.md` §3, five checks on every option given to the owner:
+  1. No hardware gate below the part's real capability. A protection trips below the damage rating. Policy limits live in firmware
+     with a lab override. A removed physical stop is listed.
+  2. Both bounds of every min / max window.
+  3. Yields that multiply, when the gates are independent.
+  4. The value proven on the previous revision.
+  5. A label on every number.
 - `references/writing-style.md` §3: label every number simulated, calculated or measured; name a software metric as software output.
 - `references/agent-ops.md` §4: a fresh blind round at each milestone, then a fix-check round; measure each reviewer claim on the model.
 - `references/pitfalls.md`: seven process lines, four agents lines, seven tooling lines, five layout / SI lines, one FEA line.

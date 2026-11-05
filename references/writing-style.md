@@ -34,7 +34,7 @@ to a vendor, and chat reports.
 - Say what you do not know. "Not measured" is better than a hedge.
 - Label every number and figure a reader sees. "Simulated" comes from a solver and a model. "Calculated" comes from a script and
   datasheet values. "Measured" comes from real hardware. A simulated eye looks like a scope capture, so say which one it is.
-- Name a software metric as software output (an eye or channel margin, a crosstalk sum). Name what the bench measures in its place.
+- Name a software metric as software output (an eye or channel margin, a crosstalk sum). Name what the bench measures beside it.
 - Write to a person. Say who did what: "The owner sends the reply." Never "it was decided".
 - Keep the reason for a rule as one short clause. The episode behind it goes to `references/pitfalls.md` as a dated line.
 
