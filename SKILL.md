@@ -227,7 +227,7 @@ order. A WARN that is "known" is not a bar; it is either fixed or a dated, evide
   (`references/pitfalls.md` process).
 - **Every option you give the owner passes five checks.** Apply them in a CC row and at a gate ask.
   1. No hardware gate below the part's real capability. A hardware protection trips below the damage rating of the part it protects.
-     Its trip tolerance and response time stay inside that rating. Never set it at a policy value below that need.
+     Its trip tolerance and response time stay inside that rating. Never set the hardware trip at a policy value.
      A policy limit (a power grant, a temperature mark, a timing margin) lives in firmware or software. It has a safe default and a lab override.
      A no-firmware stop keeps a threshold that firmware can set, and the threshold resets to the safe default at power-up.
      When you remove a physical stop, list each stop it held, its replacement, and what the replacement does not cover.
