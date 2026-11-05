@@ -159,5 +159,8 @@ exchange. At G2 / package build (`references/fab-dfm.md` §9, `references/pcb-la
 - **The order remark carries the fab-side decisions** the CAM would otherwise take silently, within the remark cap (§4). The decisions:
   press-fit and peg hole finished sizes and tolerances, which holes are NPTH, via treatment, "mask openings as designed", minimum trace/space
   finished. What does not fit is in `ASSEMBLY_NOTES`, which the remark names. §6 step 4 checks the same list back.
+- **Quote questions before the gate that rests on them.** List each fab statement a budget needs: an in-program hole-to-hole accuracy, a
+  tolerance the public page does not state, a one-sided window. Ask them on a quote before the gate. A budget that rests on an answer stays
+  open until the written answer is on file.
 - **The arrival checklist** gets its §A rows at the order (template rows A-0 and A-5). The rows: the production-file diff on file before the
   fab's approval reply, and the engineer-question answers seen in the fab's final photos. B-2 checks the rotated parts first on the bench.

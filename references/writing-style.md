@@ -34,7 +34,9 @@ to a vendor, and chat reports.
 - Say what you do not know. "Not measured" is better than a hedge.
 - Label every number and figure a reader sees. "Simulated" comes from a solver and a model. "Calculated" comes from a script and
   datasheet values. "Measured" comes from real hardware. A simulated eye looks like a scope capture, so say which one it is.
-- Name a software metric as software output (an eye or channel margin, a crosstalk sum). Name what the bench measures beside it.
+  Name a software metric as software output (an eye or channel margin, a crosstalk sum), and name what the bench measures beside it
+  (`references/high-speed-si.md` §16). Give a gallery short notes for a beginner.
+- Read a time from the record's time column, never from a results row. A row can hold a sample count.
 - Write to a person. Say who did what: "The owner sends the reply." Never "it was decided".
 - Keep the reason for a rule as one short clause. The episode behind it goes to `references/pitfalls.md` as a dated line.
 
@@ -43,6 +45,7 @@ to a vendor, and chat reports.
   `scripts/generic_lint.py` keeps them free of project names.
 - A project: folder READMEs (`references/project-yaml.md` §Layout), kit texts (`references/print-kit.md` §3), records under `90-log/`,
   order records, vendor replies (`references/vendor-review.md`), and the chat report at the end of a task (`references/agent-ops.md` §6).
+- A chat reply to the owner follows the same sentence rules as a record. Check it against §1 before you send it.
 - A project with old records: `scripts/style_gate.py` gates instead of the plain lint. It freezes a dated baseline keyed on file md5
   (`90-log/STYLE_BASELINE.json`, `--write`). An unchanged file keeps its frozen hits, and every new or edited file lints at 0.
   `style_gate.exclude` in `project.yaml` lists generated records, which are linted at their generator.

@@ -38,7 +38,7 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - The thin-wall flag is computed at UPLOAD and does not depend on the material chosen on the line afterwards; set the order's material anyway (price, map legend) and never explain a flipped verdict by the material — 2026-09-28 [dfm/vendor-map].
 - `modelAnalysisVO.previewUrl` opens the heat-map viewer (Analysis Results tab) directly even when `thinWall` is false. The hidden `input[type=file]` can be unhidden by script. Uploads and analysis work signed out — the DFM read needs no login, ordering does — 2026-09-23 / 09-28 [jlc/3dp].
 - The vendor's thin-wall metric is LENGTH-DEPENDENT. An identical rim-over-lap-step profile passed at a third of the length and failed at full length while three ray-cast censuses found nothing under the gate. A wall that passes on a coupon can fail on the part. A short probe proves nothing about the full body — 2026-09-28 [dfm/vendor-map].
-- Calibrated MJF PA12 rule at ~150 mm: a rim above a skirt-lap step ≥ 2.0 (1.4 fails; 2.0 passes with step + inward undercut kept). Or fill the undercut so the inner wall runs straight to the rim top (`lap.ring_down`, then 1.25 … 1.3 above the step passed). Plain 2.0 walls / floors, boss rings, chamfers into ≥ 1.2 walls, 45° dish ramps read grey. Free-standing wedges read red — 2026-09-28 [dfm/geometry].
+- Calibrated MJF PA12 rule at ~150 mm: a rim above a skirt-lap step ≥ 2.0 (1.4 fails; 2.0 passes with step + inward undercut kept). Or fill the undercut so the inner wall runs straight to the rim top (then 1.25 … 1.3 above the step passed). Plain 2.0 walls / floors, boss rings, chamfers into ≥ 1.2 walls, 45° dish ramps read grey. Free-standing wedges read red — 2026-09-28 [dfm/geometry].
 - Probe method that converges in one round: slice the failing body of record into capped slabs (`trimesh slice_mesh_plane`) to localise + find the length threshold. Then plain-profile OpenSCAD polygon extrusions at 40 mm AND full length with ONE knob each (`-D`), each uploaded alone, API-read, tabulated in one probe table. A 0.6 × scaled body is not informative — 2026-09-28 [dfm/probes].
 - Opposing faces that never overlap (a ledge underside 0.5 from a step top, a ring face 0.4 from a wall plane, a rim ring's 0.4 root) are invisible to a normal-direction ray census. The vendor sees them. `thin_wall_census.py` gates the nearest opposing face in ANY direction (exact point-to-face distance over KD-tree sample pairs) — 2026-09-28 [dfm/geometry].
 - Every vendor DFM decision (rails off, key off, closed rim, undercut filled, feet concentric, hood on screws) is mirrored into the home-printer preset (`home_fdm`) the same day. The mirror goes in the same yaml, under its own version key with the deciding round in the comment. Its census (1.6 / 1.2 / 1.0) and the slicer log must be clean. The kit folder regenerates — addendum / .
@@ -159,13 +159,25 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A pin's `pending:` text named one record while its check read another. Read the generated check before you write a record template. Test the template by filling a scratch copy and running `traceability.py --only` per pin — 2026-10-11 [records/gate-pins] (`release-and-cut.md` §3.1).
 - `git describe` runs inside the release script: a release built before the commit stamped `-dirty` into the manifest. Commit the design, release on the clean tree, commit the release files as a second commit; an amend changes the hash the manifest names — 2026-10-15 [release/manifest].
 - A kit mirror synced with `rsync --delete` lost about 105 generator copies that the repo keeps elsewhere. The mirror is a superset. Restore it with the generators, cache warm — 2026-10-11 [kits/mirror] (`print-kit.md` §5).
-- A delegated change passed on the worst COM case while two other cases got worse. The report carried the worst case only, and a blind reviewer found it. A delegation table carries every case — 2026-11-05 [process/delegation] (`pcb-layout-dfm.md` §19.6).
+- A delegated change passed on the worst COM case while two other cases got worse. The report carried the worst case only, and a blind reviewer found it. A delegation table carries every case — 2026-11-05 [process/delegation] (`high-speed-si.md` §11.1).
 - A fix moved one edge of a timing window inside its limit and pushed the other edge out. A part with a banded parameter fixed both. Give every option its value at both bounds — 2026-11-05 [process/options] (SKILL §3).
 - A hardware gate at a policy value blocks the lab from pushing a part. Set the protection to trip below the damage rating, with its tolerance and response time inside it. Put the policy limit in firmware with a lab override — 2026-11-05 [process/limits] (SKILL §3).
 - Removing a physical switch removed three hard stops, not one part. List each stop, its replacement, and what the replacement misses — 2026-10-30 [process/safety] (SKILL §3).
 - An owner decision that withdrew a feature left test-plan rows that tested the old behaviour. After each decision batch, grep the plan for every row of each requirement the batch touches — 2026-11-01 [process/test-plan].
 - A part change under a long spec left numbers derived from the old part in many clauses. Mark each one superseded and name the re-run that replaces it — 2026-11-02 [process/spec].
 - A small coverage script (every requirement named in the plan, every test with a row, no duplicates) found six new requirements at once. Run it after each spec batch — 2026-10-31 [process/test-plan].
+- A volatile fan curve leaves the fan at 0 % after a power cycle with no host. A study picks an EEPROM part or a flash curve — 2026-10-22 [process/study] (`schematic-phase.md` §6).
+- The last revision learned by trial in the field: the light bleed, the lid words, the power budget. One blind pass per discipline that a gate freezes, as roles inside its one round, every field finding a named check — 2026-10-21 [process/review] (`SKILL.md` §5).
+- Six blind fix-check rounds ran before one found no MAJOR. Most findings were stale numbers and uncovered rows a script finds. Run the stale-number sweep and the coverage script before each round — 2026-11-01 [process/fix-check] (`agent-ops.md` §4).
+- A stale-number sweep nearly replaced a number that differed from the new value on purpose. Check each hit's meaning before you replace it — 2026-11-01 [process/stale].
+- A board was removed from an architecture before anyone named why it existed: for the display height, not the haptics. Name the reason first — 2026-11-02 [process/architecture] (`schematic-phase.md` §7).
+- A blind review found stale copies of four decided values: a power ceiling, a grant rule, a switch part and a buffer part. Sweep every copy when a decision lands — 2026-11-03 [records/stale] (`agent-ops.md` §3).
+- An RC filter on a start-up window comparator lagged past the gate FET's threshold spread and cleared the latch on a normal start. Count the lag against the spread — 2026-11-03 [power/startup] (`schematic-phase.md` §6).
+- A divider into a pin passed its limit only at the nominal input. Check the pin's absolute maximum at the TVS clamp voltage — 2026-11-03 [power/protection] (`schematic-phase.md` §6).
+- A PD under-voltage alert sat above the legal load dip plus the cable drop. Put the alert below that sum — 2026-11-03 [power/pd] (`schematic-phase.md` §6).
+- A sink PDO current above a common charger's rating dropped the contract to a lower voltage. Read the sink chip's matching rule and its request-current option — 2026-11-03 [power/pd] (`schematic-phase.md` §6).
+- A mezzanine lift under load was planned with presence pins as long as the power pins. Equal pins cannot sequence a live lift — 2026-11-03 [process/safety] (`schematic-phase.md` §7).
+
 ## agents / git
 - Agents die when the machine sleeps or on API 500s; resume by message with the MEASURED state; heartbeat monitors ~25 min; time-box every long task; parallel router JVMs SIGTERM each other — STATUS 09-18…21.
 - Background-task watchers did not wake the coordinator: block in-process with `until ! kill -0 $pid; do sleep 20; done` (≤ 600 s per call, repeat) — 2026-09-22.
@@ -194,12 +206,32 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A scratch clone of the skill lost files twice in one day (53 deletions with missing objects, then the whole `.git`). `git -C <clone> status` before its scripts run; not a repository or deletions = delete and clone again. The release script failed loudly both times — 2026-10-14 [agents/clone] (`agent-ops.md` §2).
 - Two parallel agents both named their new selftest block `part i`; the interpreter kept the later one and hid the first. Name the parts in the brief; grep duplicate defs before the run — 2026-10-20 [agents/selftest].
 - Four branches appended rows at the same spot in four record files. Union resolves it: both sides kept, one `latest` mark, the yaml parsed and the table cell count checked before the merge commit — 2026-10-20 [agents/merge].
+- Nearly every merge of a parallel branch conflicted on the learnings log, and the union kept some entries twice. Check for duplicate lines after a union — 2026-11-02 [agents/merge] (`agent-ops.md` §3).
+- Parallel agents that each took "the next free" blocker number collided three times in one day. Give each agent its own number range in the brief — 2026-11-02 [agents/ids] (`agent-ops.md` §1).
+- A union merge kept a closed blocker beside its old open copy, because one branch edited the row in place. Check duplicate row ids after every merge of a table log — 2026-11-02 [agents/merge] (`agent-ops.md` §3).
+- An SSH master connection kept a host reachable after its key login broke. Test a login with multiplexing off — 2026-11-02 [agents/remote] (`agent-ops.md` §5.1).
+- A shell list ending in `setsid cmd &` sent the whole list to the background and hung the SSH client. Detach on a line of its own — 2026-11-02 [agents/remote] (`agent-ops.md` §5.1).
+- An inner `ssh` in a script run as `bash -s` read the rest of the script. Give every inner remote command `</dev/null` — 2026-11-03 [agents/remote] (`agent-ops.md` §5.1).
+- A pinned image ran on a host with no Docker after `docker export` and a metadata file. Purge every container, image and profile at the end — 2026-11-03 [agents/remote].
+- An agent worktree had an empty skill submodule, so its lint link dangled. Run the main checkout's lint on the worktree files — 2026-11-02 [agents/worktree].
+- Another agent overwrote a helper with a generic name in the shared scratch area. Keep helpers in a folder named for the agent — 2026-11-01 [agents/scratch].
+- A review found a requirement closed on a simplified model, and the owner's closure reversed. Brief reviewers to recompute, not to read the record — 2026-11-01 [agents/review] (`agent-ops.md` §4).
 - A bare pipe in a decision row (`all|none|NAME`) and a row without its closing pipe each broke the known-issues reader at the round. Count the cells before the round — 2026-10-21 [records/table].
 - One file moved into a package without a reorg row: the path check reported every frozen record that quoted it. A move of one file is a reorg row too — 2026-10-20 [records/reorg].
 - A union merge of an append-only log kept a closed row beside its old open copy. After every merge of a record table, list duplicate row ids (`sort | uniq -d`) and keep the newest status — 2026-11-02 [agents/records].
-- An agent worktree started on `main`, not on the branch its brief named. Check that the base commit is an ancestor of HEAD before the first edit — 2026-11-03 [agents/worktree].
+- An agent worktree started on `main`, not on the branch its brief named. Check that the base commit is an ancestor of HEAD before the first edit — 2026-11-03 [agents/worktree] (`agent-ops.md` §3).
 - An indentation slip in a predecessor's last commit floated every ground pad of a model. Read the diff of that commit before you reuse its runs — 2026-10-31 [agents/handover].
 - Prose copies of per-channel values went stale three times. Give each row of a copied table its yaml key, and let a generator check the copy — 2026-11-05 [agents/records].
+- A skill smoke check that ran a mesh script failed in a pyyaml-only venv. Start its `run` with `needs-mesh:` and run both venv kinds — 2026-10-02 [agents/smoke] (`smoke/README.md`).
+- A tag chained onto a pull-request merge landed on the old main after a merge race. Read the merge result before the tag — 2026-10-04 [agents/git] (`agent-ops.md` §2).
+- A kill removed only the running containers; stale queued jobs held a serial lane for a day. Purge the queue before new work — 2026-11-03 [agents/remote] (`agent-ops.md` §5.1).
+- A rewritten queue file under a `while read` runner left its offset mid-line. Start a new runner on a new file — 2026-11-03 [agents/remote].
+- A later job overwrote an earlier job's result in a shared remote checkout before the fetch. Give each job its own output folder — 2026-11-03 [agents/remote].
+- A lent host rebooted mid-chain. Keep chains short, keep a resubmit list, and remove only the locks of dead jobs — 2026-11-03 [agents/remote] (`agent-ops.md` §5.1).
+- The model names of an external review CLI change between runs. List the CLI's models before a run — 2026-11-03 [agents/review] (`agent-ops.md` §4).
+- A large upload to a web reviewer failed. Split the package and retry on a smaller set — 2026-11-03 [agents/review] (`agent-ops.md` §4).
+- A stacked pull request closed with its base and could not be retargeted. Retarget the child before the base branch is deleted — 2026-10-08 [agents/git] (`agent-ops.md` §2).
+
 ## tooling / determinism
 - Bambu Studio CLI (02.08.x): `sparse_infill_density` 100 % is rejected (rc -18) — use top / bottom shell thickness for a solid column. A two-filament slice with a prime tower SEGFAULTS (rc -11 / 133, "no filament colors found in projects") unless each slot's filament JSON carries `filament_colour` (or `--filament-colour '#..;#..'`). Bisect on the temp inputs one variable per run — 2026-09-29 [tooling/bambu].
 - Multi-material on the Bambu CLI = one multi-part object: Bambu-style 3MF with per-part `extruder` in `Metadata/model_settings.config` (or pre-placed STLs + `--load-filament-ids 1,2 --assemble --arrange 0`). Purge mass = used − solid-part volume × density, derivable for the SOLID colour mark only. The same STL path N times = N objects, count from the CLI's `objects`. `different_settings_to_system` omits values equal to the system default — prove from the embedded value — 2026-09-29 [tooling/bambu/ams].
@@ -257,9 +289,9 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A job launched from a `while read` queue inherits the queue file as stdin. An `ssh` in the job read the next line, and the queue lost it. Start every queued job with `< /dev/null` — 2026-11-01 [tooling/queue].
 - A remote sync with `--delete` removed three records that jobs had written into a synced folder. Write remote outputs under `build/` and pull from there — 2026-11-03 [tooling/remote].
 - A remote job folder with no command file and no log after hours means the job never started. Check the folder before you wait on it — 2026-11-05 [tooling/remote].
-- Choose a simulation host by the solver's bottleneck. FDTD is bound by memory bandwidth, FEM by memory size, and SPICE by one fast core. Count physical cores and memory channels. Time a short run of each solver class per host — 2026-11-02 [tooling/hosts].
+- Choose a simulation host by the solver's bottleneck. FDTD is bound by memory bandwidth, FEM by memory size, and SPICE by one fast core. Count physical cores and memory channels. Time a short run of each solver class per host — 2026-11-02 [tooling/hosts] (`high-speed-si.md` §6.2).
 - Run a matrix-heavy interpreter with one BLAS thread under a job pool. Three threaded runs pushed the load past the core count and ran slower — 2026-10-31 [tooling/threads].
-- PyYAML read `1e-12` and `1.0e3` as strings, and the solver failed far from the cause. Write `1.0e-12` and `1.0e+3`. Float-check every override — 2026-11-05 [tooling/yaml] (`pcb-layout-dfm.md` §19.5).
+- PyYAML read `1e-12` and `1.0e3` as strings, and the solver failed far from the cause. Write `1.0e-12` and `1.0e+3`. Float-check every override — 2026-11-05 [tooling/yaml] (`high-speed-si.md` §6).
 - A Python `%` format with a literal "95 % upper" in a table header failed after a long run. Write `%%`. Save the samples before you format them — 2026-11-01 [tooling/format].
 ## kicad / drc / swig *(worked examples; the mechanism generalises to any CAD CLI)*
 - `kicad-cli pcb drc` honours ONLY explicit `netclass_assignments`, never `netclass_patterns`, and NO DRC exclusions. Emit per-net assignments from the generator, assert a canary rule fires exactly once. Accepted residue = a generated RULE (`enclosedByArea`, not `insideArea` which is an intersection test — prove with a negative construction in `--selftest`).
@@ -291,11 +323,50 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A pre-route stub starts at the pad END for pads on a notch wall (the centre trips the edge rule).
 - Reserved sites: hold a future part's area with a rule area + a checker entry; delete both when the part arrives.
 - An unsigned distance-to-outline test let placed art pass from outside the board. Marks across two tapered corners shipped 1.68 mm outside the outline and DRC did not flag the copper. Combine point-in-polygon with the distance, assert every placed item inside the outline. Gate the Gerber copper bbox inside the Edge.Cuts bbox per layer — 2026-10-08 [layout/art-outside-edge] (`pcb-layout-dfm.md` §11).
-- A model-to-board round trip that swapped only the trace polylines was true by construction. Take the vias from the board too, and prove it with one via moved 0.1 mm — 2026-11-05 [layout/si] (`pcb-layout-dfm.md` §19.4).
-- A medium mesh agreed with the fine mesh at nominal and read a mode-conversion corner 10 dB worse. Judge low-level margins on the fine mesh and a second solver — 2026-10-31 [layout/si] (`pcb-layout-dfm.md` §19.1).
-- A reference COM run moved 0.3 to 0.6 dB between runs, more than the changes it judged. Freeze one reference file and state a noise band — 2026-11-05 [layout/si] (`pcb-layout-dfm.md` §19.3).
-- An in-house eye evaluator read 1 to 3 dB above the official code, and the bias drove a wrong study finding. Calibrate on the channels you judge — 2026-10-31 [layout/si].
-- A solver missed a whole cell row of a trace after it merged close mesh lines. A dump of the meshed metal showed it; the mesh-line checks did not — 2026-11-01 [layout/si].
+- The test point names sat on the fabrication layer only, invisible at the bench. Put them on the silk; check the card against a real board — 2026-10-24 [layout/tp] (`pcb-layout-dfm.md` §11).
+
+## si / high-speed (`references/high-speed-si.md` carries the rules; one line each here)
+- A requirement closed on a simplified twin reopened on the launch of record: the twin had a solid plane and no contact posts, and read 9 dB better than the real launch. Solve the layout of record with ports that see the quantity — 2026-11-01 [si/model].
+- FDTD energy that stalls while every port voltage has died is a static field from the Gaussian's DC, not a bad model. Judge the port tail or use a DC-free pulse — 2026-10-31 [si/fdtd].
+- A via fence near an absorbing face diverged. Keep every conductor clear of the absorbing boundary. A solid wall is only a labelled simplification, checked once against the real fence — 2026-10-31 [si/fdtd] (`high-speed-si.md` §7.1).
+- Zero-thickness copper in a FEM cross-check made a 6.5 dB solver gap by itself. Give both solvers the copper thickness — 2026-10-31 [si/solver].
+- A vendor connector model with its own host pad counted the pad twice; single corrupt lines in vendor crosstalk files made the ICN several times the measured value. Check every vendor file — 2026-11-01 [si/data].
+- Tight length-tuning bumps bought a fifth of the path they added; compensate skew at the pin where it is created — 2026-10-30 [si/skew].
+- A coupon replica fed from its far end cannot check the board's mode conversion. Feed it where the real driver touches it — 2026-11-01 [si/coupon].
+- A bench through compliance fixtures cannot resolve a −33 dB conversion limit; keep it an analysis requirement — 2026-11-01 [si/bench].
+- A FEM model with every via pair of a group read far high while the single-pair cutouts were right: the adaptive mesh starved the narrow anti-pad gaps. Set a local length rule and match the cutout — 2026-11-02 [si/fem].
+- A stack-up thickness update broke a pad and barrel balance that had passed. Every stack-up change reruns every via — 2026-11-02 [si/stack-up].
+- Tool defaults for jitter and noise, ideal rails and a typical-only corner each made an eye look better than the part — 2026-11-02 [si/time-domain].
+- "Marginal, to be confirmed in the time domain" stayed open for good. Close each such item with a named number — 2026-11-02 [si/records].
+- One SI loop took eight iterations to converge. Each later iteration found a fault a day-1 check catches. Run the playbook in order — 2026-11-02 [si/process] (`high-speed-si.md` §0).
+- A skew retune sized from SCD21 alone repeated three times. The step crossings measured half the delay SCD21 implied. Measure the p/n delay — 2026-11-02 [si/skew].
+- Straight contact posts and the real contact tails differed by about 2 ps of p/n delay on one loop. Solve the real contact once — 2026-11-02 [si/contact].
+- A pair clean at Nyquist converted at −10 to −14 dB just above it. Read every metric to twice Nyquist — 2026-11-02 [si/band].
+- A loss pad helped a short loop and cost the long loop its margin. Solve each distinct lane geometry — 2026-11-01 [si/lanes].
+- A resistor pad was solved in 3D before anyone found it taller than the gap under the connector body. Check the fit first — 2026-10-31 [si/fit].
+- Two hosts stopped one FDTD run at different steps, and the mesher gave another mesh on another CPU architecture. Prove a new host against results of record and name each difference — 2026-11-02 [si/hosts].
+- A bare container image ignored the package snapshot without an error: it had no CA certificates for the https URL. Install them first and read the package policy — 2026-11-02 [si/containers].
+- A retune sized on box posts made the conversion worse. The real contact tails flipped the skew sign. Model the real contact first — 2026-11-03 [si/contact].
+- One passive but spiked point in a vendor file moved the official COM by 0.25 dB. Despike as well as check passivity — 2026-11-03 [si/data] (`high-speed-si.md` §14).
+- A void edge near the trace made one registration corner several dB worse than the other. Pull the void back on that side — 2026-11-03 [si/void].
+- A model solved two of eight loops, and an unsolved group carried the least margin. Solve every group or prove sameness with numbers — 2026-11-03 [si/lanes].
+- A looser end criterion moved low-level ports by up to 3.1 dB. Keep screening settings out of conversion and crosstalk work — 2026-11-03 [si/fdtd] (`high-speed-si.md` §7.1).
+- An SI generator printed a clearance table that a person had to read. Make the fab check of a solved geometry fail on its own — 2026-11-03 [si/layout] (`high-speed-si.md` §3.2).
+- One memory module ran FDTD at two thirds of the speed of two, on the same CPU. Read the memory slots first — 2026-11-03 [si/hosts].
+- An older numeric interpreter ran the official COM code 27 times slower, with identical numbers. Match the interpreter version — 2026-11-02 [si/hosts].
+- MPI refused a FEM job for lack of slots under a container cpuset. Allow oversubscription and bound the ranks by the job's slots — 2026-11-03 [si/containers].
+- One-sided contact tails broke the mirror: a loop read −16.1 dB on the other direction's skew template. Solve each direction group and set its own target — 2026-11-03 [si/skew] (`high-speed-si.md` §4).
+- A TDR window between the pads of a short loop read 88 ohm on a 100 ohm pair. Read line impedance from the 2D cross-section — 2026-11-03 [si/tdr] (`high-speed-si.md` §9.5).
+- A dispersive dielectric ran about 100 times slower in FDTD. Bound its effect over the launch by analysis — 2026-11-03 [si/fdtd] (`high-speed-si.md` §7.1).
+- A figure needed the samples of a 1000-sample run, and only the summary existed. Save every sample set with its run — 2026-11-03 [si/records] (`high-speed-si.md` §10).
+- A length retune could not null one loop. A common-mode map along the loop showed a contact asymmetry that added to the route asymmetry in one direction — 2026-11-03 [si/skew] (`high-speed-si.md` §4).
+- A fixed module output setting was proposed to close a COM gap. COM already optimises the transmitter; the gap was in the channel — 2026-11-03 [si/com] (`high-speed-si.md` §9.3).
+- A model-to-board round trip that swapped only the trace polylines was true by construction. Take the vias from the board too, and prove it with one via moved 0.1 mm — 2026-11-05 [si/model] (`high-speed-si.md` §3.2).
+- A medium mesh agreed with the fine mesh at nominal and read a mode-conversion corner 10 dB worse. Judge low-level margins on the fine mesh and a second solver — 2026-10-31 [si/mesh] (`high-speed-si.md` §7.1).
+- A reference COM run moved 0.3 to 0.6 dB between runs, more than the changes it judged. Freeze one reference file and state a noise band — 2026-11-05 [si/com] (`high-speed-si.md` §9.3).
+- An in-house eye evaluator read 1 to 3 dB above the official code, and the bias drove a wrong study finding. Calibrate on the channels you judge — 2026-10-31 [si/com] (`high-speed-si.md` §9.3).
+- A solver missed a whole cell row of a trace after it merged close mesh lines. A dump of the meshed metal showed it; the mesh-line checks did not — 2026-11-01 [si/fdtd] (`high-speed-si.md` §7.3).
+
 ## silk / dfm
 - The fab's DFM grades a value EQUAL to its warning threshold as Warning: design strictly greater — thresholds JSON.
 - "THT to SMD" applies to EVERY plated/non-plated pad incl. round header pins, mounting-hole annuli and slots (read as SMD).
@@ -346,6 +417,13 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - Feet over screws: a Ø8 foot in a Ø8.5 pocket whose floor is opened by a Ø6.3 counterbore bonds on a 0.85 mm ring (38 % of its adhesive). Use flat-top cylinders over hemispheres there. The ±0.5 mm moulding tolerance eats a 0.5 mm pocket margin at worst case — 2026-09-28 [mechanical/feet].
 - A parts task catches count drift (yaml five feet, guide / order sheet / other preset four): flag the disagreement in the decision row, never pick one silently — 2026-09-28 [records].
 - A datasheet note from the `pdftotext` layer must mark curve-only values "not in datasheet text" and attribute figure readings to whoever read them — 2026-09-21.
+- A distributor stocked a sibling ordering code of the designed part. Read the stocked part's own drawing before the footprint takes it — 2026-10-24 [sourcing/variant] (`part-verification.md`).
+- A module family carried a 65 °C rating on its deepest-stock memory option and 85 °C on the others. Pick by the rated quantity, not the stock — 2026-10-24 [sourcing/rating] (`schematic-phase.md` §6).
+- A study re-read its part facts live and found four values from older files wrong: a loss, a junction temperature, a limit spread and a current. Read every fact live or mark it BLOCKED — 2026-11-02 [sourcing/live] (`part-verification.md`).
+- A fab code that read the right MPN belonged to another maker, and a distributor attribute gave 48 V where the drawing said 20 V. Read the brand field and the drawing — 2026-11-02 [sourcing/maker].
+- A connector headline rating held for one powered pin. The block rating in the qualification report was half of it. Size a rail block from the report — 2026-10-30 [sourcing/rating].
+- A port target of 12 A met a module connector with six 1.5 A power contacts: 9 A absolute. Read the contact limit before the target — 2026-11-02 [sourcing/connector] (`schematic-phase.md` §7).
+- A display datasheet table named two view angles horizontal, and its figure showed them vertical. Record the conflict and settle it on the bench — 2026-11-03 [sourcing/datasheet] (`part-verification.md`).
 
 ## mechanical / case
 - A pluggable module is not a plain box (a cabled transceiver module: bottom open at the leading edge, latch recess on top, corners R 0.15..0.60). Anything that grips it bears on the faces the standard's drawing shows solid. A pocket corner radius comes from the drawing (R > 0.66 clips a legal module), not from a print rule of thumb — 2026-09-29 [mechanical/msa].
@@ -425,7 +503,20 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - Twenty printed spring fingers jammed the lid. A board against an end block had its end 0.2 inside the finger's low corner, under the ± 0.2 print tolerance of a tall thin island, and the fingers reached 14 mm below the teeth, so they pushed before anything guided. The owner broke them off; the play stays (a foam strip is the option). A printed spring keeps a margin above the print tolerance (≥ 0.5) or reaches the part after it is guided; guide before hold; a tolerance-shifted (± 0.3) fit check when a margin is under 0.5. The fit test went 29 → 24 checks; the lid lost 2.5 g and 17 min — 2026-10-15 [case/spring-finger-jam] (`dfm-printed-enclosure.md` §8.5, `case-pipeline.md` §Interference).
 - Every second slot high keyed the lid to one direction, and a user turns a lid without looking. A palindrome stagger closes either way; the magnets then go in with the same pole up at both ends (opposite poles were the key). The guide-writing agent caught the polarity contradiction before the print — 2026-10-15 [case/either-way] (`case-pipeline.md` §Interference).
 - A unit number recess dropped from a deck as clutter came back three days later, once four programmed boards carried serials the tool names. Keep the field; keep its row as a knob — 2026-10-20 [case/legend].
-- A plain coupling bar in a plain pocket read as "no grip" in the hand even with the front key holding. The fit knob was null, so the bar was cut at the 0.30 prior, and the kit never said which bar it was. Name the fit on every bar sheet; print the bars alone — 2026-10-21 [case/coupling].
+- A plain coupling bar in a plain pocket read as "no grip" in the hand even with the front key holding. The fit knob was null, so the bar was cut at the 0.30 prior, and the kit never said which bar it was. Name the fit on every bar sheet; print the bars alone. A plain bar is a shear key only; a hold against separation needs a clip (dfm §8.7) — 2026-10-21 [case/coupling].
+- A side magnet pocket was promised before the wall budget was read. A 3.175 disc in a 2.0 wall needs an inward boss. Read the budget first — 2026-10-21 [case/magnets] (`dfm-printed-enclosure.md` §8.7).
+- A round boss underside on an upright print was a flat overhang. A V tip was a free edge. Blunt the V within the overhang limit, or run the boss to the bed — 2026-10-21 [case/boss] (`dfm-printed-enclosure.md` §8.7).
+- A wall drawn 0.02 over the census gate failed after a mesh change. Resampling moved the read from 1.57 to 1.50. Draw at `wall_gate + design_margin` (≥ 0.3, dfm §0) — 2026-10-21 [case/census].
+- A pocket roof was counted inside the ring only; past the wall the pocket sat under the deck opening. Count the roof along the whole depth — 2026-10-22 [case/pocket] (`dfm-printed-enclosure.md` §8.7).
+- A comb stopped short of the deck edge and left a saddle the census read at 0.32. Run the fused feature to the outline — 2026-10-24 [case/census] (`dfm-printed-enclosure.md` §8.7).
+- A foot moved away from the cable end cut the cable-on moment ratio from 2.63 to 1.09. Rerun the stability row after every foot move — 2026-10-24 [case/stability] (`case-pipeline.md` §Stability).
+- A second preset missed two days of shared changes, and its rebuild found a sliver. Rebuild every preset that shares the edited code — 2026-10-24 [case/presets] (`case-pipeline.md`).
+- Pockets were cut for a Ø6.0 disc, and the discs were Ø6.35. Keep a bought part's dimensions in one yaml block — 2026-10-21 [case/parts] (`case-pipeline.md`).
+- A bulk-air rise rule asked for about twice the flow and hid the fin pressure drop. Size the fan from the case limit through the sink curve — 2026-11-03 [mech/thermal] (`schematic-phase.md` §6).
+- A sink-only thermal model read 4 W low. A bare-board read gave the side path beside the sink — 2026-11-03 [mech/thermal] (`schematic-phase.md` §6).
+- A hood chamfer took 4.5 mm of roof at the fan wall, and the fan missed its hood by 8 mm. Check the fan in the real duct — 2026-11-03 [mech/fan] (`schematic-phase.md` §6).
+- A board-width change could leave a case envelope too narrow when the case copied the width. Generate the envelope from the board yaml — 2026-11-03 [mech/case] (`case-pipeline.md` §Chain).
+- One fan took PWM at 80 to 120 Hz only. Read the PWM window before a fan meets the drive frequency — 2026-11-03 [sourcing/fan].
 
 ## fea
 - Gmsh refuses CGAL STLs as volume boundaries; fTetWild meshes them; drop zero-volume slivers or K is singular.
@@ -474,6 +565,21 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A six-column table stood 138 px outside its card: the key-column header style (`nowrap`, 1% width) applied to every header. Measure overflow in the browser — 2026-10-20 [software/web].
 - An advertisement bit is not a feature: optical monitors read a constant, descriptor pages zero, a user page ignored writes. A matrix with write-read-restore per row finds them — 2026-10-21 [software/features].
 - The checker's lock-loss flag latched from the enable, and a far-end loopback reported lock loss the whole gate while it counted bits. Clear after the far generator is up; judge per second — 2026-10-20 [software/prbs].
+- A pattern test reported MEASURED while its error counter wrapped in half the reads. The module's rate agreed with the wrapped count. Check the opportunity-counter law and the wrap per window (software-track §23) — 2026-10-24 [software/measurement].
+- A verdict from the last window hid a bad middle window, and the record kept no run totals. Judge the run totals per lane and direction (software-track §23) — 2026-10-24 [software/measurement].
+- Every short pattern run read 1e-4 to 1e-3. The first 1 s window after a release read far worse; the cause needs a control. Exclude the settling by a predeclared prefix rule and report it (software-track §23) — 2026-10-24 [software/settling].
+- A cumulative 120 s run read 1e-6 and later windows read 1e-9. The first window held a start-up burst. Exclude the settling by a predeclared prefix rule (software-track §23) — 2026-10-24 [software/settling].
+- One module sent clean and received at 1e-4; only a swap of the far unit showed the failing side. Test each unit both ways — 2026-10-24 [software/bench] (`software-track.md` §23).
+- A high-power run with no health poll let a module cross its warning limit and drop two lanes. Poll both ends between windows — 2026-10-21 [software/thermal] (`software-track.md` §18).
+- Three thermal throttles in a row came from a fan with no power, not from the module. Look at the fan first — 2026-10-21 [software/bench] (`software-track.md` §18).
+- A command wrote its ABORTED record and then ended in a traceback. One handler at the command dispatch covers every command — 2026-10-21 [software/dispatch] (`software-track.md` §23).
+- A module answered "success" to every staged setting and kept its active set. Read the active set back — 2026-10-21 [software/registers] (`software-track.md` §19).
+- A switched-off rail read 0.57 V with the host plugged: idle-high bus lines fed it through the pull-ups. Check "off" with every source connected — 2026-10-24 [software/bench] (`software-track.md` §18).
+- A meter's low-impedance mode pulled a high-impedance node down. Use the plain DC range on a bring-up board — 2026-10-24 [software/bench] (`software-track.md` §18).
+- A spec binned only on a media-side pattern that the device could not generate. Read the PRBS capability matrix first — 2026-11-03 [software/prbs] (`software-track.md` §13).
+- An emulated I2C target behind a bridge that cannot see a stretch must answer in time. Keep its TX FIFO full from an interrupt — 2026-11-03 [software/i2c] (`software-track.md` §13).
+- A stock board fit a debug header only after one extra ground pin joined its signal row. Put signals and a ground in one row — 2026-11-03 [software/debug].
+- A high-power log command looped for 60 s with no health poll and ran past the throttle limit. Put the hold stops inside the loop — 2026-11-03 [software/thermal] (`software-track.md` §18).
 
 ## documentation
 - Every mention of a retired string across live docs after a design change: grep, not memory; logs and reviews keep stale words on purpose.
@@ -508,6 +614,15 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - Six bracket caps that differ by 0.05 mm of rib are indistinguishable once off the plate unless the value is printed on them. A coupon or variant without its own identifier and number on the part is a mix-up waiting for the bench - 2026-09-30 [kit/coupons].
 - A drawing matched its order line by the piece id. The order sheet labelled the piece by another name. The sheet printed "no line for this piece". Match both names and the file name — 2026-10-10 [documentation/sheets].
 - A renders record quoted a number from an earlier pass. Re-read the check file of record at the sign-off, not the brief — 2026-10-10 [records/stale-number].
+- A public page named the lights by the yaml words, and the lid prints others. Name a control by the printed word, in one name table — 2026-10-21 [documentation/public] (`release-and-cut.md` §15).
+- A comment stripper misread a JS template literal. 20 of 110 comments reached the public tree. Parse the language; check the output — 2026-10-21 [documentation/public] (`release-and-cut.md` §15).
+- The leak gate hit the public repository address on every link. An unanchored id pattern hit a lane label. Allow the full address; anchor the patterns — 2026-10-21 [documentation/public] (`release-and-cut.md` §15).
+- A Pages deploy failed at its configure step on the first push. Enable Pages before the first push — 2026-10-21 [documentation/public] (`release-and-cut.md` §15).
+- A results row said a throttle came at 292 s; 292 was the sample count. Read a time from the time column — 2026-11-03 [documentation/data].
+- A GIF palette from the last frame dropped colours of earlier frames. Build the palette from a sheet of several frames — 2026-11-03 [documentation/figures].
+- A 3D animation rescaled its axes every frame, so a deflection sweep looked frozen. Fix the axis limits to the union of the shapes — 2026-11-03 [documentation/figures].
+- A finding count mixed two severity scales and counted closure rows. State the mapping and count open rows only — 2026-11-03 [records/review] (`agent-ops.md` §4).
+
 ## records / arrival / review
 - The fab adds an order-history "Confirm Parts Placement" step after the engineer mails, with a silent ~3-day timer after which the order is produced as drawn. Check Order History after every engineer reply. Its engineering file (`Smt_Hw_Bom_Merge` → `oc` / `ec` per designator) is the complete change list - diff it before any picture. Read the pictures with a mounting-hole calibration (0.1 px) and your pad 1 over the fab's marks for every polarity-flagged part — 2026-10-08 [fab/placement-confirm] (`vendor-review.md` §5 round 4).
 - The fab's engineer rows after an order are the free source of its package conventions. Group `ec − oc` by footprint, write the deltas into the rotation table with a selftest against the engineer rows. Vendor footprints: `-BL` / `-BR` = different offsets; LQFP +270 even from the fab's own library; package origins off the pad-bbox centre → a `shift` rule in the footprint frame; passives normalised 180° = ignore. The board file is right, the table was the missing design file — 2026-10-08 [fab/rotation-table] (`pcb-layout-dfm.md` §10).
@@ -559,3 +674,6 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A drawing leader point computed at the rim height and drawn 0.2 above it sat 0.14 mm off the chamfer line (0.2 x sin 45); the self-check saw it, the template sentence hid it — 2026-10-09 [drawings/self-check].
 - A word on a board dummy read inverted when the dummy hung by its hole: upright in the file's frame, hole at the bottom of that frame; text is checked in the pose of use — 2026-10-09 [kits/dummy].
 - Two coupon readings a day apart ("6.3 is ideal", then "6.2 is perfect"): the design file records the chosen value with its date beside the parameter, and the release carries both coupon results — 2026-10-09 [coupons/fit].
+- A study filed a vendor drawing as BLOCKED. The file had sat in the reference folder for six weeks. Search the tree first — 2026-10-24 [records/blocked] (`part-verification.md`).
+- Four modules moved between three unmarked cases in one evening; only the identity read told them apart. Number every unit first — 2026-10-24 [records/units] (`software-track.md` §23).
+- The cost of each study was never written down and could not be rebuilt later. Start the cost, prediction and dead-end ledgers on day 1 — 2026-11-03 [records/ledgers] (SKILL §0 step 6).

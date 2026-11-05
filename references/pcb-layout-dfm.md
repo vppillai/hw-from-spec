@@ -1,4 +1,4 @@
-# pcb-layout-dfm.md — G1 → G2: the PCB build rules, the layout chain, the adopt gate and the SI simulation playbook
+# pcb-layout-dfm.md — G1 → G2: the PCB build rules, the layout chain and the adopt gate
 
 Every quantitative rule below carries one of four tags, so a reader knows what moves it:
 
@@ -61,6 +61,24 @@ net classes must be exported into the router input — grep the DSN for them aft
   thickness and therefore impedance geometry — pin one value in the spec before layout.
 - Thickness tolerance ±10 % at ≥ 1.0 mm **[fab capability]** (1.6 → 1.44…1.76): a press-fit connector or a card-edge must accept the range.
 - Material grade / Tg is selected at order **[owner choice]** (JLC impedance profiles assume a TG155 laminate).
+- **Fab capabilities move** **[fab capability]**. Read the live capability page before a study recommends a stack. Worked example, JLC
+  2026-10-24 (that fab's table, that day; verify it live). That fab back-drilled boards of 4 to 32 layers, from 0.8 mm thick.
+  For its back-drilled boards on that date, 2.5 mm and thicker needed 12 layers or more, at ±10 %.
+
+### 2.1 Fab tolerances against vendor limits **[fab capability]**
+- Read the fab's extremes against every vendor minimum before the stack-up is fixed. A 1.6 mm board at −10 % is 1.44 mm, exactly one
+  press-fit connector's minimum *(worked example)*. A ±0.075 mm hole position is wider than a fine connector's true-position tolerance.
+- The fab's page may not state the finished copper tolerance, the dielectric thickness tolerance or the layer registration. Ask for them at
+  the quote. Assume −20 % copper until the answer arrives.
+- Heavier inner copper changes the prepreg. One fab's 2 oz inner templates grew the outer prepreg from 0.20 to 0.29 mm, and a 90 Ω pair
+  widened from 0.28 to 0.38 mm *(worked example)*. Read the plies before you trade inner copper for current.
+- Start a board-to-board alignment budget at the contacts, not at the drilled holes. A peg that floats in its hole moves the connector
+  off its own holes. A REF dimension on the print caps how far the budget can tighten; ask the vendor for its tolerance.
+- Drill the tooling holes in the same program as the connector peg holes. Gate the in-program hole position at first article. A budget that
+  rests on a written fab statement stays open until the statement arrives (`references/vendor-review.md` §7).
+- Put each term of an angular budget on its own lever: peg play over the peg span, pin play over the tooling-pin span.
+- Count a pin map by position per row, not by pins. One map held the right pin count and still left a power block short of pairs.
+- A connector on the bottom face mirrors x in the top view. Check in the generator that pin 1 lands on the side of its nets.
 
 ## 3. Controlled impedance and differential pairs
 - **When it is required** **[physics]**: any pair whose length exceeds ~1/10 of the signal's rise-time wavelength on FR-4. Examples are USB 2.0
@@ -74,7 +92,11 @@ net classes must be exported into the router input — grep the DSN for them aft
 - Differential rules the CAD enforces: pair gap, uncoupled length ≤ N mm, skew ≤ N mm, no via stubs on the pair, reference plane continuous
   (an In2 signal over an In1 antipad edge is a route-quality HIGH, §10). Impedance control is an order option **[fab capability]**: ask for it
   on the quote form; if the form refuses it for the copper weight, that is a decision row, not a silent drop.
-- A multi-Gb/s channel that the spec must prove before layout gets a field-solver study. Follow the convergence playbook in §19.
+- **Connector pads** **[physics]**: a wide pad over thin prepreg can drop below the target impedance. A thinner prepreg lowers
+  the pad impedance further. Pick the prepreg for the pad as well as the trace. A void under the pad changes the return path.
+  Model the whole launch with the live stack-up and the connector model: εr, copper, mask, reference and pour gap.
+- Multi-gigabit lanes need more than a calculator row: the launch, skew, a field-solver study, corners and a coupon. Follow
+  `references/high-speed-si.md`.
 
 ## 4. Trace / space / via / annular / drill minimums vs the fab table
 Copy the fab's table into `20-design/dfm_thresholds.json` (source URL + date) and design strictly greater **[checker]**. Worked example
@@ -143,6 +165,8 @@ Defaults the questionnaire proposes:
   time upside down. Parts heavier than ~30 g per square inch of pad area or tall parts (electrolytics, inductors > 4.5 mm) go on the second
   side or get glue. Glue is a remark, and the fab decides. Record per-side max height in the board yaml, because the case reads it.
 - THT: unused PTH stay solder-free (say so in the remark); hand-installed parts are DNP in the BOM and marked on the fab drawing.
+- A part whose datasheet allows a single reflow goes on the side reflowed last. A radio module is the usual case. Confirm the order
+  with the assembler, and check its profile against the part's peak temperature and time above liquidus.
 
 ## 10. Polarity, rotation and the CPL **[convention + fab capability]**
 - CPL file: `Designator, Mid X, Mid Y, Rotation, Layer`, mm, 4 decimals. Position = pad-bounding-box centre relative to the drill/place origin,
@@ -178,7 +202,8 @@ Defaults the questionnaire proposes:
   axis), on the panel rails when panelised; Standard PCBA requires them, Economic does not.
 - **Test points** **[owner choice + convention]**: one per rail and per bus line the bring-up tool reads (the criteria yaml names them). Pad
   ≥ 1.0 mm, ≥ 2.54 mm pitch where a probe clip is expected. Label each with the net name and purpose on the silk (self-documenting labels).
-  Group them in a field with a legend grid. The test plan lists the coverage (T-nn ↔ TP).
+  Group them in a field with a legend grid. The test plan lists the coverage (T-nn ↔ TP). Put each name on the silk, never on the
+  fabrication layer only: that layer is invisible at the bench. Check the test point card against a real board, not the layout file.
 - **Silk** **[fab capability + checker]**: line ≥ 0.15 (design 0.16+), text height ≥ 1.0 mm (labels 1.1–1.2), width:height 1:6, silk-to-pad /
   mask ≥ 0.15 (design 0.20). **No silk over pads, no via or PTH under a text cell.** Keep vias out of the text bbox at route time; clipping is
   for hairlines only. Check silk-to-edge against the TRUE outline polygon (notches). Check glyph stroke ≥ the minimum by a morphological
@@ -250,94 +275,3 @@ rails + fiducials). The rest come from the help articles `pick-place-file-for-pc
 orientation, silkscreen governs polarity), `minimum-spacing-for-smd-components`, `Panelizing-your-PCB-for-Assembly`,
 `in-what-cases-will-there-be-charged-extra`, and the stack-up template API (`getImpedanceTemplateSettings`). Fetch again, cite the date, and
 keep the raw responses under `60-orders/quotes/<date>/`.
-
-## 19. SI simulation: the convergence playbook **[physics + convention]**
-A field-solver result is a prediction. It decides a geometry only when two meshes, a second solver and the generated board agree with it.
-Label every number from a solver "simulated" and every number from a script "calculated" (`references/writing-style.md` §3).
-
-### 19.1 Mesh convergence
-- Converge on the quantity the gate judges: return loss, mode conversion, crosstalk or the eye metric. Never converge on a field peak.
-- Run each candidate on two meshes, medium and fine. Report both values and their difference as the mesh band.
-- Never judge a low-level margin on the medium mesh alone. Mode conversion and crosstalk often sit 30 dB or more under the through path.
-  A medium mesh can agree with the fine mesh to 1 dB at nominal and miss a corner by 10 dB.
-- The medium-mesh bias has no fixed sign. A corner that fails by a small margin on the medium mesh can pass by several dB on the fine
-  mesh. Run the fine mesh before you change geometry for a small fail.
-- A result that jumps for a tiny geometry change is a mesh suspect. A 1 µm width step that moves the conversion by 9 dB is one. Dump the
-  metal that the solver meshes. Compare the dump with the drawn copper before you trust or blame the result.
-- An FDTD mesher that merges close lines can drop a whole cell row of a trace. Make every axis-parallel copper edge a mesh line of its
-  own. Grow the copper by about 1 µm, well under the etch tolerance, and apply the same growth in both solvers. Screen the whole metal dump against the drawn copper, not one cut.
-- Judge FDTD convergence on the port signals, not on the total energy. A baseband Gaussian pulse carries DC, and an absorbing boundary cannot
-  absorb a static field. The energy then stalls while every port signal decays. Use a DC-free pulse if you want an energy criterion.
-- Keep every conductor some cells clear of the absorbing boundary. A via fence near an absorbing boundary can make the run diverge.
-  A solid wall in place of a via fence is a simplification. Label it in the model, and check it once against the real fence.
-- A de-embedding thru reuses the device mesh at its ports. A thru on its own coarse mesh adds flat loss that the de-embed then credits to
-  the device.
-- Keep run-time shortcuts out of mode-conversion and crosstalk work. A looser end criterion or a narrower pulse band saves steps and moves
-  the low-level ports by several dB.
-- Two hosts agree only within the run's own noise. An FDTD end criterion meets floating-point noise, so two CPU models stop at different
-  steps. A mesher can give another element count on another CPU architecture. Compare the time records over their common samples, and
-  judge a host difference against the mesh band, never against zero.
-
-### 19.2 Two solvers
-- Never take a single-solver corner value as a pass or a fail for a low-level metric. Solve every decisive corner with a second solver
-  class, for example FDTD and FEM.
-- Make the two models equal before you compare them. Model the copper with its thickness in both. Zero-thickness sheets can move a fine
-  pair by more than 10 Ω, and that alone can make the whole solver gap.
-- Test each suspect of a solver gap on its own, on a cheap case: a closed box, a direct solve, a 2D impedance sweep. A full run per
-  suspect costs hours and most of the host memory.
-- Prove a mixed-mode setup on a mirror-symmetric pair first, with the mesh mirrored about the pair axis. Its mode conversion must sit
-  well below the judged limit, for example 30 dB under it. A mirrored FDTD mesh can read near -100 dB. A large value on the real
-  geometry is then physics, not a port or extraction fault.
-- Build the port that can see the quantity before you simplify the geometry. A port construct can hide the common mode or flip the sign
-  of a skew. Model the real contact before you size a compensation. Cut the contact tails from the vendor STEP when the model is fused.
-- Separate skew from other conversion. Read the p-to-n delay from the step responses, and compare it with the delay that the conversion
-  curve implies. When the two agree, a length trim works. When they disagree, look for an impedance asymmetry first.
-- A vendor connector model that carries its own host pad counts the pad twice against a board model that holds the real pad. Remove one.
-- Clean every vendor Touchstone file before use. Prefer passivity enforcement to the deletion of points. Keep the frequency grid uniform.
-  Record each point you change or drop, and tell the vendor. One corrupt frequency point can move a crosstalk sum by a large factor.
-
-### 19.3 COM and other eye metrics
-- COM is software output, not a signal. Say so beside every COM figure, and name what the bench measures: BER, VNA S-parameters, TDR.
-- Run the official reference code. Calibrate any in-house evaluator against it, on public channels with a published value and on the
-  channels you judge. An in-house metric can read 1 to 3 dB high, and the bias changes from channel to channel.
-- Never edit the reference sheet. Pass run switches as the reference code's own overrides.
-- Strip edge spaces from each cell when your loader reads the sheet cells. Some loaders drop a cell whose text has an edge space.
-- Set the minimum vertical eye opening parameter of the search to zero when a channel may close its eye. The code then reports a low
-  value instead of stopping.
-- Match the runtime (MATLAB or Octave) and its version on every host, not only the code. An older runtime can run many times slower.
-- Freeze one reference run as a file with all its inputs. Every "not worse" comparison reads against that file.
-- Measure the run-to-run spread of the reference and state it as a noise band. A change inside the band counts as no change. A
-  reference that moves 0.3 to 0.6 dB between runs cannot judge a 0.1 dB change.
-- Every comparison table carries every COM case: each end case, each direction, each corner. A worst-case-only table hides a case that
-  got worse.
-- Compare the absolute value per case as well as the difference to the reference. A reference that follows the device loss moves the
-  difference.
-
-### 19.4 The model and the board, both ways
-- Draw the layout and the model from the same yaml. Then read the generated board back into the model and compare.
-- Take every via from the board, ground vias included, not only the trace polylines. A round trip that swaps only the traces is true
-  by construction.
-- Prove the round trip with a negative control. One via moved 0.1 mm must change the model.
-- A per-channel model draws every via that the board holds in its region, from every channel. Two channels that share a pad can each add
-  a via, and the union can put a via at both ends of one pad.
-- Solve every lane group, or prove with numbers that a group matches a solved one. "More room" is not a proof.
-- Give a solved geometry a fab check that can fail. Compare each clearance, after the etch tolerance, with the fab minimum. A printed
-  number that a person must read is not a check.
-- Keep the corners the solver solved. A mitre shortens a skew jog, so the jog leaves part of the skew in place. Solve a variant before you change it.
-- Give each row of a per-channel table in a spec or a study its yaml key. A generator can then check the copy.
-- Choose an impedance window on every channel and every metric. A window chosen on return loss alone can push mode conversion out.
-
-### 19.5 Numbers in yaml
-- PyYAML reads YAML 1.1. It parses `1e-12` and `1.0e3` as strings. Write `1.0e-12` and `1.0e+3`.
-- Float-check every numeric value from yaml and every command-line override before it reaches a solver. A string fails far from its cause.
-- A list item that contains ": " parses as a mapping. Quote free text in a generator's yaml.
-
-### 19.6 Delegated SI decisions
-- A delegation rule for an SI change names the metrics, the cases, the corners, the mesh and the margin. For example: mode conversion at
-  nominal and at every corner with 1 dB margin, and COM not worse in every case against the frozen reference.
-- The report to the deciding agent carries the complete table: every case of every metric that the rule names. A table with a missing
-  case cannot pass the rule.
-- Read "not worse" per case, inside the noise band of §19.3. A worst-case reading can pass a change that makes two other cases worse.
-- Write each adoption as a "by delegation" sub-row with the numbers and the mesh. When a review finds a missing case, withdraw the
-  adoption in a new sub-row and return the change to the owner.
-- A medium-mesh adoption stays provisional until a fine-mesh run confirms it. A fine run worse than the limit returns the row to the owner.

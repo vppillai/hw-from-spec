@@ -31,7 +31,8 @@ make one folder per case version; the version is a field of the records and the 
 the kits copy from here. `checks/` holds the census + DFM records and the clearance and interference checks; it is the only place the gates look.
 `pictures/` holds previews, faces and assembly renders. `build/` holds scratch SCAD, logs, slicer scratch and caches. It is gitignored and recreated by every
 run. The SCAD of record stays tracked at the set root, because the assembly-guide renders and the traceability checks key on its md5.
-The determinism check compares a regenerated part with its recorded md5 in `checks/`. Everything under the set is generated. `ASSEMBLY.md` and
+Generate the case envelope from the board yaml: the board width, length and the tall parts. A board-width change then
+cannot leave the case too narrow. A case yaml that copies a board number goes stale at the next board change. The determinism check compares a regenerated part with its recorded md5 in `checks/`. Everything under the set is generated. `ASSEMBLY.md` and
 print sheets are generated with spliced blocks (`<!-- gen:BEGIN name -->…<!-- gen:END -->`) so prose survives regeneration.
 
 ## Board mesh of record (both) / fit input of record (mech)
@@ -61,6 +62,8 @@ print sheets are generated with spliced blocks (`<!-- gen:BEGIN name -->…<!-- 
   re-exporting (CGAL STLs are not byte-stable).
 - A new base key reaches every preset through the merge. Pin a new key in every override that already pins its sibling. After a knob is added,
   compare the volume of every untouched preset body against HEAD. A leaked wall value moved a sibling body on its first export (`pitfalls.md`).
+- A preset that nobody rebuilds goes stale under shared code. Rebuild every preset that shares the edited code, in the same batch. One
+  preset had missed two days of shared changes, and its rebuild showed a sliver from another change.
 - FDM (owner's printer, target `home_fdm`): printer-first rules are FAIL rows, with numbers from `project.yaml print_targets.home_fdm`. Worked
   example, 0.4 nozzle / 0.20 mm / PLA-PETG: walls ≥ 1.6 = 4 perimeters (a two-line 0.85 skirt failed as a product). Every external face is on the bed,
   vertical, or a clean top. Legends are RAISED: cap ≥ 5.1 / stroke ≥ 0.9 / air gaps ≥ 0.9 / 0.6 on a face-up top. The gap metric is an opening of the
@@ -227,6 +230,9 @@ it before any render is trusted. They are pure arithmetic on the placement matri
   afterwards; then the row proves it. Kickoff **C12** asks whether the piece stands free; the row is mandatory when it does.
 - Lateral stability follows from symmetric feet; the longitudinal margin is the one that fails. State the mass model (solid density × infill
   factors) on the row so a heavier print (more walls) or a bought part (a band, a battery) is re-judged, not assumed.
+- A foot move changes the support hull. Rerun the stability row after every foot move. A cable that pulls on the piece is an external
+  force. State its size, direction and height on the row. State the minimum ratio of restoring to tipping moment. On one case, a foot
+  move away from the cable end cut the cable-on moment ratio from 2.63 to 1.09. A move toward it raised the ratio to 6.41.
 
 ## Drawings
 Silhouettes + sections from the STLs of record (trimesh/shapely), dimension lines carry the yaml numbers (so a yaml change moves the number and the
@@ -294,5 +300,9 @@ geometry together), per-piece and assembly STEP (OCP/cadquery), `--check` = md5 
   and exits 0. Render previews with the fast engine, and fail the run on an empty frame.
 - A merge can carry a SCAD of record from an intermediate generator state. Run the chains after every merge, before a vendor upload.
 - A gate whose prerequisites are physical (a mock-up timed, a lift read) is carried by the record: `release-and-cut.md` §3.1.
+- A bought part's dimensions live in one yaml block that every pocket and the kit text read. Pockets cut for a Ø6.0 disc met Ø6.35
+  discs. With one block, a part change is one edit, not a hunt through the presets.
+- Key a cache on the inputs its output reads, no more. A coupon key that read the whole case SCAD went STALE on every deck change with
+  identical geometry. An export that embeds a timestamp changes its md5 on every run. Strip the timestamp, or check the geometry instead.
 - Read the case order's hardware lines live through the dealer's API before the order sheet is final.
   The rules are in `part-verification.md` §Bought hardware; the API keys live in an untracked env file.

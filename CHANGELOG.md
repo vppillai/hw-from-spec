@@ -11,6 +11,7 @@
   the double-blind drawing round at M1 of a printed part, the printed-case fit round (one short locating feature per parting line with its bind angle, seams in notches off the
   contact faces, a fit coupon before the parts, G-code as the evidence for every print claim), the software track, release cut + production cut + the arrival checklist + spec errata, agent operations with a measured resource budget
   (measure → audit → change; previews on the fast engine, geometry of record on the engine that passes the mesh gates; caches as determinism checks), the retro,
+  the next revision (one study per open area; a blind pass per discipline per gate), measurements that check their own counters,
   the PCBA fab after the order (engineer questions answered on pad-1 positions, the production-file package diffed per layer) and its upfront
   half (`ASSEMBLY_NOTES` in the package, the fab's-eye silk pass, hole sizes in the order remark, arrival rows A-0 / A-5), the fab's second
   round pixel-diffed before an answer, colour / cosmetic inserts (the whole face, host frame + lip + sill, the edge budget, fused STL for DFM
@@ -19,7 +20,7 @@
   gates-required, record, env), `known_issues`, `traceability`, `release_report`, `collect_renders`, `assembly_guide`, `reorg_paths`, `dfm_check`,
   `erc_gate`, `gate_check`, `handoff_header`, `thin_wall_census` (`wall_gate` on the mesh; legend boxes with a Z band; accepted clusters re-matched by class and bbox), `print_dfm` (printability-floor gate + `--validate`),
   `thin_wall_check` (quick look + pinch), `heatmap_count` (yellow / red of a vendor map capture, stdlib), `vendor_gate` (the API flag + six 0 / 0 captures per STL of record; `--newest` picks the round folder), `stability` (CoG vs support hull at the worst pose; `improper_placements` = the det +1 row), `scad_lint`, `step2stl`, `arrival_checklist`, `skill_retro` (+ `--apply`), `jobs.sh` (the heavy-job
-  pool), `adopt_gates.sh`, `clone_gate.sh`, `doc_voice_lint`, `generic_lint`. The writing gates are `style_lint` and `style_gate` (the dated baseline). Mesh stack: `numpy trimesh scipy shapely rtree networkx
+  pool), `adopt_gates.sh`, `clone_gate.sh`, `doc_voice_lint`, `generic_lint` (generic shapes in the repo, names in a private term file), `rule_check` (core rules present, folklore absent, `--mutate` proof). The writing gates are `style_lint` and `style_gate` (the dated baseline). Mesh stack: `numpy trimesh scipy shapely rtree networkx
   mapbox-earcut embreex` (the Embree ray engine keeps a census in seconds under 1 GB).
 - **Layout** (`references/project-yaml.md` §Layout): ten numbered folders in the order of the project's life — `00-now` (five generated answer
   pages) `10-spec` `20-design` `30-board` `40-case` `50-kits` `60-orders` `70-release` `80-reviews` `90-log` — plus the machinery (`gen/ scripts/
@@ -31,54 +32,279 @@
 - **Templates**: CLAUDE.md, project.yaml (kickoff / board / print_targets / fab_dfm / arrival_checklist / host), SPEC + VERIFY + SPEC_ERRATA,
   the governance records, PARTS_VERIFICATION + PROCUREMENT, TEST_PLAN, REVIEW_HANDOFF, DFM_ROUND, VENDOR_REVIEW_RECORD, CENSUS_GATE_ROWS,
   design/{traceability, erc_accept, dfm_processes, arrival_checklist}.yaml, production_cut.yaml, datasheet note, G1 pack, CI workflows + Makefile.
-- **References**: project-yaml, kickoff-questionnaire, schematic-phase, pcb-layout-dfm (with the SI simulation playbook, §19), fab-dfm, case-pipeline, dfm-printed-enclosure,
+- **References**: project-yaml, kickoff-questionnaire, schematic-phase, pcb-layout-dfm, fab-dfm, case-pipeline, dfm-printed-enclosure,
   print-dfm, print-kit, fdm-print-optimisation, cnc-enclosure, fea-stage, part-verification, software-track, release-and-cut, vendor-review,
-  agent-ops, pitfalls — one home per rule, the others link.
+  agent-ops, high-speed-si, pitfalls — one home per rule, the others link.
 - **Checks**: three read-only tiers — inner `scripts/iteration_gate.sh [-- <cmd> ...]` (a change's `--check` + grader set), standard
   `scripts/adopt_gates.sh --no-clone` (`make gates`), release `scripts/adopt_gates.sh` (`make check`); `smoke/run_smoke.sh` runs every script selftest, the rule greps, the enforcement negatives, both lints
-  and the evals; 18 evals
+  and the evals; 19 evals
   with mechanical checks; `docs/reviews/INDEX.md` lists every blind review of the skill.
-- **Generic by rule**: the skill names no project, part, board, order, account or person — `scripts/generic_lint.py` reads the whole repo
+- **Generic by rule**: the skill names no project, private part, board, order, private account or person (its own public repository
+  address and public pull-request numbers excepted) — `scripts/generic_lint.py` reads the whole repo
   (CHANGELOG and docs included; history keeps its measured numbers), a fenced worked example keeps numbers and kinds but never a name, and the
   repo carries no project retro (a retro report is folded, then deleted).
 
-## 0.12.0 - 2026-11-05 - The SI convergence playbook and five checks on every owner option
+## 0.12.0 - 2026-11-05 - SI playbook additions and five checks on every owner option
 
 Source: a field-solver study of a multi-Gb/s board-level channel, two solver classes, the official COM code, and one review round.
 The owner asked for the SI playbook first. Case, slicer, bench and firmware lines of the same period are not folded here; a later harvest takes them.
 
 ### Added
-- `references/pcb-layout-dfm.md` §19, the SI simulation convergence playbook:
-  - §19.1 mesh convergence. Two meshes and a mesh band. No low-level margin on the medium mesh. The bias with no fixed sign. The
-    meshed-metal dump. The copper edge lines. The port-signal end criterion. Conductors clear of the absorbing boundary. The
-    de-embedding thru on the device mesh. Cross-host noise.
-  - §19.2 two solvers. Equal models and copper thickness. One suspect per cheap case. The mirrored symmetric-pair proof. Ports that see
-    the quantity. Skew against other conversion. Double-counted pads. Touchstone cleaning by passivity enforcement, recorded.
-  - §19.3 COM. Software output. The official code and calibration. The reference sheet left unedited. The frozen reference with a noise
-    band. Every case in every table. Absolute values per case.
-  - §19.4 the model and the board both ways. Vias from the board, ground vias included. The negative control. The board union per
-    channel. Every lane group. A fab check that can fail. Solved corners kept. Yaml keys in copied tables. The impedance window on
-    every metric.
-  - §19.5 YAML 1.1 numbers.
-  - §19.6 delegated SI decisions with complete tables, provisional until the fine mesh confirms.
+- `references/high-speed-si.md` takes the playbook additions. It stays the one home of the SI rules:
+  - §3.2: read the generated board back into the model, every via included. Prove it with a negative control. A per-channel model
+    draws the board union of vias.
+  - §6: YAML 1.1 numbers and the float check of every override.
+  - §7.1: converge on the judged quantity. The medium-mesh bias has no fixed sign. §7.4: the same copper growth in both solvers.
+  - §9.3: calibrate on public channels and on the channels you judge. Leave the reference sheet unedited. Strip cell edge spaces in
+    a loader. Let the eye search report a closed eye. Freeze the reference run with a noise band. Every case in every table, with
+    absolute values.
+  - §11.1: delegated SI decisions with complete tables, provisional until the fine mesh confirms.
+  - §15 checklist items 42 to 44. §16: a yaml key per row of a copied per-channel table.
 - `SKILL.md` §3, five checks on every option given to the owner:
-  1. No hardware gate below the part's real capability. A protection trips below the damage rating. Policy limits live in firmware
-     with a lab override. A removed physical stop is listed.
+  1. No hardware gate below the part's real capability. A protection trips below the damage rating, with its tolerance and response
+     time inside it. Policy limits live in firmware with a lab override. A removed physical stop is listed.
   2. Both bounds of every min / max window.
   3. Yields that multiply, when the gates are independent.
   4. The value proven on the previous revision.
   5. A label on every number.
-- `references/writing-style.md` §3: label every number simulated, calculated or measured; name a software metric as software output.
-- `references/agent-ops.md` §4: a fresh blind round at each milestone, then a fix-check round; measure each reviewer claim on the model.
-- `references/pitfalls.md`: seven process lines, four agents lines, seven tooling lines, five layout / SI lines, one FEA line.
+- `references/agent-ops.md` §4: measure each reviewer claim on the model before you act on it.
+- `references/pitfalls.md`: process, agents, tooling, SI and FEA lines.
 
-## 0.11.24 - 2026-10-21 - The bring-up and test rounds of a management tester: the register map as data, pattern tests between two ends, the command block and a firmware download, the browser page
+### Changed
+- `references/high-speed-si.md` §0.2, §6 and §7.1: keep every conductor clear of the absorbing boundary. A solid wall is a labelled
+  simplification, checked once against the real fence. The symmetric-pair proof uses a mirrored mesh and reads well below the
+  judged limit.
+- `references/high-speed-si.md` §0.1 and §9.3: an uncalibrated evaluator reads 1 to 3 dB high.
+- `references/high-speed-si.md` §0.2 and §14: prefer passivity enforcement to the deletion of Touchstone points. Keep the grid
+  uniform, record each changed point and tell the vendor.
+- `references/writing-style.md` §3: one label bullet: simulated, calculated or measured, with the bench quantity beside a software metric.
+- `references/pitfalls.md`: the solid-wall and evaluator-bias lines carry the review fixes. Lines that both branches held stay once.
 
-Source: the first boards of a pluggable-module management tester. Three bench days with the owner at the keyboard and no instruments.
+## 0.11.28 - 2026-11-03 - Copy sweeps, power start-up checks, fan sizing, loop maps, milestone rounds
+
+Source: the last study and review work of 2026-11-03 on a two-ended test product. The input is the project's log for that day.
+
+### Added
+- `references/schematic-phase.md` §6: an RC-gated window comparator counts its lag against the gate FET spread. A divider is checked
+  at the TVS clamp voltage. The sink request current and the PD under-voltage alert get their own rules.
+- `references/schematic-phase.md` §6: size a fan by pressure through the real flow path. Model the side path beside the sink.
+  Check the fan in its duct and its PWM window.
+- `references/schematic-phase.md` §7: a decision gets a copy sweep. A live lift of a mezzanine connector needs sequenced pins.
+- `references/case-pipeline.md` §Chain: generate the case envelope from the board yaml.
+- `references/high-speed-si.md` §4: map the common mode along a loop, and probe each knob on its own. §9.3: a fixed transmitter
+  setting cannot beat COM. The §15 checklist gains items 39 to 41.
+- `references/agent-ops.md` §3: the copy sweep. §4: list a CLI's models, split a web upload, milestone rounds with one
+  disposition per discipline. §5.1: no `--delete` push of records, and lent hosts that reboot.
+- `references/software-track.md` §18: hold stops inside a high-power loop.
+- `SKILL.md` §5: milestone rounds.
+- `references/pitfalls.md`: dated lines in records, power, safety, agents, si, mechanical and software.
+
+### Changed
+- `evals/core_rules.yaml` and its manifest: the guard lists of `schematic-phase.md` §6 and `software-track.md` §18 carry the new
+  sentences.
+
+## 0.11.27 - 2026-11-03 - Direction groups, short-loop TDR, coupon fixtures, queue hygiene
+
+Source: the later study work of 2026-11-03 on a two-ended test product. The input is the project's log for that day.
+
+### Added
+- `references/high-speed-si.md` §0.1 and §4: one-sided contact tails break the mirror. Solve one loop per direction group.
+  Set each skew target from its own solve. §0.2 step 7 says to read the tails first.
+- `references/high-speed-si.md` §9.5: a TDR window on a short loop stays inside the launch reflection. Read the line impedance
+  from the 2D cross-section.
+- `references/high-speed-si.md` §7.1: bound a dispersive dielectric by analysis over the launch, with the sign of the RL error.
+- `references/high-speed-si.md` §10: save every Monte Carlo sample set with its run.
+- `references/high-speed-si.md` §12: one coupon per panel with clamp-on edge launches. The delta-L pair runs in both weave
+  directions. Each replica follows its board loop. Key coupon data by the board's unique ID.
+- `references/high-speed-si.md` §16: label every figure and number simulated, calculated or measured. The §15 checklist gains
+  items 33 to 38.
+- `references/software-track.md` §13: an emulated I2C target never stretches the clock behind a bridge. A debug header row
+  holds the signals and a ground.
+- `references/agent-ops.md` §5.1: purge queued jobs, never rewrite a live queue file, one output folder per job, offline
+  firmware builds. §3: check the worktree base, read files from another branch. §4: map review severity scales.
+- `references/writing-style.md` §3 and §4: label figures for a reader, read times from the time column, check chat replies.
+- `SKILL.md` §0 step 6: label each figure for a reader.
+- `references/pitfalls.md`: dated lines in si, agents, software, documentation and records.
+
+## 0.11.26 - 2026-11-03 - SI to layout, despiked vendor files, test planning for module testers, lent hosts
+
+Source: the next-revision study days of a two-ended test product, 2026-11-02 and 2026-11-03. The input is the project's log for those
+days, and a survey of public high-speed design practice. This version also carries the Unreleased entry of 2026-11-02 below.
+
+### Added
+- `references/high-speed-si.md`: a new §3.2, from the solved geometry to the layout. The solved geometry gets a fab check that fails.
+  The layout draws the solved region from the solver's yaml. The routed launch is solved again before sign-off. A compensation jog
+  keeps its solved corners.
+- `references/high-speed-si.md` §0 and §4: a port construct can flip the sign of a skew. Compare the measured p/n delay with the
+  SCD21 delay. Solve every lane group, or prove sameness with numbers. A new stop rule keeps screening settings out of conversion
+  and crosstalk work.
+- `references/high-speed-si.md` §2 gains an anisotropy corner and the glass weave as a skew term.
+- `references/high-speed-si.md` §3 gains a void edge near the trace and a rule of thumb for a discontinuity.
+  It also gains the plane cavity with its stitch pitch.
+- `references/high-speed-si.md` §6 gains MPI slots under a container cpuset. §6.2 gains the memory slots of a host.
+- `references/high-speed-si.md` §6.2 adds bit-identical results on the same CPU. §7.1 gives the cost of a looser end criterion.
+- `references/high-speed-si.md` §14 adds despiked vendor files.
+  The §15 checklist gains items 28 to 32.
+- `references/agent-ops.md` §5.1: a pinned image on a host with no Docker, and the purge at loan end.
+  Inner commands of a `bash -s` script take `</dev/null`. In §3, run the main checkout's lint on worktree files.
+- `references/software-track.md` §13: read the PRBS capability matrix before the loop topology. A loopback plug with an emulation
+  EEPROM tests a host port. Keep a module-side debug header.
+- `references/part-verification.md`: a datasheet table that contradicts its own figure.
+- `SKILL.md` §0 step 6: three ledgers from day 1 (study cost, prediction against measurement, dead ends).
+- `references/pitfalls.md`: dated lines in si, agents, sourcing, software and records.
+
+## Unreleased - 2026-11-02 - The SI convergence playbook and the next-revision learnings (no version bump)
+
+Source: the next-revision study days of a two-ended test product. One SI loop took eight iterations to converge. The days also held a
+power study, an architecture study, a front-panel study, the live parts reads and the review rounds. The input is the project's log from
+2026-10-29 on, with the SI study, its run records, its decision rows and the review dispositions.
+
+### Added
+- `references/high-speed-si.md` §0, the SI convergence playbook. Its first table lists what cost the iterations: the symptom, the cost and
+  the check that catches it first. Twelve day-1 steps follow in order, then the stop rules. Sections 1 and 4 point at it. Section 4 adds
+  the measured p/n delay and the real contact. The §15 checklist gains items 22 to 26.
+- `references/part-verification.md`: every part fact read live, BLOCKED otherwise. The maker field, the drawing over a distributor
+  attribute, the file check, the stock day, the rating that applies, curves of an example design, the media list, the exact size.
+- `references/agent-ops.md` §1: an id number range per agent and a scratch folder per agent. In §3, append-only logs take `merge=union`,
+  then a duplicate and collision check. In §4, reviewers are sceptical and recompute, the author recomputes a reviewer's number,
+  and the cheap checks run before each fix-check round.
+- `references/schematic-phase.md` §2: a symbol the CLI cannot load, pin types against the datasheet, two output pads on one net. A new §7:
+  first-time and reproducible success, the connector contact limit first, the reason a board exists, the user-interface height stack, a
+  removed switch, a part change.
+- `references/pcb-layout-dfm.md` §2.1: fab tolerances against vendor limits. The extremes, the unstated tolerances, inner copper and the
+  prepreg, an alignment budget from the contacts, tooling holes in one drill program, angular levers, pin maps by position, the bottom-face
+  mirror.
+- `references/fab-dfm.md` §5: tolerances named in writing when the public pages disagree. `references/vendor-review.md` §7: quote
+  questions before the gate that rests on them.
+- `references/pitfalls.md`: dated lines in si, process, agents and sourcing. `SKILL.md`: the Where-to-look row names the playbook.
+- `references/high-speed-si.md` §6.2: choose a simulation host by the solver bottleneck, measure a short run per solver class, and
+  prove a new host against results of record. It names the usual causes of a cross-host difference. Images are pinned by digest and
+  by package snapshot. A §0.3 stop rule and checklist item 27 point at it.
+- `references/agent-ops.md` §5.1: a shared remote simulation host. Containers with no port, no network and the caller's uid, jobs
+  that outlive the link, retries on link errors only, and a login test with SSH multiplexing off. In §3, a duplicate row id check after
+  a union merge. `references/pitfalls.md`: dated lines for each.
+
+## 0.11.25 - 2026-10-24 (candidate; the tag date follows the review rounds of 2026-10-25) - Measurements that check their own counters, the studies before a next revision, the public export, side pockets and feet
+
+Source: the bench, case and study days of a two-ended test product after the 0.11.24 cut. The days held a long two-end
+pattern campaign, a first meter session and a printed-case DFM round. They also held a public release and four studies for the next
+revision. The input is 105 entries of the project's log: 96 dated in the window and nine older lines folded from agent memory.
+Classes of those 105: GENERAL 92 folded, 7 already carried by 0.11.24, 3 near duplicates, 2 project-only, 1 meta line. Ten more items
+came from the coordinator and sit outside that count. They are six tool review findings, the studies, one blocker filed for a file
+already in the tree, and two owner rules. The project keeps its copy of the map; the skill repo carries no retro report.
+
+### Added
+- `references/software-track.md` §23, a measurement checks its own counters, the norm and never a mode. Raw reads per window, the
+  counter unit and FEC point, the lane rate, the linear bit law, one reset epoch. The window bound against a wrap, computed
+  against reported BER, the deaf-checker check, lock loss, the settling rule, run totals, the confidence bound. Each unit as sender and
+  receiver. The rule-out list. Unit numbers. The record name before high power. One handler at the command dispatch.
+- `references/software-track.md` §18: the first meter session. The low-impedance mode, the ground point, an "off" rail fed through the
+  pull-ups, the laptop port's current from the CC pin. The fan check, the health poll, the two gates, the heat of pattern traffic.
+- `references/software-track.md` §19: a flag that latches again, a success status is not "applied", a low-power pin is not a guard, leaving low
+  power does not start the data path.
+- `references/software-track.md` §20: the bit counter points at §23, the settling rule, each lane against its enable map, the host
+  loop as a far-end loopback and not a media-link result.
+- `references/software-track.md` §22: a browser's private-network rule by version, credentials over a radio provisioning link.
+- `references/schematic-phase.md` §6, studies before the next revision's spec: the shape, live parts, the bench first. Rules on power, the
+  USB power sink, thermal, heat capacity, units, loops on a connector, pads and the stack, the controller.
+- `SKILL.md` §5: the next revision gets one blind pass per discipline before each gate. Field findings are named checks. §9: one
+  sentence on the measurement norm.
+- `references/release-and-cut.md` §15, a public export. The leak gate and its id formats, the public address, data keys. Docstrings and
+  comments ship. Pages from the yaml and the renders, the printed word, the user drawing, screenshots, Pages before the first push.
+- `references/dfm-printed-enclosure.md` §8.7, side pockets, bosses, screw wells and feet. The magnet wall budget, the full wall behind a
+  pocket floor, the roof over the whole depth, the inward option first. The boss run to the bed, the hulled pad, the saddle at a step.
+  The light baffle as a wall, the counterbore bridge, a foot beside its screw. A local exception after the shared rule, the shear key.
+- `references/case-pipeline.md`: a preset nobody rebuilds goes stale. The stability row after every foot move. One yaml block per bought
+  part. A cache keyed on what its output reads, and export timestamps.
+- `references/fdm-print-optimisation.md` §3: the finish block row; hole sizing in one place; a three-bore coupon.
+- `references/part-verification.md`: the fab's keyword search endpoint; search the tree before a BLOCKED row; other paths to a PDF; the
+  stocked sibling's own drawing.
+- `references/pcb-layout-dfm.md`: connector pads over thin prepreg (§3). Fab capabilities move (§2). A single-reflow part on the side
+  reflowed last (§9). Test point names on the silk (§11).
+- `references/agent-ops.md` §2: `.venv` ignored before a venv symlink, the merge race before a tag, `gh pr checkout`, stacked pull
+  requests.
+- `references/agent-ops.md` §3: one home per rule. §4: a reviewer's measurement fix re-tested on real captures.
+- `references/agent-ops.md` §5: the browser profile and the screenshot roots.
+- `smoke/README.md`: a mesh-dependent check carries `needs-mesh:` and runs in both venv kinds.
+- `references/pitfalls.md`: 34 dated lines.
+- `evals/evals.json`: eval 19, a pattern-test verdict that checks its counters. Its checks run the whole rule file against its
+  manifest, the attack fixtures, the mutation proof and a shrunk-manifest fixture. Its assertions still need an agent run and a
+  human grade.
+- `smoke/run_smoke.sh`: `rule_check.py --mutate` and `--attacks` over every group, and one grep for the search-before-BLOCKED rule.
+- `scripts/rule_check.py`, `evals/core_rules.yaml`, `evals/core_rules_manifest.yaml` and `evals/rule_attacks.yaml`: software-track
+  §18, §20 and §23, schematic-phase §6, release-and-cut §15 and dfm §8.7 are guarded sentence by sentence, headings included.
+  Also guarded: the SKILL links and §9 sentence, banned phrases and patterns in the pitfalls and eval 19. The proof covers only
+  the guarded text; the rest of the skill has no such guard.
+
+### Changed
+- `references/software-track.md` §20: the bit-counter bullet no longer says "judge the ratio and ask the vendor"; it points at the law
+  check of §23. The settle bullet no longer says "let the link settle"; it says measure the settling time and keep the first windows.
+
+### Not done
+- The measurement rules live in a project's tool; the skill carries them as rules, an eval and the rule check.
+- Past versions of `scripts/generic_lint_terms.yaml` in the git history still hold project names. A history rewrite is the owner's call.
+
+### Review round
+Four blind reviews (two Claude, one GPT, one Grok) merged in `docs/reviews/REVIEW_0.11.25.md`. Each row carries its disposition.
+Three confirmation reviews (round 2), three more (round 3) and a final fix pass (round 4) found open gaps. Their sections in the same file list them and their
+dispositions. Round 3 changed:
+- §23: each window's own baseline and time; BER_max 1 when undocumented (about 20 ms for 32 bits at 106.25 Gb/s); a challenge
+  passes only when the error counter rises while lock holds; the run passes only when every required lane and direction passes;
+  the settling is a predeclared prefix from observable state; clustered errors make the lane INCONCLUSIVE; wrap, reset,
+  read-clear and re-enable told apart; a pre-FEC limit beside a post-FEC one. §18 and §20 are sentence-guarded too.
+- Default USB Power by version and configuration, Type-C Current as a separate grant, the RDO against its PDO or APDO and the
+  cable. The lane map challenged on every lane, AC coupling from both endpoint schematics, a conservative heat capacity, the sink
+  for every supported load, the radial and axial magnet stacks, the bar's degrees of freedom.
+- `rule_check.py`: a sentence must equal its guard entry, a glued qualifier is its own sentence, a hidden or duplicate section is
+  refused, the heading is guarded, an independent manifest catches a shrunk rule file, `--attacks` runs hand-written attacks.
+- `generic_lint.py --export`: refuses an empty or patternless private file, a missing or empty folder and a `.git`; sorts files
+  by type; reads UTF-16 and PNG text chunks; reports every match; typed allow entries. Round 3 read only the raw strings of a
+  PDF or a zip; round 4 decodes them (below). No CI template runs it; it is a manual step before each public push.
+Round 4 (the final fix pass) changed:
+- §23: a reset verified by stopping the count, waiting the update time and reading a time-consistent fresh baseline; a window
+  longer than its cap is invalid, and a read cycle longer than the cap makes the run INCONCLUSIVE; every documented clearing
+  event ends an epoch; a lower bound only from a proven saturation or wrap; the challenge anchored to a known physical lane, in
+  its own epoch; an unproven lane INCONCLUSIVE; the start-up judged on its own; no pre-FEC waiver; one-sided limits, the Šidák
+  level, clustering INCONCLUSIVE without a predeclared test. §19 and §22 are sentence-guarded too.
+- The USB tiers, the CC pin, the thermal poll period from margin and latency, a heat capacity that allows for sensor lag,
+  coupling stages from the interface specification, signed axial and radial stacks, the PD soft-reset sentence, SKILL §9.
+- `generic_lint.py --export`: zip, 3MF, Office, gzip, svgz, bz2 and xz members and PDF Flate streams decoded; an undecodable
+  part is a hit; Unicode NFKC and cross-line matches (also in the plain lint); `binary: <path> <sha256>`; an allow value with a
+  term inside, or an unused entry, fails; every promised group required; `--terms` refused.
+- `rule_check.py`: a heading, comment, fence or HTML tag inside a guarded section is refused; the `## ` headings of
+  software-track are pinned; eval 19's answer and assertions are pinned by sha256; the manifest hashes each whole entry.
+- **Leak.** `scripts/generic_lint_terms.yaml` keeps only generic shapes: id formats, path shapes, a refdes and fab-code scheme. Every
+  project, person, company, order, part, preset and dimension term moved to a private file outside the repo. `generic_lint.py` reads it
+  from `--private-terms`, `$HWFS_PRIVATE_TERMS` or `~/.config/hw-from-spec/private_terms.yaml`; without it the generic patterns run.
+  The selftest uses synthetic terms. The smoke's own project-name grep is gone; the lint covers it. One old review lost a private path.
+- **§23 rewritten as general rules.** The opportunity counter grows at the lane rate × T in its own unit. Each error ratio has
+  a matching denominator. Deltas within one verified reset epoch, each counter on its own. Every window capped by the modulus at
+  the worst lockable ratio, whatever the window before. A proven saturation, or a proven wrap outside the cap, gives a lower
+  bound; inside the cap one wrap is unwrapped and the count is exact. A lower bound over the limit is a FAIL that wins over
+  INCONCLUSIVE. A predeclared settling rule with a maximum time. Run totals per lane and direction,
+  judged by Poisson bounds. A stated ratio tolerance. Lock loss bears on the verdict. A challenged checker on every lane, else
+  "checker unproven". The lane rate at the counting point. The record name checked before high power.
+- **Leak gate.** `generic_lint.py --export` is fail-closed: it needs the private terms, reads every file, name and symlink, skips
+  nothing and flags unreviewed binaries. An exact-string allow file. A named but missing term file exits 2. The lint prints which
+  terms it used.
+- **Folklore removed.** The one-bit dark lane, the 5 s window minimum, the cold-start reading, T²/2 as a law, the host rate over the
+  media lane count, the single-controller PD buffer and soft-reset claim (Get_Source_Cap first).
+- **Corrected.** The USB-C CC bands, the Default current by USB version and state, the RDO under a contract. Get_Source_Cap as
+  the query; a soft reset only as the controller's recovery. The lane map: an identical-pattern lock cannot prove it, a
+  lane-unique pattern or one injected error can. The thermal claims: C from the initial slope, the whole detect-to-airflow time.
+  Back-power: a rated Ioff covers only its own paths. The cell wall and the boss tip at `wall_gate + design_margin`; depth +
+  proud = disc + bondline; the bridge layers from the validated process. The API metadata is not authoritative. The leak-gate
+  allow rule strips an exact string. The ground point, the rail switch, the data path, the application by descriptor.
+- **Navigation.** SKILL.md links release-and-cut §15 and dfm §8.7 by their full paths. The routing rows name the studies, §8.7 and the public export. The
+  software-track intro names §3 to §23, §18 has its new title, schematic-phase names the studies in its title. The pitfall lines name
+  their home section. The CHANGELOG headings and source lines no longer name the source product type.
+
+## 0.11.24 - 2026-10-21 - The bring-up and test rounds of a two-ended test product: the register map as data, pattern tests between two ends, the command block and a firmware download, the browser page
+
+Source: the first boards of a two-ended test product. Three bench days with the owner at the keyboard and no instruments.
 Four module types, a two-end optical pair, a vendor firmware update over the command block, seven browser-page rounds, a printed case
 round. 67 learnings of the project's log, read GENERAL 52 and PROJECT 15; the project keeps the project ones. Also folded: the three
-rules and five pitfall lines of the open branch `learnings-manifest-measured-pose-2026-10` (PR #20, 0.11.17), which no later merge had
-carried.
+rules and five pitfall lines of an earlier open branch (0.11.17), which no later merge had carried.
 
 ### Added
 - `references/software-track.md` §18, bring-up without instruments. The power order, the pull-up LEDs, the no-load hum. The identity in
@@ -1011,8 +1237,8 @@ three census / print-DFM rounds on the colour bodies and two aborted slices). Op
 
 ### Changed (corrects 0.10.0's engine rule)
 - **Manifold caveat** (`agent-ops.md` §8 item 6, `case-pipeline.md` Presets + Process rules, `pitfalls.md`): the snapshot's Manifold backend is
-  measured 100–270 × faster per body and byte-deterministic — the speed claim is [V] with the numbers in the worked example — but on the source
-  project's bodies it was NOT rule-equivalent to CGAL (odd edges = not watertight on two bodies in every export format, a membrane, sub-minimum
+  measured 100–270 × faster per body and byte-deterministic — the speed claim is [V] with the numbers in the worked example — but on one earlier
+  design's bodies it was NOT rule-equivalent to CGAL (odd edges = not watertight on two bodies in every export format, a membrane, sub-minimum
   regions under print DFM, a 18.6 mm³ spurious intersection, with bbox and volume equal). Rule: Manifold for every PREVIEW / PNG; STL exports OF
   RECORD stay on the engine that passes the chain's own mesh gates (watertight, census, print DFM, interference) — an engine is judged by those
   gates, never by bbox / volume agreement; `engine:` is a per-preset yaml key (`case.presets.<name>.engine`); re-test per OpenSCAD release.
@@ -1451,7 +1677,7 @@ home-printer and vendor operations properly" (paraphrased: the owner named the p
 ### Added
 - **`dfm-printed-enclosure.md` §7.1 — the thin-wall metric is LENGTH-DEPENDENT** (an identical rim-over-lap-step profile passed at 48 mm, failed at 88
   and 147 mm while three ray-cast censuses found nothing under 1.37): calibrated MJF PA12 rule at ~150 mm parts — **rim above a skirt-lap step ≥ 2.0
-  (1.4 fails; 2.0 passes with step + inward undercut kept) OR the undercut filled so the inner wall runs straight to the rim top (`lap.ring_down`,
+  (1.4 fails; 2.0 passes with step + inward undercut kept) OR the undercut filled so the inner wall runs straight to the rim top (a generator key,
   then 1.25 … 1.3 above the step passed)**; grey set (plain 2.0 walls / floors, boss rings, chamfers into ≥ 1.2 walls, 45° dish ramps) and red set
   (free-standing wedges). **The probe method** that converges in one round: slice the failing body of record into capped slabs
   (`trimesh slice_mesh_plane`) to localise the feature and the length threshold, then plain-profile OpenSCAD polygon extrusions at **40 mm AND full

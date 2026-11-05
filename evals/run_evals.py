@@ -5,8 +5,9 @@
       Each eval may carry `checks: [{name, run, expect_rc?}]`: `run` is a shell snippet executed in a fresh temp dir with $SKILL (this repo),
       $PY and $PYTHON (the interpreter: --python made absolute, else the interpreter running this file) and $T (the temp dir) set.
   evals/run_evals.py --selftest      # evals.json schema: unique ids, prompt / expected_output / assertions / checks (name + run) on every eval A check whose `run` starts with
-      `needs-mesh:` is SKIPPED (not failed) when $PY lacks numpy / trimesh. Evals without checks are listed as manual with their assertion count
-      (they need an agent run against the prompt and a human reading the assertions). Exit 1 on any failed check.
+      `needs-mesh:` is SKIPPED (not failed) when $PY lacks numpy / trimesh. Every eval carries checks (the selftest requires them) and
+      assertions. The assertions need an agent run against the prompt and a human grade: the checks prove the skill text, not the
+      agent's answer. Exit 1 on any failed check.
 """
 import argparse, json, os, subprocess, sys, tempfile
 import shutil
@@ -19,7 +20,7 @@ def main():
     a = ap.parse_args()
     if a.selftest:
         return selftest()
-    py = (shutil.which(a.python) or os.path.abspath(a.python)) if a.python else sys.executable  # a bare name (python3) resolves on PATH, not in the temp cwd   # checks run with cwd = a temp dir, so a relative --python must be absolutised; default = the interpreter running this file
+    py = os.path.abspath(shutil.which(a.python) or a.python) if a.python else sys.executable  # a bare name (python3) resolves on PATH, not in the temp cwd   # checks run with cwd = a temp dir, so a relative --python must be absolutised; default = the interpreter running this file
     mesh = subprocess.run([py, "-c", "import numpy, trimesh, scipy, shapely"], capture_output=True).returncode == 0
     evals = json.load(open(os.path.join(HERE, "evals.json")))["evals"]
     only = set(a.only.split(",")) if a.only else None
@@ -30,7 +31,7 @@ def main():
         checks = e.get("checks") or []
         if not checks:
             n_manual += 1; print(f"[manual] {e['id']:>2} {e['name']}: {len(e['assertions'])} assertion(s) need an agent run + a reader"); continue
-        n_mech += 1
+        n_mech += 1; n_manual += bool(e.get("assertions"))                      # the checks prove the text; the assertions still need an agent run
         with tempfile.TemporaryDirectory(prefix="hwfs_eval_") as T:
             for c in checks:
                 run = c["run"]
@@ -42,7 +43,8 @@ def main():
                 ok = r.returncode == c.get("expect_rc", 0)
                 fails += not ok
                 print(f"[{'PASS' if ok else 'FAIL'} ] {e['id']:>2} {c.get('name', run[:60])}" + ("" if ok else f"\n        rc {r.returncode}: {(r.stdout + r.stderr).strip()[-600:]}"))
-    print(f"\nevals: {n_mech} with mechanical checks ({fails} failed check(s), {n_skip} skipped), {n_manual} manual — the manual ones are graded by a human after an agent run")
+    print(f"\nevals: {n_mech} with mechanical checks ({fails} failed check(s), {n_skip} skipped); {n_manual} with assertions that a human grades after an agent run "
+          f"(the mechanical checks prove the skill text, never the agent's answer)")
     return 1 if fails else 0
 
 

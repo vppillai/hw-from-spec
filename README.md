@@ -183,4 +183,9 @@ reports drift. Numbers that come from a vendor (fab table, checker line, toleran
 text and in `project.yaml`, and re-fetched before use. MIT (`LICENSE`). Contributions arrive as retro
 PRs: run `scripts/skill_retro.py` on a finished project, fold its report into the references, add the
 evals, keep `smoke/run_smoke.sh` and the two lints (`scripts/doc_voice_lint.py`,
-`scripts/generic_lint.py`) green, bump the version, write the CHANGELOG entry, open the PR.
+`scripts/generic_lint.py`) green, bump the version, write the CHANGELOG entry, open the PR. This repo is public.
+Put a private name in the private term file (`scripts/generic_lint.py`): a project, person, customer, employer, order or private
+part. Never put it in `scripts/generic_lint_terms.yaml`. Public dependencies stay nameable: a fab, a distributor, a tool, a model
+vendor. No shipped CI template runs the lint with names; on a fresh clone it runs the generic patterns only. A CI job that
+needs the names writes the private term file from a secret. It sets `HWFS_PRIVATE_TERMS`. It stops when the secret is empty.
+The skill's own public repository address and its public pull-request numbers are not private terms.

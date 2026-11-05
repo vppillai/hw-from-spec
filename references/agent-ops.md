@@ -6,6 +6,10 @@
   each edit.
 - Hand a worker its record ID (`CC-nnn`) with the task; an ID is reserved only when its row is in HEAD; `grep -c '^| CC-nnn '` immediately before writing.
 - Long tasks are time-boxed; the coordinator keeps a heartbeat (~25 min) and a pause-point paragraph in STATUS with the resume list.
+- **Give each parallel agent its own number range for every shared id series.** Write the range in the brief: blockers, open questions,
+  finding ids. "The next free number" collided three times in one day *(worked example)*. Each merge then renumbered the rows and every
+  reference to them, file by file. A range works the way a refdes block per sheet works.
+- Give each agent a scratch folder named for it. The session scratch area is shared, and another agent overwrote a helper with a generic name.
 
 ## 2. Commits
 - Explicit paths only (`git commit -m … -- <paths>`), never `git add -A` in a shared tree. But explicit paths isolate FILES, not hunks: a shared record
@@ -47,6 +51,12 @@
   and clone again. A scratch clone of the skill lost files twice in one day: 53 deletions with missing objects, then the whole `.git` **[K]**.
   A script that runs from a clone fails loudly on a broken one (exit 2 with the missing path named), never with a silent skip.
 - Run the chains after every merge, before a vendor upload (`case-pipeline.md` §Process rules).
+- Ignore `.venv` in the repository before any worktree gets a venv symlink. A broad add in such a worktree commits the link.
+- A pull-request merge can race another merge ("Base branch was modified"). Read the merge result before you tag. Re-point a tag set on the
+  old main only while it is unpublished. A published tag stays; issue a new tag.
+- `gh pr checkout` (tested 2026-10) had no quiet flag; read `--help` of the installed version. A failed call leaves you on the old branch. Read the current branch before you edit.
+- Merge a stacked base without deleting its branch. Retarget the child to main first, then delete the base branch. A closed stacked
+  pull request cannot be retargeted; open a new one from the same branch.
 
 ## 3. Regenerating shared records
 - Re-read (re-grep) the row immediately before replacing a status cell; prefer a suffix append over a full-cell rewrite.
@@ -66,6 +76,12 @@
 - Run the style gate right before the round when another agent commits to the shared log. One line over the baseline fails the round.
 - Parallel branches that append rows at the same spot conflict in every record file. Resolve by union: both sides kept, one
   `latest` mark in the status log (the newest), the yaml parsed and the known-issues table checked before the merge commit.
+- An append-only log conflicts on nearly every merge, because every branch appends at its end. Mark such logs `merge=union` in
+  `.gitattributes`, so git takes both sides. A union keeps an entry twice when two branches carried it. After the merge, list the duplicate
+  lines and the id collisions, and remove or renumber them in the merge commit. A history line never goes; only an exact copy does.
+- A union is right for new rows and wrong for a row that one side edited in place. A blocker closed on one branch kept its old open
+  copy beside the closed one *(worked example)*. A duplicate-line check misses it, because the two lines differ. After every merge of a
+  table log, list the duplicate row ids (`grep -oE '^\| [A-Z]+-[0-9]+ ' <file> | sort | uniq -d`). Keep the newest status of each.
 - Name the selftest parts in the brief. Two agents both named their new block `part i`; the interpreter kept the later definition
   and hid the first. The merger greps for duplicate definitions before the selftest runs, and keeps the file's main guard at
   the end, after every part. A part defined after the guard raises a name error at the call.
@@ -76,8 +92,17 @@
 - A merge can move a block out of the function that owns it. The product and identity read that belongs in the open path landed
   in a re-clock function, and every run stopped at the revision check. Pin the ownership of such a block with a selftest that
   reads the function source.
-- A worktree has no venv and no vendored skill unless you give it one. A gate that cannot run there reports nothing; the
+- A worktree has no venv and no vendored skill unless you give it one. Run the main checkout's lint on the worktree files.
+  A gate that cannot run there reports nothing; the
   coordinator's merge gate covers it, and the brief says so.
+- An agent worktree can start on the default branch, not on the branch the brief names. Before any edit, check that the named
+  base commit is an ancestor of HEAD (`git merge-base --is-ancestor`). If not, reset the clean worktree to the named branch.
+- A file that a brief cites can live on another branch only. Read it with `git show <branch>:<path>`, and cite the branch and path.
+- A copied table header can outlive its data. When a header and the commit message disagree, trust the commit and the run log.
+- **A landed decision gets a copy sweep.** Search every document and every yaml for each copy of the old value. Update every copy in
+  the same pass as the decision row. Check each hit's meaning first (§4). A blind review found four stale copies that the decision
+  pass had missed *(worked example)*.
+- One home per rule. A gate tier is an alias of the gate script with a flag, never a second yaml list.
 
 ## 4. Blind reviews (the protocol; templates in `workflows/`)
 - Freeze: start from a clean tree (`git status --short --untracked-files=no` empty). Run `git worktree add --detach <frozen> HEAD`, then `git -C
@@ -87,9 +112,6 @@
   scope per specialty, the known/open list with dispositions, the claims of the round (for a delta audit) — the ONLY briefing. Plus the one-paragraph
   waiver list without reasoning so verifiers spend their budget on new defects.
 - Reviewers never read other reviewers' output nor the author's reasoning (name the forbidden file patterns explicitly in the prompt).
-- Run a fresh blind round at each milestone, not only at a gate. A milestone is a spec pass, a simulation loop that closes, a study that
-  lands, or a tag. Freeze a tag. Run the round on it. Merge the findings. Bring each owner row with one recommendation. A fix-check
-  round by fresh reviewers then closes it.
 - Measure each reviewer claim on the model before you act on it. A reviewer that reads a render can misread a clearance or a flow direction.
   The adversarial verification bullet below gives the method.
 - External models run through a second agent CLI: `agent -p --mode ask --model <m> --output-format text "<prompt>"` from the frozen worktree. The ask
@@ -130,6 +152,23 @@
 - **A merged review record needs a closing pass after the fix wave**. One blind verifier closes it. Each finding gets one row: the disposition
   row, the artefact line read, and the verdict line in the pin's form. Write the findings as numbered rows in the merge; prose bullets make the
   count a reconstruction.
+- Re-test a reviewer's fix to a measurement on real captures before you adopt it. One proposed legend exclusion was wrong for the real
+  viewer; the old exclusion held.
+- **Brief every reviewer to be sceptical and to recompute.** A reviewer recomputes each headline number from the design yaml and the
+  scripts. It compares the model with the layout of record and asks what each closure rests on. It never takes a number from the record.
+  One round found a requirement closed on a simplified model; the owner's closure reversed *(worked example)*.
+- The author recomputes a reviewer's number too. One reviewer's figure came from a point of another window; the disposition says so.
+- **Run the cheap checks before each fix-check round.** Run the stale-number sweep over every document a decision batch touched. Run the
+  coverage script (every requirement named in the plan, every plan row traced). Check each stale hit's meaning before you replace it. Six
+  fix-check rounds ran before one found no MAJOR, and most of their findings were of this kind *(worked example)*.
+- External reviewers can grade on another scale (High / Medium / Low). State the mapping to BLOCKER / MAJOR / MINOR before you count
+  findings across rounds. A fix-check repeats old ids as closure rows. Count only the rows that are not in a closure state.
+- **List an external CLI's models before a run.** The model names change. A retired model name gives an empty report.
+- **Split a large upload for a web reviewer.** A browser reviewer can refuse or truncate a large file set. Send the package in parts.
+  When a run fails, retry on a smaller set, and record the split in the merge.
+- **A milestone gets a fresh double-blind round.** The milestones are a spec pass, a closed SI loop, a study and a tag. A fix-check round
+  with fresh reviewers follows the fixes. Merge into one disposition per discipline. Each row reads FIX, OWNER, CLOSED or REJECTED.
+  Check every BLOCKER and MAJOR against the frozen package before its row is written. Bring the owner one recommended option per OWNER row.
 
 ## 5. Background jobs and the machine
 - **Long chains run in the BACKGROUND and are waited on by the harness, never by a foreground loop.** Every job writes its own log. It ends the log
@@ -145,6 +184,9 @@
   at the end. Use one worktree per agent. Never run two mesh / slicer pools at once. After a panic, resume from the MEASURED state (`git status`, last
   commit, the report file on disk), never from memory.
 - Parallel router JVMs SIGTERM each other; one JVM at a time, `-mt 1` for determinism.
+- The browser driver can report "browser already running". Stop the driver's own Chrome profile, and delete its `Singleton*` files.
+  Then list the pages again. The driver's screenshot tool writes only inside the workspace roots. Save under the main tree's ignored
+  build folder, and copy the file into a worktree outside those roots.
 - Owner offline: list owner-only items (orders, gate cells, hardware records) at the pause point, never attempt them; kill a long chain early when an
   owner addition arrives through the coordinator.
 - **Rerun a flaky gate once before you read it as real.** One adopt run failed at its clone step. The standalone clone gate passed on the
@@ -152,6 +194,47 @@
 - **A module loaded twice has two copies of every class**. A shim that loads a module by path beside its package import gets a second
   copy of `Nack` and `Port`. An `except` on one copy misses the other. Load once, or rebind the shared classes after the load
   (`references/software-track.md` §3).
+
+### 5.1 A shared remote simulation host
+Heavy solvers can run on a second host beside the main machine. `references/high-speed-si.md` §6.2 says which jobs go there and how to
+prove the host. The rules below keep the host safe and the jobs alive.
+- **Install nothing on the host.** Every tool lives in a container image pinned by digest. A runner syncs the repo subset a job needs,
+  runs the job in the image and fetches the outputs.
+- **Publish no port, and never use host networking.** Run each job with the network off (`--network none`). A solver needs no network.
+- **Run the container as the caller's uid and gid** (`--user "$(id -u):$(id -g)"`). Output files then belong to the user, not to root.
+- **Keep licensed files out of every image.** Copy them to a private folder on the host for the run only, and never push them.
+- **A job outlives the link.** Start it detached on the host (`setsid nohup … < /dev/null &`), with its own log. Fetch the outputs
+  later. A sleeping laptop or a dropped link then stops nothing.
+- Put the detached command on its own line, with its own redirects. In `a && b && setsid cmd &` the shell backgrounds the whole list.
+  The subshell then holds the SSH channel open, and the client hangs.
+- A script run as `bash -s` reads itself from stdin. Give every inner `ssh` or container exec `</dev/null`. Otherwise the inner
+  command reads the rest of the script.
+- **A host with no Docker can still run the pinned image.** `docker export` gives the root filesystem. Add a `metadata.yaml`, and
+  import both as a split system-container image (LXD). The root filesystem has no init. Set the init command (`lxc.init.cmd`)
+  to `/bin/sleep infinity` in the profile. Run the container unprivileged, with no network device.
+- **Purge everything when a lent host goes back.** Delete the containers, the images, the profile and the job
+  storage. Then list each kind again and confirm that it is empty.
+- Retry only on link errors: SSH exit 255, and the rsync codes for a dropped connection or a timeout. A missing remote path is an
+  answer, not a dropped link. A retry loop on it held one fetch for half an hour *(worked example)*.
+- **A multiplexed SSH session can hide a broken key login.** The open master connection keeps working after the server stops taking
+  the key. Test a login path with `-o ControlMaster=no -o ControlPath=none`.
+- Pipe a public key on stdin to append it (`ssh <host> 'cat >> ~/.ssh/authorized_keys' < key.pub`). A key comment with an apostrophe
+  breaks a quoted `echo`.
+- Use key login only. Write no password, key or token into any file, log or brief.
+- **A kill that removes only running containers leaves queued jobs waiting.** A queued job keeps polling for its lock and can
+  start hours later. Stale queued jobs held one serial lane for a day *(worked example)*. Purge the queue before new work. Stop
+  each waiting runner process, then list the processes and the containers again.
+- Never rewrite a queue file that a `while read` runner is reading. The shell reads ahead, so the runner has already taken the
+  removed line. Its offset then falls mid-line in the new file. Stop the runner and start a new one on a new file.
+- **Give each job its own output folder on the host.** A shared remote checkout lets a later job overwrite an earlier job's
+  result before the fetch. Otherwise, fetch each result before the next push.
+- A firmware build runs offline in a pinned toolchain image, with the network off. Start each run from an empty build folder.
+  A partial clean of the build folder breaks the next incremental run.
+- **Never push a records folder with `--delete` to a shared remote checkout.** A later push deletes the records that an earlier job
+  wrote there before the fetch. Three records were lost that way in one day *(worked example)*. Write remote outputs under the
+  ignored build folder, and pull them from there. Rebuild a lost table from its job log.
+- **A lent host can reboot.** Keep each chain short. Keep a resubmit list in the checkpoint file. After a reboot, remove only the
+  locks of jobs that are dead. Check each lock's process before you remove it.
 
 ## 6. Reporting
 - Every report, record and README follows `references/writing-style.md`: lead with the result, second person, active voice, present tense,

@@ -10,6 +10,7 @@ permissions:
   contents: read
 jobs:
   package:
+    if: github.ref_type == 'tag'         # a manual dispatch runs only on a tag ref; a branch dispatch never stages a release
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     container:

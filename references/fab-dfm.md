@@ -76,6 +76,8 @@ Build the mirror before the first quote and make it part of the adopt rule.
   2× the price).
 - DFM viewer: rows read "Unanalyzed" until its own button is pressed (~60 s); the export is an icon-only toolbar item; the PDF lands in Downloads.
 - PCBA: a part with a stock shortfall is auto-deselected; a catalogue part without a fab footprint shows nothing until the paid confirm step.
+- A fab's public pages can disagree on a tolerance. One fab gave ±10 % impedance on its capability page and ±20 % for the free test in a
+  help article, with ±5 % "upon special request" *(worked example)*. Name each tolerance the design needs in writing on the order. <!-- style: ok -->
 - Prices are read from the live form and written next to the generated parameters; `newest_quote()` accepts only a row whose price cell starts
   with a figure.
 
