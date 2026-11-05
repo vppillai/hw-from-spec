@@ -24,7 +24,7 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 | Judging only up to Nyquist | A pair clean at Nyquist converts at −10 to −14 dB just above it | Found in the last iteration | Every metric plotted to twice Nyquist from the first run (step 8) |
 | One lane solved for all | A fix that helps one loop hurts its neighbour. A loss pad helped the short loop and cost the long loop its return-loss margin. | Every fix ran twice | Each distinct lane geometry solved on its own (step 7) |
 | A skew target copied by symmetry | The contact tails rise on one side of their pads, so opposite loops are not mirrors. A loop read −16.1 dB on a template that read −38.8 dB on its own group. | 1 retune round | One solve per direction group, each with its own skew target (step 7) |
-| An uncalibrated evaluator | A home-made COM-like eye read 1.4 to 3.1 dB high with a bias that changed per channel. Its false finding drove a two-iteration fix study. | 2 iterations | The official code from the first eye (step 6) |
+| An uncalibrated evaluator | A home-made COM-like eye read 1 to 3 dB high with a bias that changed per channel. Its false finding drove a two-iteration fix study. | 2 iterations | The official code from the first eye (step 6) |
 | Bench limits found late | A limit that no fixture can resolve. The test plan was rewritten after the review. | 1 review round | The verification method written beside each limit before the runs (step 1) |
 | A coupon that cannot check the launch | A replica fed from its far end predicts −15 dB of conversion that the board does not have | 1 coupon redesign | Each coupon structure predicted with the same model, in the same iteration as the launch (step 10) |
 | A fix part that does not fit | A resistor pad solved in 3D, then found taller than the gap under the connector body | Most of an iteration | The housing height from the STEP read before you solve a fix (step 2) |
@@ -40,12 +40,12 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
    plane, pad, post and stitch of the layout appears in the model, and every via. A twin may screen a variant. It never closes a requirement.
 4. **Model the real contact, and build ports that see every quantity** (§8). Solve the vendor contact geometry once at nominal. Compare it
    with the post or port stand-in. Keep the stand-in only inside the difference you measured. Use single-ended ports to a ground bar, so the
-   common mode shows. Validate the setup on a mirror-symmetric pair: SCD21 below −100 dB.
+   common mode shows. Validate the setup on a mirror-symmetric pair with a mirrored mesh: SCD21 well below the judged limit.
 5. **Screen the mesh before you spend solver time** (§7). Make every copper edge a mesh line. Run the whole-model voxel screen: 0 cuts over
-   half a cell. Run three mesh levels on the first geometry. Use a DC-free excitation and judge the port tail. Close a plane cavity with a
-   solid wall.
-6. **Clean the inputs and fix the evaluator** (§9.3, §14). Check every vendor file for passivity, point by point. Drop isolated spikes too: a passive point
-   10 dB off its neighbours is still corrupt. Agree every reference
+   half a cell. Run three mesh levels on the first geometry. Use a DC-free excitation and judge the port tail. Keep every conductor
+   clear of the absorbing boundary.
+6. **Clean the inputs and fix the evaluator** (§9.3, §14). Check every vendor file for passivity, point by point. Repair isolated spikes too: a
+   passive point 10 dB off its neighbours is still corrupt. Agree every reference
    plane, so no pad counts twice. Run the official COM code from the first eye. Calibrate any fast evaluator against it on your own channels.
 7. **List every distinct lane geometry and solve each one** (§6.1). Group lanes only by a symmetry you can state. Solve nested partner loops
    and their neighbours together. Solve every lane group, or prove with numbers that it matches a solved one. Extra room near a group
@@ -184,6 +184,11 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
   the fab minimum. Check each plane void against the vias, and against the neck width it leaves. A printed table that a person
   must read is not a check.
 - Draw the solved region from the same yaml the solver reads **[method]**. The layout and the field model then cannot drift apart.
+- Read the generated board back into the model and compare **[method]**. Take every via from the board, ground vias included, not only
+  the trace polylines. A round trip that swaps only the traces is true by construction. Prove the round trip with a negative control:
+  one via moved 0.1 mm must change the model.
+- A per-channel model draws every via that the board holds in its region, from every channel **[method]**. Two channels that share a
+  pad can each add a via, and the union can put a via at both ends of one pad.
 - Re-extract the launch from the routed board and solve it again before the layout sign-off (§3.1).
 - Keep the corners the solver solved on a skew-compensation jog **[physics]**. A mitre changes the jog length, and so the skew it
   nulls. Solve the mitred variant and compare it before you change the corners.
@@ -248,7 +253,8 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 | Eye or COM | the official IEEE COM code (it runs under GNU Octave) | COM against a reference channel |
 
 - Validate each solver on a known case first **[method]**. Check the 2D solver against a closed-form microstrip. Check a 3D mixed-mode setup on
-  a mirror-symmetric pair: SCD21 must sit below −100 dB. Then a large SCD21 on the real geometry is physics, not a port bug.
+  a mirror-symmetric pair, with the mesh mirrored about the pair axis. SCD21 must sit well below the judged limit, for example 30 dB
+  under it. A mirrored FDTD mesh can read near −100 dB. Then a large SCD21 on the real geometry is physics, not a port bug.
 - Check reciprocity and the Tx and Rx drives of the same model **[method]**. They must agree.
 - Every script has `--selftest`. Heavy runs go through the host's job pool. Cache each finished sweep keyed on its inputs before the next step
   starts; a crash in the last step then loses nothing.
@@ -258,6 +264,9 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
   `OMPI_MCA_rmaps_base_oversubscribe=1`), and let the job's slot count bound the ranks.
 - Test each suspect of a solver disagreement on its own, on a cheap case. Compare a closed box with absorbing faces. Compare direct
   solves with an adaptive sweep. Sweep the copper thickness in 2D.
+- PyYAML reads YAML 1.1. It parses `1e-12` and `1.0e3` as strings. Write `1.0e-12` and `1.0e+3` **[method]**.
+- Float-check every number from yaml and every command-line override before it reaches a solver. A string fails far from its cause.
+- A list item that contains ": " parses as a mapping. Quote free text in a generator's yaml.
 
 ### 6.1 Partition the channel
 
@@ -322,11 +331,15 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 
 ### 7.1 Mesh and time
 
+- Converge on the quantity the gate judges: return loss, mode conversion, crosstalk or the eye metric **[method]**. Never converge on a
+  field peak.
 - Run three mesh levels at the copper (coarse, medium, fine) **[method]**. State the spread as the uncertainty. If the order is not monotonic,
   keep the pessimistic level of record.
 - Judge mode conversion on the fine mesh only **[method]**. At nominal the medium mesh agreed with the fine one. At the impedance corners it was
   10 dB off *(worked example)*.
-- Judge FDTD time convergence on the port tail, not only on the energy **[method]**. A Gaussian excitation carries DC, and an absorbing face
+- The medium-mesh bias has no fixed sign **[method]**. A corner that fails by a small margin on the medium mesh can pass by several dB
+  on the fine mesh. Run the fine mesh before you change geometry for a small fail.
+- Judge FDTD time convergence on the port tail, not only on the energy **[method]**. A baseband Gaussian excitation carries DC, and an absorbing face
   cannot remove a static field. The energy then stalls while every port voltage has died. A DC-free excitation (the derivative of a Gaussian)
   converges fast and gives the same S-parameters.
 - A looser FDTD end criterion and a narrower excitation are screening settings **[method]**. On one loop model, −50 dB saved
@@ -337,8 +350,9 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
   **[method]**. One 6-pole model ran at 1 % of the cell rate *(worked example)*. When the de-embed already restores the correct
   line, only the short launch keeps the model material. Bound that error by analysis over the launch length instead of a full run.
   State the sign too. Extra loss damps each reflection on its round trip, so a model with a higher loss tangent reads RL optimistic.
-- Close an FDTD plane-pair cavity with a solid conducting wall, never a via fence near an absorbing face **[method]**. Field leaks between the
-  fence vias into a thin strip that ends on the absorbing face, and the run diverges.
+- Keep every conductor clear of the absorbing boundary by at least the boundary depth in cells **[method]**. A via fence near an absorbing face can make the run
+  diverge: field leaks between the fence vias into a thin strip that ends on the absorbing face. A solid wall in place of the fence is
+  a simplification. Label it in the model, and check it once against the real fence.
 - A 2x-thru for de-embedding reuses the DUT's mesh at its ports **[method]**. With its own mesh the thru reads a flat loss that the de-embedded
   part then shows as gain.
 
@@ -373,7 +387,8 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 ### 7.4 The edge-snapped mesh and the whole-model voxel screen
 
 - Make every axis-parallel copper edge a mesh line of its own **[method]**. Drop other lines inside the merge gap of a hard edge. Then grow
-  the copper by about 1 µm so each such line falls inside the metal.
+  the copper by about 1 µm, well under the etch tolerance, so each such line falls inside the metal. Apply the same growth in the
+  second solver.
 - Screen the whole model, not one cut **[method]**. Cut every axis-parallel trace segment at a fixed step and every contact foot, on the
   solver's own copper dump. Compare the meshed edge with the drawn edge. The gate is 0 cuts over half a cell.
 - Run the screen before any solver time on a new geometry, and on every model of record.
@@ -446,9 +461,20 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 
 - Judge a short channel by the difference to a reference **[method]**. The reference is the same channel padded with line to the standard's
   loss budget, through the same transmitter, receiver and packages.
-- Run the official COM code **[method]**. A home-made evaluator read 1.4 to 3.1 dB high, and its bias depended on the channel. That bias
+- Run the official COM code **[method]**. A home-made evaluator read 1 to 3 dB high, and its bias depended on the channel. That bias
   produced a finding the official code did not repeat *(worked example)*. A second open-source port also swung by several dB between
-  near-identical channels.
+  near-identical channels. Calibrate any in-house evaluator against the official code, on public channels with a published value and
+  on the channels you judge.
+- Never edit the reference sheet. Pass run switches as the reference code's own overrides.
+- Strip edge spaces from each cell when your loader reads the sheet cells. Some loaders drop a cell whose text has an edge space.
+- Set the minimum vertical eye opening parameter of the search to zero when a channel may close its eye. The code then reports a low
+  value instead of stopping.
+- Freeze one reference run as a file with all its inputs **[method]**. Every "not worse" comparison reads against that file. Measure the
+  run-to-run spread of the reference and state it as a noise band. A change inside the band counts as no change. A reference that moves
+  0.3 to 0.6 dB between runs cannot judge a 0.1 dB change *(worked example)*.
+- Every comparison table carries every COM case: each end case, each direction, each corner. A worst-case-only table hides a case that
+  got worse. Give the absolute value per case beside the difference to the reference. A reference that follows the device loss moves
+  the difference.
 - If no public calibration case exists at your rate, run the official code itself. Check your Touchstone writer against an original file
   through it.
 - Run the module corners: typical packages, one end on the return-loss mask, both ends on it, and the slowest allowed transmitter edge. Report
@@ -533,6 +559,17 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 - Hold the loss of the channel under a margin rule well inside the standard's budget **[owner choice]**.
 - Margins are owner decisions. An agent proposes the row with the number; the owner accepts it.
 
+### 11.1 Delegated SI decisions
+
+- A delegation rule for an SI change names the metrics, the cases, the corners, the mesh and the margin **[owner choice]**. For example:
+  mode conversion at nominal and at every corner with 1 dB margin, and COM not worse in every case against the frozen reference (§9.3).
+- The report to the deciding agent carries the complete table: every case of every metric that the rule names. A table with a missing
+  case cannot pass the rule.
+- Read "not worse" per case, inside the noise band of §9.3. A worst-case reading can pass a change that makes two other cases worse.
+- Write each adoption as a "by delegation" sub-row with the numbers and the mesh. When a review finds a missing case, withdraw the
+  adoption in a new sub-row and return the change to the owner.
+- A medium-mesh adoption stays provisional until a fine-mesh run confirms it. A fine run worse than the limit returns the row to the owner.
+
 ## 12. Coupon design that checks the model
 
 - Put the coupon on a breakaway rail of the same panel: same lot, same stack-up **[fab capability]**.
@@ -564,9 +601,11 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 ## 14. Vendor models and data hygiene
 
 - Check every vendor Touchstone file for passivity point by point before use **[method]**. Single corrupt lines can hide in a crosstalk file. One
-  file set made a connector ICN several times its measured value *(worked example)*. Drop the non-passive points and record how many.
+  file set made a connector ICN several times its measured value *(worked example)*. Prefer passivity enforcement to the deletion of
+  points. Keep the frequency grid uniform. Record each point you change or drop, and tell the vendor.
 - Despike every vendor file as well **[method]**. A point can be passive and still corrupt. One SDD11 point at −15 dB between
-  −34 dB neighbours moved the official COM by 0.25 dB *(worked example)*. Drop isolated spikes of about 10 dB, and record how many.
+  −34 dB neighbours moved the official COM by 0.25 dB *(worked example)*. Repair isolated spikes of about 10 dB on the same grid, and
+  record each one.
 - A vendor model of a similar part from another maker is a stand-in. Say so in the record. Compare it with any measured report for that part.
 - A measured report of a mated fixture set includes fixture traces. Do not compare its IL with a bare connector model.
 - Licensed vendor models and drawings stay local. Never commit them; record their path and licence.
@@ -629,6 +668,9 @@ Give each reviewer the frozen study, the yaml, the scripts and this list. Give n
 39. When a retune did not null a loop, does a common-mode map along the loop show where the conversion starts?
 40. Was each knob (plane void, pair coupling, pad trim) probed on its own before a fix was chosen?
 41. Does any proposed fix try to close a COM gap with a fixed transmitter setting?
+42. Does every COM comparison read against one frozen reference file, with a stated noise band and every case in the table?
+43. Does the model-to-board round trip take every via from the board? Did a negative control (one via moved) change the model?
+44. Does every delegated adoption carry the complete table, and is a medium-mesh adoption marked provisional?
 
 ## 16. Records
 
@@ -638,8 +680,9 @@ Give each reviewer the frozen study, the yaml, the scripts and this list. Give n
   per-layer anti-pads, the TDR markers with delta and margin, the S-parameters at Nyquist and a status table.
 - Keep the Touchstone files of record beside the sign-off, named by structure, layers and date. The cascade uses exactly those files.
 - Mark a set-up check "preliminary" in its first line.
+- Give each row of a per-channel table in a spec or a study its yaml key. A generator can then check the copy.
 - Label every figure and every number for a reader as simulated, calculated or measured. COM, ICN and ILD are software outputs.
-  Say so, and name what the bench measures instead: BER, a VNA sweep or a TDR. Give each gallery short notes for a beginner.
+  Say so, and name what the bench measures beside it: BER, a VNA sweep or a TDR. Give each gallery short notes for a beginner.
 - Results borrowed from a sister board are a placeholder. Say so, and sign off again with the board's own models.
 - Each iteration ends with a verdict table (converged / cross-checked / verdict), a risk register, proposed decision rows and learnings.
 - Results of record live beside the study. Figures are generated. The solver export (Gerber, drill, stack-up and port table of exactly the

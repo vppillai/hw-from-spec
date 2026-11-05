@@ -1,6 +1,6 @@
 # CHANGELOG — hw-from-spec
 
-## Current state (0.11.28): read this instead of replaying the entries below
+## Current state (0.12.0): read this instead of replaying the entries below
 
 - **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
   thirteen batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
@@ -43,6 +43,42 @@
   address and public pull-request numbers excepted) — `scripts/generic_lint.py` reads the whole repo
   (CHANGELOG and docs included; history keeps its measured numbers), a fenced worked example keeps numbers and kinds but never a name, and the
   repo carries no project retro (a retro report is folded, then deleted).
+
+## 0.12.0 - 2026-11-05 - SI playbook additions and five checks on every owner option
+
+Source: a field-solver study of a multi-Gb/s board-level channel, two solver classes, the official COM code, and one review round.
+The owner asked for the SI playbook first. Case, slicer, bench and firmware lines of the same period are not folded here; a later harvest takes them.
+
+### Added
+- `references/high-speed-si.md` takes the playbook additions. It stays the one home of the SI rules:
+  - §3.2: read the generated board back into the model, every via included. Prove it with a negative control. A per-channel model
+    draws the board union of vias.
+  - §6: YAML 1.1 numbers and the float check of every override.
+  - §7.1: converge on the judged quantity. The medium-mesh bias has no fixed sign. §7.4: the same copper growth in both solvers.
+  - §9.3: calibrate on public channels and on the channels you judge. Leave the reference sheet unedited. Strip cell edge spaces in
+    a loader. Let the eye search report a closed eye. Freeze the reference run with a noise band. Every case in every table, with
+    absolute values.
+  - §11.1: delegated SI decisions with complete tables, provisional until the fine mesh confirms.
+  - §15 checklist items 42 to 44. §16: a yaml key per row of a copied per-channel table.
+- `SKILL.md` §3, five checks on every option given to the owner:
+  1. No hardware gate below the part's real capability. A protection trips below the damage rating, with its tolerance and response
+     time inside it. Policy limits live in firmware with a lab override. A removed physical stop is listed.
+  2. Both bounds of every min / max window.
+  3. Yields that multiply, when the gates are independent.
+  4. The value proven on the previous revision.
+  5. A label on every number.
+- `references/agent-ops.md` §4: measure each reviewer claim on the model before you act on it.
+- `references/pitfalls.md`: process, agents, tooling, SI and FEA lines.
+
+### Changed
+- `references/high-speed-si.md` §0.2, §6 and §7.1: keep every conductor clear of the absorbing boundary. A solid wall is a labelled
+  simplification, checked once against the real fence. The symmetric-pair proof uses a mirrored mesh and reads well below the
+  judged limit.
+- `references/high-speed-si.md` §0.1 and §9.3: an uncalibrated evaluator reads 1 to 3 dB high.
+- `references/high-speed-si.md` §0.2 and §14: prefer passivity enforcement to the deletion of Touchstone points. Keep the grid
+  uniform, record each changed point and tell the vendor.
+- `references/writing-style.md` §3: one label bullet: simulated, calculated or measured, with the bench quantity beside a software metric.
+- `references/pitfalls.md`: the solid-wall and evaluator-bias lines carry the review fixes. Lines that both branches held stay once.
 
 ## 0.11.28 - 2026-11-03 - Copy sweeps, power start-up checks, fan sizing, loop maps, milestone rounds
 

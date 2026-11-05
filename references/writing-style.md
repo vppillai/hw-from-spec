@@ -32,8 +32,10 @@ to a vendor, and chat reports.
 - Cut every word that does no work. Read the sentence without the word; if the meaning holds, the word goes.
 - One idea per paragraph. A list for parallel items, prose for one line of argument.
 - Say what you do not know. "Not measured" is better than a hedge.
-- Label each figure and each number for a reader: simulated, calculated or measured. Name a software metric as software output, and
-  name what the bench measures instead (`references/high-speed-si.md` §16). Give a gallery short notes for a beginner.
+- Label every number and figure a reader sees. "Simulated" comes from a solver and a model. "Calculated" comes from a script and
+  datasheet values. "Measured" comes from real hardware. A simulated eye looks like a scope capture, so say which one it is.
+  Name a software metric as software output (an eye or channel margin, a crosstalk sum), and name what the bench measures beside it
+  (`references/high-speed-si.md` §16). Give a gallery short notes for a beginner.
 - Read a time from the record's time column, never from a results row. A row can hold a sample count.
 - Write to a person. Say who did what: "The owner sends the reply." Never "it was decided".
 - Keep the reason for a rule as one short clause. The episode behind it goes to `references/pitfalls.md` as a dated line.

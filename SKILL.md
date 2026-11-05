@@ -1,6 +1,6 @@
 ---
 name: hw-from-spec
-version: 0.11.28
+version: 0.12.0
 description: Run a hardware project (a PCB, a printed or CNC enclosure, or both — scope chosen at kickoff; contract fab such as JLCPCB) from a written specification to a production cut with an owner-gated, generated-only, blind-reviewed workflow — a kickoff questionnaire that asks every owner decision up front with recommended answers, a zero-warning manufacturability bar, and a retro that folds each project's learnings back into the skill. Use this whenever someone starts a board or enclosure project from a spec, asks to set up gates, a decision log, generators, part verification, a fab DFM mirror, a case pipeline, FEA, blind reviews, a release report or a production cut for one, or resumes such a project, or wants the skill improved from a finished project — even if they only say "new KiCad board", "order this at JLC", "review the layout", "cut the release" or "what did we learn".
 ---
 
@@ -226,6 +226,18 @@ order. A WARN that is "known" is not a bar; it is either fixed or a dated, evide
 - Rule 2: a value, part, topology or pin assignment named in the spec is never changed silently. Write the CC row (reason, options, recommendation),
   mark it OPEN, ask. Apply only after approval, or ship it behind an optional flag that warns when omitted so the code path is tested now
   (`references/pitfalls.md` process).
+- **Every option you give the owner passes five checks.** Apply them in a CC row and at a gate ask.
+  1. No hardware gate below the part's real capability. A hardware protection trips below the damage rating of the part it protects.
+     Its trip tolerance and response time stay inside that rating. Never set the hardware trip at a policy value.
+     A policy limit (a power grant, a temperature mark, a timing margin) lives in firmware or software. It has a safe default and a lab override.
+     A no-firmware stop keeps a threshold that firmware can set, and the threshold resets to the safe default at power-up.
+     When you remove a physical stop, list each stop it held, its replacement, and what the replacement does not cover.
+  2. Both bounds of every min / max window. A finding names one bound, and a fix that shifts the whole band can break the other bound.
+     Give the value at both corners for each option. Prefer a fix that narrows the spread of the cause, such as a part with both limits on its datasheet.
+  3. Yields that multiply. Independent sort or inspection gates in series pass the product of their yields. State the product and size the order on it.
+     When the gates read correlated causes, the product is wrong. Measure the joint yield on the first lot.
+  4. The value proven on the previous revision. When one exists, offer it as an option with what proved it and its known risk.
+  5. A label on every number: simulated, calculated or measured (`references/writing-style.md` §3).
 - `90-log/KNOWN_ISSUES.md` is generated from the log: OPEN rows, rows mentioning OPEN, provisional rows, the nod section (KNOWN_ISSUES §2.1), blockers, the
   test plan's UNVERIFIED markers. Section 1 is hand-curated between markers (`scripts/known_issues.py`). Describe the nod marker indirectly in
   status cells or the generator re-triggers on the description.
