@@ -208,7 +208,7 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - Four branches appended rows at the same spot in four record files. Union resolves it: both sides kept, one `latest` mark, the yaml parsed and the table cell count checked before the merge commit — 2026-10-20 [agents/merge].
 - Nearly every merge of a parallel branch conflicted on the learnings log, and the union kept some entries twice. Check for duplicate lines after a union — 2026-11-02 [agents/merge] (`agent-ops.md` §3).
 - Parallel agents that each took "the next free" blocker number collided three times in one day. Give each agent its own number range in the brief — 2026-11-02 [agents/ids] (`agent-ops.md` §1).
-- A union merge kept a closed blocker beside its old open copy, because one branch edited the row in place. Check duplicate row ids after every merge of a table log — 2026-11-02 [agents/merge] (`agent-ops.md` §3).
+- A union merge kept a closed blocker beside its old open copy, because one branch edited the row in place. After every merge of a table log, list duplicate row ids (`sort | uniq -d`) and keep the newest status — 2026-11-02 [agents/merge] (`agent-ops.md` §3).
 - An SSH master connection kept a host reachable after its key login broke. Test a login with multiplexing off — 2026-11-02 [agents/remote] (`agent-ops.md` §5.1).
 - A shell list ending in `setsid cmd &` sent the whole list to the background and hung the SSH client. Detach on a line of its own — 2026-11-02 [agents/remote] (`agent-ops.md` §5.1).
 - An inner `ssh` in a script run as `bash -s` read the rest of the script. Give every inner remote command `</dev/null` — 2026-11-03 [agents/remote] (`agent-ops.md` §5.1).
@@ -218,7 +218,6 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A review found a requirement closed on a simplified model, and the owner's closure reversed. Brief reviewers to recompute, not to read the record — 2026-11-01 [agents/review] (`agent-ops.md` §4).
 - A bare pipe in a decision row (`all|none|NAME`) and a row without its closing pipe each broke the known-issues reader at the round. Count the cells before the round — 2026-10-21 [records/table].
 - One file moved into a package without a reorg row: the path check reported every frozen record that quoted it. A move of one file is a reorg row too — 2026-10-20 [records/reorg].
-- A union merge of an append-only log kept a closed row beside its old open copy. After every merge of a record table, list duplicate row ids (`sort | uniq -d`) and keep the newest status — 2026-11-02 [agents/records].
 - An agent worktree started on `main`, not on the branch its brief named. Check that the base commit is an ancestor of HEAD before the first edit — 2026-11-03 [agents/worktree] (`agent-ops.md` §3).
 - An indentation slip in a predecessor's last commit floated every ground pad of a model. Read the diff of that commit before you reuse its runs — 2026-10-31 [agents/handover].
 - Prose copies of per-channel values went stale three times. Give each row of a copied table its yaml key, and let a generator check the copy — 2026-11-05 [agents/records].

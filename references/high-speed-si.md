@@ -339,7 +339,7 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
   10 dB off *(worked example)*.
 - The medium-mesh bias has no fixed sign **[method]**. A corner that fails by a small margin on the medium mesh can pass by several dB
   on the fine mesh. Run the fine mesh before you change geometry for a small fail.
-- Judge FDTD time convergence on the port tail, not only on the energy **[method]**. A Gaussian excitation carries DC, and an absorbing face
+- Judge FDTD time convergence on the port tail, not only on the energy **[method]**. A baseband Gaussian excitation carries DC, and an absorbing face
   cannot remove a static field. The energy then stalls while every port voltage has died. A DC-free excitation (the derivative of a Gaussian)
   converges fast and gives the same S-parameters.
 - A looser FDTD end criterion and a narrower excitation are screening settings **[method]**. On one loop model, −50 dB saved
@@ -350,7 +350,7 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
   **[method]**. One 6-pole model ran at 1 % of the cell rate *(worked example)*. When the de-embed already restores the correct
   line, only the short launch keeps the model material. Bound that error by analysis over the launch length instead of a full run.
   State the sign too. Extra loss damps each reflection on its round trip, so a model with a higher loss tangent reads RL optimistic.
-- Keep every conductor some cells clear of the absorbing boundary **[method]**. A via fence near an absorbing face can make the run
+- Keep every conductor clear of the absorbing boundary by at least the boundary depth in cells **[method]**. A via fence near an absorbing face can make the run
   diverge: field leaks between the fence vias into a thin strip that ends on the absorbing face. A solid wall in place of the fence is
   a simplification. Label it in the model, and check it once against the real fence.
 - A 2x-thru for de-embedding reuses the DUT's mesh at its ports **[method]**. With its own mesh the thru reads a flat loss that the de-embedded
@@ -682,7 +682,7 @@ Give each reviewer the frozen study, the yaml, the scripts and this list. Give n
 - Mark a set-up check "preliminary" in its first line.
 - Give each row of a per-channel table in a spec or a study its yaml key. A generator can then check the copy.
 - Label every figure and every number for a reader as simulated, calculated or measured. COM, ICN and ILD are software outputs.
-  Say so, and name what the bench measures instead: BER, a VNA sweep or a TDR. Give each gallery short notes for a beginner.
+  Say so, and name what the bench measures beside it: BER, a VNA sweep or a TDR. Give each gallery short notes for a beginner.
 - Results borrowed from a sister board are a placeholder. Say so, and sign off again with the board's own models.
 - Each iteration ends with a verdict table (converged / cross-checked / verdict), a risk register, proposed decision rows and learnings.
 - Results of record live beside the study. Figures are generated. The solver export (Gerber, drill, stack-up and port table of exactly the
