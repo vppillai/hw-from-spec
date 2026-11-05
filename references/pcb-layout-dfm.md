@@ -1,4 +1,4 @@
-# pcb-layout-dfm.md — G1 → G2: the PCB build rules, the layout chain and the adopt gate
+# pcb-layout-dfm.md — G1 → G2: the PCB build rules, the layout chain, the adopt gate and the SI simulation playbook
 
 Every quantitative rule below carries one of four tags, so a reader knows what moves it:
 
@@ -74,6 +74,7 @@ net classes must be exported into the router input — grep the DSN for them aft
 - Differential rules the CAD enforces: pair gap, uncoupled length ≤ N mm, skew ≤ N mm, no via stubs on the pair, reference plane continuous
   (an In2 signal over an In1 antipad edge is a route-quality HIGH, §10). Impedance control is an order option **[fab capability]**: ask for it
   on the quote form; if the form refuses it for the copper weight, that is a decision row, not a silent drop.
+- A multi-Gb/s channel that the spec must prove before layout gets a field-solver study. Follow the convergence playbook in §19.
 
 ## 4. Trace / space / via / annular / drill minimums vs the fab table
 Copy the fab's table into `20-design/dfm_thresholds.json` (source URL + date) and design strictly greater **[checker]**. Worked example
@@ -249,3 +250,90 @@ rails + fiducials). The rest come from the help articles `pick-place-file-for-pc
 orientation, silkscreen governs polarity), `minimum-spacing-for-smd-components`, `Panelizing-your-PCB-for-Assembly`,
 `in-what-cases-will-there-be-charged-extra`, and the stack-up template API (`getImpedanceTemplateSettings`). Fetch again, cite the date, and
 keep the raw responses under `60-orders/quotes/<date>/`.
+
+## 19. SI simulation: the convergence playbook **[physics + convention]**
+A field-solver result is a prediction. It decides a geometry only when two meshes, a second solver and the generated board agree with it.
+Label every number from a solver "simulated" and every number from a script "calculated" (`references/writing-style.md` §3).
+
+### 19.1 Mesh convergence
+- Converge on the quantity the gate judges: return loss, mode conversion, crosstalk or the eye metric. Never converge on a field peak.
+- Run each candidate on two meshes, medium and fine. Report both values and their difference as the mesh band.
+- Never judge a low-level margin on the medium mesh alone. Mode conversion and crosstalk sit 30 dB or more under the through path.
+  A medium mesh can agree with the fine mesh to 1 dB at nominal and miss a corner by 10 dB.
+- The medium-mesh bias has no fixed sign. A corner that fails by a small margin on the medium mesh can pass by several dB on the fine
+  mesh. Run the fine mesh before you change geometry for a small fail.
+- A result that jumps for a tiny geometry change is a mesh suspect. A 1 µm width step that moves the conversion by 9 dB is one. Dump the
+  metal that the solver meshes. Compare the dump with the drawn copper before you trust or blame the result.
+- An FDTD mesher that merges close lines can drop a whole cell row of a trace. Make every axis-parallel copper edge a mesh line of its
+  own, and grow the copper by about 1 µm. Screen the whole metal dump against the drawn copper, not one cut.
+- Judge FDTD convergence on the port signals, not on the total energy. A Gaussian pulse carries DC, and an absorbing boundary cannot
+  absorb a static field. The energy then stalls while every port signal decays. Use a DC-free pulse if you want an energy criterion.
+- Close a plane-pair cavity in the model with a solid conducting wall. A via fence near an absorbing boundary can make the run diverge.
+- A de-embedding thru reuses the device mesh at its ports. A thru on its own coarse mesh adds flat loss that the de-embed then credits to
+  the device.
+- Keep run-time shortcuts out of mode-conversion and crosstalk work. A looser end criterion or a narrower pulse band saves steps and moves
+  the low-level ports by several dB.
+- Two hosts agree only within the run's own noise. An FDTD end criterion meets floating-point noise, so two CPU models stop at different
+  steps. A mesher can give another element count on another CPU architecture. Compare the time records over their common samples, and
+  judge a host difference against the mesh band, never against zero.
+
+### 19.2 Two solvers
+- Never take a single-solver corner value as a pass or a fail for a low-level metric. Solve every decisive corner with a second solver
+  class, for example FDTD and FEM.
+- Make the two models equal before you compare them. Model the copper with its thickness in both. Zero-thickness sheets can move a fine
+  pair by about 15 Ω, and that alone can make the whole solver gap.
+- Test each suspect of a solver gap on its own, on a cheap case: a closed box, a direct solve, a 2D impedance sweep. A full run per
+  suspect costs hours and most of the host memory.
+- Prove a mixed-mode setup on a mirror-symmetric pair first. Its mode conversion must read below -100 dB. A large value on the real
+  geometry is then physics, not a port or extraction fault.
+- Build the port that can see the quantity before you simplify the geometry. A port construct can hide the common mode or flip the sign
+  of a skew. Model the real contact before you size a compensation. Cut the contact tails from the vendor STEP when the model is fused.
+- Separate skew from other conversion. Read the p-to-n delay from the step responses, and compare it with the delay that the conversion
+  curve implies. When the two agree, a length trim works. When they disagree, look for an impedance asymmetry first.
+- A vendor connector model that carries its own host pad counts the pad twice against a board model that holds the real pad. Remove one.
+- Clean every vendor Touchstone file before use. Drop non-passive points and isolated 10 dB spikes. One corrupt frequency point can move
+  an eye metric by 0.25 dB and a crosstalk sum by a factor of four.
+
+### 19.3 COM and other eye metrics
+- COM is software output, not a signal. Say so beside every COM figure, and name what the bench measures: BER, VNA S-parameters, TDR.
+- Run the official reference code. Calibrate any in-house evaluator against it, on public channels with a published value and on the
+  channels you judge. An in-house metric can read 1 to 3 dB high, and the bias changes from channel to channel.
+- Pass run switches as the reference code's own overrides; never edit its sheet. Strip edge spaces from every sheet cell. Set the
+  minimum eye limit of the search to zero when a channel may close its eye. The code then reports a low value instead of stopping.
+- Match the interpreter version of the reference host, not only the code. An older interpreter can run many times slower.
+- Freeze one reference run as a file with all its inputs. Every "not worse" comparison reads against that file.
+- Measure the run-to-run spread of the reference and state it as a noise band. A change inside the band counts as no change. A
+  reference that moves 0.3 to 0.6 dB between runs cannot judge a 0.1 dB change.
+- Every comparison table carries every COM case: each end case, each direction, each corner. A worst-case-only table hides a case that
+  got worse.
+- Compare the absolute value per case as well as the difference to the reference. A reference that follows the device loss moves the
+  difference.
+
+### 19.4 The model and the board, both ways
+- Draw the layout and the model from the same yaml. Then read the generated board back into the model and compare.
+- Take every via from the board, ground vias included, not only the trace polylines. A round trip that swaps only the traces is true
+  by construction.
+- Prove the round trip with a negative control. One via moved 0.1 mm must change the model.
+- A per-channel model draws every via that the board holds in its region, from every channel. Two channels that share a pad can each add
+  a via, and the union can put a via at both ends of one pad.
+- Solve every lane group, or prove with numbers that a group matches a solved one. "More room" is not a proof.
+- Give a solved geometry a fab check that fails. Compare each clearance, after the etch tolerance, with the fab minimum. A printed
+  number that a person must read is not a check.
+- Keep the corners the solver solved. A mitred skew jog changes its length and so the skew it nulls. Solve a variant before you change it.
+- Give each row of a per-channel table in a spec or a study its yaml key. A generator can then check the copy.
+- Choose an impedance window on every channel and every metric. A window chosen on return loss alone can push mode conversion out.
+
+### 19.5 Numbers in yaml
+- PyYAML reads YAML 1.1. It parses `1e-12` and `1.0e3` as strings. Write `1.0e-12` and `1.0e+3`.
+- Float-check every numeric value from yaml and every command-line override before it reaches a solver. A string fails far from its cause.
+- A list item that contains ": " parses as a mapping. Quote free text in a generator's yaml.
+
+### 19.6 Delegated SI decisions
+- A delegation rule for an SI change names the metrics, the cases, the corners, the mesh and the margin. For example: mode conversion at
+  nominal and at every corner with 1 dB margin, and COM not worse in every case against the frozen reference.
+- The report to the deciding agent carries the complete table: every case of every metric that the rule names. A table with a missing
+  case cannot pass the rule.
+- Read "not worse" per case, inside the noise band of §19.3. A worst-case reading can pass a change that makes two other cases worse.
+- Write each adoption as a "by delegation" sub-row with the numbers and the mesh. When a review finds a missing case, withdraw the
+  adoption in a new sub-row and return the change to the owner.
+- A fine-mesh run confirms each medium-mesh adoption. A fine run worse than the limit returns the row to the owner.

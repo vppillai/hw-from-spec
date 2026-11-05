@@ -87,6 +87,10 @@
   scope per specialty, the known/open list with dispositions, the claims of the round (for a delta audit) — the ONLY briefing. Plus the one-paragraph
   waiver list without reasoning so verifiers spend their budget on new defects.
 - Reviewers never read other reviewers' output nor the author's reasoning (name the forbidden file patterns explicitly in the prompt).
+- Run a fresh blind round at each milestone, not only at a gate. A milestone is a spec pass, a simulation loop that closes, a study that
+  lands, or a tag. Freeze a tag, run the round, merge the findings, and bring each owner row with one recommendation. Then a fix-check
+  round by fresh reviewers closes it.
+- Measure each reviewer claim on the model before you act on it. A reviewer that reads a render can misread a clearance or a flow direction.
 - External models run through a second agent CLI: `agent -p --mode ask --model <m> --output-format text "<prompt>"` from the frozen worktree. The ask
   and plan modes are read-only. `-p` alone has shell access, so never use it for reviews. Keep the prompt ≤ ~30 kB (observed CLI limit, unversioned).
   Name the files in the prompt; the model reads them. The packet ceiling is ≈ 440 kB (observed: the CLI returns 0 bytes above it). Rotate two vendors

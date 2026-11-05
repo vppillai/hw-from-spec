@@ -1,6 +1,6 @@
 # CHANGELOG — hw-from-spec
 
-## Current state (0.11.24): read this instead of replaying the entries below
+## Current state (0.12.0): read this instead of replaying the entries below
 
 - **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
   thirteen batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
@@ -31,7 +31,7 @@
 - **Templates**: CLAUDE.md, project.yaml (kickoff / board / print_targets / fab_dfm / arrival_checklist / host), SPEC + VERIFY + SPEC_ERRATA,
   the governance records, PARTS_VERIFICATION + PROCUREMENT, TEST_PLAN, REVIEW_HANDOFF, DFM_ROUND, VENDOR_REVIEW_RECORD, CENSUS_GATE_ROWS,
   design/{traceability, erc_accept, dfm_processes, arrival_checklist}.yaml, production_cut.yaml, datasheet note, G1 pack, CI workflows + Makefile.
-- **References**: project-yaml, kickoff-questionnaire, schematic-phase, pcb-layout-dfm, fab-dfm, case-pipeline, dfm-printed-enclosure,
+- **References**: project-yaml, kickoff-questionnaire, schematic-phase, pcb-layout-dfm (with the SI simulation playbook, §19), fab-dfm, case-pipeline, dfm-printed-enclosure,
   print-dfm, print-kit, fdm-print-optimisation, cnc-enclosure, fea-stage, part-verification, software-track, release-and-cut, vendor-review,
   agent-ops, pitfalls — one home per rule, the others link.
 - **Checks**: three read-only tiers — inner `scripts/iteration_gate.sh [-- <cmd> ...]` (a change's `--check` + grader set), standard
@@ -41,6 +41,28 @@
 - **Generic by rule**: the skill names no project, part, board, order, account or person — `scripts/generic_lint.py` reads the whole repo
   (CHANGELOG and docs included; history keeps its measured numbers), a fenced worked example keeps numbers and kinds but never a name, and the
   repo carries no project retro (a retro report is folded, then deleted).
+
+## 0.12.0 - 2026-11-05 - The SI convergence playbook and five checks on every owner option
+
+Source: the field-solver study of a short board-level loop for a high-speed pluggable host port, two solvers on four hosts, the official
+COM code, and one G0 review round. The learnings log since the last harvest and 19 decision rows were read for general lessons. The owner
+asked for the SI playbook first. Case, slicer, bench and firmware lines of the same period are not folded here; a later harvest takes them.
+
+### Added
+- `references/pcb-layout-dfm.md` §19, the SI simulation convergence playbook. §19.1 mesh convergence: two meshes and a mesh band, no
+  low-level margin on the medium mesh, the bias with no fixed sign, the meshed-metal dump, the copper edge lines, the port-signal end
+  criterion, the de-embedding thru on the device mesh, cross-host noise. §19.2 two solvers: equal models, copper thickness, one suspect per
+  cheap case, the symmetric-pair proof, ports that see the quantity, skew against other conversion, double-counted pads, clean Touchstone
+  files. §19.3 COM: software output, the official code and calibration, sheet hygiene, the frozen reference with a noise band, every case in
+  every table, absolute values per case. §19.4 the model and the board both ways: vias from the board with ground vias, the negative
+  control, the board union per channel, every lane group, a failing fab check, solved corners kept, yaml keys in copied tables, the
+  impedance window on every metric. §19.5 YAML 1.1 numbers. §19.6 delegated SI decisions with complete tables.
+- `SKILL.md` §3, five checks on every option given to the owner: no hardware gate below the part's real capability (policy limits in
+  firmware with a lab override, a removed physical stop listed), both bounds of every min / max window, yields that multiply, the value
+  proven on the previous revision, a label on every number.
+- `references/writing-style.md` §3: label every number simulated, calculated or measured; name a software metric as software output.
+- `references/agent-ops.md` §4: a fresh blind round at each milestone, then a fix-check round; measure each reviewer claim on the model.
+- `references/pitfalls.md`: seven process lines, four agents lines, seven tooling lines, five layout / SI lines, one FEA line.
 
 ## 0.11.24 - 2026-10-21 - The bring-up and test rounds of a management tester: the register map as data, pattern tests between two ends, the command block and a firmware download, the browser page
 

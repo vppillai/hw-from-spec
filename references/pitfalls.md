@@ -164,6 +164,13 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A pin's `pending:` text named one record while its check read another. Read the generated check before you write a record template. Test the template by filling a scratch copy and running `traceability.py --only` per pin — 2026-10-11 [records/gate-pins] (`release-and-cut.md` §3.1).
 - `git describe` runs inside the release script: a release built before the commit stamped `-dirty` into the manifest. Commit the design, release on the clean tree, commit the release files as a second commit; an amend changes the hash the manifest names — 2026-10-15 [release/manifest].
 - A kit mirror synced with `rsync --delete` lost about 105 generator copies that the repo keeps elsewhere. The mirror is a superset. Restore it with the generators, cache warm — 2026-10-11 [kits/mirror] (`print-kit.md` §5).
+- A delegated change passed on the worst COM case while two other cases got worse. The report carried the worst case only, and a blind reviewer found it. A delegation table carries every case — 2026-11-05 [process/delegation] (`pcb-layout-dfm.md` §19.6).
+- A fix moved one edge of a timing window inside its limit and pushed the other edge out. A part with a banded parameter fixed both. Give every option its value at both bounds — 2026-11-05 [process/options] (SKILL §3).
+- A hardware gate at a policy value blocks the lab from pushing a part. Put the protection at the damage rating, and the policy limit in firmware with a lab override — 2026-11-05 [process/limits] (SKILL §3).
+- Removing a physical switch removed three hard stops, not one part. List each stop, its replacement, and what the replacement misses — 2026-10-30 [process/safety].
+- An owner decision that withdrew a feature left test-plan rows that tested the old behaviour. After each decision batch, grep the plan for every row of each requirement the batch touches — 2026-11-01 [process/test-plan].
+- A part change under a long spec left numbers derived from the old part in many clauses. Mark each one superseded and name the re-run that replaces it — 2026-11-02 [process/spec].
+- A small coverage script (every requirement named in the plan, every test with a row, no duplicates) found six new requirements at once. Run it after each spec batch — 2026-10-31 [process/test-plan].
 ## agents / git
 - Agents die when the machine sleeps or on API 500s; resume by message with the MEASURED state; heartbeat monitors ~25 min; time-box every long task; parallel router JVMs SIGTERM each other — STATUS 09-18…21.
 - Background-task watchers did not wake the coordinator: block in-process with `until ! kill -0 $pid; do sleep 20; done` (≤ 600 s per call, repeat) — 2026-09-22.
@@ -196,6 +203,10 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A bare pipe in a decision row (`all|none|NAME`) and a row without its closing pipe each broke the known-issues reader at the round. Count the cells before the round — 2026-10-21 [records/table].
 - One file moved into a package without a reorg row: the path check reported every frozen record that quoted it. A move of one file is a reorg row too — 2026-10-20 [records/reorg].
 
+- A union merge of an append-only log kept a closed row beside its old open copy. After every merge of a record table, list duplicate row ids (`sort | uniq -d`) and keep the newest status — 2026-11-02 [agents/records].
+- An agent worktree started on `main`, not on the branch its brief named. Check that the base commit is an ancestor of HEAD before the first edit — 2026-11-03 [agents/worktree].
+- An indentation slip in a predecessor's last commit floated every ground pad of a model. Read the diff of that commit before you reuse its runs — 2026-10-31 [agents/handover].
+- Prose copies of per-channel values went stale three times. Give each row of a copied table its yaml key, and let a generator check the copy — 2026-11-05 [agents/records].
 ## tooling / determinism
 - Bambu Studio CLI (02.08.x): `sparse_infill_density` 100 % is rejected (rc -18) — use top / bottom shell thickness for a solid column. A two-filament slice with a prime tower SEGFAULTS (rc -11 / 133, "no filament colors found in projects") unless each slot's filament JSON carries `filament_colour` (or `--filament-colour '#..;#..'`). Bisect on the temp inputs one variable per run — 2026-09-29 [tooling/bambu].
 - Multi-material on the Bambu CLI = one multi-part object: Bambu-style 3MF with per-part `extruder` in `Metadata/model_settings.config` (or pre-placed STLs + `--load-filament-ids 1,2 --assemble --arrange 0`). Purge mass = used − solid-part volume × density, derivable for the SOLID colour mark only. The same STL path N times = N objects, count from the CLI's `objects`. `different_settings_to_system` omits values equal to the system default — prove from the embedded value — 2026-09-29 [tooling/bambu/ams].
@@ -252,6 +263,13 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A check that imports yaml exits 1 under the stock python before it reads a path. Run every skill script with the project venv's python — 2026-10-10 [tooling/venv].
 - A README with two spliced blocks needs its mask and preserve keyed by the marker name. Use one regex with a backreference. A single-marker mask erases the second block on the next regen — 2026-10-10 [tooling/generators].
 - A G-code reader keyed on `;Z:` saw one layer: the layer marker is `; Z_HEIGHT: `. The `; FEATURE: Outer wall` marker comes after the travel, so a reader that resets on it loses the seam point. A both-endpoints-inside window dropped long lines; neighbouring finger lines contaminated a tooth-tip probe — 2026-10-15 [tooling/gcode] (`fdm-print-optimisation.md` §5).
+- A job launched from a `while read` queue inherits the queue file as stdin. An `ssh` in the job read the next line, and the queue lost it. Start every queued job with `< /dev/null` — 2026-11-01 [tooling/queue].
+- A remote sync with `--delete` removed three records that jobs had written into a synced folder. Write remote outputs under `build/` and pull from there — 2026-11-03 [tooling/remote].
+- A remote job folder with no command file and no log after hours means the job never started. Check the folder before you wait on it — 2026-11-05 [tooling/remote].
+- Choose a simulation host by the solver's bottleneck. FDTD is bound by memory bandwidth, FEM by memory size, and SPICE by one fast core. Count physical cores and memory channels, and time a short run of each solver class per host — 2026-11-02 [tooling/hosts].
+- Run a matrix-heavy interpreter with one BLAS thread under a job pool. Three threaded runs pushed the load past the core count and ran slower — 2026-10-31 [tooling/threads].
+- PyYAML read `1e-12` and `1.0e3` as strings, and the solver failed far from the cause. Write `1.0e-12` and `1.0e+3`, and float-check every override — 2026-11-05 [tooling/yaml] (`pcb-layout-dfm.md` §19.5).
+- A Python `%` format with a literal "95 % upper" in a table header failed after a long run. Write `%%`, and save the samples before you format them — 2026-11-01 [tooling/format].
 ## kicad / drc / swig *(worked examples; the mechanism generalises to any CAD CLI)*
 - `kicad-cli pcb drc` honours ONLY explicit `netclass_assignments`, never `netclass_patterns`, and NO DRC exclusions. Emit per-net assignments from the generator, assert a canary rule fires exactly once. Accepted residue = a generated RULE (`enclosedByArea`, not `insideArea` which is an intersection test — prove with a negative construction in `--selftest`).
 - Enforcing net classes for the first time on a "DRC 0" board showed 202 errors. A class clearance larger than the fill's zone clearance is unenforceable by construction. Write the as-built geometry into scoped rules general → specific (later rule wins), log the relaxation.
@@ -283,6 +301,11 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - Reserved sites: hold a future part's area with a rule area + a checker entry; delete both when the part arrives.
 - An unsigned distance-to-outline test let placed art pass from outside the board. Marks across two tapered corners shipped 1.68 mm outside the outline and DRC did not flag the copper. Combine point-in-polygon with the distance, assert every placed item inside the outline. Gate the Gerber copper bbox inside the Edge.Cuts bbox per layer — 2026-10-08 [layout/art-outside-edge] (`pcb-layout-dfm.md` §11).
 
+- A model-to-board round trip that swapped only the trace polylines was true by construction. Take the vias from the board too, and prove it with one via moved 0.1 mm — 2026-11-05 [layout/si] (`pcb-layout-dfm.md` §19.4).
+- A medium mesh agreed with the fine mesh at nominal and read a mode-conversion corner 10 dB worse. Judge low-level margins on the fine mesh and a second solver — 2026-10-31 [layout/si] (`pcb-layout-dfm.md` §19.1).
+- A reference COM run moved 0.3 to 0.6 dB between runs, more than the changes it judged. Freeze one reference file and state a noise band — 2026-11-05 [layout/si] (`pcb-layout-dfm.md` §19.3).
+- An in-house eye evaluator read 1.4 to 3.1 dB above the official code, and the bias drove a wrong study finding. Calibrate on the channels you judge — 2026-10-31 [layout/si].
+- A solver missed a whole cell row of a trace after it merged close mesh lines. A dump of the meshed metal showed it; the mesh-line checks did not — 2026-11-01 [layout/si].
 ## silk / dfm
 - The fab's DFM grades a value EQUAL to its warning threshold as Warning: design strictly greater — thresholds JSON.
 - "THT to SMD" applies to EVERY plated/non-plated pad incl. round header pins, mounting-hole annuli and slots (read as SMD).
@@ -429,6 +452,7 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - Gate the von Mises off the load, support and tie bands. A sliver tet on a tie node reads ten times its average — 2026-10-10 [fea/bands].
 - `--only <subset>` wiped the other cases of the record and the report. A subset run never writes the report of record — 2026-10-10 [fea/records].
 - An FEA owner row with no test row stayed open across two gates. Write the arrival row the day the model reads FAIL: pose, instrument, reduction formula, pass number, record file, fail action. A brief named row ids that already existed; check the yaml first — 2026-10-11 [fea/owner-rows] (`fea-stage.md` §Thermal).
+- A von Mises peak at a hole edge beside a fixed annulus keeps rising with the mesh. Converge on the quantities the limits use, and quote the peak Richardson-extrapolated over three meshes — 2026-10-31 [fea/mesh].
 ## software
 - A fixed jig cap makes the WARN level unreachable when THROTTLE = min(alarm − margin, cap): make the interplay explicit and print both levels — software/thermal.
 - Manuals written before the software they describe: the "what you should see" lines go under an explicit banner naming the fake backend that produced them — 2026-09-22 [documentation].
