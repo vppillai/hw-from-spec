@@ -206,3 +206,14 @@ Run these before the spec fixes a target or a board split. A study of §6 cites 
 - **A fan sheet with no start current gives no start budget**. Stagger the starts on one switch, or read the current on the bench.
 - **Keep a field that changes in use outside the checksum span of an identity block**. One torn write then cannot invalidate the
   identity.
+- **A single-ended sense across a high-current return reads high by the return drop**. A monitor whose bus pin is referred to
+  ground counts the return path in its voltage. Subtract I × R_return in firmware, with R_return measured per unit by a Kelvin
+  read. Store it with the unit, and widen the guard by the residual.
+- **An RC delay needs a discharge path that resets on supply loss**. A large RC can hold an enable high for many seconds after
+  the supply drops. A quick replug then skips the delay. Use a supervisor with a stated minimum delay and an output that drops
+  at once on supply loss.
+- **Check an eFuse's reverse-current block against a converter in forced PWM**. Forced PWM can sink current and boost its input
+  back above the source on a load release. The eFuse sees reverse current and trips. Filter its fault longer than the episode,
+  or change the converter mode. Size the filter with a circuit simulation of the release.
+- **State the life of every wear part in units tested**. A connector rated for a few hundred mating cycles serves that many units
+  per port. Write the spare count and the swap steps into the spec. Do the same for a reference part that each test consumes.

@@ -1,6 +1,6 @@
 # CHANGELOG — hw-from-spec
 
-## Current state (0.12.1): read this instead of replaying the entries below
+## Current state (0.12.2): read this instead of replaying the entries below
 
 - **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
   thirteen batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
@@ -43,6 +43,33 @@
   address and public pull-request numbers excepted) — `scripts/generic_lint.py` reads the whole repo
   (CHANGELOG and docs included; history keeps its measured numbers), a fenced worked example keeps numbers and kinds but never a name, and the
   repo carries no project retro (a retro report is folded, then deleted).
+
+## 0.12.2 - 2026-11-06 - Worker briefs, sceptic passes, power traps and verdict paths
+
+Source: the project log after the 0.12.1 cut, to the end of 2026-11-06. The general lessons of that day's decisions are folded too.
+
+### Added
+- `templates/AGENT_BRIEFS.md` (new): an eight-part brief, 18 broad worker personas with guards and done means, and four
+  development loops.
+- `references/agent-ops.md`:
+  - §1.1 (new): worker briefs. Every persona is at the top of its field. Guards fence changes, and FLAGS carry what the agent notices.
+  - §4: a browser upload of about 300 KB per chat. Read the whole reply thread before you log a failure.
+  - §4.1: a sceptic pass before the owner sees a claim. A finding from several model families counts as confirmed. Misses
+    cluster between disciplines, so the review loops without personas run beside the panel.
+  - §5.2: smoke-run each licensed tool end to end. Check on a job rather than wait for it.
+- `references/schematic-phase.md` §7: a single-ended sense across a return path and an RC delay with no reset on supply loss.
+  Also an eFuse reverse block against a forced-PWM converter, and the life of wear parts in units tested.
+- `references/high-speed-si.md` §9.1: map the signal direction from the pin table before you judge mode conversion. A
+  five-step fix when a judged direction proves wrong.
+- `references/software-track.md` §5: every init reason reaches a table row. An exact test decides at every floor count. A
+  low-floor branch judges the unit's count alone. §8: an optional control read-back.
+- `references/pitfalls.md`: dated lines in process, agents, si and software.
+- `SKILL.md` §5: a pointer to the worker briefs.
+
+### Changed
+- `templates/REVIEWER_PERSONAS.md`: every persona is at the top of its field. A slice is about 300 KB or less. Ten personas
+  added (P18 to P27), from interface contracts to software QA. Eight review loops without personas, with their schedule.
+- `references/high-speed-si.md` §3.3: the void-to-neighbour gate runs at the registration corners, not at nominal.
 
 ## 0.12.1 - 2026-11-06 - Coupled models, an independent solver, the order gate test, shared licences
 

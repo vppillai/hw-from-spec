@@ -211,6 +211,7 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
   every row with a 2D clearance check, at the registration corners.
 - Check every plane void against the legs of the neighbour loop **[physics]**. A void that runs past its pad end can cut under one leg of
   the next loop. Only that leg loses its reference, so the pair converts. Make the void-to-neighbour clearance a generator check that fails.
+  Run it at the registration corners with the worst-case minimum, not at nominal.
 - Trim the overrun, then probe both loops **[method]**. The fix must help the victim and leave the aggressor's loop unhurt.
 - Model a ground pour before you add it near a differential launch **[physics]**. Asymmetric pour edges load one leg more than the other.
   One pour 0.127 mm from a nested launch raised mode conversion by 3 dB *(worked example)*.
@@ -460,6 +461,14 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 
 - One page per link group. Four panels: SDD21, SDD11, SCD21 and SDC21. Every lane of the group is overlaid, one colour per lane.
 - Add SCD11 when a module input has a common-mode limit. Plot SCD21 and SDC21 both: they differ when the structure is not symmetric end to end.
+- Map the signal direction from the connector pin table before you judge mode conversion **[method]**. Port 1 of the model may sit
+  at the receive end. In a loopback the verdict quantity can then be SCD12, not SCD21. Name the judged direction on every plot.
+- When a judged direction proves wrong, fix it in five steps **[method]**:
+  1. Rerun the reverse excitation on every loop of record.
+  2. Recheck the NEXT and FEXT labels of every crosstalk aggressor.
+  3. Recheck which port reflection feeds each evaluator input.
+  4. Annotate the old results as the wrong direction. Never delete them.
+  5. Add a generator assert tied to the pin-function table, so the port map cannot drift again.
 - Put one marker at the Nyquist frequency of the target rate. Put the worst lane value at that marker in the panel title.
 - Name the two ends of the link on each page.
 - The overlay shows an outlier lane at once. Investigate the outlier, not the average.
