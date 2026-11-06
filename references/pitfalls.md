@@ -177,6 +177,9 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A PD under-voltage alert sat above the legal load dip plus the cable drop. Put the alert below that sum — 2026-11-03 [power/pd] (`schematic-phase.md` §6).
 - A sink PDO current above a common charger's rating dropped the contract to a lower voltage. Read the sink chip's matching rule and its request-current option — 2026-11-03 [power/pd] (`schematic-phase.md` §6).
 - A mezzanine lift under load was planned with presence pins as long as the power pins. Equal pins cannot sequence a live lift — 2026-11-03 [process/safety] (`schematic-phase.md` §7).
+- A list of every analysis before the order grew past what could change the board. Gate only on items that could change it, with a thin margin — 2026-11-06 [process/gates] (SKILL §1).
+- Each discipline pass checked the design, but none asked what the first bench hour would find. Add a blind bring-up readiness role at G2 — 2026-11-06 [process/gates] (SKILL §1).
+- A study board kept old pad sizes two decisions after the yaml moved, so its DRC read old copper. Tie each study board to its keys with a `--check` — 2026-11-06 [process/records] (`pcb-layout-dfm.md` §4).
 
 ## agents / git
 - Agents die when the machine sleeps or on API 500s; resume by message with the MEASURED state; heartbeat monitors ~25 min; time-box every long task; parallel router JVMs SIGTERM each other — STATUS 09-18…21.
@@ -365,6 +368,13 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A reference COM run moved 0.3 to 0.6 dB between runs, more than the changes it judged. Freeze one reference file and state a noise band — 2026-11-05 [si/com] (`high-speed-si.md` §9.3).
 - An in-house eye evaluator read 1 to 3 dB above the official code, and the bias drove a wrong study finding. Calibrate on the channels you judge — 2026-10-31 [si/com] (`high-speed-si.md` §9.3).
 - A solver missed a whole cell row of a trace after it merged close mesh lines. A dump of the meshed metal showed it; the mesh-line checks did not — 2026-11-01 [si/fdtd] (`high-speed-si.md` §7.3).
+- A loop signed on a single-channel model read 7 dB worse beside its routed neighbour. Run a coupled model per loop with a neighbour — 2026-11-06 [si/model] (`high-speed-si.md` §3.3).
+- A plane void ran past its pad end and cut under one leg of the next loop. The same pad-end geometry repeated the flaw on every row — 2026-11-06 [si/void] (`high-speed-si.md` §3.3).
+- A surface pour beside a nested launch raised mode conversion by 3 dB. Model a pour before you add it — 2026-11-06 [si/layout] (`high-speed-si.md` §3.3).
+- A new study key with a live default changed the geometry of every older tagged run. Default each probe key to off — 2026-11-06 [si/tooling] (`high-speed-si.md` §3.3).
+- The measured p/n delay was small while mode conversion implied a large one. It was not a skew, and a length trim could not remove it — 2026-11-05 [si/skew] (`high-speed-si.md` §4).
+- A licensed solver was installed, but no licence server held its feature. Query the feature on each server first — 2026-11-06 [si/tools] (`high-speed-si.md` §6.3).
+- A loop-minus-reference COM difference moved because the padded reference follows the loop loss. Compare the loop COM per case too — 2026-11-05 [si/com] (`high-speed-si.md` §9.3).
 
 ## silk / dfm
 - The fab's DFM grades a value EQUAL to its warning threshold as Warning: design strictly greater — thresholds JSON.
@@ -516,6 +526,13 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A hood chamfer took 4.5 mm of roof at the fan wall, and the fan missed its hood by 8 mm. Check the fan in the real duct — 2026-11-03 [mech/fan] (`schematic-phase.md` §6).
 - A board-width change could leave a case envelope too narrow when the case copied the width. Generate the envelope from the board yaml — 2026-11-03 [mech/case] (`case-pipeline.md` §Chain).
 - One fan took PWM at 80 to 120 Hz only. Read the PWM window before a fan meets the drive frequency — 2026-11-03 [sourcing/fan].
+- A per-axis position tolerance grows by √2 only in radial sums. A clearance read along one axis keeps the per-axis value — 2026-11-05 [mech/tolerance].
+- A tolerance sum at the vendor maximum ignored a no-go gauge that already ran. Credit every gate that runs — 2026-11-06 [mech/tolerance].
+- A turn term scales with the lever over the span. Gate the short pin pair, not the long one — 2026-11-06 [mech/tolerance].
+- A cylinder bow takes its curvature over its own span, not the diagonal. Check each bow shape, not only the sphere — 2026-11-05 [mech/bow].
+- A larger copper keep-out does not move a washer. Check which term a "grow the clearance" fix acts on — 2026-11-05 [mech/fit].
+- A stated fab band broke a decided fit check while the generator self-check stayed green. Take that finding to the owner — 2026-11-05 [mech/fit].
+- A yaml flag changed how a shared value is read, and one study applied the factor twice. Search every study that scales the value — 2026-11-05 [gen/tolerance].
 
 ## fea
 - Gmsh refuses CGAL STLs as volume boundaries; fTetWild meshes them; drop zero-volume slivers or K is singular.
@@ -621,6 +638,9 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A GIF palette from the last frame dropped colours of earlier frames. Build the palette from a sheet of several frames — 2026-11-03 [documentation/figures].
 - A 3D animation rescaled its axes every frame, so a deflection sweep looked frozen. Fix the axis limits to the union of the shapes — 2026-11-03 [documentation/figures].
 - A finding count mixed two severity scales and counted closure rows. State the mapping and count open rows only — 2026-11-03 [records/review] (`agent-ops.md` §4).
+- The sentence-length lint skipped table cells, so 30-word cells passed. Check the cells of a rule table on their own — 2026-11-05 [docs/style].
+- The splitter joined a sentence that starts with a digit or a lower-case letter to the one before. Start each sentence with a capital word — 2026-11-05 [docs/style].
+- A word-count gate counted each number and unit as words. Split a sentence with many values at each value pair — 2026-11-06 [docs/style].
 
 ## records / arrival / review
 - The fab adds an order-history "Confirm Parts Placement" step after the engineer mails, with a silent ~3-day timer after which the order is produced as drawn. Check Order History after every engineer reply. Its engineering file (`Smt_Hw_Bom_Merge` → `oc` / `ec` per designator) is the complete change list - diff it before any picture. Read the pictures with a mounting-hole calibration (0.1 px) and your pad 1 over the fab's marks for every polarity-flagged part — 2026-10-08 [fab/placement-confirm] (`vendor-review.md` §5 round 4).

@@ -162,5 +162,11 @@ exchange. At G2 / package build (`references/fab-dfm.md` §9, `references/pcb-la
 - **Quote questions before the gate that rests on them.** List each fab statement a budget needs: an in-program hole-to-hole accuracy, a
   tolerance the public page does not state, a one-sided window. Ask them on a quote before the gate. A budget that rests on an answer stays
   open until the written answer is on file.
+- **A combination gets its answer from a DFM upload, not from support.** Support confirms each process alone. A combination (a small
+  drill, filled and capped, in a large pad) goes to engineering with a Gerber request. Simulate the fallback first, then ask once,
+  with the Gerbers.
+- **Recompute a tolerance case in the reading of record before it goes into vendor text**. Use the same axis reading and the panel
+  rotation. A yes to a smaller number is not a yes to yours.
+- **Keep vendor rounds few.** Ask only a question that blocks the design. Otherwise design to the worst reading on file.
 - **The arrival checklist** gets its §A rows at the order (template rows A-0 and A-5). The rows: the production-file diff on file before the
   fab's approval reply, and the engineer-question answers seen in the fab's final photos. B-2 checks the rotated parts first on the bench.

@@ -28,6 +28,8 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 | Bench limits found late | A limit that no fixture can resolve. The test plan was rewritten after the review. | 1 review round | The verification method written beside each limit before the runs (step 1) |
 | A coupon that cannot check the launch | A replica fed from its far end predicts −15 dB of conversion that the board does not have | 1 coupon redesign | Each coupon structure predicted with the same model, in the same iteration as the launch (step 10) |
 | A fix part that does not fit | A resistor pad solved in 3D, then found taller than the gap under the connector body | Most of an iteration | The housing height from the STEP read before you solve a fix (step 2) |
+| A neighbour left out of the model | A loop read 7 dB worse mode conversion beside its routed neighbour than alone. A void of the neighbour ran past its pad end and cut under one leg. | A G0 hold and three probe runs | A coupled model of every loop with a routed neighbour, and a 2D void-to-neighbour clearance check on every row (step 7) |
+| A thin margin trusted on one open solver | A result within 1 dB of its limit, from one solver class only | An owner decision taken on an unknown model error | An independent solver on the worst cases, before the margin closes anything (step 11) |
 
 ### 0.2 Day 1, in order
 
@@ -50,6 +52,7 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 7. **List every distinct lane geometry and solve each one** (§6.1). Group lanes only by a symmetry you can state. Solve nested partner loops
    and their neighbours together. Solve every lane group, or prove with numbers that it matches a solved one. Extra room near a group
    is no reason to skip it. Read the contact tails in the STEP. One-sided tails break the mirror: solve one loop per direction group.
+   Solve every loop with a routed neighbour in a coupled model before you sign its mode conversion (§3.3).
 8. **Put the bounds in the first sweep** (§10). Solve both window edges exactly. Add the registration and p/n etch corners. Add the module
    corners: the return-loss mask at one end and at both ends, and the slowest transmitter edge. Turn crosstalk on. Plot every metric to twice
    Nyquist.
@@ -59,7 +62,8 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 10. **Design the coupon in the same iteration as the launch** (§12). Feed each replica pad where the real driver touches it. Predict every
     structure with the model of record.
 11. **Run the second solver on the worst corner in the same iteration** (§6, §7.4). Size its memory first. Pick the isolated cutout that
-    fits. A single-solver corner value never closes a requirement.
+    fits. A single-solver corner value never closes a requirement. Before a thin margin decides anything, correlate it with an
+    independent solver (§6.3). Check the licence feature of a licensed solver first, before you build its model.
 12. **Close with the verdict table** (§16). Each row says converged, cross-checked, and the margin against its uncertainty. A blind
     reviewer recomputes the headline numbers from the yaml and the scripts before the owner sees a closure (§15).
 
@@ -73,6 +77,8 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 - A screening setting (a looser FDTD end criterion, a narrower excitation) is for main-path screens only. Never use it for mode
   conversion or crosstalk (§7.1).
 - A number from a new host or a new tool image counts only after that host reproduces a result of record (§6.2).
+- Separate a model artefact from physics with one-knob controls before you change geometry. Swap the absorbing boundary type. Swap a
+  solid wall for its stitching vias. Refine the mesh. A rise that holds through all three is in the geometry.
 
 ## 1. The rule of record
 
@@ -193,6 +199,26 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 - Keep the corners the solver solved on a skew-compensation jog **[physics]**. A mitre changes the jog length, and so the skew it
   nulls. Solve the mitred variant and compare it before you change the corners.
 - Solve and compare a variant before you change any solved feature. An unsolved edit voids the result of record.
+- Hash a model file only after you normalise it **[method]**. A model writer can add a random display colour per property. A CAD grid
+  can move a vertex by a micron. Drop the colours, round the numbers and sort the elements, then hash. Otherwise the negative control
+  passes for the wrong reason.
+
+### 3.3 Neighbours, voids and pours
+
+- A single-channel model can miss mode conversion from a neighbour loop **[physics]**. One inner loop read about 7 dB worse beside the
+  neighbour's traces than alone *(worked example)*. Run a coupled model for every loop with a routed neighbour before you sign it.
+- A coupled model shows only the pair it draws **[method]**. Rows with the same pad-end geometry repeat a flaw found on one row. Sweep
+  every row with a 2D clearance check, at the registration corners.
+- Check every plane void against the legs of the neighbour loop **[physics]**. A void that runs past its pad end can cut under one leg of
+  the next loop. Only that leg loses its reference, so the pair converts. Make the void-to-neighbour clearance a generator check that fails.
+- Trim the overrun, then probe both loops **[method]**. The fix must help the victim and leave the aggressor's loop unhurt.
+- Model a ground pour before you add it near a differential launch **[physics]**. Asymmetric pour edges load one leg more than the other.
+  One pour 0.127 mm from a nested launch raised mode conversion by 3 dB *(worked example)*.
+- Give every study knob a key that defaults to off or null **[method]**. A new key with a live default changes every older tagged run
+  silently. Add the null row to the defaults table in the same commit. Prove it with one rebuild of an old run.
+- Fall through on a null explicitly. `dict.get(key, default)` returns `None` when the key holds null, so the default never applies.
+- Name every derived threshold in yaml **[method]**. Code that subtracts a margin from a limit key counts the margin twice when the key
+  moves. Check the record header against the yaml value.
 
 ## 4. Differential skew and its compensation
 
@@ -326,6 +352,21 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 - Install the CA certificates before you point the package sources at an https snapshot. A bare base image has none, and the package
   tool falls back to the live archive without an error. Read the package policy output to confirm the snapshot.
 - Keep one host of record per output kind. A second host checks parity. It does not replace the files of record.
+
+### 6.3 An independent solver before a thin margin decides
+
+- Correlate a thin margin with a solver of another class before it decides a gate **[method]**. Two open solvers can share a modelling
+  choice. A commercial FEM solver, run on the same copper, puts a number on the model error.
+- Prove that both decks draw the same copper before you compare them. Compute the symmetric difference of the copper area, the void
+  holes and the barrels. It reads zero when the decks match.
+- Run the correlation cases first: the worst case as drawn, the case after the fix and a single-channel reference.
+- Name a solver of record only after two solvers agree within a stated band on those cases. When they disagree, find the cause
+  before you trust either. Let the fast solver run the sweeps, and let it reproduce each result of record with the gap stated.
+- Use the extra tool only where its result can change the board or a test verdict. Tolerance corners need a few design points, not a
+  Monte Carlo run.
+- **Step 0: check the licence feature, not the install.** Installed binaries do not mean a usable solver. Query each licence server
+  alone for the solver's feature. A multi-server path can report only the first server. Check write access to the job folder too.
+- A shared licence is somebody else's work tool. Follow the etiquette of `references/agent-ops.md` §5.2.
 
 ## 7. Convergence and meshing artefacts
 
@@ -558,6 +599,8 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 - Give every known model bias its sign. A receiver model that terminates twice is pessimistic; a pass with it stands, with the note.
 - Hold the loss of the channel under a margin rule well inside the standard's budget **[owner choice]**.
 - Margins are owner decisions. An agent proposes the row with the number; the owner accepts it.
+- A margin within about 2 dB of its limit may rest on one solver class. Then it needs the independent solver of §6.3 first.
+- Judge a verdict on the worse of the method corners in hand: mesh level, solver and boundary. Size the noise band from them.
 
 ### 11.1 Delegated SI decisions
 
@@ -611,6 +654,11 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 - Licensed vendor models and drawings stay local. Never commit them; record their path and licence.
 - Use the vendor's measurement-correlated model of a connector, not an approximation. If a vendor's 3D model is wrong, say so and ask for a
   correct one.
+- Check a large vendor Touchstone file for a cut tail before you parse it. Keep whole frequency records only, and ask for a clean copy.
+- Read the vendor's port map before you pick a connector variant. One model gave each loop its real Rx and Tx pairs. Another used one
+  file at both ends *(worked example)*.
+- A shunt-capacitance de-embed fitted from a TDR dip removes little from a tuned pad. Where a pad, a via and a line overlap, model the
+  fixture on its own.
 
 ### 14.1 Model-export checks
 
@@ -671,6 +719,10 @@ Give each reviewer the frozen study, the yaml, the scripts and this list. Give n
 42. Does every COM comparison read against one frozen reference file, with a stated noise band and every case in the table?
 43. Does the model-to-board round trip take every via from the board? Did a negative control (one via moved) change the model?
 44. Does every delegated adoption carry the complete table, and is a medium-mesh adoption marked provisional?
+45. Does every loop with a routed neighbour have a coupled model? Does a 2D check clear every void from every neighbour leg, on every row?
+46. Did one-knob controls (boundary, wall, mesh) separate each surprising rise into artefact or physics?
+47. Does each thin margin carry an independent-solver correlation? Do both decks draw the same copper?
+48. Does each new study key default to off or null, so older runs keep their geometry?
 
 ## 16. Records
 

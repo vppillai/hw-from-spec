@@ -115,11 +115,22 @@ Copy the fab's table into `20-design/dfm_thresholds.json` (source URL + date) an
 | same-net spacing | 0.25 | 0.25 (no CAD rule — avoid parallel same-net slivers) |
 | min SMD pad | 0.25 × 0.25 | never below the datasheet pad |
 
+- **Judge a space rule with nets** **[checker]**. Assign the net to every pad first. Then judge spacing between unlike nets only. A
+  net-blind check fails a pad for the wrong reason. When the check gains nets, re-read every verdict and exemption that rested on it.
+- **A pad-size trial checks the neighbours, not only its ring** **[checker]**. A larger peg or tooling pad can come within the space rule
+  of the next contact row. Joining the pad to that contact's net removes the rule; prove the net from the pinout first.
+- **Rate a via's current on the plating inside the drilled hole** **[physics]**. The copper area is π (r² − (r − t)²). Plating drawn
+  outside the hole overstates the current by about 10 % for a small drill.
+- **A study board goes stale silently** **[convention]**. A generator with no `--check` tied to a changed key keeps the old copper. Give
+  every study board a `--check` on each key it draws. Regenerate each board when a value moves.
+
 ## 5. Via-in-pad and tenting
 - Tented (mask-covered) vias by default, ≤ 0.5 mm, none inside SMD pads **[fab capability + convention]**; via-in-pad needs the fab's filled-and-
   capped process (an order option and a surcharge) — a decision row, never an accident of a fan-out. Mask-plugged vias: no opening either side,
   ≥ 0.35 mm from other mask openings (JLC).
 - A via under a silk text cell is a silk defect (§11); a via in a fiducial's clearance ring is a placement defect.
+- A via inside an SMD pad joins the pad on the outer layer only **[checker]**. The DRC then reports each one as dangling, a warning.
+  End a track segment at each via centre to give it a joint of its own. Make the dangling-via class a gate failure.
 
 ## 6. Thermal reliefs and teardrops
 - **Thermal reliefs** **[physics + owner choice]**: always on PTH pads into pours. A solid connection wicks heat from the joint and tombstones

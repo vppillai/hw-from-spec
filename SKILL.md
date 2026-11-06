@@ -1,6 +1,6 @@
 ---
 name: hw-from-spec
-version: 0.12.0
+version: 0.12.1
 description: Run a hardware project (a PCB, a printed or CNC enclosure, or both — scope chosen at kickoff; contract fab such as JLCPCB) from a written specification to a production cut with an owner-gated, generated-only, blind-reviewed workflow — a kickoff questionnaire that asks every owner decision up front with recommended answers, a zero-warning manufacturability bar, and a retro that folds each project's learnings back into the skill. Use this whenever someone starts a board or enclosure project from a spec, asks to set up gates, a decision log, generators, part verification, a fab DFM mirror, a case pipeline, FEA, blind reviews, a release report or a production cut for one, or resumes such a project, or wants the skill improved from a finished project — even if they only say "new KiCad board", "order this at JLC", "review the layout", "cut the release" or "what did we learn".
 ---
 
@@ -138,6 +138,13 @@ The release cut = reports RELEASED, collateral, tag; the production cut = docume
   means one round.
 - Never quote the release phrase in prose anywhere the regex can see it (a sentence that explains the rule matches the regex) — describe the
   marker indirectly (`references/pitfalls.md` process).
+- **The board-order gate test**. Keep one list of every queued or deferred analysis. An item holds the fab order only if two
+  things hold. First, its result could change copper, a part, an assembly step or a test verdict. Second, its margin is thin, or
+  the design changed since its last pass. Record the other items, and do not gate on them. The owner signs the list. The order
+  checklist reads it.
+- **A bring-up readiness review at G2**. One blind role asks what the first hour on the bench would find. It checks the power-up
+  order, the reset chain, debug access and test points. It checks firmware hooks, fixture fit and assembly. It also checks every
+  field finding of the last revision.
 
 **Who decides what** (D rows carry the owner's decisions — the agent transcribes the owner's words into them, quoted; agents write CC rows and ask):
 
@@ -308,6 +315,10 @@ a defect one gate earlier than one merged review at the end. The studies that op
 **Milestone rounds.** Run a fresh double-blind round at every milestone: a spec pass, a closed SI loop, a study, a tag. A fix-check
 round with fresh reviewers follows the fixes. Merge into one disposition per discipline (FIX / OWNER / CLOSED / REJECTED). Bring the
 owner one recommended option per OWNER row (`references/agent-ops.md` §4).
+
+**Persona panels.** Every round assigns reviewer personas from `templates/REVIEWER_PERSONAS.md`. Each persona runs on two model
+families, blind, and checks each value against its primary source. The coordinator verifies every BLOCKER and MAJOR first
+(`references/agent-ops.md` §4.1).
 
 **The double-blind drawing round** [mech, both] (the M1 round for a printed part, beside `case_dfm`): the drawing sheet is generated from the
 exported meshes with its self-checks (`references/case-pipeline.md` §Drawings). Reviewer A gets ONLY the sheet and a one-paragraph design

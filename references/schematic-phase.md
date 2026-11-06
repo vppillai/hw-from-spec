@@ -193,3 +193,16 @@ Run these before the spec fixes a target or a board split. A study of §6 cites 
 - **A live lift needs sequenced pins.** A test that lifts a mezzanine connector under load is unsafe when its presence pins have the same
   contact length as its power pins. Equal pins cannot break the power before the presence signal. Remove power first, or use a connector
   with a short presence pin. Put this item in the safety review of the test plan.
+- **An error budget carries every term.** A divider's temperature coefficient and a converter's offset widen a monitor's reading error.
+  Every band set from that error then narrows. Search every copy of the old figure before you edit one.
+- **A monitor before a protection part reads that part's loss as load**. Subtract I² × (on-resistance max + shunt) from the draw it
+  reports, or move the monitor after the part.
+- **A threshold band has two corners.** The earliest turn-on sits at the lowest threshold. Size a delay at the input-low minimum, the
+  shortest time constant and the highest supply.
+- **A one-shot fed by a hold signal fires at power-up when the button is held**. A power-on clear cannot stop it, because the hold
+  edge comes later. Add an arm latch that sets only on a release.
+- **Chain a reset sequence from supervisors with a stated minimum and maximum delay**. Start each stage from the one before, so the
+  order holds at every corner without a race.
+- **A fan sheet with no start current gives no start budget**. Stagger the starts on one switch, or read the current on the bench.
+- **Keep a field that changes in use outside the checksum span of an identity block**. One torn write then cannot invalidate the
+  identity.

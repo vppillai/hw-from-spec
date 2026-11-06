@@ -1,6 +1,6 @@
 # CHANGELOG — hw-from-spec
 
-## Current state (0.12.0): read this instead of replaying the entries below
+## Current state (0.12.1): read this instead of replaying the entries below
 
 - **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
   thirteen batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
@@ -43,6 +43,40 @@
   address and public pull-request numbers excepted) — `scripts/generic_lint.py` reads the whole repo
   (CHANGELOG and docs included; history keeps its measured numbers), a fenced worked example keeps numbers and kinds but never a name, and the
   repo carries no project retro (a retro report is folded, then deleted).
+
+## 0.12.1 - 2026-11-06 - Coupled models, an independent solver, the order gate test, shared licences
+
+Source: the project log after the 0.12.0 cut, to 2026-11-06. The general lessons of that period's decisions are folded too.
+The SI playbook and the review and gate rules come first. About 60 rule lines and 20 pitfall lines are added.
+
+### Added
+- `references/high-speed-si.md`:
+  - §0.1: two rows. A neighbour left out of the model, and a thin margin trusted on one open solver.
+  - §0.2 step 7: a coupled model per loop with a routed neighbour. Step 11: an independent solver and the licence check.
+  - §0.3: one-knob controls (boundary, wall, mesh) separate an artefact from physics.
+  - §3.2: normalise a model file before you hash it.
+  - §3.3 (new): neighbours, voids and pours. A void-to-neighbour clearance check on every row. Probe keys default to off. Fall
+    through on a null. Name each derived threshold in yaml.
+  - §6.3 (new): independent-solver correlation, the same-copper proof, a solver of record, and the licence feature as step 0.
+  - §11: a margin within about 2 dB from one solver class needs §6.3. Judge on the worse method corner.
+  - §14: a cut tail in a vendor file, the vendor port map, and the limit of a shunt-capacitance de-embed.
+  - §15: checklist items 45 to 48.
+- `SKILL.md` §1: the board-order gate test. Could it change the board, and is the margin thin? Also the G2 bring-up readiness review.
+- `references/agent-ops.md`:
+  - §4: split a web review by discipline and redact it. Reviewers verify values by a live search. Triage as a realistic sceptic.
+  - §4.1 (new): persona panels. Each persona has a mindset, a method and a slice, and runs on two model families, blind. Values
+    are checked at the source. The coordinator verifies each BLOCKER and MAJOR. A disagreement is settled against the datasheet.
+  - §5.1: a stale queued batch, held slots, a job that never started, and the fetch checkout.
+  - §5.2 (new): shared licences and borrowed compute. Headroom before a seat, lowest priority, a private folder, a cleanup table.
+  - §5.3 (new): shells, scripts and worktrees. Two writers on one file. An exact-replace helper asserts a non-empty anchor.
+- `references/pcb-layout-dfm.md` §4: space rules judged with nets, and pad trials against neighbours. The current of a via on its
+  inner plating, and stale study boards. In §5, a via in an SMD pad and the dangling-via gate.
+- `references/schematic-phase.md` §7: error budgets, a monitor before a protection part, and threshold corners. The hold one-shot
+  arm latch, chained supervisors, fan start current, and a checksum span.
+- `references/vendor-review.md` §7: process combinations through a DFM upload, tolerance text in the reading of record, few rounds.
+- `references/pitfalls.md`: dated lines in process, si, mechanical and documentation.
+- `templates/REVIEWER_PERSONAS.md` (new): a roster of 17 reviewer personas, the common closing text and the model families.
+- `SKILL.md` §5: a pointer to the persona panels.
 
 ## 0.12.0 - 2026-11-05 - SI playbook additions and five checks on every owner option
 
