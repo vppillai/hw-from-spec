@@ -165,7 +165,13 @@
   findings across rounds. A fix-check repeats old ids as closure rows. Count only the rows that are not in a closure state.
 - **List an external CLI's models before a run.** The model names change. A retired model name gives an empty report.
 - **Split a large upload for a web reviewer.** A browser reviewer can refuse or truncate a large file set. Send the package in parts.
-  When a run fails, retry on a smaller set, and record the split in the merge.
+  When a run fails, retry on a smaller set, and record the split in the merge. Split by discipline, so each part carries its own
+  checklist. Redact the package first: no licensed model, no confidential file, no private name.
+- **Tell every reviewer to verify values by a live search**. A part rating, a fab limit or a clause of a standard needs a live source
+  with its address. A value from model memory is a finding of its own. The verifier rechecks each cited source.
+- **Triage as a realistic sceptic.** Ask two questions per finding. Could it change copper, a part, an assembly step or a test verdict?
+  Is its margin thin, or did the design change since its last pass? Two yeses make it gating. Otherwise record it, and do not gate on
+  it. No pedantic engineering, and no missed item that a bench would find in the first hour.
 - **A milestone gets a fresh double-blind round.** The milestones are a spec pass, a closed SI loop, a study and a tag. A fix-check round
   with fresh reviewers follows the fixes. Merge into one disposition per discipline. Each row reads FIX, OWNER, CLOSED or REJECTED.
   Check every BLOCKER and MAJOR against the frozen package before its row is written. Bring the owner one recommended option per OWNER row.
@@ -235,6 +241,38 @@ prove the host. The rules below keep the host safe and the jobs alive.
   ignored build folder, and pull them from there. Rebuild a lost table from its job log.
 - **A lent host can reboot.** Keep each chain short. Keep a resubmit list in the checkpoint file. After a reboot, remove only the
   locks of jobs that are dead. Check each lock's process before you remove it.
+- **A queued batch goes stale when the owner moves a value it holds.** Stop each queued runner at once. Comment out its queue line
+  with the reason, and requeue on the new record.
+- A shared host can pass its start gate on other users' load and hold a queue for hours. Check the held slots, not only the queue.
+  Move a decision run to an idle lane.
+- A remote job folder with no command file and no log after hours means the job never started. Check the folder before you wait.
+- Run a fetch from the checkout that submitted the job. A runner that names the remote folder after the checkout finds nothing from
+  another one.
+
+### 5.2 Shared licences and borrowed compute
+A licensed solver on a shared cluster belongs to other people's work. Your job runs at the lowest priority.
+- **Check the licence feature first** (`references/high-speed-si.md` §6.3). Then check write access to the job folder. Key login,
+  modules, the scheduler and the licences can all pass while the project area refuses a new folder.
+- **Leave headroom.** Take a seat only when at least two seats of that tool stay free after your checkout. Take one seat at most.
+  Take cores only when half of the shared token pool stays free.
+- Submit at the lowest scheduler priority. Run batch only, with no idle GUI seat. When the condition fails, wait and check again
+  after 15 minutes or more. Never retry in a tight loop.
+- Release a job of yours that blocks another user's queued job, at the next check.
+- Work in a private folder (mode 700). A licensed vendor model may enter that folder for a run. It never leaves it, and it is purged
+  at the end. Commit only summary metrics and plots from it, never geometry.
+- **Clean up when a set ends**. Remove every file of yours from each host: project folders, scheduler logs, temp and result folders.
+  End every session of yours. Record a cleanup table per host with the commands and a final empty listing.
+- Name no company host, path, licence server or ticket in a committed record. Add those terms to the public leak gate.
+
+### 5.3 Shells, scripts and worktrees
+- Bash reads a running script as it goes. Lines appended to it run at the end of the current run. Never edit a script while a job
+  runs it.
+- zsh does not split an unquoted variable into words. Write a loop that builds argument lists as a bash script.
+- A new worktree lacks the ignored inputs: the virtual environment, downloaded tools and generated contact files. It also lacks
+  the skill submodule until `git submodule update --init`. Check every input before a chain starts.
+- Two writers can share one file if each owns named sections and edits by exact replacement. Check the file's modification time
+  before a scripted write, so a concurrent edit is never lost.
+- An exact-replace helper must assert that the old text is not empty. Python's `str.replace("", x)` puts x between every character.
 
 ## 6. Reporting
 - Every report, record and README follows `references/writing-style.md`: lead with the result, second person, active voice, present tense,
