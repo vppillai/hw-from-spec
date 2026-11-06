@@ -71,6 +71,12 @@ reason and one worked example.
   was one adapter in one place.
 - Keep one selftest case per judge path. The paths: the missing section, the missing module threshold, and a FAIL with the block removed.
 - A slope needs two samples. A one-second soak is NOT-MEASURED. So the shortest judged soak asks for two seconds.
+- **Let an exact test decide at every reference-floor count**. A count gate on the floor throws away the power of the exact
+  conditional test. Add only a minimum count on the unit under test.
+- When the reference floor is unresolved (few or no errors), judge the unit's count alone. PASS when the exact Poisson upper
+  bound is under a signed limit. FAIL only when the count alone exceeds it. An unsigned limit gives INCONCLUSIVE, never FAIL.
+- **List every reason an init step can give, then check that a table row reads each one**. An unread reason falls through, and a
+  dead lane can end at PASS.
 
 ## 6. Fakes
 - **Write the fake's default as the field default**. A fake that inserts itself after the open hides the normal case. *Reason*: every real
@@ -101,6 +107,8 @@ reason and one worked example.
 - Every decoder cites its table in a notes file (`10-spec/datasheet_notes/<standard>.md`): table, page, bytes, and the decoded meaning.
 - A decoder is faithful to the primary text: no offset, no default, no guess. A field the text does not define is `unknown`, recorded only.
 - The kickoff names the standard tables the tool decodes (G2). A table outside that list is a decision row before a decoder exists.
+- A read-back of zero from an optional control proves nothing. Zero is also the default of a field the device may lack. Write a
+  legal non-zero value, read it back, then write the value you need.
 
 ## 9. Process boundaries: one process, one open
 - A lot loop over separate processes cannot hold a USB handle. So "open once" means the checklist and the safety line once, not one handle.

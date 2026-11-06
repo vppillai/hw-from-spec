@@ -180,6 +180,9 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A list of every analysis before the order grew past what could change the board. Gate only on items that could change it, with a thin margin — 2026-11-06 [process/gates] (SKILL §1).
 - Each discipline pass checked the design, but none asked what the first bench hour would find. Add a blind bring-up readiness role at G2 — 2026-11-06 [process/gates] (SKILL §1).
 - A study board kept old pad sizes two decisions after the yaml moved, so its DRC read old copper. Tie each study board to its keys with a `--check` — 2026-11-06 [process/records] (`pcb-layout-dfm.md` §4).
+- An enable RC held a load on for seconds after its supply dropped. A replug then skipped the delay. Use a supervisor that drops at once — 2026-11-06 [process/power] (`schematic-phase.md` §7).
+- On a load release, a converter in forced PWM boosted its input above the source. The eFuse reverse block tripped. Simulate the release — 2026-11-06 [process/power] (`schematic-phase.md` §7).
+- A rail monitor sensed single-ended across a high-current return and read high by the drop. Subtract a per-unit measured return — 2026-11-06 [process/power] (`schematic-phase.md` §7).
 
 ## agents / git
 - Agents die when the machine sleeps or on API 500s; resume by message with the MEASURED state; heartbeat monitors ~25 min; time-box every long task; parallel router JVMs SIGTERM each other — STATUS 09-18…21.
@@ -233,6 +236,12 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - The model names of an external review CLI change between runs. List the CLI's models before a run — 2026-11-03 [agents/review] (`agent-ops.md` §4).
 - A large upload to a web reviewer failed. Split the package and retry on a smaller set — 2026-11-03 [agents/review] (`agent-ops.md` §4).
 - A stacked pull request closed with its base and could not be retargeted. Retarget the child before the base branch is deleted — 2026-10-08 [agents/git] (`agent-ops.md` §2).
+- Worker briefs without guards or done means cost rework rounds. Brief each worker with a persona, a scope fence and FLAGS — 2026-11-06 [agents/briefs] (`agent-ops.md` §1.1).
+- A cross-check refuted several confident BLOCKERs of one review round. Run a sceptic pass before the owner sees them — 2026-11-06 [agents/review] (`agent-ops.md` §4.1).
+- Three model families found the same height error on their own. A wide panel turns a finding into a confirmed one — 2026-11-06 [agents/review] (`agent-ops.md` §4.1).
+- Thirteen domain review rounds missed errors at interfaces: a direction, a fastener standard, a stale model. Add interface and V&V loops — 2026-11-06 [agents/review] (`agent-ops.md` §4.1).
+- Uploads over about 300 KB failed in a browser reviewer. Split by discipline at that size — 2026-11-06 [agents/review] (`agent-ops.md` §4).
+- A browser model showed an error, then a real answer below it. Read the whole thread before you log a failure — 2026-11-06 [agents/review] (`agent-ops.md` §4).
 
 ## tooling / determinism
 - Bambu Studio CLI (02.08.x): `sparse_infill_density` 100 % is rejected (rc -18) — use top / bottom shell thickness for a solid column. A two-filament slice with a prime tower SEGFAULTS (rc -11 / 133, "no filament colors found in projects") unless each slot's filament JSON carries `filament_colour` (or `--filament-colour '#..;#..'`). Bisect on the temp inputs one variable per run — 2026-09-29 [tooling/bambu].
@@ -374,6 +383,9 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A new study key with a live default changed the geometry of every older tagged run. Default each probe key to off — 2026-11-06 [si/tooling] (`high-speed-si.md` §3.3).
 - The measured p/n delay was small while mode conversion implied a large one. It was not a skew, and a length trim could not remove it — 2026-11-05 [si/skew] (`high-speed-si.md` §4).
 - A licensed solver was installed, but no licence server held its feature. Query the feature on each server first — 2026-11-06 [si/tools] (`high-speed-si.md` §6.3).
+- A licensed tool opened but failed later in the chain. Smoke-run it end to end, and check on each job — 2026-11-06 [si/tools] (`agent-ops.md` §5.2).
+- In a loopback the verdict quantity can be SCD12, not SCD21. Map the ports from the pin table before you judge — 2026-11-06 [si/method] (`high-speed-si.md` §9.1).
+- A wrong judged direction left crosstalk labels and evaluator inputs suspect too. Rerun, relabel, annotate and assert — 2026-11-06 [si/method] (`high-speed-si.md` §9.1).
 - A loop-minus-reference COM difference moved because the padded reference follows the loop loss. Compare the loop COM per case too — 2026-11-05 [si/com] (`high-speed-si.md` §9.3).
 
 ## silk / dfm
@@ -596,6 +608,9 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - An emulated I2C target behind a bridge that cannot see a stretch must answer in time. Keep its TX FIFO full from an interrupt — 2026-11-03 [software/i2c] (`software-track.md` §13).
 - A stock board fit a debug header only after one extra ground pin joined its signal row. Put signals and a ground in one row — 2026-11-03 [software/debug].
 - A high-power log command looped for 60 s with no health poll and ran past the throttle limit. Put the hold stops inside the loop — 2026-11-03 [software/thermal] (`software-track.md` §18).
+- An optional control read back 0, which is also the default of an absent field. Write a non-zero value first — 2026-11-06 [software/registers] (`software-track.md` §8).
+- Four init reasons reached no table row, so a dead lane could end at PASS. Map every reason to a row — 2026-11-06 [software/verdict] (`software-track.md` §5).
+- A count gate on the reference floor threw away the power of an exact test. Let the exact test decide — 2026-11-06 [software/verdict] (`software-track.md` §5).
 
 ## documentation
 - Every mention of a retired string across live docs after a design change: grep, not memory; logs and reviews keep stale words on purpose.

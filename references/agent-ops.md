@@ -11,6 +11,19 @@
   reference to them, file by file. A range works the way a refdes block per sheet works.
 - Give each agent a scratch folder named for it. The session scratch area is shared, and another agent overwrote a helper with a generic name.
 
+### 1.1 Worker briefs
+A vague brief costs a rework round. Brief every worker from `templates/AGENT_BRIEFS.md`.
+- **Eight parts, in order**: persona, goal, inputs, scope fence, guards, done means, report and flags. The goal is a result
+  someone can check. Done means names the exact commands and the numbers that must come out.
+- **Keep each persona broad**. A schematic, layout or power persona sees the whole job. Hyper-specialised roles miss the
+  problems between disciplines.
+- **Every persona is at the top of its field**, worker or reviewer. Write it as a senior practitioner with decades of shipped
+  products, and expect that depth.
+- **Guards limit what an agent changes, not what it notices**. A problem or an idea outside the fence goes under FLAGS, with its
+  file and line. The agent does not act on it. The coordinator routes each flag.
+- **Run the development loops** of the template on every task. A pre-mortem comes before it. Another model family reviews the
+  diff after it. At each gate, rebuild from a clean checkout, and sweep the areas no one touched.
+
 ## 2. Commits
 - Explicit paths only (`git commit -m … -- <paths>`), never `git add -A` in a shared tree. But explicit paths isolate FILES, not hunks: a shared record
   file carries other agents' uncommitted edits. Before committing one, `git diff -- <file>` and confirm every hunk is yours, or stage the exact edit:
@@ -167,6 +180,9 @@
 - **Split a large upload for a web reviewer.** A browser reviewer can refuse or truncate a large file set. Send the package in parts.
   When a run fails, retry on a smaller set, and record the split in the merge. Split by discipline, so each part carries its own
   checklist. Redact the package first: no licensed model, no confidential file, no private name.
+  About 300 KB per chat worked. Larger uploads failed or came back truncated *(worked example)*.
+- **Read the whole reply thread of a browser reviewer**. A model can show an error and then post a real answer below it. Scroll to
+  the end before you record a failed run.
 - **Tell every reviewer to verify values by a live search**. A part rating, a fab limit or a clause of a standard needs a live source
   with its address. A value from model memory is a finding of its own. The verifier rechecks each cited source.
 - **Triage as a realistic sceptic.** Ask two questions per finding. Could it change copper, a part, an assembly step or a test verdict?
@@ -192,6 +208,15 @@ round, from `templates/REVIEWER_PERSONAS.md`.
 - **Settle a disagreement between personas against the datasheet**. Two personas can read one part in opposite ways. A sceptic's
   cross-check found two BLOCKERs of one reviewer refuted by another reviewer's datasheet read *(worked example)*. Read the primary
   source yourself, and record which reading holds.
+- **Run a sceptic pass before the owner sees a claim**. Default each BLOCKER to refuted, then open the cited source and the repo.
+  One cross-check refuted several confident BLOCKERs of one round *(worked example)*. Bring the owner only what survives.
+- **A large panel on several model families finds independent confirmations**. Count a finding raised by two or more families as
+  strong evidence. Three families found the same height error in one round *(worked example)*. Dedupe by defect, and keep the count.
+- **Misses cluster between disciplines**. Thirteen rounds of domain personas missed a signal direction across a model-to-pin-table
+  boundary *(worked example)*. They also missed a wrong fastener standard, a sense assumption, a stale model and an unwalked power
+  state. Add interface, standards, model V&V and metrology personas beside the domain ones.
+- **Run the review loops without personas** on their stated schedule (`templates/REVIEWER_PERSONAS.md`). They are blank slate,
+  pre-mortem, assumption audit, consistency and trace sweeps, teach-back, coverage map and a review red team.
 
 ## 5. Background jobs and the machine
 - **Long chains run in the BACKGROUND and are waited on by the harness, never by a foreground loop.** Every job writes its own log. It ends the log
@@ -270,6 +295,10 @@ prove the host. The rules below keep the host safe and the jobs alive.
 A licensed solver on a shared cluster belongs to other people's work. Your job runs at the lowest priority.
 - **Check the licence feature first** (`references/high-speed-si.md` §6.3). Then check write access to the job folder. Key login,
   modules, the scheduler and the licences can all pass while the project area refuses a new folder.
+- **Smoke-run every licensed tool end to end before you rely on it**. Run a trivial model through the whole chain: build, solve,
+  export and fetch. A tool that opens can still fail at the solve or the export step.
+- **Check on a job; do not only wait for it**. At each check, read its log and the scheduler state. From outside, a job that never
+  started or stalled looks the same as a slow one.
 - **Leave headroom.** Take a seat only when at least two seats of that tool stay free after your checkout. Take one seat at most.
   Take cores only when half of the shared token pool stays free.
 - Submit at the lowest scheduler priority. Run batch only, with no idle GUI seat. When the condition fails, wait and check again
