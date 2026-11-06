@@ -64,6 +64,8 @@ The SI playbook and the review and gate rules come first. About 60 rule lines an
 - `SKILL.md` §1: the board-order gate test. Could it change the board, and is the margin thin? Also the G2 bring-up readiness review.
 - `references/agent-ops.md`:
   - §4: split a web review by discipline and redact it. Reviewers verify values by a live search. Triage as a realistic sceptic.
+  - §4.1 (new): persona panels. Each persona has a mindset, a method and a slice, and runs on two model families, blind. Values
+    are checked at the source. The coordinator verifies each BLOCKER and MAJOR. A disagreement is settled against the datasheet.
   - §5.1: a stale queued batch, held slots, a job that never started, and the fetch checkout.
   - §5.2 (new): shared licences and borrowed compute. Headroom before a seat, lowest priority, a private folder, a cleanup table.
   - §5.3 (new): shells, scripts and worktrees. Two writers on one file. An exact-replace helper asserts a non-empty anchor.
@@ -73,6 +75,8 @@ The SI playbook and the review and gate rules come first. About 60 rule lines an
   arm latch, chained supervisors, fan start current, and a checksum span.
 - `references/vendor-review.md` §7: process combinations through a DFM upload, tolerance text in the reading of record, few rounds.
 - `references/pitfalls.md`: dated lines in process, si, mechanical and documentation.
+- `templates/REVIEWER_PERSONAS.md` (new): a roster of 17 reviewer personas, the common closing text and the model families.
+- `SKILL.md` §5: a pointer to the persona panels.
 
 ## 0.12.0 - 2026-11-05 - SI playbook additions and five checks on every owner option
 

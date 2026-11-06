@@ -316,6 +316,10 @@ a defect one gate earlier than one merged review at the end. The studies that op
 round with fresh reviewers follows the fixes. Merge into one disposition per discipline (FIX / OWNER / CLOSED / REJECTED). Bring the
 owner one recommended option per OWNER row (`references/agent-ops.md` §4).
 
+**Persona panels.** Every round assigns reviewer personas from `templates/REVIEWER_PERSONAS.md`. Each persona runs on two model
+families, blind, and checks each value against its primary source. The coordinator verifies every BLOCKER and MAJOR first
+(`references/agent-ops.md` §4.1).
+
 **The double-blind drawing round** [mech, both] (the M1 round for a printed part, beside `case_dfm`): the drawing sheet is generated from the
 exported meshes with its self-checks (`references/case-pipeline.md` §Drawings). Reviewer A gets ONLY the sheet and a one-paragraph design
 intent, and reports what the sheet says the part does and where it cannot. Verifier B measures every claim of A on the meshes of record and

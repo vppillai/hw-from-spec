@@ -176,6 +176,23 @@
   with fresh reviewers follows the fixes. Merge into one disposition per discipline. Each row reads FIX, OWNER, CLOSED or REJECTED.
   Check every BLOCKER and MAJOR against the frozen package before its row is written. Bring the owner one recommended option per OWNER row.
 
+### 4.1 Persona panels
+A package and a checklist find what the checklist names. A persona finds what one kind of expert fears. Assign personas in every
+round, from `templates/REVIEWER_PERSONAS.md`.
+- **Give each persona a mindset, a method and a slice**. The mindset says what the reviewer fears. The method says how it tests a
+  claim. The slice is the part of the package that persona needs.
+- **Cover the whole life of the product**. The roster runs from the fab CAM engineer and the first bench hour to power, SI, PI and
+  assembly. It continues to firmware, field failure, a test-validity red team, cost, simplicity and a new user. It ends with safety,
+  daily lab use, fleet deployment and five-year maintenance.
+- **Run each persona on at least two model families, blind**. Rotate the families between rounds. Redact each slice, and keep it
+  small enough for a browser reviewer.
+- **Every persona verifies values against the primary source by a live search**. It cites the address and page. It marks a value it
+  cannot confirm UNVERIFIED, and it recomputes each number itself.
+- **The coordinator verifies every BLOCKER and MAJOR before the owner sees it**. Check each one against the repo and the cited source.
+- **Settle a disagreement between personas against the datasheet**. Two personas can read one part in opposite ways. A sceptic's
+  cross-check found two BLOCKERs of one reviewer refuted by another reviewer's datasheet read *(worked example)*. Read the primary
+  source yourself, and record which reading holds.
+
 ## 5. Background jobs and the machine
 - **Long chains run in the BACKGROUND and are waited on by the harness, never by a foreground loop.** Every job writes its own log. It ends the log
   with `echo EXIT $? >> log`. Use `python -u`, because a redirected Python block-buffers. Start the chain with the harness's background-run option (or
