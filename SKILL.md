@@ -1,6 +1,6 @@
 ---
 name: hw-from-spec
-version: 0.12.2
+version: 0.12.3
 description: Run a hardware project (a PCB, a printed or CNC enclosure, or both — scope chosen at kickoff; contract fab such as JLCPCB) from a written specification to a production cut with an owner-gated, generated-only, blind-reviewed workflow — a kickoff questionnaire that asks every owner decision up front with recommended answers, a zero-warning manufacturability bar, and a retro that folds each project's learnings back into the skill. Use this whenever someone starts a board or enclosure project from a spec, asks to set up gates, a decision log, generators, part verification, a fab DFM mirror, a case pipeline, FEA, blind reviews, a release report or a production cut for one, or resumes such a project, or wants the skill improved from a finished project — even if they only say "new KiCad board", "order this at JLC", "review the layout", "cut the release" or "what did we learn".
 ---
 
@@ -241,6 +241,7 @@ order. A WARN that is "known" is not a bar; it is either fixed or a dated, evide
      When you remove a physical stop, list each stop it held, its replacement, and what the replacement does not cover.
   2. Both bounds of every min / max window. A finding names one bound, and a fix that shifts the whole band can break the other bound.
      Give the value at both corners for each option. Prefer a fix that narrows the spread of the cause, such as a part with both limits on its datasheet.
+     Stack the corners that occur together. A fix can move the fail from one corner to the other (`references/high-speed-si.md` §10).
   3. Yields that multiply. Independent sort or inspection gates in series pass the product of their yields. State the product and size the order on it.
      When the gates read correlated causes, the product is wrong. Measure the joint yield on the first lot.
   4. The value proven on the previous revision. When one exists, offer it as an option with what proved it and its known risk.

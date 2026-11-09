@@ -123,6 +123,14 @@ Copy the fab's table into `20-design/dfm_thresholds.json` (source URL + date) an
   outside the hole overstates the current by about 10 % for a small drill.
 - **A study board goes stale silently** **[convention]**. A generator with no `--check` tied to a changed key keeps the old copper. Give
   every study board a `--check` on each key it draws. Regenerate each board when a value moves.
+- **Test a net-class clearance against the connector land before you set it** **[checker]**. A maker's land pattern can put two
+  pads closer than the class. The class can never hold there, so keep the clearance the land allows.
+- **Check the pin order around each package before you write a one-layer rule for a pair** **[physics]**. Two chips on the same
+  face that both number their pins counter-clockwise cannot join a D+/D- pair on one layer: the pair must cross once.
+- **Neck a wide line on fine-pitch pins along the pad axis** **[checker]**. When two pairs leave adjacent pins of one package,
+  keep both necked until they part.
+- **Count packages, not symbol units** **[convention]**. A multi-unit symbol lists one row per unit. Key a height, area or part
+  count on the reference designator.
 
 ## 5. Via-in-pad and tenting
 - Tented (mask-covered) vias by default, ≤ 0.5 mm, none inside SMD pads **[fab capability + convention]**; via-in-pad needs the fab's filled-and-
@@ -255,6 +263,8 @@ reviewer can read); an isolated section (USB isolator, mains) gets a keep-out zo
 - **The canary rule** **[convention]**: one deliberately violated generated rule (a `CANARY` text or a marker area) must fire **exactly
   once** in every DRC run. It proves the rule file was parsed and the classes are enforced. A malformed `.kicad_dru` is silently ignored. A
   stricter rule than the class is invisible to the router and appears afterwards.
+- **One canary per custom rule** **[convention]**. Copy the board without zones, add one deliberate miss per rule, and assert that the
+  DRC flags each one. A rule with a wrong layer keyword or a wrong condition otherwise fails silently.
 
 ## 15. Route-quality classes **[convention + owner choice]**
 Per net: routed / direct (MST over pads) meander ratio, segments, vias, layer changes, min/max width vs class, stubs, acute corners, layers used.

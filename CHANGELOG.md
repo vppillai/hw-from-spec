@@ -1,6 +1,6 @@
 # CHANGELOG — hw-from-spec
 
-## Current state (0.12.2): read this instead of replaying the entries below
+## Current state (0.12.3): read this instead of replaying the entries below
 
 - **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
   thirteen batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
@@ -43,6 +43,44 @@
   address and public pull-request numbers excepted) — `scripts/generic_lint.py` reads the whole repo
   (CHANGELOG and docs included; history keeps its measured numbers), a fenced worked example keeps numbers and kinds but never a name, and the
   repo carries no project retro (a retro report is folded, then deleted).
+
+## 0.12.3 - 2026-11-09 - Mesh states across impedance, over-void trims, stacked corners, runs that outlive the session
+
+Source: the project log from the late entries of 2026-11-06 to 2026-11-09, and an overnight SI corner-closure loop. The SI
+convergence playbook comes first. About 55 rule lines and 40 pitfall lines are added. Nothing is removed.
+
+### Added
+- `references/high-speed-si.md`:
+  - §0.1: two rows. A mesh state shared by close widths, and a fix that trades one corner for another.
+  - §0.2 step 8: stack the corners that occur together, and read every lever at every stacked corner.
+  - §0.3: never interpolate a mesh result across the impedance axis. A lever that trades corners is not a fix.
+  - §3.3: a new resonance after a move away from a void edge. The contact tails of every pad row in a coupled model.
+  - §4: a length trim cancels an over-void imbalance at one frequency only. A void step is more trim. A side-entry leg trades
+    the two registration corners.
+  - §6: the memory of an interpolating FEM sweep, asked at submit.
+  - §6.3: compare SDD21 first. A conductivity fitted high in the band. An open-solver acceptance rule when the shared solver
+    is busy: an agreement margin, fine-mesh runs near the line, a fab-spread calculation and a recheck on the routed copper.
+  - §7.1: the fine-mesh correction per corner, the grid state of close widths, and a flat low-frequency conversion floor.
+  - §7.2: refine every metal face of a FEM model, and check the body count and the volume. FDTD throughput after the first minute.
+  - §9.1: a mirror-symmetric loop hides a direction error. No fills for a missing drive run. A reference only on a freeze command.
+  - §10: stacked corners and the trade map. A reversed drive swaps the registration corners.
+  - §15: checklist items 49 to 53.
+- `SKILL.md` §3 check 2: stack the corners that occur together.
+- `references/agent-ops.md`:
+  - §5.1: runs that outlive the coordinator, with a resume file. Watchers that re-arm. Portable job kinds only, one host-only
+    slot kept free, a lane test, one queue view, a fixed move order, image names, pruning, remote kills, runner copies, SSH
+    control paths and arm64 archives.
+  - §5.2: run only when nobody waits. A time limit on every solver session. An empty scheduler answer is unknown. The licence
+    environment in each job shell, the memory field, and links in a shared home.
+  - §5.3: `bash -n`, watchers that survive `pkill -f`, `pgrep -c`, `set --` in a wrapper, `--help` on a script with no parser,
+    and an exact last-line match.
+- `references/pcb-layout-dfm.md` §4: net classes against the connector land, the pin order of a pair, necks on fine pitch, and
+  packages counted by reference designator. §14: one canary per custom rule.
+- `references/schematic-phase.md` §7: Schmitt inputs for slow edges, the hold-detector ratio, an open-drain power-good, board
+  thermal resistance, borrowed efficiency curves, the controller regulator loss, the steady module current and an independent
+  current reference.
+- `references/pitfalls.md`: dated lines in process, agents, tooling, layout, si, fab, sourcing, mechanical, software and
+  documentation.
 
 ## 0.12.2 - 2026-11-06 - Worker briefs, sceptic passes, power traps and verdict paths
 

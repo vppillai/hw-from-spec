@@ -290,6 +290,30 @@ prove the host. The rules below keep the host safe and the jobs alive.
 - A remote job folder with no command file and no log after hours means the job never started. Check the folder before you wait.
 - Run a fetch from the checkout that submitted the job. A runner that names the remote folder after the checkout finds nothing from
   another one.
+- **A run outlives the coordinator too.** Start each long run detached, and write a resume file beside the study. It lists how to
+  check, fetch, compare and clean up each run. A fresh session then resumes from the file, with no memory of the last one. One
+  overnight loop ran about 30 runs that way while the coordinator was offline *(worked example)*.
+- **A watcher re-arms after each landing.** A watcher that fires once and stops misses every later landing. Re-arm it in the same
+  step that reads the result.
+- Send only portable job kinds to other hosts. Allow a list of container jobs known to run there; do not block a list of bad
+  ones. A job with a host-only interpreter path or CAD tool fails elsewhere. Two such moves failed in one day *(worked example)*.
+- Keep one slot free on the only host that runs host-only work (CAD, circuit simulation, the case chain). Send the portable solver
+  runs to the remote lanes first.
+- Check a new lane for the image and the job inputs before you send it work. Each miss fails a job within seconds. A sandbox
+  probe is not a lane test: a lane takes routed work only after one real job ends with rc 0.
+- Read a queue spread over many hosts from the hosts themselves, in one view. A live runner with a start file is running. A live
+  runner without one is queued. No runner is dead. The first such view found many jobs queued on one host beside idle ones.
+- Move a queued job in a fixed order. Stop its runner (SIGSTOP). Check that it has not started. Then kill the runner, mark the job
+  moved, and submit it on the new lane. A job that started in the gap gets SIGCONT and stays. A move then never loses progress.
+- Strip the registry prefix before you compare image names. One container tool lists `docker.io/library/<name>`, another `<name>`.
+- Prune dangling images only. `docker image prune -a` deletes every tagged image that no container uses, the lane images too.
+- Stopping a local `ssh host 'bash -s' < script` does not stop the remote script. Kill the remote script before a rerun. Give each
+  run's containers a unique name, so an old exit trap cannot remove the next run's containers.
+- A remote job runs with the runner copy of the checkout that sent it. Merge a runner fix into that checkout first.
+- Two local VMs on two machines can answer on the same loopback address and port. A shared SSH control path then reuses the local
+  master. Set `ControlPath none` on such an alias, and read `nproc` and the OS release after the first login.
+- An arm64 image reads another package archive host than amd64. Pin that host to the snapshot too, or apt stays unpinned with no
+  error. Check that each Python wheel the image needs exists for arm64.
 
 ### 5.2 Shared licences and borrowed compute
 A licensed solver on a shared cluster belongs to other people's work. Your job runs at the lowest priority.
@@ -309,6 +333,18 @@ A licensed solver on a shared cluster belongs to other people's work. Your job r
 - **Clean up when a set ends**. Remove every file of yours from each host: project folders, scheduler logs, temp and result folders.
   End every session of yours. Record a cleanup table per host with the commands and a final empty listing.
 - Name no company host, path, licence server or ticket in a committed record. Add those terms to the public leak gate.
+- **Run only when nobody waits.** Before each submit, check that no other user waits for a licence or a host. When the cluster
+  stays full, keep the work going on the open solver under an agreed rule (`references/high-speed-si.md` §6.3).
+- Give every solver session a time limit inside the batch job. Kill the session's processes on a timeout, and skip the solve when
+  the build failed. A session that never started held a seat for about an hour *(worked example)*.
+- A job waiter treats an empty scheduler answer as unknown, not as done. One dropped SSH link made a chain collect a running case
+  and skip the next submit *(worked example)*.
+- Load the licence environment inside every scheduler job shell. Without it, the tool asks the default pool for features it does
+  not hold. The message reads like a version error.
+- Give the memory limit in the form the scheduler documents, and test a one-line job first. A memory reservation in the wrong
+  field can make an idle host unschedulable.
+- A link that dangles on one host can be live on another that mounts the same home. Check every host that mounts it, and search
+  the runner scripts for the path, before you remove anything in a shared home.
 
 ### 5.3 Shells, scripts and worktrees
 - Bash reads a running script as it goes. Lines appended to it run at the end of the current run. Never edit a script while a job
@@ -319,6 +355,14 @@ A licensed solver on a shared cluster belongs to other people's work. Your job r
 - Two writers can share one file if each owns named sections and edits by exact replacement. Check the file's modification time
   before a scripted write, so a concurrent edit is never lost.
 - An exact-replace helper must assert that the old text is not empty. Python's `str.replace("", x)` puts x between every character.
+- Check an edited script with `bash -n` before you restart it. Start a watcher with `nohup bash -c '...'`, so a `pkill -f` for
+  the runner does not kill the watcher too.
+- `pgrep -c` exits 1 when nothing matches. In `n=$(ssh host 'pgrep -c x') || n=99` an idle host reads busy. Add `; true` in the
+  remote command. Match with a bracket (`[r]unner`), so the probe does not count itself.
+- After `eval "set -- $line"`, the positional parameters are the command's arguments. Save a wrapper's own arguments in named
+  variables first. Run `git diff --stat` after any shell wrapper that touches files.
+- Run `--help` only on a script whose header shows an argument parser. A script without one starts its full job on any argument.
+- Match a log for completion on the wrapper's exact last line. A grep for "done" matched a package install line.
 
 ## 6. Reporting
 - Every report, record and README follows `references/writing-style.md`: lead with the result, second person, active voice, present tense,
