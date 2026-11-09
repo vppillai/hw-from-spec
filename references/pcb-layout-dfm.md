@@ -95,8 +95,8 @@ net classes must be exported into the router input — grep the DSN for them aft
 - **Connector pads** **[physics]**: a wide pad over thin prepreg can drop below the target impedance. A thinner prepreg lowers
   the pad impedance further. Pick the prepreg for the pad as well as the trace. A void under the pad changes the return path.
   Model the whole launch with the live stack-up and the connector model: εr, copper, mask, reference and pour gap.
-- Multi-gigabit lanes need more than a calculator row: the launch, skew, a field-solver study, corners and a coupon. Follow
-  `references/high-speed-si.md`.
+- Multi-gigabit lanes take a tier first (`references/high-speed-si.md` §0.0). A short lane that follows its layout guide closes
+  on the calculator row, the length and skew rules and the vendor checklist. A long, marginal or fast lane needs a field solve or the full chain.
 
 ## 4. Trace / space / via / annular / drill minimums vs the fab table
 Copy the fab's table into `20-design/dfm_thresholds.json` (source URL + date) and design strictly greater **[checker]**. Worked example

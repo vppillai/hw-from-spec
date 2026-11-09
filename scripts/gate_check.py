@@ -2,7 +2,12 @@
 """scripts/gate_check.py — the gate table read by a script, not by prose: a phase's generators call it before they build (SKILL.md §1.1).
 
   scripts/gate_check.py G1                exit 0 when the G1 row of paths.gates has owner text in its approval cell (4th cell; `_not yet approved_`
-                                          / `_not yet written_` / empty = no), 1 otherwise; prints the cell. Any gate name: G0 G1 G2 M1 M2 ...
+                                          / `_not yet written_` / empty = no), or a `> delegated: G1, ...` line under the table whose committed
+                                          git author is project.owner (full gate id per comma field; prints DELEGATED); 1 otherwise. Any gate
+                                          name: G0 G1 G2 M1 M2 ... The approval binds to its artefact (review 0.12.3): a commit in the cell must leave
+                                          the gate's artefact (G0 paths.spec, G1 paths.schematic, G2 paths.board) unchanged since it, and an
+                                          8-hex token that is not a commit must equal the artefact's md5-8. Else exit 1, STALE APPROVAL. A cell
+                                          with neither token prints UNBOUND and passes.
   scripts/gate_check.py --release         exit 0 when the Release row's approval cell matches markers.release_regex AND the line's git author is
                                           project.owner (name or email, case-insensitive; `git blame` on the committed line — an uncommitted
                                           line, another author, or no git history here = 1). The release phrase anywhere else in the file counts
@@ -99,11 +104,62 @@ def check_release(P):
     return 0 if ok else 1
 
 
+def delegation_lines(text):
+    """[(line_no, {gate ids})] for every `> delegated:` line under the gate table; one full gate id per comma field (0.11.18 [gates/gate-ids])."""
+    last = max((n for n, _ in gate_rows(text).values()), default=0)
+    return [(n, {f.strip().strip("*").lower() for f in l[len("> delegated:"):].split(",")})
+            for n, l in enumerate(text.splitlines(), 1) if n > last and l.startswith("> delegated:")]
+
+
+def gate_approved(P, text, gate):
+    """(how, detail): ("cell", cell) for an owner cell, ("DELEGATED", line) for a `> delegated: <gate>` line committed by project.owner,
+    (None, reason) otherwise. The one reader for gate_check and project.py gates-required (review 0.12.3)."""
+    cell = gate_cell(text, gate)
+    if cell:
+        return "cell", cell
+    why = "empty cell or no row, and no `> delegated: " + gate + "` line committed by project.owner"
+    for n, ids in delegation_lines(text):
+        if gate.lower() in ids:
+            author = line_author(P.path("gates"), n, P.root)
+            ok, w = owner_matches(P, author) if author else (False, "the line is not committed")
+            if ok:
+                return "DELEGATED", text.splitlines()[n - 1]
+            why = f"delegation line {n}: {w}"
+    return None, why
+
+
+ARTEFACT = {"g0": "spec", "g1": "schematic", "g2": "board"}   # the artefact of record each gate cell names (SKILL.md §1.1 step 2)
+
+
+def binding(P, gate, cell):
+    """(stale: bool, note) — the cell's commit or md5-8 against the gate's artefact of record now (review 0.12.3)."""
+    key = ARTEFACT.get(gate.lower()); f = P.path(key) if key else None
+    if not f or not os.path.exists(f):
+        return False, f"UNBOUND (no artefact of record for {gate})"
+    cwd = os.environ.get("HWFS_GIT_ROOT") or P.root
+    rel = os.path.relpath(f, P.root)
+    for tok in re.findall(r"\b[0-9a-f]{7,40}\b", cell, re.I):
+        r = subprocess.run(["git", "rev-parse", "-q", "--verify", tok + "^{commit}"], cwd=cwd, capture_output=True, text=True)
+        if r.returncode == 0:
+            same = subprocess.run(["git", "diff", "--quiet", tok, "--", rel], cwd=cwd).returncode == 0
+            return (not same), f"{rel} {'unchanged' if same else 'CHANGED'} since commit {tok}"
+        if len(tok) == 8:
+            import hashlib
+            m = hashlib.md5(open(f, "rb").read()).hexdigest()[:8]
+            return (m != tok.lower()), f"{rel} md5-8 {m} vs cell {tok}"
+    return False, f"UNBOUND (no commit or md5-8 in the cell for {rel})"
+
+
 def check_gate(P, gate):
     text = open(P.path("gates"), encoding="utf-8").read() if os.path.exists(P.path("gates")) else ""
-    cell = gate_cell(text, gate)
-    print(f"gate_check: {gate} {'approved: ' + cell if cell else 'NOT approved (empty cell or no row) in ' + P.get('paths.gates')}")
-    return 0 if cell else 1
+    how, detail = gate_approved(P, text, gate)
+    if not how:
+        print(f"gate_check: {gate} NOT approved in {P.get('paths.gates')} ({detail})"); return 1
+    if how == "DELEGATED":
+        print(f"gate_check: {gate} DELEGATED: {detail}"); return 0
+    stale, note = binding(P, gate, detail)
+    print(f"gate_check: {gate} {'STALE APPROVAL' if stale else 'approved'}: {detail} — {note}")
+    return 1 if stale else 0
 
 
 def selftest():
@@ -128,9 +184,30 @@ def selftest():
     P.cfg["project"]["owner"] = "owner@example.com"; assert check_release(P) == 0, "a plain string owner (email) matches too"
     P.cfg["project"]["owner"] = None; assert check_release(P) == 1, "no owner named = no release"
     assert release_cell(Project(f"{d}/project.yaml"), rows) is None and gate_cell(rows, "G1").startswith("Owner Person")
+    # review 0.12.3: a delegation line counts only when the owner committed it; full gate id per comma field
+    P = Project(f"{d}/project.yaml")
+    open(G, "a").write('\n> delegated: G0 (case spec), Owner Person, 2026-01-05 09:00, "go"\n> delegated: G2, Owner Person, 2026-01-05 09:00, "lay it out"\n')
+    assert check_gate(P, "G2") == 1, "an uncommitted delegation line"
+    git("add", "-A"); git("-c", "user.name=Agent Bot", "-c", "user.email=bot@example.com", "commit", "-qm", "agent quotes")
+    assert check_gate(P, "G2") == 1, "a delegation line an agent committed"
+    open(G, "a").write('> delegated: G2, Owner Person, 2026-01-05 10:00, "lay it out"\n')
+    git("add", "-A"); git("-c", "user.name=Owner Person", "-c", "user.email=owner@example.com", "commit", "-qm", "owner delegates")
+    assert check_gate(P, "G2") == 0 and gate_approved(P, open(G).read(), "G2")[0] == "DELEGATED", "the owner's committed delegation"
+    assert check_gate(P, "G0") == 1, "`G0 (case spec)` is not G0"
+    # review 0.12.3: the cell binds to its artefact by commit or md5-8; a change after it is STALE APPROVAL
+    import hashlib
+    os.makedirs(f"{d}/10-spec"); S = f"{d}/10-spec/SPEC.md"; open(S, "w").write("spec r1\n")
+    git("add", "-A"); git("-c", "user.name=Owner Person", "-c", "user.email=owner@example.com", "commit", "-qm", "spec")
+    head = git("rev-parse", "--short=8", "HEAD", text=True).stdout.strip(); m8 = hashlib.md5(b"spec r1\n").hexdigest()[:8]
+    for tok in (head, m8):
+        open(G, "a").write(f"| **G0** | spec | x | Owner Person, 2026-01-06, {tok} |\n")
+        assert check_gate(P, "G0") == 0, f"bound to {tok}, unchanged"
+        open(S, "w").write("spec r2\n"); assert check_gate(P, "G0") == 1, f"STALE after the spec moved ({tok})"
+        open(S, "w").write("spec r1\n")
+    open(G, "a").write("| **G0** | spec | x | Owner Person, 2026-01-06, SPEC r1 |\n"); assert check_gate(P, "G0") == 0, "an UNBOUND cell passes with a note"
     for ph in ("TBD", "pending", "Pending", "not yet approved", "Not yet", "_not yet approved_", "not_yet_approved", "**TBD**", "n/a", "", "—"):
         assert gate_cell(f"| **G2** | pcb | x | {ph} |\n", "G2") is None, f"placeholder {ph!r} read as approved"
-    print("selftest OK (cells not prose, empty markers and placeholders (TBD, pending, not yet), release cell + git author = owner, agent author refused, uncommitted refused, missing owner refused)")
+    print("selftest OK (cells not prose, empty markers and placeholders (TBD, pending, not yet), release cell + git author = owner, agent author refused, uncommitted refused, missing owner refused, owner-committed delegation = DELEGATED, agent or uncommitted delegation refused, commit / md5-8 binding and STALE APPROVAL)")
     return 0
 
 

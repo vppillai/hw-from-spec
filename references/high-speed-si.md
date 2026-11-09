@@ -5,7 +5,21 @@ impedance rules of the board (when a pair needs control, how to record the calcu
 covers the rest, from the stack-up and the launch to the solvers, the coupon, the bench and the blind review. The rules are tagged **[physics]**, **[fab capability]**, **[method]** or **[owner choice]**. A worked number is
 labelled *(worked example)*; the mechanism generalises, the value does not.
 
-## 0. The SI convergence playbook: what to run on day 1
+## 0.0 The SI tier of each lane: pick it first
+
+Not every multi-gigabit lane needs the full playbook. Give each lane a tier before any SI work **[method]**. Record the tier and its
+reason per lane in a CC row. When a lane is between two tiers, take the higher one.
+
+| Tier | When | What closes the lane |
+|---|---|---|
+| 1 | The lane follows the interface's layout guide, and the guide covers its rate, length, stack-up and connector. The calculator shows clear margin. | A calculator impedance row (`references/pcb-layout-dfm.md` §3), the length and skew rules (§4), and the vendor layout checklist, item by item. |
+| 2 | The lane is longer than the guide allows, or its calculated margin is thin. | Tier 1, plus one field solve of the channel with a converged mesh (§7). |
+| 3 | The lane is near its limit, it has a custom launch or connector footprint, or it runs above ~25 Gb/s per lane. | The full playbook below: §0.2 in order, two solvers (§6), corners (§10). |
+
+A tier-2 result inside its uncertainty of the limit moves the lane to tier 3. The rest of this page is the tier-3 method. Tiers 1
+and 2 use the sections they name.
+
+## 0. The SI convergence playbook: what to run on day 1 (tier 3)
 
 One SI loop ran eight iterations against its mode-conversion limit *(worked example)*. Most of them fixed a fault that a day-1 check
 catches in minutes. Run the steps of §0.2 in order, before the first performance number. Plan three iterations: build and
@@ -89,7 +103,7 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 
 ## 1. The rule of record
 
-- A number counts only when three things hold **[method]**. Its mesh has converged. A second solver agrees in band on the same geometry. The
+- A tier-3 number counts only when three things hold **[method]**. Its mesh has converged. A second solver agrees in band on the same geometry. The
   evaluator behind any eye or COM figure is calibrated against the official code.
 - The model is the layout of record **[method]**. It holds every void, post, plane and pad, and every via. A simplified twin may screen a
   variant. It never closes a requirement. One study read SCD21 −33.5 dB on a twin with a solid plane and no contact posts. The launch of record
@@ -597,7 +611,7 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 - Run first-order compliance (COM, ERL) on the cascade before any bit-by-bit run. It finds a gross fault cheaply.
 - Draw the eye mask at its stated BER and give the margin as a number in mV and ps **[method]**. A margin nobody can read becomes "adequate".
 - Reach the target BER with a statistical eye or the receiver model's SNR, not a counted BER **[physics]**. Zero errors in N bits means a BER
-  under about 1/N only.
+  under 3/N at 95 % confidence (4.6/N at 99 %) only. Size the bench run length from that.
 - State the basis of the BER target and the alternatives: an internal target, the standard's pre-FEC limit, the silicon vendor's figure.
 - Use a long PRBS with a different seed per lane. Equal seeds make the lanes switch together. Add a worst-case pattern from the pulse response.
 - Drop the start-up transient and the equaliser training bits before you count. Use at least 32 samples per UI.

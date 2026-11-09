@@ -93,7 +93,7 @@ board as MISSING at G1 (no routed board yet) — that is expected and said in th
 
 1. G0 cell written by the owner → 2. `20-design/*.yaml` from SPEC (every spec value that must change → CC row OPEN first) → 3. `gen/build_sch.py`
 (`--check` green, ERC zero errors, netlist) → 4. map checks → 5. G1 pack → 6. `scripts/traceability.py` entries for every spec requirement now
-landing in the yaml (stage `schematic`) → 7. freeze, hand-off, blind round (SKILL §5), merged report `80-reviews/G1_merged.md` → 8. REQUIRED
+landing in the yaml (stage `schematic`). Its R-ID census fails on an R-xx with no entry, or with no T-nn row and no NOT-INCLUDED decision → 7. freeze, hand-off, blind round (SKILL §5), merged report `80-reviews/G1_merged.md` → 8. REQUIRED
 items applied, regenerate, re-run 3-6 → 9. ask for the G1 cell (SKILL §1.1). Layout CAD starts only after the cell exists.
 
 ## 6. Studies before the next revision's spec

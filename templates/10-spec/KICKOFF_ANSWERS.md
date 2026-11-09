@@ -38,7 +38,7 @@ answered question is a defect; changing an answer is a new D row that supersedes
 | D1 | the manufacturability bar | {{zero errors / zero warnings / no waivers}} | yes | D-{{nn}} = `{{D-BAR}}` | `fab_dfm.bar` (ee / both), `print_targets.*.accepted` (mech / both); GATES.md; CLAUDE.md rule 9 |
 | D2 | what may be waived | {{nothing}} | yes | D-{{nn}} | `print_targets.*.accepted: []` (mech / both), `dfm_accepted: []` (ee / both) |
 | D3 | design margin / tolerance source | {{+0.3 MJF; first article replaces the vendor sheet}} | yes | D-{{nn}} | `print_targets.*.design_margin / tolerance` | {{mech,both}}
-| E1 | review rounds per gate | {{one round per gate, two external models}} | yes | D-{{nn}} | `kickoff.verification.rounds`; `{{EXTERNAL_MODELS}}` |
+| E1 | review rounds per gate | {{one round per gate, SKILL.md §5 table}} | yes | D-{{nn}} | `kickoff.verification.rounds`; `{{EXTERNAL_MODELS}}` |
 | E2 | visual inspections | {{tiles + renders + six faces}} | yes | D-{{nn}} | `kickoff.verification.visual` |
 | E3 | coupons / dummies / first article | {{yes}} | yes | D-{{nn}} | `kickoff.coupons.plan` | {{mech,both}}
 | E3a | who calipers the bought hardware before the case order | {{owner}} | yes | D-{{nn}} | `kickoff.coupons.hardware_measurer` | {{mech,both}}

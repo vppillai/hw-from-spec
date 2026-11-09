@@ -9,9 +9,8 @@ approval cell reads `<owner name>, <YYYY-MM-DD>, <what was approved: SPEC rev / 
 project.yaml. Do not quote them in prose anywhere in this file. `scripts/gate_check.py --release` reads the cell and the line's git author.
 `scripts/gate_check.py <gate>` reads a gate cell. The next phase's generators refuse to run while it says NOT approved. A chat approval is quoted verbatim (date/time) under the table; the cell stays the owner's.
 
-**One review round** (skill `SKILL.md` §5) = for every role of the round's role set, one in-session reviewer + two external models of a second
-model family. The in-session fallback may stand in for the external models, and the merge says so. Each role also gets one verifier with record access.
-The round produces one merged report in `80-reviews/<round>_merged.md`. Every gate below needs one.
+**One review round** is defined in the "Review rounds" table of skill `SKILL.md` §5. It produces one merged report in
+`80-reviews/<round>_merged.md`. Every gate below needs one.
 
 **The manufacturability bar** is owner decision {{D-BAR}} from the kickoff questionnaire (default = zero / zero / no waivers). Scripts enforce it.
 Board: CAD DRC 0 errors / 0 unconnected / **0 warnings**. Fab DFM mirror **0 open at either of the fab's grades** (for example Danger / Warning), unless a dated `dfm_accepted` entry with {{ee,both}}
@@ -33,5 +32,7 @@ A waiver is a dated decision row plus a machine-readable accept entry the gate r
 
 Owner instructions quoted verbatim (with date/time) go here when the owner delegates a step; the cells above stay empty until the owner fills them.
 A delegation line starts with `> delegated:` and names its gate: `> delegated: G0, <owner>, <YYYY-MM-DD HH:MM>, "<owner words>"`.
+The owner commits the line. A line an agent committed does not count.
 `scripts/project.py gates-required` fails while a next-phase artefact exists and its gate has neither a cell nor such a line.
+`scripts/gate_check.py <gate>` reads the commit or md5-8 in a cell. It prints STALE APPROVAL when the artefact changed after it.
 The pairs are: schematic → G0, board → G1, fab package → G2, STL set → G0, `ORDER_<rev>.md` (mech) → M1.

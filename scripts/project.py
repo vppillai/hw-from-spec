@@ -14,7 +14,7 @@ CLI (for shell scripts):
   scripts/project.py scaffold --scope S FILE...   # resolve the {{ee,both}}-style scope tags of copied templates in place: a tagged line stays only
                                               # when S is in its list (tag removed); untagged lines stay; the {{SCOPE}} slot becomes S. Then `slots`.
   scripts/project.py gates-required           # exit 1 when an artefact exists (schematic, board, the STL set) and gates.adopt has no gate line for it,
-                                              # or when a next-phase artefact exists and its preceding gate has no cell and no `> delegated:` line
+                                              # or when a next-phase artefact exists and its preceding gate has no cell and no `> delegated:` line committed by project.owner
   scripts/project.py slots [FILE|DIR ...]     # the unfilled {{...}} slots per file (default: CLAUDE.md 10-spec/SPEC.md project.yaml docs design — CI workflow
                                               # files are the ci/README's own `{{PROJECT_` grep); lines between
                                               # `<!-- skeleton: begin -->` / `<!-- skeleton: end -->` are skipped; exit 1 while any slot remains
@@ -218,11 +218,8 @@ def gate_cell_backstop(P, sets):
     """A next-phase artefact that exists needs its preceding gate approved: a cell in paths.gates, or a `> delegated: <gate> ...` line under the
     table (the owner's delegation quote; SKILL.md §1.1 keeps the cell empty then). schematic -> G0, board -> G1, fab package <fab_dir>/<rev>/ -> G2,
     an STL set -> G0, mech scope ORDER_<rev>.md -> M1. -> problem list (blind review 0.11.13 A-9)."""
-    from gate_check import gate_cell, gate_rows   # lazy: gate_check imports this module
+    from gate_check import gate_approved   # lazy: gate_check imports this module; one reader for both (review 0.12.3): cell, or a delegation line the owner committed
     gp = P.path("gates"); text = open(gp, encoding="utf-8").read() if gp and os.path.exists(gp) else ""
-    last = max((n for n, _ in gate_rows(text).values()), default=0)
-    # a delegation names gates by their FULL id, one per comma field: `G0` and `G0 (case v4 spec)` are two gates (0.11.18 [gates/gate-ids])
-    delegated = [{f.strip().strip("*").lower() for f in l[len("> delegated:"):].split(",")} for l in text.splitlines()[last:] if l.startswith("> delegated:")]
     fab = os.path.join(P.path("fab_dir"), P.rev())
     order = os.path.join(P.path("orders_dir"), f"ORDER_{P.rev()}.md")
     pairs = [("G0", "schematic", P.path("schematic")), ("G1", "board", P.path("board")),
@@ -232,8 +229,8 @@ def gate_cell_backstop(P, sets):
         pairs.append(("M1", "case order file", order))
     bad = []
     for gate, what, f in pairs:
-        if f and os.path.exists(f) and not gate_cell(text, gate) and not any(gate.lower() in ids for ids in delegated):
-            bad.append(f"{what} {os.path.relpath(f, P.root)} exists but {gate} is not approved in {P.get('paths.gates')} (empty cell, no `> delegated: {gate}` line under the table)")
+        if f and os.path.exists(f) and not gate_approved(P, text, gate)[0]:
+            bad.append(f"{what} {os.path.relpath(f, P.root)} exists but {gate} is not approved in {P.get('paths.gates')} (empty cell, no `> delegated: {gate}` line under the table committed by project.owner)")
     return bad
 
 
@@ -431,10 +428,14 @@ def selftest():
     assert required_gate_lines(P) == [], ("G0 approved: schematic and STL sets pass", required_gate_lines(P))
     open(f"{d}/90-log/GATES.md", "w").write(GT.replace("Owner, 2026-01-01, SPEC r1", "_not yet approved_"))
     bad = required_gate_lines(P); assert len(bad) == 3 and all("G0 is not approved" in b for b in bad) and "schematic k/k.kicad_sch" in bad[0], bad
+    import subprocess   # review 0.12.3: a delegation line counts only when project.owner committed it
+    git = lambda *a: subprocess.run(["git", "-c", "user.name=Owner", "-c", "user.email=o@o", *a], cwd=d, check=True, capture_output=True)
+    P.cfg["project"]["owner"] = "Owner"; git("init", "-q")
     open(f"{d}/90-log/GATES.md", "a").write("\n> delegated: G1, Owner, 2026-01-02, \"go on\"\n"); assert len(required_gate_lines(P)) == 3, "a G1 delegation does not cover G0"
     open(f"{d}/90-log/GATES.md", "a").write("> delegated: G0 (case v4 spec), Owner, 2026-01-02, \"start the G0 work\"\n")
     assert len(required_gate_lines(P)) == 3, "a delegation of `G0 (case v4 spec)` is not a delegation of G0, and a quote naming G0 is not one either"
-    open(f"{d}/90-log/GATES.md", "a").write("> delegated: G0, Owner, 2026-01-02, \"start the schematic\"\n"); assert required_gate_lines(P) == [], required_gate_lines(P)
+    open(f"{d}/90-log/GATES.md", "a").write("> delegated: G0, Owner, 2026-01-02, \"start the schematic\"\n"); assert len(required_gate_lines(P)) == 3, "an uncommitted delegation line"
+    git("add", "90-log/GATES.md"); git("commit", "-qm", "owner delegates"); assert required_gate_lines(P) == [], required_gate_lines(P)
     os.makedirs(f"{d}/60-orders"); open(f"{d}/60-orders/ORDER_rev0.md", "w").write("x")
     bad = required_gate_lines(P); assert len(bad) == 1 and "M1 is not approved" in bad[0] and "ORDER_rev0.md" in bad[0], bad
     open(f"{d}/90-log/GATES.md", "w").write("> delegated: M1 above the table counts for nothing\n" + GT); assert any("M1" in b for b in required_gate_lines(P))

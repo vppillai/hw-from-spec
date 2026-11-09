@@ -121,9 +121,10 @@ A vague brief costs a rework round. Brief every worker from `templates/AGENT_BRI
 - Freeze: start from a clean tree (`git status --short --untracked-files=no` empty). Run `git worktree add --detach <frozen> HEAD`, then `git -C
   <frozen> submodule update --init`. The skill submodule is empty in a fresh worktree, and the `scripts` link dangles until then. Reviewers read only
   there and write only their own report file in the live repo.
-- Hand-off document v-n: generated header (`scripts/handoff_header.py`: board of record, HEAD md5 MATCH, package, case version, clean tree), the
-  scope per specialty, the known/open list with dispositions, the claims of the round (for a delta audit) — the ONLY briefing. Plus the one-paragraph
-  waiver list without reasoning so verifiers spend their budget on new defects.
+- Hand-off document v-n (`templates/REVIEW_HANDOFF.md`). The reviewer part is the ONLY briefing. It holds the generated header (`scripts/handoff_header.py`:
+  board of record, HEAD md5 MATCH, package, case version, clean tree) and the artefacts with md5. It adds the role's checklist, the claims of
+  the round (for a delta audit) and the one-paragraph waiver list without reasoning. The verifier annex holds the decision log, the known/open list with
+  dispositions and the errata. Only the verifier gets the annex (SKILL.md §5 steps 3 and 4).
 - Reviewers never read other reviewers' output nor the author's reasoning (name the forbidden file patterns explicitly in the prompt).
 - Measure each reviewer claim on the model before you act on it. A reviewer that reads a render can misread a clearance or a flow direction.
   The adversarial verification bullet below gives the method.
@@ -172,7 +173,7 @@ A vague brief costs a rework round. Brief every worker from `templates/AGENT_BRI
   One round found a requirement closed on a simplified model; the owner's closure reversed *(worked example)*.
 - The author recomputes a reviewer's number too. One reviewer's figure came from a point of another window; the disposition says so.
 - **Run the cheap checks before each fix-check round.** Run the stale-number sweep over every document a decision batch touched. Run the
-  coverage script (every requirement named in the plan, every plan row traced). Check each stale hit's meaning before you replace it. Six
+  coverage script: `scripts/traceability.py --check` (every R-xx with an entry and a T-nn row, every decision row traced). Check each stale hit's meaning before you replace it. Six
   fix-check rounds ran before one found no MAJOR, and most of their findings were of this kind *(worked example)*.
 - External reviewers can grade on another scale (High / Medium / Low). State the mapping to BLOCKER / MAJOR / MINOR before you count
   findings across rounds. A fix-check repeats old ids as closure rows. Count only the rows that are not in a closure state.
@@ -188,8 +189,8 @@ A vague brief costs a rework round. Brief every worker from `templates/AGENT_BRI
 - **Triage as a realistic sceptic.** Ask two questions per finding. Could it change copper, a part, an assembly step or a test verdict?
   Is its margin thin, or did the design change since its last pass? Two yeses make it gating. Otherwise record it, and do not gate on
   it. No pedantic engineering, and no missed item that a bench would find in the first hour.
-- **A milestone gets a fresh double-blind round.** The milestones are a spec pass, a closed SI loop, a study and a tag. A fix-check round
-  with fresh reviewers follows the fixes. Merge into one disposition per discipline. Each row reads FIX, OWNER, CLOSED or REJECTED.
+- **A milestone gets a fresh double-blind round.** The round types, the roster cap and the fix-check stop rule are in the SKILL.md §5
+  table. Merge into one disposition per discipline. Each row reads FIX, OWNER, CLOSED or REJECTED.
   Check every BLOCKER and MAJOR against the frozen package before its row is written. Bring the owner one recommended option per OWNER row.
 
 ### 4.1 Persona panels
