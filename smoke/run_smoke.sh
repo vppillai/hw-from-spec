@@ -273,6 +273,9 @@ cp "$SKILL/templates"/{project.yaml,CLAUDE.md} $K/; cp "$SKILL/templates"/10-spe
  printf '| **D-02** | d | **APPROVED** | kickoff | owner | words |\n' >> 90-log/DECISIONS.md; sed -i.bak 's/D-X/D-02/g' 10-spec/KICKOFF_ANSWERS.md
  "$PY" scripts/project.py kickoff --check >/dev/null || { echo "FAIL (F10): a filled ee project must pass the kickoff check"; "$PY" scripts/project.py kickoff --check | tail -5 || true; exit 1; }
  out=$("$PY" scripts/traceability.py --no-commands 2>&1 || true); echo "$out" | grep -q 'R-E01 (no traceability entry)' || { echo "FAIL (review 0.12.3): a filled SPEC with untraced R-IDs passed the R-ID census"; echo "$out" | tail -3; exit 1; }
+ echo "$out" | grep -q '^NOT GATE EVIDENCE' && [[ ! -e 90-log/TRACEABILITY.md ]] || { echo "FAIL (review 0.12.4): a --no-commands run must say it is not gate evidence and must not write the matrix of record"; exit 1; }
+ for flags in "--no-commands" "--only D-02"; do rc=0; out=$("$PY" scripts/traceability.py --check $flags 2>&1) || rc=$?
+  [[ $rc == 2 ]] && echo "$out" | grep -q '^REFUSED' || { echo "FAIL (review 0.12.4): traceability --check $flags must exit 2 with REFUSED (got rc $rc)"; exit 1; }; done
  echo "slots: fresh ee scaffold -> exit 1 with counts; trivially filled -> 0; kickoff --check: unfilled yaml names the slots, D-X rows FAIL, filled rows pass")
 say "0b scope: A0 asked first, every scope scaffolds from ONE template set and gets its own gate rows"
 grep -q '^\*\*A0 Project scope' "$SKILL/references/kickoff-questionnaire.md" && grep -q '^| A0 | scope' "$SKILL/templates/10-spec/KICKOFF_ANSWERS.md" || { echo "FAIL: kickoff A0 (scope) missing"; exit 1; }

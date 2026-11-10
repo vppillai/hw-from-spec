@@ -21,7 +21,7 @@ The rule covers every fact a design or a study takes from a part, not only the f
 - When a maker site refuses a scripted fetch, try a distributor's media list of the part. It often links the maker's own drawing. Keep a
   local copy of any drawing a browser session reads, so the next review can check it.
 - Read the stock of the exact size you need. One family stocked its short part deeply and its long part thinly.
-- A distributor API can give stock per package variation (reel, cut tape, tray). A top-level stock of null is not unknown.
+- A distributor API can give stock per package variation (reel, cut tape, tray). A null top-level stock does not mean no stock.
   Read every variation.
 
 ## Tags

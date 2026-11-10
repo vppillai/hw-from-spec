@@ -186,7 +186,7 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A study table quoted a number that a later decision had moved. Read the generator before you copy a number into the spec — 2026-11-06 [process/records].
 - A generator `--check` that no gate ran drifted in silence. One gate that runs every check and lists every red one showed four stale records at once — 2026-11-06 [process/gates].
 - A verdict field that a person typed broke the file's own rule. Compute the verdict in a check from the inputs — 2026-11-06 [process/records].
-- A `--no-commands` traceability run read 0 FAILED and hid real failures. Only the run with commands counts at a gate — 2026-11-10 [process/gates] (`release-and-cut.md` §3.1).
+- A `--no-commands` traceability run never fails a command row, and it hid real failures. Only the run with commands counts at a gate — 2026-11-10 [process/gates] (`release-and-cut.md` §3.1).
 - A checker cached a FAILED command result and replayed it, so a load flake stayed FAILED on every run. Never cache a failure — 2026-11-10 [process/gates] (`release-and-cut.md` §3.1).
 - PENDING rows hid 136 dead checks: moved paths, a retired tool, double-escaped regexes. Sweep PENDING rows at each milestone — 2026-11-10 [process/gates] (`release-and-cut.md` §3.1).
 - A selftest shim's cache key named only part of the code it ran, so a change elsewhere never reran it. Key on every file the command runs — 2026-11-09 [process/gates].
@@ -724,7 +724,7 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A word-count gate counted each number and unit as words. Split a sentence with many values at each value pair — 2026-11-06 [docs/style].
 - A full EEPROM byte map left no room for a new calibration field. Plan spare bytes, and state the text encoding and byte order with one worked block — 2026-11-06 [documentation/fru].
 - A sentence split by hand in a generated file reverted on the next run. Make the style fix in the generator — 2026-11-10 [docs/style] (`writing-style.md` §4).
-- A merge brought a new folder into an exported tree, and the export shipped it. Run the export report after every merge — 2026-11-09 [docs/public] (`release-and-cut.md` §15).
+- A merge brought a new folder into an exported tree, and the export shipped it. After every merge, read the export's yaml list and run `generic_lint.py --export` — 2026-11-09 [docs/public] (`release-and-cut.md` §15).
 
 ## records / arrival / review
 - The fab adds an order-history "Confirm Parts Placement" step after the engineer mails, with a silent ~3-day timer after which the order is produced as drawn. Check Order History after every engineer reply. Its engineering file (`Smt_Hw_Bom_Merge` → `oc` / `ec` per designator) is the complete change list - diff it before any picture. Read the pictures with a mounting-hole calibration (0.1 px) and your pad 1 over the fab's marks for every polarity-flagged part — 2026-10-08 [fab/placement-confirm] (`vendor-review.md` §5 round 4).

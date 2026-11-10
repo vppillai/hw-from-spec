@@ -105,8 +105,9 @@ A vague brief costs a rework round. Brief every worker from `templates/AGENT_BRI
 - A merge can move a block out of the function that owns it. The product and identity read that belongs in the open path landed
   in a re-clock function, and every run stopped at the revision check. Pin the ownership of such a block with a selftest that
   reads the function source.
-- **A merge of a long-lived branch can bring a second rule for the same question.** Before the merge commit, grep every reader
-  of the first rule: code, generated text, web pages and readmes. One reader left on the first rule shows a wrong state.
+- **A merge of a long-lived branch can bring a second rule for the same question.** An example is a second way to mark a file
+  approved. Before the merge commit, grep everything that reads the first rule: code, generated text, web pages and readmes.
+  One page that still reads the first rule shows a wrong state.
 - Never resolve a conflicted data file with `checkout --ours` or `--theirs`. That drops the other side's clean hunks too. Run
   `git checkout -m <file>` and resolve the conflicted hunk only. Then diff the result against each branch, line by line.
 - **A merge can carry a value that no decision row holds.** Check each constant that a decision row names against the merged
@@ -286,8 +287,8 @@ prove the host. The rules below keep the host safe and the jobs alive.
 - **Fetch each job's own run folder, never a host's whole results tree.** A whole-tree fetch also carries a killed job's partial
   folder. That folder then overwrites the same run that a later job wrote on another host *(worked example)*. Delete a killed
   job's folder on its host.
-- **Check the provenance of every landed result before you use it.** Name its job of record: the latest job of that run key with
-  rc 0. Compare the local result with that job's copy by md5, or the local file time with the job's log end. Then run the
+- **Check the provenance of every landed result before you use it.** Name its job of record: the latest job with rc 0 that wrote
+  that run folder. Compare the local result with that job's copy by md5, or the local file time with the job's log end. Then run the
   result's own sanity test. One check of 16 results found one overwritten result and two invalid ones *(worked example)*.
 - A firmware build runs offline in a pinned toolchain image, with the network off. Start each run from an empty build folder.
   A partial clean of the build folder breaks the next incremental run.
@@ -314,11 +315,13 @@ prove the host. The rules below keep the host safe and the jobs alive.
   runs to the remote lanes first.
 - Check a new lane for the image and the job inputs before you send it work. Each miss fails a job within seconds. A sandbox
   probe is not a lane test: a lane takes routed work only after one real job ends with rc 0. Compare that job's output with the
-  same run on a proven lane, byte for byte. A copied solver runtime gave bitwise-equal results *(worked example)*.
+  same run on a proven lane. A deterministic tool must match byte for byte. Any other tool must agree within a stated
+  tolerance, with the cause named (`high-speed-si.md` §6.2). A copied solver runtime gave bitwise-equal results *(worked example)*.
 - Read a lane's free disk on its resolved job folder, never on the home folder. One host had a small network home beside
   terabytes of local scratch *(worked example)*.
-- Measure the sum and each job's rate before you add a job to a lane. A third job raised one host's sum by 9 % and slowed
-  each running job by 12 to 21 % *(worked example)*. Run the urgent jobs first, and give the extra slot to work with slack.
+- Add an extra job to a lane as a trial first. Measure the lane's total throughput and each job's rate. Keep the job only if
+  the total gains. A third job raised one host's total by 9 % and slowed each running job by 12 to 21 % *(worked example)*.
+  Run the urgent jobs first, and give the extra slot to work with slack.
 - Read a queue spread over many hosts from the hosts themselves, in one view. A live runner with a start file is running. A live
   runner without one is queued. No runner is dead. The first such view found many jobs queued on one host beside idle ones.
 - Move a queued job in a fixed order. Stop its runner (SIGSTOP). Check that it has not started. Then kill the runner, mark the job

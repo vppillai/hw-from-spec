@@ -46,12 +46,16 @@ copy-back with `git checkout` once its diff is timestamp-only.
   `traceability.py --only <family>`. Read every `now k/n` under PENDING(stage) as a failure in waiting (`pitfalls.md`). The script has no
   flag that forces a stage. A check-table row is gate evidence only when its note cell names the requirement id. The id goes into the
   generator's note text, never into the table by hand.
-- **Only a run with commands counts at a gate.** A `--no-commands` run reads 0 FAILED, because its command checks read PENDING.
-  `traceability.py --check` refuses `--no-commands`.
+- **Only a run with commands counts at a gate.** A `--no-commands` run never fails a command row: its command checks read PENDING.
+  A row of another check type still fails. The run prints `NOT GATE EVIDENCE` and does not write the matrix.
+  `traceability.py --check` refuses `--no-commands` and `--only`.
 - **Never cache a failed check result across runs.** A cached FAILED from a load flake replays on every later run. Cache a pass
   on an inputs key at most, and rerun every failure. The key covers every file that the cached command runs.
 - **Sweep the PENDING rows for dead checks at each milestone.** A PENDING row hides a check that can never pass: a moved path, a
-  retired tool or a double-escaped regex. One sweep cut the dead checks in live rows from 136 to 31 *(worked example)*.
+  retired tool or a double-escaped regex. A check not yet reached names an output of a step that has not run. A dead check
+  names a path, a tool or a pattern that no step of the tree produces. For each failing check under PENDING, grep the
+  generators for its path and its pattern. No hit means a dead check. One sweep cut the dead checks from 136 to 31
+  *(worked example)*.
 - **An owner row at an open gate** reads `PENDING(<text>)`, never a waiver. The entry's `pending:` text carries the owner's decision row
   id. In `scripts/traceability.py`, PENDING(text) is a known gap with a logged fix. The check table keeps its FAIL. The
   gate record reads PENDING on the owner's decision. The round then runs.
@@ -261,8 +265,8 @@ README alone did not answer the owner's "are the settings backed up" after the o
 ## 15. A public export from the private tree
 A public export ships only what a fail-closed leak gate has read.
 - One generator builds the public tree from a yaml list of what goes out. The generator is project code, like the cut generator (§7).
-- A new folder under an exported tree ships unless the exclude list names it. Run the export report after every merge into
-  that tree.
+- The yaml list names trees, so a new folder under a listed tree ships. After every merge into a listed tree, read the yaml
+  list against the tree. Then run the export generator and `scripts/generic_lint.py --export <tree> --allow <file>`.
 - A leak gate reads every exported file of the final tree. The push depends on a clean gate.
 - Only `scripts/generic_lint.py --export <tree> --allow <file>` is the leak gate. The plain lint mode is not.
 - The export mode pins the skill's generic rules; `--terms` is refused with it. It fails without a private term file. That file

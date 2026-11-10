@@ -234,6 +234,7 @@ Run these before the spec fixes a target or a board split. A study of §6 cites 
   I²R row moves with it.
 - **A pass mark against a meter that reads the same shunt as the device checks only the ADC**. Add an independent current
   reference, so the shunt value and its drift fall inside the check.
-- **A power-mux comparator pin can set two thresholds at once**: the fast-switchover enable and the priority point. A divider
-  from a wide-range input, such as USB VBUS, cannot hold both bounds. Feed it from a regulated rail. Check the window at both
-  corners: over the reference maximum, and under the priority minimum less the comparator offset.
+- **A power-mux comparator pin can set two thresholds at once**: the fast-switchover enable and the priority point. This
+  applies when the priority is fixed, not voltage-sensed. A divider from a wide-range input, such as USB VBUS, cannot hold both
+  bounds. Feed it from a regulated rail. Check the window at both corners. The upper corner stays over the reference maximum.
+  The lower corner stays under the priority minimum less the comparator offset.
