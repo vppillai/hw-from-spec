@@ -435,10 +435,10 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
   10 dB off *(worked example)*.
 - The medium-mesh bias has no fixed sign **[method]**. A corner that fails by a small margin on the medium mesh can pass by several dB
   on the fine mesh. Run the fine mesh before you change geometry for a small fail.
-- The fine-mesh correction depends on the corner and the pair **[method]**. One loop read 3 to 5 dB better at fine on one registration corner, and
-  0.3 to 0.7 dB worse on the other *(worked example)*. A medium fail at a corner where fine reads worse does not pass at fine.
-  Measure the correction per corner and per pair. Never carry it over from another corner or another pair impedance. At one
-  corner a narrow-gap pair read 5 dB better at fine, and two wider pairs read 0.3 to 0.7 dB worse *(worked example)*.
+- The fine-mesh correction depends on the corner and the pair **[method]**. At one registration corner, a narrow-gap pair read up to
+  5 dB better at fine. Two wider pairs read 0.3 to 0.7 dB worse at the same corner *(worked example; one data set)*.
+  A medium fail where fine reads worse does not pass at fine. Measure the correction per corner and per pair.
+  Never carry it over from another corner or another pair impedance.
 - The medium mesh can snap close widths to one grid state **[method]**. Two pairs 0.005 mm apart in width read the same at every
   frequency. A pair 0.007 mm wider read 19 dB lower at 2 GHz *(worked example)*. A step between near-equal widths is a grid state,
   not physics. Never interpolate mesh results across the impedance axis: a straight line between two pairs missed a run by
