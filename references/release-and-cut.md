@@ -54,7 +54,7 @@ copy-back with `git checkout` once its diff is timestamp-only.
 - **Sweep the PENDING rows for dead checks at each milestone.** A PENDING row hides a check that can never pass: a moved path, a
   retired tool or a double-escaped regex. A check not yet reached names an output of a step that has not run. A dead check
   names a path, a tool or a pattern that no step of the tree produces. For each failing check under PENDING, grep the
-  generators for its path and its pattern. No hit means a dead check. One sweep cut the dead checks from 136 to 31
+  generators and the owner record templates for its path and its pattern. No hit in either means a dead check. One sweep cut the dead checks from 136 to 31
   *(worked example)*.
 - **An owner row at an open gate** reads `PENDING(<text>)`, never a waiver. The entry's `pending:` text carries the owner's decision row
   id. In `scripts/traceability.py`, PENDING(text) is a known gap with a logged fix. The check table keeps its FAIL. The
