@@ -278,7 +278,7 @@ A public export ships only what a fail-closed leak gate has read.
   from a secret to a temporary file. It sets `HWFS_PRIVATE_TERMS`. A missing or empty secret stops the job. Never commit the
   terms.
 - The gate refuses decision and review ids, private paths, order numbers, private vendor and person names, and the company name.
-- Two blind reviews come before every public push. The owner's word is the go.
+- One review round (`SKILL.md` §5 table) comes before every public push. The owner's word is the go.
 - Give the gate every id format the records use, the review finding ids included.
 - Anchor each pattern on word boundaries. The unanchored `E-[0-9]+` matched the `E-3` inside `X-LANE-3`.
 - Allow the public repository address as a `url:` entry. The address carries the account name, so the name pattern hits every

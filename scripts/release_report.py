@@ -214,7 +214,7 @@ def render(P, rep):
 def run(P, check):
     rc = 0
     for rep in P.get("reports", []) or []:
-        out = os.path.join(P.path("reports_dir"), f"{rep["name"]}.md")
+        out = os.path.join(P.path("reports_dir"), f"{rep['name']}.md")
         new = render(P, rep)
         if check:
             old = open(out, encoding="utf-8").read() if os.path.exists(out) else ""

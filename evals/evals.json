@@ -47,7 +47,7 @@
    "checks": [
     {
      "name": "blind-deep-review template: blindness clause, verifier default REFUTED with record access, REQUIRED/OWNER/DOCUMENT/ACCEPT merge, handoff header selftest",
-     "run": "grep -q \"Do NOT read any file named 80-reviews/\\${TAG}_\\*\" \"$SKILL\"/workflows/blind-deep-review.js && grep -q \"Default to REFUTED\" \"$SKILL\"/workflows/blind-deep-review.js && grep -q \"'ALREADY DECIDED'\" \"$SKILL\"/workflows/blind-deep-review.js && grep -q \"REQUIRED generator/YAML change\" \"$SKILL\"/workflows/blind-deep-review.js && \"$PY\" \"$SKILL\"/scripts/handoff_header.py --selftest"
+     "run": "grep -q \"Do NOT read any file named 80-reviews/\\${TAG}_\\*\" \"$SKILL\"/workflows/blind-deep-review.js && grep -q \"Default to REFUTED\" \"$SKILL\"/workflows/blind-deep-review.js && grep -q \"'ALREADY DECIDED'\" \"$SKILL\"/workflows/blind-deep-review.js && grep -q \"REQUIRED generator/YAML change\" \"$SKILL\"/workflows/blind-deep-review.js && grep -q 'reviewer-copy' \"$SKILL\"/workflows/blind-deep-review.js && grep -q 'reviewer-copy' \"$SKILL\"/workflows/delta-audit.js && \"$PY\" \"$SKILL\"/scripts/handoff_header.py --selftest"
     }
    ]
   },

@@ -1,5 +1,7 @@
 # 20-design/traceability.yaml — one entry per traceable item; the matrix 90-log/TRACEABILITY.md is generated (scripts/traceability.py).
 # Every D-/CC- row of 90-log/DECISIONS.md must be cited by some entry's `source` (the census lists unmapped rows). Stages in yaml order.
+# Every R-xx of 10-spec/SPEC.md needs an entry citing it, plus a T-nn row of 20-design/TEST_PLAN.md that names it or a NOT-INCLUDED
+# entry that cites its decision row. `--check` (a day-1 adopt gate) fails on a gap.
 stages:
   spec:
     reached: [{type: exists, path: 10-spec/SPEC.md}]

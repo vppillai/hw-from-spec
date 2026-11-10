@@ -5,7 +5,22 @@ impedance rules of the board (when a pair needs control, how to record the calcu
 covers the rest, from the stack-up and the launch to the solvers, the coupon, the bench and the blind review. The rules are tagged **[physics]**, **[fab capability]**, **[method]** or **[owner choice]**. A worked number is
 labelled *(worked example)*; the mechanism generalises, the value does not.
 
-## 0. The SI convergence playbook: what to run on day 1
+## 0.0 The SI tier of each lane: pick it first
+
+Not every multi-gigabit lane needs the full playbook. Give each lane a tier before any SI work **[method]**. Record the tier and its
+reason per lane in a CC row. List each lane's tier and the numbers behind it in the reviewer part of the hand-off, so
+reviewers see it. When a lane is between two tiers, take the higher one.
+
+| Tier | When | What closes the lane |
+|---|---|---|
+| 1 | The lane follows the interface's layout guide, and the guide covers its rate, length, stack-up and connector. The calculator shows clear margin. | A calculator impedance row (`references/pcb-layout-dfm.md` §3), the length and skew rules (§4), and the vendor layout checklist, item by item. |
+| 2 | The lane is longer than the guide allows, or its calculated margin is thin. | Tier 1, plus one field solve of the channel with a converged mesh (§7). |
+| 3 | The lane is near its limit, it has a custom launch or connector footprint, or it runs above ~25 Gb/s per lane. | The full playbook below: §0.2 in order, two solvers (§6), corners (§10). |
+
+A tier-2 result inside its uncertainty of the limit moves the lane to tier 3. The rest of this page is the tier-3 method. Tiers 1
+and 2 use the sections they name.
+
+## 0. The SI convergence playbook: what to run on day 1 (tier 3)
 
 One SI loop ran eight iterations against its mode-conversion limit *(worked example)*. Most of them fixed a fault that a day-1 check
 catches in minutes. Run the steps of §0.2 in order, before the first performance number. Plan three iterations: build and
@@ -30,6 +45,8 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 | A fix part that does not fit | A resistor pad solved in 3D, then found taller than the gap under the connector body | Most of an iteration | The housing height from the STEP read before you solve a fix (step 2) |
 | A neighbour left out of the model | A loop read 7 dB worse mode conversion beside its routed neighbour than alone. A void of the neighbour ran past its pad end and cut under one leg. | A G0 hold and three probe runs | A coupled model of every loop with a routed neighbour, and a 2D void-to-neighbour clearance check on every row (step 7) |
 | A thin margin trusted on one open solver | A result within 1 dB of its limit, from one solver class only | An owner decision taken on an unknown model error | An independent solver on the worst cases, before the margin closes anything (step 11) |
+| A mesh state shared by close widths | Two pairs 0.005 mm apart in width read the same. A pair 0.007 mm wider read up to 19 dB lower. A straight line across the impedance axis missed the next run by 2 dB. | A wrong option value sent to the owner | A fine-mesh run at each impedance corner of a near-limit verdict, and no interpolation across impedance (step 8) |
+| A fix that trades one corner for another | Each step of a lever passed one stacked corner and failed the other. No setting passed every corner. | A night of runs and an owner option table | Each lever valued at every stacked corner before it is called a fix (step 8) |
 
 ### 0.2 Day 1, in order
 
@@ -56,6 +73,7 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 8. **Put the bounds in the first sweep** (§10). Solve both window edges exactly. Add the registration and p/n etch corners. Add the module
    corners: the return-loss mask at one end and at both ends, and the slowest transmitter edge. Turn crosstalk on. Plot every metric to twice
    Nyquist.
+   Stack the corners that occur together: an impedance edge with a registration extreme. Read every lever at every stacked corner (§10).
 9. **Cross-check every run in the time domain** (§4, §9.5). Measure the p/n delay at the 50 % crossings of the step response. Compare it
    with the delay that SCD21 implies. Agreement means a pure skew, and a length retune fixes it. Disagreement points at an impedance
    asymmetry first. Overlay the p and n TDR. Tune the skew on the measured delay.
@@ -79,10 +97,14 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 - A number from a new host or a new tool image counts only after that host reproduces a result of record (§6.2).
 - Separate a model artefact from physics with one-knob controls before you change geometry. Swap the absorbing boundary type. Swap a
   solid wall for its stitching vias. Refine the mesh. A rise that holds through all three is in the geometry.
+- Never interpolate a mesh result across the impedance axis. Two widths a few microns apart can share a grid state that a third
+  width does not. A near-limit verdict at an impedance corner needs its own fine-mesh run (§7.1).
+- A lever that passes one stacked corner and fails the other is a trade, not a fix. Give its value at every corner, and take the
+  trade map to the owner (§10).
 
 ## 1. The rule of record
 
-- A number counts only when three things hold **[method]**. Its mesh has converged. A second solver agrees in band on the same geometry. The
+- A tier-3 number counts only when three things hold **[method]**. Its mesh has converged. A second solver agrees in band on the same geometry. The
   evaluator behind any eye or COM figure is calibrated against the official code.
 - The model is the layout of record **[method]**. It holds every void, post, plane and pad, and every via. A simplified twin may screen a
   variant. It never closes a requirement. One study read SCD21 −33.5 dB on a twin with a solid plane and no contact posts. The launch of record
@@ -218,6 +240,10 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 - Give every study knob a key that defaults to off or null **[method]**. A new key with a live default changes every older tagged run
   silently. Add the null row to the defaults table in the same commit. Prove it with one rebuild of an old run.
 - Fall through on a null explicitly. `dict.get(key, default)` returns `None` when the key holds null, so the default never applies.
+- Moving a loop away from a void edge can raise a new resonance in another band **[physics]**. One move cleared a peak near 12 GHz
+  and raised one near 6 GHz *(worked example)*. Read the whole band after every move, not only the old peak.
+- Draw the contact tails of every pad row that the coupled model draws **[method]**. Pads with no tails on one row split the two legs
+  of a nearby loop by 0.3 dB in magnitude. That reads as a flat mode-conversion floor down to 0.1 GHz *(worked example)*.
 - Name every derived threshold in yaml **[method]**. Code that subtracts a margin from a limit key counts the margin twice when the key
   moves. Check the record header against the yaml value.
 
@@ -258,6 +284,15 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
   route asymmetry on loops in one direction and cancel it on the other *(worked example)*.
 - Probe the knobs one at a time **[method]**: the plane void, the pair coupling, the pad trim. Change one, solve, and read SCD21. The
   knob that moves the conversion is the one to fix. A change of two knobs at once hides which one acts.
+- A length trim cancels an over-void imbalance at one frequency only **[physics]**. When one leg runs farther over a plane void than
+  its partner, that leg differs in impedance as well as in delay. A trim matches the delay only. It nulls the conversion near one
+  frequency and over-trims above it. One loop nulled near 10 GHz and rose about 1.4 dB per 0.05 mm of extra trim above it
+  *(worked example)*. Moving or splitting the trim cannot help when the trim already lies over the void. Only equal over-void
+  length on both legs flattens the conversion at every frequency.
+- A wider void on the trimmed leg is more trim, not a second knob **[physics]**. Read the void step and the skew step as one delay
+  balance. Give each step its cost at every corner.
+- A side-entry leg is the length compensation of its loop **[physics]**. Widening, narrowing or re-routing that leg trades the two
+  registration corners against each other, by up to 9 dB *(worked example)*. Report such a lever only with its values at both corners.
 - Record the variants that failed beside the one adopted. They are the reason for the adopted form.
 
 ## 5. Breakout and routing patterns
@@ -287,6 +322,9 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
   starts; a crash in the last step then loses nothing.
 - Size the FEM memory before a run **[method]**. Second-order FEM needs tens of kB per tetrahedron. A full pad-row model can need far more
   memory than one isolated loop. Record the size limit, then pick the cross-check case that fits.
+- An interpolating FEM sweep solves several frequencies at once, and each one needs its own memory. A coupled model of about
+  1 M tetrahedra needed 70 to 80 GB *(worked example)*. Ask for the memory at submit: a scheduler does not raise the limit of a
+  running job.
 - Under a container cpuset, the MPI launcher can refuse a FEM job for lack of slots. Allow oversubscription (Open MPI:
   `OMPI_MCA_rmaps_base_oversubscribe=1`), and let the job's slot count bound the ranks.
 - Test each suspect of a solver disagreement on its own, on a cheap case. Compare a closed box with absorbing faces. Compare direct
@@ -368,6 +406,19 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 - **Step 0: check the licence feature, not the install.** Installed binaries do not mean a usable solver. Query each licence server
   alone for the solver's feature. A multi-server path can report only the first server. Check write access to the job folder too.
 - A shared licence is somebody else's work tool. Follow the etiquette of `references/agent-ops.md` §5.2.
+- Compare SDD21 first when two solvers disagree on a small conversion term. When SDD21 agrees within a few hundredths of a dB, both
+  decks hold the same model. The conversion gap is then mesh or solver error.
+- A fixed dielectric conductivity fitted at a high frequency gives a loss tangent far too high low in the band. A fit at 20 GHz
+  read about 20 times too high at 1 GHz *(worked example)*. Both solvers carry it, so the cross-check stays fair. The absolute
+  loss low in the band does not.
+- **When the shared solver is busy, keep working under an agreed rule.** Run the commercial solver only when no other user waits
+  for a licence or a host. When the cluster stays full, do not hold a gate for it. Agree an open-solver acceptance rule with the
+  owner instead:
+  1. Move the pass line by the solver-agreement margin: the largest gap seen on loops where the two solvers agreed
+     *(worked example: 0.6 dB)*. A loop where the commercial solver read better keeps the plain line.
+  2. Give every loop within 1 dB of its line a fine-mesh run. The fine value is the value of record.
+  3. Show by calculation that the fab spreads stay inside the corners of record.
+  4. Rerun every loop on the routed copper at the layout gate. Add the commercial solver there only for a loop inside its margin.
 
 ## 7. Convergence and meshing artefacts
 
@@ -381,6 +432,16 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
   10 dB off *(worked example)*.
 - The medium-mesh bias has no fixed sign **[method]**. A corner that fails by a small margin on the medium mesh can pass by several dB
   on the fine mesh. Run the fine mesh before you change geometry for a small fail.
+- The fine-mesh correction depends on the corner **[method]**. One loop read 3 to 5 dB better at fine on one registration corner, and
+  0.3 to 0.7 dB worse on the other *(worked example)*. A medium fail at a corner where fine reads worse does not pass at fine.
+  Measure the correction per corner. Never carry it over from another corner.
+- The medium mesh can snap close widths to one grid state **[method]**. Two pairs 0.005 mm apart in width read the same at every
+  frequency. A pair 0.007 mm wider read 19 dB lower at 2 GHz *(worked example)*. A step between near-equal widths is a grid state,
+  not physics. Never interpolate mesh results across the impedance axis: a straight line between two pairs missed a run by
+  2 dB *(worked example)*. A near-limit verdict needs a fine-mesh run at each impedance corner.
+- A flat mode-conversion floor at low frequency is a static p/n imbalance **[method]**. Look for it in the model first: a missing
+  contact tail, or a grid state that one pair width hits. Compare the per-port through magnitudes with a second solver. A floor
+  that no lever moves is not the lever's physics.
 - Judge FDTD time convergence on the port tail, not only on the energy **[method]**. A baseband Gaussian excitation carries DC, and an absorbing face
   cannot remove a static field. The energy then stalls while every port voltage has died. A DC-free excitation (the derivative of a Gaussian)
   converges fast and gives the same S-parameters.
@@ -414,6 +475,12 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 - Inspect every curve for features no physics makes: a vertical step, a one-point spike, a jagged band **[method]**. Confirm them with a
   discrete sweep or a finer mesh before you judge the curve. Interpolation and meshing can invent resonances.
 - Below the numerical floor, report "negligible", not a number. A crosstalk value deep under the floor is solver noise.
+- Refine every metal face of a FEM model, except a plane you mean to skip **[method]**. One filter skipped every face that touched
+  a plane. It also skipped the via barrels through that plane. Their walls got coarse triangles that folded, and the mesher
+  reported overlapping facets *(worked example)*. Check the body count and the total volume after each heal or filter. Fragment
+  all bodies in one call: one call took under a minute, and body-by-body cuts took over half an hour *(worked example)*.
+- Measure FDTD throughput from the timestep counter after the first minute. The solver checks its end criteria often at the
+  start, so an early speed reading swings by 2 to 4 times.
 
 ### 7.3 The voxel and dropped-cell artefact
 
@@ -482,6 +549,12 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 - Plot every NEXT and FEXT pair at one end, then the power sum or ICN per victim. Several aggressors that each pass a pair limit can fail
   together.
 - Bound every exception ("except at transitions") by its length and depth. An open exception lets a real discontinuity through.
+- A loop that is nearly mirror-symmetric hides a direction error in SCD **[method]**. Both drive ends read alike. The end-specific
+  terms (SDD22, the crosstalk ends, the COM orientation) do not hide it. Check those terms after a direction fix.
+- Never fill a missing drive run from another entry. A fill such as S22 = S11, or a reciprocity swap, hides the missing run. Mode
+  conversion is not reciprocal in the needed sense: SCD21 equals SDC12, not SCD12. Raise an error on a missing run.
+- Create a cached reference only on an explicit freeze command **[method]**. A run that writes the reference when the file is
+  missing then compares against itself. Refuse a reference frozen under other inputs.
 
 ### 9.2 What the curves say
 
@@ -539,7 +612,7 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 - Run first-order compliance (COM, ERL) on the cascade before any bit-by-bit run. It finds a gross fault cheaply.
 - Draw the eye mask at its stated BER and give the margin as a number in mV and ps **[method]**. A margin nobody can read becomes "adequate".
 - Reach the target BER with a statistical eye or the receiver model's SNR, not a counted BER **[physics]**. Zero errors in N bits means a BER
-  under about 1/N only.
+  under 3/N at 95 % confidence (4.6/N at 99 %) only. Size the bench run length from that.
 - State the basis of the BER target and the alternatives: an internal target, the standard's pre-FEC limit, the silicon vendor's figure.
 - Use a long PRBS with a different seed per lane. Equal seeds make the lanes switch together. Add a worst-case pattern from the pulse response.
 - Drop the start-up transient and the equaliser training bits before you count. Use at least 32 samples per UI.
@@ -593,6 +666,13 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
   their curves.
 - Rank by the margin number, the worst value against the limit, not by PASS or FAIL. Two passing options can differ by 10 dB.
 - Run the fab corners on the winning option before you adopt it. A winner at nominal can lose at a corner.
+- **Stack the corners that occur together, and check both bounds** **[method]**. A fix can move the fail from one corner to the
+  other. One skew step passed the low-impedance corner at one registration extreme and failed the other extreme
+  *(worked example)*. Build a trade map: each lever value against every stacked corner, with the value of record in each cell.
+  When no setting passes every corner, give the owner the options with their values. Put the root-cause option beside them, even
+  when it costs a new layout study.
+- Reversing the drive end mirrors a loop **[physics]**. The two registration corners along the mirror axis then swap values between
+  SCD21 and SCD12. The worst value over the pair does not change. Read both corners before you call a direction change a new risk.
 
 ## 11. Margin rules
 
@@ -732,6 +812,12 @@ Give each reviewer the frozen study, the yaml, the scripts and this list. Give n
 46. Did one-knob controls (boundary, wall, mesh) separate each surprising rise into artefact or physics?
 47. Does each thin margin carry an independent-solver correlation? Do both decks draw the same copper?
 48. Does each new study key default to off or null, so older runs keep their geometry?
+49. Is any value interpolated across the impedance axis? Does each near-limit impedance corner have its own fine-mesh run?
+50. Does each lever carry its value at every stacked corner? Did a fix move the fail to another corner?
+51. Does a skew trim stand against an over-void imbalance? Is the conversion flat across the band, or nulled at one frequency?
+52. When the commercial solver was unavailable, which acceptance rule replaced it? Did the owner approve the rule?
+53. Does any matrix entry come from a fill (S22 = S11) or a reciprocity swap instead of its own drive run?
+54. Does each lane's tier (§0.0) hold for its rate, length and margin? Judge the lane by the evidence of its tier only. Items 3 to 53 apply to tier-3 lanes.
 
 ## 16. Records
 

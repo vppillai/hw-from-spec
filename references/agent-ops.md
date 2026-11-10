@@ -121,17 +121,18 @@ A vague brief costs a rework round. Brief every worker from `templates/AGENT_BRI
 - Freeze: start from a clean tree (`git status --short --untracked-files=no` empty). Run `git worktree add --detach <frozen> HEAD`, then `git -C
   <frozen> submodule update --init`. The skill submodule is empty in a fresh worktree, and the `scripts` link dangles until then. Reviewers read only
   there and write only their own report file in the live repo.
-- Hand-off document v-n: generated header (`scripts/handoff_header.py`: board of record, HEAD md5 MATCH, package, case version, clean tree), the
-  scope per specialty, the known/open list with dispositions, the claims of the round (for a delta audit) — the ONLY briefing. Plus the one-paragraph
-  waiver list without reasoning so verifiers spend their budget on new defects.
+- Hand-off document v-n (`templates/REVIEW_HANDOFF.md`). The reviewer part is the ONLY briefing. It holds the generated header (`scripts/handoff_header.py`:
+  board of record, HEAD md5 MATCH, package, case version, clean tree) and the artefacts with md5. It adds the role's checklist, the claims of
+  the round (for a delta audit) and the one-paragraph waiver list without reasoning. The verifier annex holds the decision log, the known/open list with
+  dispositions and the errata. Only the verifier gets the annex (SKILL.md §5 steps 3 and 4).
 - Reviewers never read other reviewers' output nor the author's reasoning (name the forbidden file patterns explicitly in the prompt).
 - Measure each reviewer claim on the model before you act on it. A reviewer that reads a render can misread a clearance or a flow direction.
   The adversarial verification bullet below gives the method.
 - External models run through a second agent CLI: `agent -p --mode ask --model <m> --output-format text "<prompt>"` from the frozen worktree. The ask
   and plan modes are read-only. `-p` alone has shell access, so never use it for reviews. Keep the prompt ≤ ~30 kB (observed CLI limit, unversioned).
-  Name the files in the prompt; the model reads them. The packet ceiling is ≈ 440 kB (observed: the CLI returns 0 bytes above it). Rotate two vendors
-  per role. An EMPTY report is a failure. Retry once with the fallback model and note the substitution. If the retry also fails, write the failure
-  into the report and return zero findings. macOS has no `timeout`. Use background + PID + until-loop within the §5 ceiling.
+  Name the files in the prompt; the model reads them. The packet ceiling is ≈ 440 kB (observed: the CLI returns 0 bytes above it). Rotate the vendors
+  between seats. An EMPTY report is a failure. Retry once with the fallback model and note the substitution. If the retry also fails, write the failure
+  into the report and return zero findings. macOS has no `timeout`. Run in the background and wait on the completion notification or the `^EXIT` line (§5).
 - **Pairing that worked for a print kit (2026-09-30):** a **technician persona on the kit folders AS RECEIVED** in parallel with an **FDM DFM persona
   measuring the meshes**. The technician has no repo and no git. It unzips the 3MFs and measures the STLs. Its task: "print the fit-check set and tell
   the engineer whether it fits". The DFM persona measures orientation, overhang angles, seat datums, and slicer keys from the embedded config, not the
@@ -172,7 +173,7 @@ A vague brief costs a rework round. Brief every worker from `templates/AGENT_BRI
   One round found a requirement closed on a simplified model; the owner's closure reversed *(worked example)*.
 - The author recomputes a reviewer's number too. One reviewer's figure came from a point of another window; the disposition says so.
 - **Run the cheap checks before each fix-check round.** Run the stale-number sweep over every document a decision batch touched. Run the
-  coverage script (every requirement named in the plan, every plan row traced). Check each stale hit's meaning before you replace it. Six
+  coverage script: `scripts/traceability.py --check` (every R-xx with an entry and a T-nn row, every decision row traced). Check each stale hit's meaning before you replace it. Six
   fix-check rounds ran before one found no MAJOR, and most of their findings were of this kind *(worked example)*.
 - External reviewers can grade on another scale (High / Medium / Low). State the mapping to BLOCKER / MAJOR / MINOR before you count
   findings across rounds. A fix-check repeats old ids as closure rows. Count only the rows that are not in a closure state.
@@ -188,8 +189,8 @@ A vague brief costs a rework round. Brief every worker from `templates/AGENT_BRI
 - **Triage as a realistic sceptic.** Ask two questions per finding. Could it change copper, a part, an assembly step or a test verdict?
   Is its margin thin, or did the design change since its last pass? Two yeses make it gating. Otherwise record it, and do not gate on
   it. No pedantic engineering, and no missed item that a bench would find in the first hour.
-- **A milestone gets a fresh double-blind round.** The milestones are a spec pass, a closed SI loop, a study and a tag. A fix-check round
-  with fresh reviewers follows the fixes. Merge into one disposition per discipline. Each row reads FIX, OWNER, CLOSED or REJECTED.
+- **A milestone gets a fresh double-blind round.** The round types, the roster cap and the fix-check stop rule are in the SKILL.md §5
+  table. Merge into one disposition per discipline. Each row reads FIX, OWNER, CLOSED or REJECTED.
   Check every BLOCKER and MAJOR against the frozen package before its row is written. Bring the owner one recommended option per OWNER row.
 
 ### 4.1 Persona panels
@@ -290,6 +291,30 @@ prove the host. The rules below keep the host safe and the jobs alive.
 - A remote job folder with no command file and no log after hours means the job never started. Check the folder before you wait.
 - Run a fetch from the checkout that submitted the job. A runner that names the remote folder after the checkout finds nothing from
   another one.
+- **A run outlives the coordinator too.** Start each long run detached, and write a resume file beside the study. It lists how to
+  check, fetch, compare and clean up each run. A fresh session then resumes from the file, with no memory of the last one. One
+  overnight loop ran about 30 runs that way while the coordinator was offline *(worked example)*.
+- **A watcher re-arms after each landing.** A watcher that fires once and stops misses every later landing. Re-arm it in the same
+  step that reads the result.
+- Send only portable job kinds to other hosts. Allow a list of container jobs known to run there; do not block a list of bad
+  ones. A job with a host-only interpreter path or CAD tool fails elsewhere. Two such moves failed in one day *(worked example)*.
+- Keep one slot free on the only host that runs host-only work (CAD, circuit simulation, the case chain). Send the portable solver
+  runs to the remote lanes first.
+- Check a new lane for the image and the job inputs before you send it work. Each miss fails a job within seconds. A sandbox
+  probe is not a lane test: a lane takes routed work only after one real job ends with rc 0.
+- Read a queue spread over many hosts from the hosts themselves, in one view. A live runner with a start file is running. A live
+  runner without one is queued. No runner is dead. The first such view found many jobs queued on one host beside idle ones.
+- Move a queued job in a fixed order. Stop its runner (SIGSTOP). Check that it has not started. Then kill the runner, mark the job
+  moved, and submit it on the new lane. A job that started in the gap gets SIGCONT and stays. A move then never loses progress.
+- Strip the registry prefix before you compare image names. One container tool lists `docker.io/library/<name>`, another `<name>`.
+- Prune dangling images only. `docker image prune -a` deletes every tagged image that no container uses, the lane images too.
+- Stopping a local `ssh host 'bash -s' < script` does not stop the remote script. Kill the remote script before a rerun. Give each
+  run's containers a unique name, so an old exit trap cannot remove the next run's containers.
+- A remote job runs with the runner copy of the checkout that sent it. Merge a runner fix into that checkout first.
+- Two local VMs on two machines can answer on the same loopback address and port. A shared SSH control path then reuses the local
+  master. Set `ControlPath none` on such an alias, and read `nproc` and the OS release after the first login.
+- An arm64 image reads another package archive host than amd64. Pin that host to the snapshot too, or apt stays unpinned with no
+  error. Check that each Python wheel the image needs exists for arm64.
 
 ### 5.2 Shared licences and borrowed compute
 A licensed solver on a shared cluster belongs to other people's work. Your job runs at the lowest priority.
@@ -309,6 +334,18 @@ A licensed solver on a shared cluster belongs to other people's work. Your job r
 - **Clean up when a set ends**. Remove every file of yours from each host: project folders, scheduler logs, temp and result folders.
   End every session of yours. Record a cleanup table per host with the commands and a final empty listing.
 - Name no company host, path, licence server or ticket in a committed record. Add those terms to the public leak gate.
+- **Run only when nobody waits.** Before each submit, check that no other user waits for a licence or a host. When the cluster
+  stays full, keep the work going on the open solver under an agreed rule (`references/high-speed-si.md` §6.3).
+- Give every solver session a time limit inside the batch job. Kill the session's processes on a timeout, and skip the solve when
+  the build failed. A session that never started held a seat for about an hour *(worked example)*.
+- A job waiter treats an empty scheduler answer as unknown, not as done. One dropped SSH link made a chain collect a running case
+  and skip the next submit *(worked example)*.
+- Load the licence environment inside every scheduler job shell. Without it, the tool asks the default pool for features it does
+  not hold. The message reads like a version error.
+- Give the memory limit in the form the scheduler documents, and test a one-line job first. A memory reservation in the wrong
+  field can make an idle host unschedulable.
+- A link that dangles on one host can be live on another that mounts the same home. Check every host that mounts it, and search
+  the runner scripts for the path, before you remove anything in a shared home.
 
 ### 5.3 Shells, scripts and worktrees
 - Bash reads a running script as it goes. Lines appended to it run at the end of the current run. Never edit a script while a job
@@ -319,6 +356,14 @@ A licensed solver on a shared cluster belongs to other people's work. Your job r
 - Two writers can share one file if each owns named sections and edits by exact replacement. Check the file's modification time
   before a scripted write, so a concurrent edit is never lost.
 - An exact-replace helper must assert that the old text is not empty. Python's `str.replace("", x)` puts x between every character.
+- Check an edited script with `bash -n` before you restart it. Start a watcher with `nohup bash -c '...'`, so a `pkill -f` for
+  the runner does not kill the watcher too.
+- `pgrep -c` exits 1 when nothing matches. In `n=$(ssh host 'pgrep -c x') || n=99` an idle host reads busy. Add `; true` in the
+  remote command. Match with a bracket (`[r]unner`), so the probe does not count itself.
+- After `eval "set -- $line"`, the positional parameters are the command's arguments. Save a wrapper's own arguments in named
+  variables first. Run `git diff --stat` after any shell wrapper that touches files.
+- Run `--help` only on a script whose header shows an argument parser. A script without one starts its full job on any argument.
+- Match a log for completion on the wrapper's exact last line. A grep for "done" matched a package install line.
 
 ## 6. Reporting
 - Every report, record and README follows `references/writing-style.md`: lead with the result, second person, active voice, present tense,

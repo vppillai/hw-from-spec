@@ -5,7 +5,7 @@ they test a claim. The method is in `references/agent-ops.md` §4.1. Delete the 
 
 ## How to use
 
-1. Pick the personas the round needs. A full gate round takes all that fit the scope.
+1. Pick the personas the round needs, by scope. The roster cap and the round types are in the skill's `SKILL.md` §5 table.
 2. Give each reviewer its persona block, its package slice, the severity table and the output table format.
 3. Keep each slice small enough for a browser reviewer to read in one chat: about 300 KB or less.
 4. Run each persona on at least two model families. Rotate the families between rounds.
@@ -68,8 +68,8 @@ Personas find depth inside a discipline. These loops find what falls between dis
 7. **Coverage map.** Record which files and sections each round read. The next round targets the unread ones.
 8. **Red-team the review.** Ask which classes of error all of these personas would miss.
 
-Schedule: the persona panel and loops 1, 2, 3 and 8 at every gate. Loops 4 and 5 run in CI. Loops 6 and 7 run at the spec gate
-and the layout gate.
+Schedule: the loops are optional extras of a round (the skill's `SKILL.md` §5 table). Loops 4 and 5 run in CI, where they cost
+no reviewer run. Run the others when the gate's run cap allows.
 
 ## Model families
 

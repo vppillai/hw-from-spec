@@ -2,6 +2,7 @@
 """scripts/handoff_header.py — the generated header block of the review hand-off (blind-review protocol, references/agent-ops.md).
 
   python scripts/handoff_header.py [PKG_DIR]     # default: the fab package whose board_id.txt md5 == md5 of the board at HEAD (content match, release_report.pkg_for_board)
+  python scripts/handoff_header.py --reviewer-copy HANDOFF.md OUT.md   # the reviewer part only: cut at the "Verifier annex" heading
   python scripts/handoff_header.py --selftest
 
 Prints a markdown table read from the package's board_id.txt (keys: board, md5, commit, built, plus any counts), the committed case
@@ -9,7 +10,7 @@ yaml (`case.version`, optional: paths.case_yaml) and the board-mesh provenance s
 verbatim under "## 0" of the hand-off; nothing in it is typed by hand. A hand-off from a dirty tree, or one that names a board the frozen
 worktree does not carry, invalidates the review — both are printed as MISMATCH / DIRTY, never silently.
 """
-import datetime, hashlib, json, os, subprocess, sys, tempfile
+import datetime, hashlib, json, os, re, subprocess, sys, tempfile
 
 import yaml
 
@@ -68,6 +69,20 @@ def header(P, pkg=None):
     return "| Item | Value |\n|---|---|\n" + "\n".join(f"| **{k}** | {v} |" for k, v in rows)
 
 
+ANNEX = re.compile(r"^#+\s*Verifier annex", re.M | re.I)
+
+
+def reviewer_copy(src, out):
+    """Write the reviewer part of a hand-off (everything above the "Verifier annex" heading) to `out`. Exit 1 when the heading is
+    missing: a hand-off without the cut cannot be sent to a reviewer (templates/REVIEW_HANDOFF.md)."""
+    text = open(src, encoding="utf-8").read()
+    m = ANNEX.search(text)
+    if not m:
+        print(f"handoff_header: no 'Verifier annex' heading in {src}: refusing to write a reviewer copy"); return 1
+    open(out, "w", encoding="utf-8").write(text[:m.start()].rstrip() + "\n")
+    print(f"handoff_header: reviewer copy {out} ({len(text[:m.start()].splitlines())} lines; annex cut)"); return 0
+
+
 def selftest():
     d = tempfile.mkdtemp(prefix="hwfs_ho_")
     os.makedirs(f"{d}/30-board/kicad/b"); os.makedirs(f"{d}/20-design")
@@ -93,11 +108,23 @@ def selftest():
     assert "MISSING" in h and "no package" in h, ("HEAD now carries a board no package records", h)
     P.cfg["paths"]["board"] = "30-board/kicad/none.kicad_pcb"
     assert "no board in HEAD" in header(P), "a project before G1 has no board: say so, no slicing of a message"
-    print("selftest OK")
+    # the reviewer copy carries no annex text (review 0.12.3): the template's own annex and a project-style one
+    t = tempfile.mkdtemp(prefix="hwfs_rc_"); tpl = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "templates", "REVIEW_HANDOFF.md")
+    for src in (tpl, os.path.join(t, "h.md")):
+        if src != tpl:
+            open(src, "w").write("# H\n## 2. Files\nSPEC.md\n\n## Verifier annex (verifier only)\n### V.1 Decision trail\nCC-001 OPEN\n")
+        out = os.path.join(t, "r.md"); assert reviewer_copy(src, out) == 0
+        r = open(out).read(); annex = open(src).read()[ANNEX.search(open(src).read()).start():]
+        assert not ANNEX.search(r) and "Decision trail" not in r and "DECISIONS.md` rows" not in r, "annex text in the reviewer copy"
+        assert all(l not in r for l in annex.splitlines() if len(l) > 12 and l.startswith(("###", "`90-log", "CC-", "OPEN owner", "Applied ahead"))), "annex lines leaked"
+    open(os.path.join(t, "bad.md"), "w").write("# H\nno cut\n"); assert reviewer_copy(os.path.join(t, "bad.md"), os.path.join(t, "x.md")) == 1, "no heading = refuse"
+    print("selftest OK (header, reviewer copy without annex)")
 
 
 if __name__ == "__main__":
     import argparse
-    ap = argparse.ArgumentParser(description=__doc__.split("\n")[0]); ap.add_argument("--selftest", action="store_true"); ap.add_argument("--project"); ap.add_argument("args", nargs="?")
+    ap = argparse.ArgumentParser(description=__doc__.split("\n")[0]); ap.add_argument("--selftest", action="store_true"); ap.add_argument("--project"); ap.add_argument("args", nargs="?"); ap.add_argument("--reviewer-copy", nargs=2, metavar=("HANDOFF", "OUT"))
     a = ap.parse_args()
+    if a.reviewer_copy:
+        sys.exit(reviewer_copy(*a.reviewer_copy))
     sys.exit(selftest() if a.selftest else print(header(Project.find(arg=a.project), a.args)))

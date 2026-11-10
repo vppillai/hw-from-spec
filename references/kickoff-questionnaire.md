@@ -63,7 +63,7 @@ parts ≥ 2 mm, drain holes, post-cure warp, no snap or press fits; `references/
 radii, threads, anodising build-up, 5–10× the price; `references/cnc-enclosure.md`). Four options: the AskUserQuestion limit.
 
 ## B. PCB build (`references/pcb-layout-dfm.md`)
-**B1 Layers and thickness** [ee, both]. **RECOMMENDED: 4 layers, 1.6 mm, the fab's default stack-up template named in the yaml** — a solid GND plane under
+**B1 Layers and thickness** [ee, both]. **RECOMMENDED: 4 layers, 1.6 mm, the fab's default stack-up template named in the yaml** — a solid reference plane under
 every signal, a power plane, the template's numbers in the CAD physical stack-up. *Alt:* 2 layers — cheaper; no reference plane, no controlled
 impedance, more via work. *Alt:* 6 layers — for dense high-speed; cost ×1.6, longer lead time.
 **B2 Copper weights** [ee, both]. **RECOMMENDED: 1 oz outer / 0.5 oz inner** — 0.09 / 0.09 trace-space at the worked-example fab, 0.10 mask dams, the fab's
@@ -184,7 +184,7 @@ the vendor's map while the API passed (`references/dfm-printed-enclosure.md` §1
 gate. *Alt:* design at the line — the mesh samples 0.01 under and the argument is lost.
 
 ## E. Verification (SKILL §5, `references/pcb-layout-dfm.md`, `references/dfm-printed-enclosure.md`)
-**E1 Review rounds per gate.** **RECOMMENDED: one review round (in-session + two external models per role, adversarial verifiers, merge) before
+**E1 Review rounds per gate.** **RECOMMENDED: one review round (the `SKILL.md` §5 table: two model families per seat, one verifier, merge) before
 G0, G1, G2, the board order and the case order; a delta audit after a bounded change** — external models through a read-only CLI. *Alt:* in-session
 only — same model family, weaker; say so in the merged report. *Alt:* owner review only — no blind pass; the owner reads every heat map.
 **E2 Visual inspections.** **RECOMMENDED: routing inspection on ≥ 40 px/mm tiles, silk legibility read from renders, six face renders per printed

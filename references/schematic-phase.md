@@ -93,7 +93,7 @@ board as MISSING at G1 (no routed board yet) — that is expected and said in th
 
 1. G0 cell written by the owner → 2. `20-design/*.yaml` from SPEC (every spec value that must change → CC row OPEN first) → 3. `gen/build_sch.py`
 (`--check` green, ERC zero errors, netlist) → 4. map checks → 5. G1 pack → 6. `scripts/traceability.py` entries for every spec requirement now
-landing in the yaml (stage `schematic`) → 7. freeze, hand-off, blind round (SKILL §5), merged report `80-reviews/G1_merged.md` → 8. REQUIRED
+landing in the yaml (stage `schematic`). Its R-ID census fails on an R-xx with no entry, or with no T-nn row and no NOT-INCLUDED decision → 7. freeze, hand-off, blind round (SKILL §5), merged report `80-reviews/G1_merged.md` → 8. REQUIRED
 items applied, regenerate, re-run 3-6 → 9. ask for the G1 cell (SKILL §1.1). Layout CAD starts only after the cell exists.
 
 ## 6. Studies before the next revision's spec
@@ -217,3 +217,20 @@ Run these before the spec fixes a target or a board split. A study of §6 cites 
   or change the converter mode. Size the filter with a circuit simulation of the release.
 - **State the life of every wear part in units tested**. A connector rated for a few hundred mating cycles serves that many units
   per port. Write the spare count and the swap steps into the spec. Do the same for a reference part that each test consumes.
+- **A slow RC edge needs a Schmitt input**. Plain logic inputs have an input transition-rate limit. Put a Schmitt buffer between an
+  RC filter and a latch input.
+- **A single RC hold detector has a fixed ratio between hold and release**. The pull-up must be about ten times the press resistor
+  to settle under the low threshold. So the release recovery is about ten times the hold. Gate any indicator with the arm state,
+  and count that blind window in the review.
+- **An open-drain power-good pulled up to a live rail reads high on an unpowered controller**. Power-good alone never proves the
+  input rail. Pair it with an ADC read of the output.
+- **Check a datasheet thermal resistance against the whole board, not one part**. A sheet model fitted to the vendor's test board
+  gives the board's own loss per kelvin. Mutual heating of the parts adds to each rise.
+- **A converter efficiency curve is not a switch loss**. Before you borrow a reference efficiency, check its frequency, its parts
+  and its gate-drive source. Correlate a bottom-up loss model at the reference design's own point first. Then state its sign.
+- **Count the controller's internal regulator loss** when the gate drive comes from the input. Every gate charge then passes
+  through it, and the controller heats beside the switches.
+- **Derive a steady module current from the standard's stated supply voltage**, not from power over the pad minimum. Every
+  I²R row moves with it.
+- **A pass mark against a meter that reads the same shunt as the device checks only the ADC**. Add an independent current
+  reference, so the shunt value and its drift fall inside the check.

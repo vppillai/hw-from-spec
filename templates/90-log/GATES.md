@@ -3,15 +3,14 @@
 # GATES.md — owner approvals (scope both: G0 → G1 → G2 → board order + case order → release) {{both}}
 
 The owner writes the approval cells and the release line; **agents never write either** — they ask (skill `SKILL.md` §1.1) and wait. A valid
-approval cell reads `<owner name>, <YYYY-MM-DD>, <what was approved: SPEC rev / schematic commit / board md5-8 / case version + record md5-8 (the case gates)>`; an empty cell is
+approval cell reads `<owner name>, <YYYY-MM-DD>, commit <sha> | md5 <md5-8>` (`scripts/gate_check.py --md5 <gate>` prints the md5-8 of the gate's artefact); an empty cell is
 `_not yet approved_`. The release reports read this file and stay DRAFT until the owner writes the release phrase
 **into the Release row's approval cell** and commits it as `project.owner`. The release phrase is the words named by `markers.release_regex` in
 project.yaml. Do not quote them in prose anywhere in this file. `scripts/gate_check.py --release` reads the cell and the line's git author.
 `scripts/gate_check.py <gate>` reads a gate cell. The next phase's generators refuse to run while it says NOT approved. A chat approval is quoted verbatim (date/time) under the table; the cell stays the owner's.
 
-**One review round** (skill `SKILL.md` §5) = for every role of the round's role set, one in-session reviewer + two external models of a second
-model family. The in-session fallback may stand in for the external models, and the merge says so. Each role also gets one verifier with record access.
-The round produces one merged report in `80-reviews/<round>_merged.md`. Every gate below needs one.
+**One review round** is defined in the "Review rounds" table of skill `SKILL.md` §5. It produces one merged report in
+`80-reviews/<round>_merged.md`. Every gate below needs one.
 
 **The manufacturability bar** is owner decision {{D-BAR}} from the kickoff questionnaire (default = zero / zero / no waivers). Scripts enforce it.
 Board: CAD DRC 0 errors / 0 unconnected / **0 warnings**. Fab DFM mirror **0 open at either of the fab's grades** (for example Danger / Warning), unless a dated `dfm_accepted` entry with {{ee,both}}
@@ -33,5 +32,8 @@ A waiver is a dated decision row plus a machine-readable accept entry the gate r
 
 Owner instructions quoted verbatim (with date/time) go here when the owner delegates a step; the cells above stay empty until the owner fills them.
 A delegation line starts with `> delegated:` and names its gate: `> delegated: G0, <owner>, <YYYY-MM-DD HH:MM>, "<owner words>"`.
+The owner commits the line. A line an agent committed does not count.
 `scripts/project.py gates-required` fails while a next-phase artefact exists and its gate has neither a cell nor such a line.
+`scripts/gate_check.py <gate>` and `gates-required` read the `commit` or `md5` token of a cell, or the commit of a delegation line.
+They fail with STALE APPROVAL when the artefact changed after it, and with UNBOUND when a cell has no token.
 The pairs are: schematic → G0, board → G1, fab package → G2, STL set → G0, `ORDER_<rev>.md` (mech) → M1.
