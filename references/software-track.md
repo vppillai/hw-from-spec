@@ -33,7 +33,18 @@ reason and one worked example.
 - One `--selftest` run in the adopt gates. It needs no hardware and no network.
 - The selftest patches `time.sleep` on module and instance attributes, never on a module global of the tool. A global of the tool is not
   visible from a package.
-- Under the patched `time.sleep` two samples share one timestamp, so a slope reads None. Assert the temperature, not the slope.
+- Under a no-op patched sleep (no virtual clock), two samples share one timestamp, so a slope reads None. Assert the temperature, not the slope.
+- **Look at the stack twice, a minute apart, before you call a slow selftest a hang.** A test that sleeps in real time through
+  simulated waits sits idle in `time.sleep`. Its wall time is many times its CPU time. One part took 25 minutes that way
+  *(worked example)*.
+- Run simulated waits on a virtual clock: `time.sleep` moves `time.monotonic` and `time.time` forward at once. Give each
+  selftest step a time budget. Past the budget, print every thread's stack and exit non-zero.
+- A virtual clock breaks checks that race a real thread or a real process. Only the thread that starts the clock sleeps on it.
+  A server thread, and a check that waits on a real process, use a real sleep. A timed event reads the virtual clock, never a
+  `threading.Timer`. When the virtual clock ends, keep its added offset, so the clock never steps back.
+- **Name every shared temp file and lock of a selftest after its own process id.** A fixed name collides with a second selftest
+  on the same host. The test then passes alone and fails in a matrix run. Keep one check that holds a fixed lock name while
+  the selftest runs, so a regression fails at once.
 
 ## 3. Carve a package out of the working tool
 - Move code verbatim. Keep the tool's selftest byte-identical as the fidelity proof. A moved line that changes is a decision, not a move.
@@ -77,6 +88,9 @@ reason and one worked example.
   bound is under a signed limit. FAIL only when the count alone exceeds it. An unsigned limit gives INCONCLUSIVE, never FAIL.
 - **List every reason an init step can give, then check that a table row reads each one**. An unread reason falls through, and a
   dead lane can end at PASS.
+- **Derive a set from the table of record, never from a literal copy.** A copied list of test phases missed one new step. A fault
+  of the test unit could then still fail the item under test *(worked example)*. Derive each per-code list from the table of
+  codes too, so a new code gets its entry.
 
 ## 6. Fakes
 - **Write the fake's default as the field default**. A fake that inserts itself after the open hides the normal case. *Reason*: every real

@@ -186,6 +186,11 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A study table quoted a number that a later decision had moved. Read the generator before you copy a number into the spec — 2026-11-06 [process/records].
 - A generator `--check` that no gate ran drifted in silence. One gate that runs every check and lists every red one showed four stale records at once — 2026-11-06 [process/gates].
 - A verdict field that a person typed broke the file's own rule. Compute the verdict in a check from the inputs — 2026-11-06 [process/records].
+- A `--no-commands` traceability run never fails a command row, and it hid real failures. Only the run with commands counts at a gate — 2026-11-10 [process/gates] (`release-and-cut.md` §3.1).
+- A checker cached a FAILED command result and replayed it, so a load flake stayed FAILED on every run. Never cache a failure — 2026-11-10 [process/gates] (`release-and-cut.md` §3.1).
+- PENDING rows hid 136 dead checks: moved paths, a retired tool, double-escaped regexes. Sweep PENDING rows at each milestone — 2026-11-10 [process/gates] (`release-and-cut.md` §3.1).
+- A selftest shim's cache key named only part of the code it ran, so a change elsewhere never reran it. Key on every file the command runs — 2026-11-09 [process/gates].
+- A power-mux comparator divider from a wide-range input could not hold both the switchover and the priority bound. Feed it from a regulated rail — 2026-11-09 [process/power] (`schematic-phase.md` §7).
 
 ## agents / git
 - Agents die when the machine sleeps or on API 500s; resume by message with the MEASURED state; heartbeat monitors ~25 min; time-box every long task; parallel router JVMs SIGTERM each other — STATUS 09-18…21.
@@ -249,6 +254,13 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A dispatcher moved a host-only job to another lane, and it failed. Allow only the portable job kinds — 2026-11-07 [agents/lanes] (`agent-ops.md` §5.1).
 - A job waiter read an empty scheduler answer as done and skipped a submit. Treat it as unknown — 2026-11-07 [agents/jobs] (`agent-ops.md` §5.2).
 - A dangling link removed from one host broke every lane on the hosts where it was live. Check every host that mounts a shared home — 2026-11-06 [agents/hosts] (`agent-ops.md` §5.2).
+- A merged branch approved a file by a second rule, and one reader still used the first. Grep every reader of the old rule before the merge commit — 2026-11-09 [agents/merge] (`agent-ops.md` §3).
+- `checkout --ours` on a data file with one conflicted hunk dropped the other side's clean hunks. Use `checkout -m` and resolve the hunk — 2026-11-09 [agents/merge] (`agent-ops.md` §3).
+- A merge set a constant that no decision row held. Check each constant a decision row names against the merged code — 2026-11-09 [agents/merge] (`agent-ops.md` §3).
+- A whole-tree fetch carried a killed job's partial folder over a live result. Fetch each job's own folder, and check the provenance of every landed result — 2026-11-10 [agents/lanes] (`agent-ops.md` §5.1).
+- A lane's disk check read a small network home, not the large local job folder. Read free disk on the resolved job folder — 2026-11-10 [agents/lanes] (`agent-ops.md` §5.1).
+- A third job on a lane raised the sum a little and slowed every running job more. Measure both before you add a job — 2026-11-09 [agents/lanes] (`agent-ops.md` §5.1).
+- A copied solver runtime gave bitwise-equal results to its source machine. Prove a new lane with one byte-level compare — 2026-11-09 [agents/lanes] (`agent-ops.md` §5.1).
 
 ## tooling / determinism
 - Bambu Studio CLI (02.08.x): `sparse_infill_density` 100 % is rejected (rc -18) — use top / bottom shell thickness for a solid column. A two-filament slice with a prime tower SEGFAULTS (rc -11 / 133, "no filament colors found in projects") unless each slot's filament JSON carries `filament_colour` (or `--filament-colour '#..;#..'`). Bisect on the temp inputs one variable per run — 2026-09-29 [tooling/bambu].
@@ -315,6 +327,12 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A comment-only edit of a hashed yaml made its result STALE. Plan the rerun with the edit — 2026-11-07 [tooling/cache].
 - A loss moved into a shared model would have counted twice in a caller that still added it. Search every caller before you add a source to a shared model — 2026-11-07 [tooling/models].
 - A KiCad stock symbol with private properties was written back unquoted, and its child sheet failed to load. Load-test each child sheet with a netlist export — 2026-11-06 [tooling/kicad].
+- macOS dropped every `DYLD_*` variable at a protected binary such as `/usr/bin/env`. Export them inside the job script — 2026-11-09 [tooling/macos] (`agent-ops.md` §5.3).
+- `DYLD_LIBRARY_PATH` on a copied runtime overrode a wheel's own libraries. Use `DYLD_FALLBACK_LIBRARY_PATH` — 2026-11-09 [tooling/macos] (`agent-ops.md` §5.3).
+- A lookup with a silent fallback hid a moved zone, and a check used the old position. Read a value of record with no fallback — 2026-11-09 [tooling/generators].
+- A case check copied a joint's numbers from another generator. Import the shared calculation from its generator of record — 2026-11-09 [tooling/generators].
+- YAML read an unquoted date as a date object, and a schema refused the whole file. Quote dates in a text field — 2026-11-09 [tooling/yaml].
+- A YAML plain scalar broke on a colon and space, and a flow mapping broke on a comma inside a part number. Quote both, and parse after each scripted edit — 2026-11-09 [tooling/yaml].
 ## kicad / drc / swig *(worked examples; the mechanism generalises to any CAD CLI)*
 - `kicad-cli pcb drc` honours ONLY explicit `netclass_assignments`, never `netclass_patterns`, and NO DRC exclusions. Emit per-net assignments from the generator, assert a canary rule fires exactly once. Accepted residue = a generated RULE (`enclosedByArea`, not `insideArea` which is an intersection test — prove with a negative construction in `--selftest`).
 - Enforcing net classes for the first time on a "DRC 0" board showed 202 errors. A class clearance larger than the fill's zone clearance is unenforceable by construction. Write the as-built geometry into scoped rules general → specific (later rule wins), log the relaxation.
@@ -409,6 +427,8 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A loop moved off a void edge cleared one peak and raised another at half the frequency. Read the whole band after a move — 2026-11-06 [si/void] (`high-speed-si.md` §3.3).
 - A FEM refinement filter skipped via barrels, and their walls folded. Refine every metal face, and check body count and volume after each heal — 2026-11-06 [si/fem] (`high-speed-si.md` §7.2).
 - A fill (S22 = S11) hid a missing drive run. Raise on a missing run; never answer it from the reverse run — 2026-11-06 [si/tooling] (`high-speed-si.md` §9.1).
+- A null study default kept old runs as drawn and also reached new runs that omitted the key. Diff each new run's configuration against the record — 2026-11-09 [si/tooling] (`high-speed-si.md` §3.3).
+- A medium-to-fine mesh offset held for one pair only: 5 dB better on a narrow-gap pair, slightly worse on wider pairs. Measure it per pair — 2026-11-09 [si/mesh] (`high-speed-si.md` §7.1).
 
 ## silk / dfm
 - The fab's DFM grades a value EQUAL to its warning threshold as Warning: design strictly greater — thresholds JSON.
@@ -472,6 +492,7 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A display datasheet table named two view angles horizontal, and its figure showed them vertical. Record the conflict and settle it on the bench — 2026-11-03 [sourcing/datasheet] (`part-verification.md`).
 - A capacitor at the needed voltage existed only in a wider-drift dielectric in the fab's stock. Check the dielectric against the live catalogue before a decision names it — 2026-11-07 [sourcing/capacitors].
 - A spec named a large C0G value that the fab barely stocks. Check the stock before a spec names a dielectric and tolerance — 2026-11-06 [sourcing/capacitors].
+- A distributor API gave stock per package variation, and the top-level field read null. Read every variation — 2026-11-09 [sourcing/api] (`part-verification.md`).
 
 ## mechanical / case
 - A pluggable module is not a plain box (a cabled transceiver module: bottom open at the leading edge, latch recess on top, corners R 0.15..0.60). Anything that grips it bears on the faces the standard's drawing shows solid. A pocket corner radius comes from the drawing (R > 0.66 clips a legal module), not from a print rule of thumb — 2026-09-29 [mechanical/msa].
@@ -579,6 +600,10 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - Two standard washers shared one outer-diameter band, and a rule between them left a zero-width window. Check a selection rule against both tolerance bands — 2026-11-06 [mech/fasteners].
 - A thin feeler blade buckled before it reached a far stack, and a buckle reads like no entry. Read a height against the computed top instead — 2026-11-06 [mech/metrology].
 - An edge-bearing term moved every clamp margin downstream, and a self-check stopped the generator. Gate the case the owner set, and report the other — 2026-11-06 [mech/clamp].
+- A contact-area target asked for three times what the edge and the free width could give. Check the geometry first — 2026-11-09 [mech/case] (`case-pipeline.md`).
+- One heat-creep bound for every part forced a false pass or a needless material change. Split the gate by contact with the hot part — 2026-11-09 [mech/thermal] (`case-pipeline.md`).
+- The first clamp screw slipped below the load that the whole set held. Report both answers, and gate the gross slip only behind a hard stop — 2026-11-09 [mech/clamp] (`fea-stage.md`).
+- The slicer puts ASA and ABS in one adhesion class, so ASA takes the ABS support filament — 2026-11-09 [mech/fdm] (`fdm-print-optimisation.md`).
 
 ## fea
 - Gmsh refuses CGAL STLs as volume boundaries; fTetWild meshes them; drop zero-volume slivers or K is singular.
@@ -648,6 +673,10 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A firmware that marked a new image valid at boot defeated rollback for an image that boots but breaks a bus. Mark it valid after a bounded self-test — 2026-11-06 [software/ota].
 - A device clock resets at power-on. With the clock unset, a calendar rule reads INCONCLUSIVE, never valid — 2026-11-06 [software/time].
 - A counter written once per hour never advanced on short sessions. Accumulate in RAM and write at the end of each session too — 2026-11-06 [software/time].
+- A selftest slept in real time through simulated waits and looked hung. Look at the stack twice, then use a virtual clock — 2026-11-09 [software/selftest] (`software-track.md` §2).
+- A virtual clock broke checks that raced a real thread. Only the starting thread sleeps on it; timed events read the clock — 2026-11-09 [software/selftest] (`software-track.md` §2).
+- Two selftests took the same fixed lock name in the shared temp folder. Name each after its process id — 2026-11-10 [software/selftest] (`software-track.md` §2).
+- A copied phase list missed one new step. Derive a set from the table of record — 2026-11-09 [software/criteria] (`software-track.md` §5).
 
 ## documentation
 - Every mention of a retired string across live docs after a design change: grep, not memory; logs and reviews keep stale words on purpose.
@@ -694,6 +723,8 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - The splitter joined a sentence that starts with a digit or a lower-case letter to the one before. Start each sentence with a capital word — 2026-11-05 [docs/style].
 - A word-count gate counted each number and unit as words. Split a sentence with many values at each value pair — 2026-11-06 [docs/style].
 - A full EEPROM byte map left no room for a new calibration field. Plan spare bytes, and state the text encoding and byte order with one worked block — 2026-11-06 [documentation/fru].
+- A sentence split by hand in a generated file reverted on the next run. Make the style fix in the generator — 2026-11-10 [docs/style] (`writing-style.md` §4).
+- A merge brought a new folder into an exported tree, and the export shipped it. After every merge, read the export's yaml list and run `generic_lint.py --export` — 2026-11-09 [docs/public] (`release-and-cut.md` §15).
 
 ## records / arrival / review
 - The fab adds an order-history "Confirm Parts Placement" step after the engineer mails, with a silent ~3-day timer after which the order is produced as drawn. Check Order History after every engineer reply. Its engineering file (`Smt_Hw_Bom_Merge` → `oc` / `ec` per designator) is the complete change list - diff it before any picture. Read the pictures with a mounting-hole calibration (0.1 px) and your pad 1 over the fab's marks for every polarity-flagged part — 2026-10-08 [fab/placement-confirm] (`vendor-review.md` §5 round 4).

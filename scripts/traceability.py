@@ -3,8 +3,10 @@
 
   python scripts/traceability.py                 # run every check, write paths.traceability_out, exit 1 on FAILED or unmapped
   python scripts/traceability.py --only D-03     # print the entries whose id/source contain the token, every check detail; nothing written
-  python scripts/traceability.py --no-commands   # skip `command` checks (they read SKIPPED → PENDING(--no-commands), never FAILED)
-  python scripts/traceability.py --check         # exit 1 when the matrix on disk is stale or any row FAILED / unmapped (adopt gate)
+  python scripts/traceability.py --no-commands   # skip `command` checks (they read SKIPPED → PENDING(--no-commands)); a draft look only:
+                                                 # prints the counts, writes nothing, and is never gate evidence
+  python scripts/traceability.py --check         # exit 1 when the matrix on disk is stale or any row FAILED / unmapped (adopt gate);
+                                                 # refuses --no-commands and --only (exit 2)
   python scripts/traceability.py --selftest
 
 Inputs  paths.traceability_yaml — `stages:` (ordered mapping: gates that decide PENDING) and `entries:` (one per traceable item)
@@ -15,7 +17,7 @@ Inputs  paths.traceability_yaml — `stages:` (ordered mapping: gates that decid
                                  of the decision log. No SPEC file, or a SPEC with {{...}} slots (not read yet), = no census, said in the
                                  matrix. The R-ID pattern is `ids.requirement_re` (default R-<letters><digits>).
         paths.netlist          — kicadxml netlist for `netlist_net` checks (optional)
-Output  paths.traceability_out — the only file written inside the repository
+Output  paths.traceability_out — the only file written inside the repository; written by the plain run only (never under --only or --no-commands)
 
 Check types (each: ok/detail)
   exists(path)   image(path)  glob allowed        grep(path, regex[, absent, min_count])  re.S|re.M
@@ -290,6 +292,8 @@ def main():
     a = ap.parse_args()
     if a.selftest:
         return selftest()
+    if a.check and (a.no_commands or a.only):   # 0.12.4: a run without commands never fails a command row; --only reads a part of the entries
+        print("REFUSED: --check runs every command on every entry; a --no-commands or --only run is not a gate"); return 2
     P = Project.find(arg=a.project)
     scratch = a.scratch or tempfile.mkdtemp(prefix="hwfs_trace_")
     text, failed, unmapped, only_lines = build(P, Ctx(P, os.path.abspath(scratch), not a.no_commands), a.only)
@@ -297,6 +301,9 @@ def main():
         print("\n".join(only_lines) or f"no entry matches {a.only}")
         return 0
     out = P.path("traceability_out")
+    if a.no_commands:   # 0.12.4: a matrix without command results never replaces the matrix of record
+        print(f"NOT GATE EVIDENCE: --no-commands run, {out} not written; FAILED {failed}; unmapped {unmapped or 'none'}")
+        return 1 if failed or unmapped else 0
     strip = lambda s: re.sub(r"on \d{4}-\d{2}-\d{2}\.", "", s)
     if a.check:
         old = open(out, encoding="utf-8").read() if os.path.exists(out) else ""

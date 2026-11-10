@@ -240,6 +240,9 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 - Give every study knob a key that defaults to off or null **[method]**. A new key with a live default changes every older tagged run
   silently. Add the null row to the defaults table in the same commit. Prove it with one rebuild of an old run.
 - Fall through on a null explicitly. `dict.get(key, default)` returns `None` when the key holds null, so the default never applies.
+- A null default reaches new runs too **[method]**. A null that keeps older tagged runs as drawn also applies to every new run
+  that omits the key. Several new runs drew an old void for days *(worked example)*. Diff each new run's built configuration
+  against the record, key by key, before a batch. Gate the dispatcher on that diff.
 - Moving a loop away from a void edge can raise a new resonance in another band **[physics]**. One move cleared a peak near 12 GHz
   and raised one near 6 GHz *(worked example)*. Read the whole band after every move, not only the old peak.
 - Draw the contact tails of every pad row that the coupled model draws **[method]**. Pads with no tails on one row split the two legs
@@ -432,9 +435,10 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
   10 dB off *(worked example)*.
 - The medium-mesh bias has no fixed sign **[method]**. A corner that fails by a small margin on the medium mesh can pass by several dB
   on the fine mesh. Run the fine mesh before you change geometry for a small fail.
-- The fine-mesh correction depends on the corner **[method]**. One loop read 3 to 5 dB better at fine on one registration corner, and
-  0.3 to 0.7 dB worse on the other *(worked example)*. A medium fail at a corner where fine reads worse does not pass at fine.
-  Measure the correction per corner. Never carry it over from another corner.
+- The fine-mesh correction depends on the corner and the pair **[method]**. At one registration corner, a narrow-gap pair read up to
+  5 dB better at fine. Two wider pairs read 0.3 to 0.7 dB worse at the same corner *(worked example; one data set)*.
+  A medium fail where fine reads worse does not pass at fine. Measure the correction per corner and per pair.
+  Never carry it over from another corner or another pair impedance.
 - The medium mesh can snap close widths to one grid state **[method]**. Two pairs 0.005 mm apart in width read the same at every
   frequency. A pair 0.007 mm wider read 19 dB lower at 2 GHz *(worked example)*. A step between near-equal widths is a grid state,
   not physics. Never interpolate mesh results across the impedance axis: a straight line between two pairs missed a run by

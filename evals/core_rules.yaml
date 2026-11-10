@@ -731,6 +731,9 @@ public-export:
   - A public export ships only what a fail-closed leak gate has read.
   - One generator builds the public tree from a yaml list of what goes out.
   - The generator is project code, like the cut generator (§7).
+  - The yaml list names trees, so a new folder under a listed tree ships.
+  - After every merge into a listed tree, read the yaml list against the tree.
+  - Then run the export generator and `scripts/generic_lint.py --export <tree> --allow <file>`.
   - A leak gate reads every exported file of the final tree.
   - The push depends on a clean gate.
   - Only `scripts/generic_lint.py --export <tree> --allow <file>` is the leak gate.

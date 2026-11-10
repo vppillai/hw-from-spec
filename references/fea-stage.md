@@ -85,6 +85,8 @@ elasticity, heat) · pyamg (SA-AMG + CG for > 60k DOF) · trimesh/rtree/shapely 
 - Coupled cases drift with a rebuilt board mesh while board-alone numbers stay bit-identical — report both, explain the delta.
 - A thermal "warn at warning / throttle at alarm − margin" rule with a fixed cap can make WARN unreachable; make the interplay explicit and print both.
 - Long solves block-buffer stdout when redirected: judge progress by the process and its output files, or `python -u`.
+- A friction clamp check has two answers: the first fastener to slip, and the gross slip of the whole set. Report both. Gate the
+  gross slip alone only when a hard stop limits the travel to less than the hole clearance.
 - `--only <subset>` must not wipe the other cases of a record. Merge per label, and let the stale-case sweep remove only the cases the design
   rules skipped. A report written from a subset run lacks the other rows; run the full set for the report of record. Check the analyses keys after
   every subset run.
