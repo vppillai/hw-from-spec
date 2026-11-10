@@ -232,7 +232,7 @@ def gate_cell_backstop(P, sets):
         if f and os.path.exists(f):
             ok, word, detail = gate_status(P, text, gate)
             if not ok:
-                bad.append(f"{what} {os.path.relpath(f, P.root)} exists but {gate} is {"not approved" if word == "NOT approved" else word} in {P.get('paths.gates')} ({detail})")
+                bad.append(f"{what} {os.path.relpath(f, P.root)} exists but {gate} is {'not approved' if word == 'NOT approved' else word} in {P.get('paths.gates')} ({detail})")
     return bad
 
 

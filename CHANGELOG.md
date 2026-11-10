@@ -89,8 +89,10 @@ convergence playbook comes first. About 55 rule lines and 40 pitfall lines are a
 - Requirement census: `scripts/traceability.py` fails when a SPEC R-ID has no entry with a check, or has no T-nn row and no
   NOT-INCLUDED entry that cites a real decision row. It waits while the SPEC still has slots. The test plan template names
   the R-ID. The smoke runs the census.
-- Blind hand-off: `templates/REVIEW_HANDOFF.md` has a reviewer part and a verifier annex. The review workflows send reviewers the
-  reviewer part only and name the forbidden files. The verifier reads the annex and the errata.
+- Blind hand-off: `templates/REVIEW_HANDOFF.md` has a reviewer part and a verifier annex. `scripts/handoff_header.py
+  --reviewer-copy` writes the reviewer part to its own file, and its selftest proves no annex text is left. The review workflows
+  make that copy first and point every reviewer at it only. The verifier reads the full hand-off and the errata.
+- Python 3.11: two f-strings with nested double quotes no longer stop `project.py` and `release_report.py` from parsing.
 - Bound approvals: `scripts/gate_check.py` and `project.py gates-required` share `gate_status()`. A cell names its artefact as
   `commit <sha>` or `md5 <md5-8>` (`--md5 <gate>` prints it). G1 covers every sheet, and M1, M2 and the case order the STL set.
   A delegation binds to the commit that wrote it. A change gives STALE APPROVAL, and a cell with no token gives UNBOUND.

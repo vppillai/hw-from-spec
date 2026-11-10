@@ -3,7 +3,8 @@
 Four ES-module scripts for the Claude Code Workflow tool (`agent()`, `parallel()`, `pipeline()`, `phase()`, `log()` are provided by the runner).
 They are templates: every `{{PLACEHOLDER}}` must be replaced before a run; a leftover placeholder is a bug (`grep -nE '\{\{[A-Z_*]+\}\}' gen/workflows/*.js`
 must print nothing in the instantiated copy). Without a runner that provides `agent()/parallel()/pipeline()`, run the same prompts as sequential
-subagents in the order of the phases (Review → Verify → Merge) — the blindness clauses hold as long as each reviewer gets only the hand-off.
+subagents in the order of the phases (Prepare → Review → Verify → Merge). The blindness clauses hold while each reviewer gets the reviewer
+part only (`scripts/handoff_header.py --reviewer-copy`).
 
 | Template | Use | Shape |
 |---|---|---|
@@ -26,7 +27,7 @@ subagents in the order of the phases (Review → Verify → Merge) — the blind
    - `{{PERSONAS_BY_KEY}}`: a JS object from seat key to a persona block of `templates/REVIEWER_PERSONAS.md`. `{}` keeps the titles.
    - `{{ROLE_SET}}`: `spec`, `board` or `mech`. The `mech` set is the M1 / case-order round of a mech-scope project.
    - `{{VERDICT_OPTIONS}}`: for example `order as is / order after the REQUIRED list / do not order yet`. At G0: `approve as is / after the REQUIRED edits / not yet`.
-   - `{{BRIEF_*}}`: what each seat looks at (files, nets, decision rows). Numbers come from the hand-off, not the brief.
+   - `{{BRIEF_*}}`: what each seat looks at (files, nets, interfaces). Never a decision row or a disposition. Numbers come from the hand-off, not the brief.
      The `spec` set: `BRIEF_SPEC`, `BRIEF_PARTS`, `BRIEF_MECH`, `BRIEF_TEST`.
      The `board` set has eight seats: `BRIEF_POWER`, `BRIEF_DIGITAL`, `BRIEF_LAYOUT`, `BRIEF_FAB` + `BRIEF_SILK`, `BRIEF_MECH`,
      `BRIEF_CASE_DFM` (the STL dir, the census and print-DFM records, `print_targets`), `BRIEF_SOFTWARE`, `BRIEF_COHERENCE` + `BRIEF_GATES`.
@@ -62,8 +63,8 @@ weaker (same model family) — say so in the merged report's reviewer-quality se
   Wait on the harness's completion notification or the `^EXIT` line, never a foreground sleep loop (`references/agent-ops.md` §5).
   Then `test -s` the report. An EMPTY or error-only report is a failure: retry once with the fallback model and note the substitution.
   If the retry fails too, write the failure into the report and return zero findings. The wrapper never judges the artefact itself.
-- **Blindness clause** (every reviewer prompt). The only briefing is the reviewer part of the hand-off in the frozen worktree, read down to
-  the "Verifier annex" heading. Never read the annex, `90-log/DECISIONS.md`, `90-log/KNOWN_ISSUES.md`, `10-spec/SPEC_ERRATA.md`,
+- **Blindness clause** (every reviewer prompt). The only briefing is the reviewer copy of the hand-off in the frozen worktree
+  (`<handoff>.reviewer.md`, written by `scripts/handoff_header.py --reviewer-copy` in the Prepare phase). Never read the full hand-off, `90-log/DECISIONS.md`, `90-log/KNOWN_ISSUES.md`, `10-spec/SPEC_ERRATA.md`,
   `80-reviews/<TAG>_*` or earlier merged reviews. Never read the live repo, except to write the own report. Every finding cites
   file + line / coordinate / refdes / net and says how it was checked. Severity is BLOCKER / MAJOR / MINOR / NOTE, as the hand-off defines them.
 
