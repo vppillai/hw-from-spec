@@ -130,9 +130,9 @@ A vague brief costs a rework round. Brief every worker from `templates/AGENT_BRI
   The adversarial verification bullet below gives the method.
 - External models run through a second agent CLI: `agent -p --mode ask --model <m> --output-format text "<prompt>"` from the frozen worktree. The ask
   and plan modes are read-only. `-p` alone has shell access, so never use it for reviews. Keep the prompt ≤ ~30 kB (observed CLI limit, unversioned).
-  Name the files in the prompt; the model reads them. The packet ceiling is ≈ 440 kB (observed: the CLI returns 0 bytes above it). Rotate two vendors
-  per role. An EMPTY report is a failure. Retry once with the fallback model and note the substitution. If the retry also fails, write the failure
-  into the report and return zero findings. macOS has no `timeout`. Use background + PID + until-loop within the §5 ceiling.
+  Name the files in the prompt; the model reads them. The packet ceiling is ≈ 440 kB (observed: the CLI returns 0 bytes above it). Rotate the vendors
+  between seats. An EMPTY report is a failure. Retry once with the fallback model and note the substitution. If the retry also fails, write the failure
+  into the report and return zero findings. macOS has no `timeout`. Run in the background and wait on the completion notification or the `^EXIT` line (§5).
 - **Pairing that worked for a print kit (2026-09-30):** a **technician persona on the kit folders AS RECEIVED** in parallel with an **FDM DFM persona
   measuring the meshes**. The technician has no repo and no git. It unzips the 3MFs and measures the STLs. Its task: "print the fit-check set and tell
   the engineer whether it fits". The DFM persona measures orientation, overhang angles, seat datums, and slicer keys from the embedded config, not the

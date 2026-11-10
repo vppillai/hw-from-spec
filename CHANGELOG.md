@@ -82,21 +82,25 @@ convergence playbook comes first. About 55 rule lines and 40 pitfall lines are a
 - `references/pitfalls.md`: dated lines in process, agents, tooling, layout, si, fab, sourcing, mechanical, software and
   documentation.
 
-### Changed (blind persona review of 0.12.3, six verified MAJOR findings)
+### Changed (blind persona review of 0.12.3 and its fix-check round)
 - SI tiers: `references/high-speed-si.md` §0.0 gives each lane a tier by rate, length and margin. A short lane that follows its
-  layout guide closes on the calculator row and the vendor checklist. Only tier 3 takes the full two-solver chain.
-- Requirement census: `scripts/traceability.py` fails when a SPEC R-ID has no entry, or has no T-nn row and no NOT-INCLUDED
-  decision. The day-1 `--check` gate carries it.
-- Blind hand-off: `templates/REVIEW_HANDOFF.md` has a reviewer part and a verifier annex. The decision log, the dispositions and
-  the errata go to the verifier only.
-- Bound approvals: `scripts/gate_check.py` reads the commit or md5-8 in a gate cell. It exits 1 with STALE APPROVAL when the
-  artefact changed after it.
-- Delegations: `gate_check.py` and `project.py gates-required` share `gate_approved()`. A `> delegated:` line counts when the
-  owner committed it. `gate_check.py` then prints DELEGATED.
-- Review rounds: one table in `SKILL.md` §5 defines the gate, milestone and fix-check rounds. Each roster seat runs on two model
-  families. A fix-check stops at 0 new BLOCKER or MAJOR, or after two rounds. `project.yaml` `reviews:` caps the roster and the
-  reviewer runs per gate.
-- Three wording fixes: a solid reference plane in kickoff B1, the BER bound for a zero-error run, and the wait on a background job.
+  layout guide closes on the calculator row and the vendor checklist. Only tier 3 takes the full two-solver chain. The hand-off
+  lists the tiers, and §15 item 54 judges each lane at its tier.
+- Requirement census: `scripts/traceability.py` fails when a SPEC R-ID has no entry with a check, or has no T-nn row and no
+  NOT-INCLUDED entry that cites a real decision row. It waits while the SPEC still has slots. The test plan template names
+  the R-ID. The smoke runs the census.
+- Blind hand-off: `templates/REVIEW_HANDOFF.md` has a reviewer part and a verifier annex. The review workflows send reviewers the
+  reviewer part only and name the forbidden files. The verifier reads the annex and the errata.
+- Bound approvals: `scripts/gate_check.py` and `project.py gates-required` share `gate_status()`. A cell names its artefact as
+  `commit <sha>` or `md5 <md5-8>` (`--md5 <gate>` prints it). G1 covers every sheet, and M1, M2 and the case order the STL set.
+  A delegation binds to the commit that wrote it. A change gives STALE APPROVAL, and a cell with no token gives UNBOUND.
+- Delegations: a `> delegated:` line counts when the owner committed it. The quoted owner words name no gate.
+- Review rounds: one table in `SKILL.md` §5 defines the gate, milestone and fix-check rounds. Each seat runs on two model
+  families. A fix-check stops at 0 new BLOCKER or MAJOR, or after two rounds. `project.yaml` `reviews:` caps the roster (8)
+  and the runs per gate (32). `workflows/blind-deep-review.js` and `delta-audit.js` run that shape and throw over the caps.
+- Waits: the workflows, `agent-ops.md` and a pitfall line wait on the completion notification or the `^EXIT` line.
+- Wording: a solid reference plane in kickoff B1, the BER bound for a zero-error run, the verifier reads the errata, and one
+  review round before a public push.
 
 ## 0.12.2 - 2026-11-06 - Worker briefs, sceptic passes, power traps and verdict paths
 

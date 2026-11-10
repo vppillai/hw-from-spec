@@ -3,7 +3,7 @@
 # GATES.md — owner approvals (scope both: G0 → G1 → G2 → board order + case order → release) {{both}}
 
 The owner writes the approval cells and the release line; **agents never write either** — they ask (skill `SKILL.md` §1.1) and wait. A valid
-approval cell reads `<owner name>, <YYYY-MM-DD>, <what was approved: SPEC rev / schematic commit / board md5-8 / case version + record md5-8 (the case gates)>`; an empty cell is
+approval cell reads `<owner name>, <YYYY-MM-DD>, commit <sha> | md5 <md5-8>` (`scripts/gate_check.py --md5 <gate>` prints the md5-8 of the gate's artefact); an empty cell is
 `_not yet approved_`. The release reports read this file and stay DRAFT until the owner writes the release phrase
 **into the Release row's approval cell** and commits it as `project.owner`. The release phrase is the words named by `markers.release_regex` in
 project.yaml. Do not quote them in prose anywhere in this file. `scripts/gate_check.py --release` reads the cell and the line's git author.
@@ -34,5 +34,6 @@ Owner instructions quoted verbatim (with date/time) go here when the owner deleg
 A delegation line starts with `> delegated:` and names its gate: `> delegated: G0, <owner>, <YYYY-MM-DD HH:MM>, "<owner words>"`.
 The owner commits the line. A line an agent committed does not count.
 `scripts/project.py gates-required` fails while a next-phase artefact exists and its gate has neither a cell nor such a line.
-`scripts/gate_check.py <gate>` reads the commit or md5-8 in a cell. It prints STALE APPROVAL when the artefact changed after it.
+`scripts/gate_check.py <gate>` and `gates-required` read the `commit` or `md5` token of a cell, or the commit of a delegation line.
+They fail with STALE APPROVAL when the artefact changed after it, and with UNBOUND when a cell has no token.
 The pairs are: schematic → G0, board → G1, fab package → G2, STL set → G0, `ORDER_<rev>.md` (mech) → M1.

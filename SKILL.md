@@ -59,8 +59,8 @@ reference when you reach that step, not before. Nothing here is specific to one 
 6. **First records** (the smoke's sequence, in a new project; `PY=.venv/bin/python`). First fill the slots of CLAUDE.md / project.yaml / the
    records. `$PY scripts/project.py slots` names them. An unfilled `project.yaml` is not valid YAML, and every reader says so. Then run
    `$PY scripts/known_issues.py` → `$PY scripts/traceability.py`. **Exit 1 = a decision row without a traceability entry or a FAILED check. Every
-   D-/CC- row, the kickoff rows included, needs an entry in `20-design/traceability.yaml`: add it and rerun**. Every R-xx of the SPEC needs
-   an entry and a T-nn row of the test plan, or a NOT-INCLUDED entry with its decision. Then run `$PY scripts/release_report.py`
+   D-/CC- row, the kickoff rows included, needs an entry in `20-design/traceability.yaml`: add it and rerun**. After the spec is read and its
+   slots are filled, every R-xx needs an entry with a check and a T-nn row, or a NOT-INCLUDED entry with its decision. Then run `$PY scripts/release_report.py`
    (DRAFT, record MISSING: correct before G1 / M1) → `$PY scripts/now_pages.py` (the five answers of `00-now/`; `--check` is in the day-1 gate list)
    → commit. Then `scripts/adopt_gates.sh` (day-1 list + clone gate) green → `$PY scripts/project.py kickoff --check` green. That check passes when
    every answered kickoff row has landed in project.yaml with a real D row. Then fill the
@@ -134,8 +134,10 @@ The release cut = reports RELEASED, collateral, tag; the production cut = docume
   The quote is one line that names its gate: `> delegated: <gate>, <owner>, <YYYY-MM-DD HH:MM>, "<owner words>"`. A G1 line does not cover G0.
   An agent drafts the line. The owner commits it under the owner's identity. Then `scripts/gate_check.py <gate>` prints DELEGATED and exits 0.
   `scripts/project.py gates-required` fails while a next-phase artefact exists and its gate has neither a cell nor that committed line.
-  Both read the same function, `gate_approved()`. A cell binds to its artefact by commit or md5-8. When the artefact changes after
-  it, `gate_check.py` prints STALE APPROVAL and exits 1. The owner then writes a new cell.
+  Both read the same function, `gate_status()`. A cell names its artefact as `commit <sha>` or `md5 <md5-8>`
+  (`scripts/gate_check.py --md5 <gate>` prints the md5-8). The artefacts: G0 the SPEC, G1 every schematic sheet, G2 and the board
+  order the board, M1, M2 and the case order the STL set. A delegation line binds to the commit that wrote it. When the artefact
+  changes, both print STALE APPROVAL and fail. A cell with no token reads UNBOUND and fails. The owner then writes a new cell.
 - **One review round precedes every gate**. The table "Review rounds" in §5 is its one definition. "Two reviews" in an older record
   means one round.
 - Never quote the release phrase in prose anywhere the regex can see it (a sentence that explains the rule matches the regex) — describe the
@@ -167,7 +169,7 @@ The release cut = reports RELEASED, collateral, tag; the production cut = docume
    checker outputs: ERC / DRC files [ee, both], census JSON + `DFM_ROUND.md` [mech, both]. `scripts/adopt_gates.sh` is green at HEAD, and
    KNOWN_ISSUES §2 lists only items the owner has seen. If one is missing, say so and stop.
 2. Write the STATUS pause-point paragraph. It names what was reviewed (commit, SPEC rev / board md5-8), the merged report path and the OPEN rows
-   the owner must decide. It ends with the exact ask: *"Write the Gn / Mn cell in 90-log/GATES.md: `<your name>, <date>, <SPEC rev | schematic commit | board md5-8 | case version + record md5-8>`"*.
+   the owner must decide. It ends with the exact ask: *"Write the Gn / Mn cell in 90-log/GATES.md: `<your name>, <date>, commit <sha> | md5 <md5-8>`"*. Give the value from `scripts/gate_check.py --md5 <gate>` or the reviewed commit.
 3. Ask in one message with that sentence; do not start the next phase's CAD while waiting (other work — docs, tests, tooling — may continue).
 4. A valid cell is owner text in the approval column of that row; `_not yet approved_` is empty. **Agents never write approval cells or the
    release line**, not even when told "go ahead" in chat. Quote the chat instruction verbatim under the table as a `> delegated: <gate>` line (§1), ask the owner to commit it, and note
@@ -280,13 +282,13 @@ order. A WARN that is "known" is not a bar; it is either fixed or a dated, evide
 
 | Round | Trigger | Roster | Model families | Verifier | Stop |
 |---|---|---|---|---|---|
-| Gate round | Before every gate and every order | Personas from `templates/REVIEWER_PERSONAS.md`, picked by scope. They replace the roles. At most `reviews.max_roster` (default 8). | Each seat runs on two families: the in-session agent and one second-family model. | One, with record access, on every finding | One merged report |
+| Gate round (`workflows/blind-deep-review.js`) | Before every gate and every order | Personas from `templates/REVIEWER_PERSONAS.md`, picked by scope. They replace the roles. At most `reviews.max_roster` (default 8). | Each seat runs on two families: the in-session agent and one second-family model. | One, with record access, on every finding | One merged report |
 | Milestone round | A spec pass, a closed SI loop, a study, a tag | As the gate round, scoped to what changed | Two, as above | One, as above | One disposition per discipline |
-| Fix-check round | After the fixes of a gate or milestone round | Fresh reviewers. Only the changed files. | Two, as above | One, as above | 0 new BLOCKER or MAJOR in the changed files, or 2 rounds. Then ask the owner. |
+| Fix-check round | After the fixes of a gate or milestone round | Fresh reviewers. Only the changed files. `workflows/delta-audit.js` runs it. | Two, as above | One, as above | 0 new BLOCKER or MAJOR in the changed files, or 2 rounds. Then ask the owner. |
 
 - Required extras: the bring-up readiness role at G2 [ee, both]. The drawing round at M1 and the case order [mech, both].
 - Optional extras: the loops without personas, a third model family, a coverage map. Run them only when the budget allows.
-- The cap: `reviews.max_runs_per_gate` in `project.yaml` (default 16) counts every reviewer run of a gate. Fix-check runs count too.
+- The cap: `reviews.max_runs_per_gate` in `project.yaml` (default 32: one full round and two fix-checks) counts every reviewer run of a gate. Fix-check runs count too.
   The verifier runs do not count. At the cap, stop and ask the owner.
 - When no second-family model is available, the in-session fallback stands in. The merge says so.
 
@@ -326,8 +328,8 @@ compares with the census JSON of record. Required before the case order (`templa
 
 **The next revision** gets one blind pass per discipline that a gate freezes. Take the discipline list from the scope. An example list:
 schematic, layout, mechanical, the host link, firmware and tool, test plan and criteria, documentation. Each pass follows the protocol above,
-as roles inside the gate's one review round. Every field finding of the last revision is a named check in its discipline's checklist.
-The coordinator sets the role list by hand; `workflows/blind-deep-review.js` does not split by discipline. *Reason*: a pass per discipline finds
+as seats inside the gate's one review round. Every field finding of the last revision is a named check in its discipline's checklist.
+The coordinator sets the seat list by hand; `workflows/blind-deep-review.js` does not split by discipline. *Reason*: a pass per discipline finds
 a defect one gate earlier than one merged review at the end. The studies that open the revision follow `references/schematic-phase.md` §6.
 
 **Milestone rounds** (the table above). Merge into one disposition per discipline (FIX / OWNER / CLOSED / REJECTED). Bring the
@@ -502,7 +504,7 @@ placeholders). **One project-side generator** (`gen/production_cut.py`) builds `
 filled by an agent. Records (photos, press logs, the first-article caliper table, test results) are filed as they happen under **the one records
 folder `70-release/<rev>/records/`** (the cut yaml's `records_dir`; RELEASE_NOTES points there), or the cut cannot be written
 (`references/release-and-cut.md`). A public export from the private tree follows `references/release-and-cut.md` §15. It needs a leak gate,
-two blind reviews and the owner's word.
+one review round (§5 table) and the owner's word.
 
 - **The last round is an order, then a fixed-point pass:** records → renders → reports → matrix → reports → analysis index → PDFs → cut build LAST → commit;
   afterwards only `--check`s; run the round twice and diff after stripping the volatile cascade (`references/release-and-cut.md` §3.1). Whoever
@@ -554,7 +556,7 @@ two blind reviews and the owner's word.
   window) + `evidence`; closing a row = editing the yaml, regenerating, committing (`references/release-and-cut.md` §10).
 - **A frozen SPEC is never edited**. Deviations of the design of record from the frozen text are **E-rows in `10-spec/SPEC_ERRATA.md`**
   (`templates/10-spec/SPEC_ERRATA.md`). They stay OPEN until the owner approves and fold into the next SPEC revision's change log. The arrival
-  checklist §E carries them. A reviewer reads the errata before calling a deviation a finding (ALREADY DECIDED).
+  checklist §E carries them. The verifier reads the errata before it accepts a deviation as a finding (ALREADY DECIDED).
 
 ## 11. Agent operations
 

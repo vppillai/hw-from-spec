@@ -51,7 +51,7 @@ board:                                        # the PCB build from kickoff B1–
   test_points: {{B7_TEST_POINTS}} {{ee,both}}
   panel: {{B8_PANEL}} {{ee,both}}
 ids: {owner_prefix: D, agent_prefix: CC, blocker_prefix: B}
-reviews: {max_roster: 8, max_runs_per_gate: 16}   # the review load cap per gate: personas per round, reviewer runs incl. fix-checks, verifiers excluded (SKILL.md §5 table)
+reviews: {max_roster: 8, max_runs_per_gate: 32}   # the review load cap per gate: personas per round, reviewer runs incl. fix-checks, verifiers excluded (SKILL.md §5 table)
 markers:
   release_regex: 'clear[ -]to[ -]build'       # the owner's release line in paths.gates — never quote the phrase in prose
   unverified: [UNVERIFIED, TBD-DRAWING]

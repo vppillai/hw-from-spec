@@ -1,10 +1,10 @@
 // workflows/delta-audit.js — TEMPLATE: a DELTA audit after a bounded change (a copper hop, a tooling round, a document set): only the specialties
 // the change can touch, briefed with the round's CLAIMS list, verifying claims against the frozen worktree rather than re-reviewing everything.
-// Same machinery as blind-deep-review.js (roles × in-session + external × verifier → merge); the differences are the role filter, the claims
-// paragraph and the merge instruction to compare with the previous merged report item by item.
+// The fix-check round of SKILL.md §5 (the Review rounds table): seats × (in-session + one external) × verifier → merge, on the changed files
+// only. It stops after two fix-check rounds of one gate, or at the run cap; then the owner decides.
 export const meta = {
   name: '{{PROJECT}}-delta-audit-{{ROUND}}',
-  description: '{{PROJECT}} {{ROUND}} delta audit: the specialties the change can affect, each reviewed blind by one in-session reviewer and two external models against the round claims; BLOCKER/MAJOR verified; merged against the previous audit',
+  description: '{{PROJECT}} {{ROUND}} delta audit: the specialties the change can affect, each reviewed blind by one in-session reviewer and one second-family model against the round claims; BLOCKER/MAJOR verified; merged against the previous audit',
   phases: [{ title: 'Review' }, { title: 'Verify' }, { title: 'Merge' }],
 }
 const FINDINGS = { type: 'object', properties: { report_path: { type: 'string' }, model: { type: 'string' }, findings: { type: 'array', items: { type: 'object', properties: { id: { type: 'string' }, area: { type: 'string' }, severity: { type: 'string', enum: ['BLOCKER', 'MAJOR', 'MINOR', 'NOTE'] }, finding: { type: 'string' }, evidence: { type: 'string' }, proposed_change: { type: 'string' } }, required: ['id', 'area', 'severity', 'finding', 'evidence', 'proposed_change'] } }, files_read: { type: 'integer' }, summary: { type: 'string' } }, required: ['report_path', 'model', 'findings', 'files_read', 'summary'] }
@@ -26,32 +26,37 @@ const ALL_ROLES = [
   { key: 'docs', title: 'Document set: manuals, SOPs, compliance statements', brief: '{{BRIEF_DOCS}}' },
 ]
 const ROLES = ALL_ROLES.filter(r => [{{DELTA_ROLE_KEYS}}].includes(r.key))   // e.g. 'layout', 'fab', 'gates'
-const MODELS = [{{EXTERNAL_MODELS}}], FALLBACK = '{{FALLBACK_MODEL}}'   // at least two distinct models; role i gets MODELS[i], MODELS[i+1] (cyclic)
-if (new Set(MODELS).size < 2) throw new Error(`EXTERNAL_MODELS needs at least two distinct models (got ${JSON.stringify(MODELS)}) — two vendors per role`)
-const pair = (i) => { const n = MODELS.length, m1 = MODELS[i % n], m2 = MODELS[(i + 1) % n]; if (m1 === m2) throw new Error(`role ${i}: both models are ${m1}`); return { m1, m2 } }
+const MODELS = [{{EXTERNAL_MODELS}}], FALLBACK = '{{FALLBACK_MODEL}}'   // at least one second-family model; seat i gets MODELS[i] (cyclic)
+if (!MODELS.length) throw new Error('EXTERNAL_MODELS needs at least one second-family model (or use the in-session fallback of workflows/README.md)')
+const pick = (i) => MODELS[i % MODELS.length]
+// The load cap and the stop rule (SKILL.md §5 table; project.yaml `reviews:`): checked before the first run.
+const MAX_ROSTER = {{MAX_ROSTER}}, MAX_RUNS = {{MAX_RUNS_PER_GATE}}, RUNS_USED = {{RUNS_USED_THIS_GATE}}, FIXCHECK_NO = {{FIXCHECK_ROUND_NUMBER}}   // e.g. 8, 32, 16, 1
+if (FIXCHECK_NO > 2) throw new Error('a third fix-check round: stop and ask the owner (SKILL.md §5)')
+if (ROLES.length > MAX_ROSTER) throw new Error(`${ROLES.length} seats > reviews.max_roster ${MAX_ROSTER}`)
+if (RUNS_USED + 2 * ROLES.length > MAX_RUNS) throw new Error(`${RUNS_USED} + ${2 * ROLES.length} reviewer runs > reviews.max_runs_per_gate ${MAX_RUNS}: ask the owner`)
 
-const COMMON = `Today is ${TODAY}. DELTA AUDIT {{ROUND}}: since the previous audit (${PREVIOUS}) the following changed — ${CLAIMS}. Concentrate on VERIFYING these claims against the frozen worktree (the hand-off lists each claim with its commit and evidence path), on the items applied ahead of the owner's nod (hand-off nod section), and on the rebuilt package/order chain; do not re-litigate earlier findings that are unchanged unless the change made them worse. BLINDNESS: your ONLY briefing is ${WT}/${HANDOFF} plus read access to ${WT} (detached checkout; never write there). Do NOT read 80-reviews/${TAG}_* or any merged review newer than ${PREVIOUS}; do not read the live repo ${MAIN} except to WRITE your report. Every finding cites file + line/coordinate/refdes/net and how you checked it. Severity: BLOCKER / MAJOR / MINOR / NOTE as in the hand-off. Finish with 'files_read' and a 10-line summary that states per claim CONFIRMED / NOT CONFIRMED / PARTLY.`
+const COMMON = `Today is ${TODAY}. DELTA AUDIT {{ROUND}}: since the previous audit (${PREVIOUS}) the following changed — ${CLAIMS}. Concentrate on VERIFYING these claims against the frozen worktree (the hand-off's claims section lists each claim with its commit and evidence path), and on the rebuilt package/order chain; do not re-litigate earlier findings that are unchanged unless the change made them worse. BLINDNESS: your ONLY briefing is the reviewer part of ${WT}/${HANDOFF}: read it down to the heading 'Verifier annex' and stop there. You also have read access to ${WT} (detached checkout; never write there). Never read the verifier annex, 90-log/DECISIONS.md, 90-log/KNOWN_ISSUES.md or 10-spec/SPEC_ERRATA.md. Do NOT read 80-reviews/${TAG}_* or any merged review newer than ${PREVIOUS}; do not read the live repo ${MAIN} except to WRITE your report. Every finding cites file + line/coordinate/refdes/net and how you checked it. Severity: BLOCKER / MAJOR / MINOR / NOTE as in the hand-off. Finish with 'files_read' and a 10-line summary that states per claim CONFIRMED / NOT CONFIRMED / PARTLY.`
 
 const inSession = (r) => agent(`${COMMON}
 You are the IN-SESSION blind reviewer for **${r.title}**. Scope: ${r.brief}
-Read the hand-off first, then the files it points to in ${WT} (parse CAD files with ${KPY} or grep; images with Read). Write ${MAIN}/80-reviews/${TAG}_${r.key}_claude.md (header + one table row per finding: id ${r.key.toUpperCase()}-Cnn | severity | finding | evidence | proposed change). Return the schema (model = 'claude-in-session').`, { label: `review:${r.key}:claude`, phase: 'Review', schema: FINDINGS, effort: 'high' })
+Read the reviewer part of the hand-off first (down to 'Verifier annex'), then the files it points to in ${WT} (parse CAD files with ${KPY} or grep; images with Read). Write ${MAIN}/80-reviews/${TAG}_${r.key}_claude.md (header + one table row per finding: id ${r.key.toUpperCase()}-Cnn | severity | finding | evidence | proposed change). Return the schema (model = 'claude-in-session').`, { label: `review:${r.key}:claude`, phase: 'Review', schema: FINDINGS, effort: 'high' })
 
 const external = (r, model, n) => agent(`${COMMON}
 You are the WRAPPER for an EXTERNAL blind reviewer: model **${model}** via the Cursor agent CLI, run from the frozen worktree:
   cd ${WT} && agent -p --mode ask --model ${model} --output-format text "<PROMPT>" > ${MAIN}/80-reviews/${TAG}_${r.key}_${n}_${model}.md 2> ${MAIN}/80-reviews/${TAG}_${r.key}_${n}_${model}.stderr.log
-<PROMPT> (under 30 kB, do not paste the hand-off): 'You are a senior hardware reviewer doing a BLIND DELTA audit of {{PROJECT_ONE_LINE}}. Read ${HANDOFF} completely first — it is your only briefing and lists the claims of this round — then verify each claim and review the specialty "${r.title}": ${r.brief} You may read any file here; you may not write. Report ONLY a markdown table ID | Severity | Area | Finding | Evidence (file + line/coordinate/refdes/net and how you checked) | Proposed change, ids ${r.key.toUpperCase()}-E${n}-nn, then "Files read: N" and a 10-line summary with CONFIRMED / NOT CONFIRMED per claim.'
-No timeout on macOS: background + PID + until-loops (≤ 8 min per call, ≤ 75 min). Empty report = failure: retry once with --model ${FALLBACK} (note it), else write the failure into the report and return zero findings. Never judge the design yourself. Parse the table into the schema.`, { label: `review:${r.key}:${model}`, phase: 'Review', schema: FINDINGS, effort: 'medium' })
+<PROMPT> (under 30 kB, do not paste the hand-off): 'You are a senior hardware reviewer doing a BLIND DELTA audit of {{PROJECT_ONE_LINE}}. Read ${HANDOFF} down to the heading Verifier annex and stop there — that part is your only briefing and lists the claims of this round — then verify each claim and review the specialty "${r.title}": ${r.brief} You may read the files here except the verifier annex, 90-log/DECISIONS.md, 90-log/KNOWN_ISSUES.md, 10-spec/SPEC_ERRATA.md and 80-reviews/; you may not write. Report ONLY a markdown table ID | Severity | Area | Finding | Evidence (file + line/coordinate/refdes/net and how you checked) | Proposed change, ids ${r.key.toUpperCase()}-E${n}-nn, then "Files read: N" and a 10-line summary with CONFIRMED / NOT CONFIRMED per claim.'
+No timeout on macOS. Launch it in the background with an EXIT line in its log; wait on the harness's completion notification or the ^EXIT line, never a foreground sleep loop (≤ 75 min). Empty report = failure: retry once with --model ${FALLBACK} (note it), else write the failure into the report and return zero findings. Never judge the design yourself. Parse the table into the schema.`, { label: `review:${r.key}:${model}`, phase: 'Review', schema: FINDINGS, effort: 'medium' })
 
 const verify = (r, reviews) => {
   const all = reviews.filter(Boolean).flatMap(v => v.findings.map(f => ({ ...f, model: v.model })))
   const toVerify = all.filter(f => f.severity === 'BLOCKER' || f.severity === 'MAJOR')
   if (!toVerify.length) return Promise.resolve({ role: r.key, all, verdicts: [] })
-  return agent(`Today is ${TODAY}. Adversarial VERIFIER for **${r.title}** (delta audit {{ROUND}}). Default REFUTED unless ${WT} supports the claim; open the cited files, compute the number, read the image; CONFIRMED / REFUTED / PARTLY / UNVERIFIABLE with corrected text and severity; mark duplicates by identical corrected_finding. Write ${MAIN}/80-reviews/${TAG}_${r.key}_verify.md. Findings: ${JSON.stringify(toVerify).slice(0, 60000)}`, { label: `verify:${r.key}`, phase: 'Verify', schema: VERDICT, effort: 'high' }).then(v => ({ role: r.key, all, verdicts: v ? v.verdicts : [] }))
+  return agent(`Today is ${TODAY}. Adversarial VERIFIER for **${r.title}** (delta audit {{ROUND}}), the one reader with record access (the verifier annex of ${WT}/${HANDOFF}, DECISIONS, KNOWN_ISSUES, SPEC_ERRATA). Default REFUTED unless ${WT} supports the claim; open the cited files, compute the number, read the image; CONFIRMED / REFUTED / PARTLY / UNVERIFIABLE with corrected text and severity; mark duplicates by identical corrected_finding. Write ${MAIN}/80-reviews/${TAG}_${r.key}_verify.md. Findings: ${JSON.stringify(toVerify).slice(0, 60000)}`, { label: `verify:${r.key}`, phase: 'Verify', schema: VERDICT, effort: 'high' }).then(v => ({ role: r.key, all, verdicts: v ? v.verdicts : [] }))
 }
 
 const results = await pipeline(
-  ROLES.map((r, i) => ({ r, ...pair(i) })),
-  ({ r, m1, m2 }) => parallel([() => inSession(r), () => external(r, m1, 1), () => external(r, m2, 2)]).then(rs => ({ r, rs })),
+  ROLES.map((r, i) => ({ r, m: pick(i) })),
+  ({ r, m }) => parallel([() => inSession(r), () => external(r, m, 1)]).then(rs => ({ r, rs })),
   ({ r, rs }) => verify(r, rs),
 )
 

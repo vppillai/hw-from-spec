@@ -272,6 +272,7 @@ cp "$SKILL/templates"/{project.yaml,CLAUDE.md} $K/; cp "$SKILL/templates"/10-spe
  out=$("$PY" scripts/project.py kickoff --check 2>&1 || true); echo "$out" | grep -q '^KICKOFF: .*no D row id\|^KICKOFF: .*is not in' || { echo "FAIL (F10): kickoff rows with D-X ids passed the kickoff check"; echo "$out" | tail -3; exit 1; }
  printf '| **D-02** | d | **APPROVED** | kickoff | owner | words |\n' >> 90-log/DECISIONS.md; sed -i.bak 's/D-X/D-02/g' 10-spec/KICKOFF_ANSWERS.md
  "$PY" scripts/project.py kickoff --check >/dev/null || { echo "FAIL (F10): a filled ee project must pass the kickoff check"; "$PY" scripts/project.py kickoff --check | tail -5 || true; exit 1; }
+ out=$("$PY" scripts/traceability.py --no-commands 2>&1 || true); echo "$out" | grep -q 'R-E01 (no traceability entry)' || { echo "FAIL (review 0.12.3): a filled SPEC with untraced R-IDs passed the R-ID census"; echo "$out" | tail -3; exit 1; }
  echo "slots: fresh ee scaffold -> exit 1 with counts; trivially filled -> 0; kickoff --check: unfilled yaml names the slots, D-X rows FAIL, filled rows pass")
 say "0b scope: A0 asked first, every scope scaffolds from ONE template set and gets its own gate rows"
 grep -q '^\*\*A0 Project scope' "$SKILL/references/kickoff-questionnaire.md" && grep -q '^| A0 | scope' "$SKILL/templates/10-spec/KICKOFF_ANSWERS.md" || { echo "FAIL: kickoff A0 (scope) missing"; exit 1; }

@@ -8,7 +8,8 @@ labelled *(worked example)*; the mechanism generalises, the value does not.
 ## 0.0 The SI tier of each lane: pick it first
 
 Not every multi-gigabit lane needs the full playbook. Give each lane a tier before any SI work **[method]**. Record the tier and its
-reason per lane in a CC row. When a lane is between two tiers, take the higher one.
+reason per lane in a CC row. List each lane's tier and the numbers behind it in the reviewer part of the hand-off, so
+reviewers see it. When a lane is between two tiers, take the higher one.
 
 | Tier | When | What closes the lane |
 |---|---|---|
@@ -816,6 +817,7 @@ Give each reviewer the frozen study, the yaml, the scripts and this list. Give n
 51. Does a skew trim stand against an over-void imbalance? Is the conversion flat across the band, or nulled at one frequency?
 52. When the commercial solver was unavailable, which acceptance rule replaced it? Did the owner approve the rule?
 53. Does any matrix entry come from a fill (S22 = S11) or a reciprocity swap instead of its own drive run?
+54. Does each lane's tier (§0.0) hold for its rate, length and margin? Judge the lane by the evidence of its tier only. Items 3 to 53 apply to tier-3 lanes.
 
 ## 16. Records
 

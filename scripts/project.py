@@ -218,7 +218,7 @@ def gate_cell_backstop(P, sets):
     """A next-phase artefact that exists needs its preceding gate approved: a cell in paths.gates, or a `> delegated: <gate> ...` line under the
     table (the owner's delegation quote; SKILL.md §1.1 keeps the cell empty then). schematic -> G0, board -> G1, fab package <fab_dir>/<rev>/ -> G2,
     an STL set -> G0, mech scope ORDER_<rev>.md -> M1. -> problem list (blind review 0.11.13 A-9)."""
-    from gate_check import gate_approved   # lazy: gate_check imports this module; one reader for both (review 0.12.3): cell, or a delegation line the owner committed
+    from gate_check import gate_status   # lazy: gate_check imports this module; one reader for both (review 0.12.3): approved and bound to the artefact now
     gp = P.path("gates"); text = open(gp, encoding="utf-8").read() if gp and os.path.exists(gp) else ""
     fab = os.path.join(P.path("fab_dir"), P.rev())
     order = os.path.join(P.path("orders_dir"), f"ORDER_{P.rev()}.md")
@@ -229,8 +229,10 @@ def gate_cell_backstop(P, sets):
         pairs.append(("M1", "case order file", order))
     bad = []
     for gate, what, f in pairs:
-        if f and os.path.exists(f) and not gate_approved(P, text, gate)[0]:
-            bad.append(f"{what} {os.path.relpath(f, P.root)} exists but {gate} is not approved in {P.get('paths.gates')} (empty cell, no `> delegated: {gate}` line under the table committed by project.owner)")
+        if f and os.path.exists(f):
+            ok, word, detail = gate_status(P, text, gate)
+            if not ok:
+                bad.append(f"{what} {os.path.relpath(f, P.root)} exists but {gate} is {"not approved" if word == "NOT approved" else word} in {P.get('paths.gates')} ({detail})")
     return bad
 
 
@@ -442,11 +444,14 @@ def selftest():
     P.cfg["project"]["scope"] = "ee"; os.makedirs(f"{d}/30-board/fab/rev0"); assert not any("fab package" in b for b in required_gate_lines(P)), "an empty package folder is no package"
     open(f"{d}/30-board/fab/rev0/board_id.txt", "w").write("x"); assert any("G2 is not approved" in b for b in required_gate_lines(P))
     open(f"{d}/90-log/GATES.md", "a").write("| **G2** | lay | x | Owner, 2026-01-03, board 0123abcd |\n"); assert required_gate_lines(P) == [], required_gate_lines(P)
+    os.makedirs(f"{d}/10-spec", exist_ok=True); open(f"{d}/10-spec/SPEC.md", "w").write("spec\n")   # review 0.12.3: gates-required reads the binding too
+    open(f"{d}/90-log/GATES.md", "a").write("| **G0** | spec | x | Owner, 2026-01-01, md5 00000000 |\n"); assert any("G0 is STALE APPROVAL" in b for b in required_gate_lines(P)), required_gate_lines(P)
+    open(f"{d}/90-log/GATES.md", "a").write("| **G0** | spec | x | Owner, 2026-01-01, md5 %s |\n" % hashlib.md5(b"spec\n").hexdigest()[:8]); assert required_gate_lines(P) == [], required_gate_lines(P)
     P.cfg["project"]["scope"] = "mech"; os.remove(f"{d}/60-orders/ORDER_rev0.md")
     # slots (skeleton skipped) and the kickoff check
     open(f"{d}/S.md", "w").write("a {{X}} b {{Y}}\n<!-- skeleton: begin -->\n{{SKEL}}\n<!-- skeleton: end -->\n{{X}}\n")
     assert slots(["S.md", "nope.md"], d) == {"S.md": ["{{X}}", "{{Y}}"]}, slots(["S.md"], d)
-    os.makedirs(f"{d}/10-spec"); open(f"{d}/10-spec/KICKOFF_ANSWERS.md", "w").write(
+    os.makedirs(f"{d}/10-spec", exist_ok=True); open(f"{d}/10-spec/KICKOFF_ANSWERS.md", "w").write(
         "| Q | Question | Answer | Rec. | D row | Written to |\n|---|---|---|---|---|---|\n| A1 | product class | sample | yes | D-02 | `kickoff.product_class`; SPEC §1 |\n"
         "| B1 | layers | 4 | yes | D-03 | `board.layers`, `board.thickness_mm` |\n| C2 | retention | n/a (scope) | - | - | `kickoff.enclosure.retention` |\n"
         "| C8a | rows | jlc | yes | D-{{nn}} | `print_targets.<t>.dfm_process` |\n| D1 | bar | {{zero}} | yes | D-04 | `fab_dfm.bar` |\n"
