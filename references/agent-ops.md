@@ -105,6 +105,12 @@ A vague brief costs a rework round. Brief every worker from `templates/AGENT_BRI
 - A merge can move a block out of the function that owns it. The product and identity read that belongs in the open path landed
   in a re-clock function, and every run stopped at the revision check. Pin the ownership of such a block with a selftest that
   reads the function source.
+- **A merge of a long-lived branch can bring a second rule for the same question.** Before the merge commit, grep every reader
+  of the first rule: code, generated text, web pages and readmes. One reader left on the first rule shows a wrong state.
+- Never resolve a conflicted data file with `checkout --ours` or `--theirs`. That drops the other side's clean hunks too. Run
+  `git checkout -m <file>` and resolve the conflicted hunk only. Then diff the result against each branch, line by line.
+- **A merge can carry a value that no decision row holds.** Check each constant that a decision row names against the merged
+  code. Restore the row's value, and pin it with a golden vector. A test that needs another value names it in its fixture.
 - A worktree has no venv and no vendored skill unless you give it one. Run the main checkout's lint on the worktree files.
   A gate that cannot run there reports nothing; the
   coordinator's merge gate covers it, and the brief says so.
@@ -277,6 +283,12 @@ prove the host. The rules below keep the host safe and the jobs alive.
   removed line. Its offset then falls mid-line in the new file. Stop the runner and start a new one on a new file.
 - **Give each job its own output folder on the host.** A shared remote checkout lets a later job overwrite an earlier job's
   result before the fetch. Otherwise, fetch each result before the next push.
+- **Fetch each job's own run folder, never a host's whole results tree.** A whole-tree fetch also carries a killed job's partial
+  folder. That folder then overwrites the same run that a later job wrote on another host *(worked example)*. Delete a killed
+  job's folder on its host.
+- **Check the provenance of every landed result before you use it.** Name its job of record: the latest job of that run key with
+  rc 0. Compare the local result with that job's copy by md5, or the local file time with the job's log end. Then run the
+  result's own sanity test. One check of 16 results found one overwritten result and two invalid ones *(worked example)*.
 - A firmware build runs offline in a pinned toolchain image, with the network off. Start each run from an empty build folder.
   A partial clean of the build folder breaks the next incremental run.
 - **Never push a records folder with `--delete` to a shared remote checkout.** A later push deletes the records that an earlier job
@@ -301,7 +313,12 @@ prove the host. The rules below keep the host safe and the jobs alive.
 - Keep one slot free on the only host that runs host-only work (CAD, circuit simulation, the case chain). Send the portable solver
   runs to the remote lanes first.
 - Check a new lane for the image and the job inputs before you send it work. Each miss fails a job within seconds. A sandbox
-  probe is not a lane test: a lane takes routed work only after one real job ends with rc 0.
+  probe is not a lane test: a lane takes routed work only after one real job ends with rc 0. Compare that job's output with the
+  same run on a proven lane, byte for byte. A copied solver runtime gave bitwise-equal results *(worked example)*.
+- Read a lane's free disk on its resolved job folder, never on the home folder. One host had a small network home beside
+  terabytes of local scratch *(worked example)*.
+- Measure the sum and each job's rate before you add a job to a lane. A third job raised one host's sum by 9 % and slowed
+  each running job by 12 to 21 % *(worked example)*. Run the urgent jobs first, and give the extra slot to work with slack.
 - Read a queue spread over many hosts from the hosts themselves, in one view. A live runner with a start file is running. A live
   runner without one is queued. No runner is dead. The first such view found many jobs queued on one host beside idle ones.
 - Move a queued job in a fixed order. Stop its runner (SIGSTOP). Check that it has not started. Then kill the runner, mark the job
@@ -364,6 +381,10 @@ A licensed solver on a shared cluster belongs to other people's work. Your job r
   variables first. Run `git diff --stat` after any shell wrapper that touches files.
 - Run `--help` only on a script whose header shows an argument parser. A script without one starts its full job on any argument.
 - Match a log for completion on the wrapper's exact last line. A grep for "done" matched a package install line.
+- macOS strips every `DYLD_*` variable when a protected system binary starts, such as `/bin/bash`, `/usr/bin/env` or
+  `/usr/bin/nice`. Export such variables inside the job script, after the shell starts.
+- For a copied runtime, set `DYLD_FALLBACK_LIBRARY_PATH`, not `DYLD_LIBRARY_PATH`. The fallback acts only on a missing
+  library, so a Python wheel keeps its own bundled libraries.
 
 ## 6. Reporting
 - Every report, record and README follows `references/writing-style.md`: lead with the result, second person, active voice, present tense,

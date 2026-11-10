@@ -21,6 +21,8 @@ The rule covers every fact a design or a study takes from a part, not only the f
 - When a maker site refuses a scripted fetch, try a distributor's media list of the part. It often links the maker's own drawing. Keep a
   local copy of any drawing a browser session reads, so the next review can check it.
 - Read the stock of the exact size you need. One family stocked its short part deeply and its long part thinly.
+- A distributor API can give stock per package variation (reel, cut tape, tray). A top-level stock of null is not unknown.
+  Read every variation.
 
 ## Tags
 | Tag | Meaning | Allowed on a fitted part? |
@@ -49,6 +51,8 @@ Re-verify before every package build (`verify_parts` style script: machine endpo
   with the body `{"keyword": "<text>", "currentPage": 1, "pageSize": 25}`. The endpoint is undocumented. Verify it live before use.
   Check the site's terms before scripted use.
   Use it to find codes. Then confirm each code on its detail endpoint.
+  Many listed codes show stock 0, so filter on stock before the detail read. The detail endpoint also gives the datasheet
+  link when the maker site blocks a script.
 Record every endpoint that answered in `90-log/ENV.md`; a fab that changes its API is a BLOCKER row, not a guess.
 
 ## Gates that catch the usual mistakes

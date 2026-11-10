@@ -269,6 +269,10 @@ geometry together), per-piece and assembly STEP (OCP/cadquery), `--check` = md5 
 - Print sheets and order sheets list filaments / processes per piece, orientation, supports, post-process, and the material rating (UL 94 / HDT from
   the TDS). They list insert type / bore / temperature per material (from the insert TDS, `dfm-printed-enclosure.md` §1.1). They carry the insert
   temperature/time and screw torque as `[OWNER: …]` placeholders until the insert + torque coupon measured them.
+- Split a heat-creep gate by contact. A part that touches the hot part sees its throttle temperature, and an inlet-side part
+  sees far less. One bound for all gives a false pass or a needless material change.
+- Check the geometry before you set a contact-area target. The edge thickness times the free width caps the area. One target
+  asked for three times what the geometry could give *(worked example)*.
 - Debug dumps under `build/**/_check/` (gitignored), never the repo root.
 - The fast engine (`--backend=Manifold` on a snapshot build, `tools.openscad_args`) exports a body in well under a second where the release kernel
   takes minutes. A 360-step sweep and an animation become affordable as PREVIEWS. The pool's slots go to the mesh checks and the slicer

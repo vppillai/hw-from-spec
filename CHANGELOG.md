@@ -1,6 +1,6 @@
 # CHANGELOG — hw-from-spec
 
-## Current state (0.12.3): read this instead of replaying the entries below
+## Current state (0.12.4): read this instead of replaying the entries below
 
 - **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
   thirteen batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
@@ -43,6 +43,43 @@
   address and public pull-request numbers excepted) — `scripts/generic_lint.py` reads the whole repo
   (CHANGELOG and docs included; history keeps its measured numbers), a fenced worked example keeps numbers and kinds but never a name, and the
   repo carries no project retro (a retro report is folded, then deleted).
+
+## 0.12.4 - 2026-11-10 - Gate evidence that hides nothing, landed results with provenance, virtual clocks, merges that keep their values
+
+Source: the project log of 2026-11-09 and 2026-11-10, after the 0.12.3 cut. About 45 rule lines and 31 pitfall lines are added.
+Nothing is removed.
+
+### Added
+- `references/release-and-cut.md`:
+  - §3.1: only a run with commands counts at a gate. Never cache a failed check result across runs. Sweep the PENDING rows
+    for dead checks at each milestone.
+  - §15: a new folder under an exported tree ships unless the exclude list names it.
+- `references/agent-ops.md`:
+  - §3: a merged branch can bring a second rule for one question. Never resolve a data file with `checkout --ours`. A merge
+    can carry a value that no decision row holds.
+  - §5.1: fetch each job's own run folder. Check the provenance of every landed result. Prove a lane byte for byte. Read free
+    disk on the job folder. Measure the per-job slowdown before you add a job.
+  - §5.3: macOS strips `DYLD_*` at a protected binary. Use the fallback library path for a copied runtime.
+- `references/software-track.md`:
+  - §2: look at the stack twice before you call a selftest hung. A virtual clock for simulated waits, a budget per step, and
+    the three rules that keep real threads safe. Selftest temp files and locks named after the process id.
+  - §5: derive a set from the table of record, never from a literal copy.
+- `references/high-speed-si.md` §3.3: a null default also reaches new tagged runs; diff each new run against the record.
+  §7.1: the medium-to-fine correction depends on the pair as well as the corner.
+- `references/writing-style.md` §4: a style fix to a generated file goes into its generator.
+- `references/schematic-phase.md` §7: a power-mux comparator pin that sets two thresholds.
+- `references/fea-stage.md`: a friction clamp has two answers, the first fastener to slip and the gross slip.
+- `references/case-pipeline.md`: split a heat-creep gate by contact. Check the geometry before a contact-area target.
+- `references/fdm-print-optimisation.md`: ASA takes the ABS support filament.
+- `references/part-verification.md`: filter search results on stock first. Read distributor stock per package variation.
+- `references/pitfalls.md`: dated lines in process, agents, tooling, si, sourcing, mechanical, software and documentation.
+
+### Changed
+- `scripts/traceability.py --check` refuses `--no-commands` (exit 2).
+
+### Not done
+- Project-only lessons stay in the project: a loader's file-name rule, one pin generator's id set, one tool's parts-check
+  file path, and the mapping of one revision's decision rows.
 
 ## 0.12.3 - 2026-11-09 - Mesh states across impedance, over-void trims, stacked corners, runs that outlive the session
 

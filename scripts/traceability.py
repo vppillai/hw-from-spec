@@ -4,7 +4,7 @@
   python scripts/traceability.py                 # run every check, write paths.traceability_out, exit 1 on FAILED or unmapped
   python scripts/traceability.py --only D-03     # print the entries whose id/source contain the token, every check detail; nothing written
   python scripts/traceability.py --no-commands   # skip `command` checks (they read SKIPPED → PENDING(--no-commands), never FAILED)
-  python scripts/traceability.py --check         # exit 1 when the matrix on disk is stale or any row FAILED / unmapped (adopt gate)
+  python scripts/traceability.py --check         # exit 1 when the matrix on disk is stale or any row FAILED / unmapped (adopt gate); refuses --no-commands
   python scripts/traceability.py --selftest
 
 Inputs  paths.traceability_yaml — `stages:` (ordered mapping: gates that decide PENDING) and `entries:` (one per traceable item)
@@ -290,6 +290,8 @@ def main():
     a = ap.parse_args()
     if a.selftest:
         return selftest()
+    if a.check and a.no_commands:   # 0.12.4: a run without commands reads 0 FAILED and is never gate evidence
+        print("REFUSED: --check runs every command; a --no-commands run is not a gate"); return 2
     P = Project.find(arg=a.project)
     scratch = a.scratch or tempfile.mkdtemp(prefix="hwfs_trace_")
     text, failed, unmapped, only_lines = build(P, Ctx(P, os.path.abspath(scratch), not a.no_commands), a.only)

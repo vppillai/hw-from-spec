@@ -49,6 +49,8 @@ to a vendor, and chat reports.
 - A project with old records: `scripts/style_gate.py` gates instead of the plain lint. It freezes a dated baseline keyed on file md5
   (`90-log/STYLE_BASELINE.json`, `--write`). An unchanged file keeps its frozen hits, and every new or edited file lints at 0.
   `style_gate.exclude` in `project.yaml` lists generated records, which are linted at their generator.
+- A style fix to a generated file goes into its generator. A sentence split by hand in the output reverts on the next run.
+  Until then, its `--check` reads STALE.
 - Not the owner's own words. A quoted owner sentence keeps its wording; mark the line `<!-- style: ok -->` when the lint trips on it.
 
 ## 5. How to fix a hit
