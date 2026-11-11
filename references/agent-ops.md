@@ -323,6 +323,11 @@ prove the host. The rules below keep the host safe and the jobs alive.
   step that reads the result.
 - Send only portable job kinds to other hosts. Allow a list of container jobs known to run there; do not block a list of bad
   ones. A job with a host-only interpreter path or CAD tool fails elsewhere. Two such moves failed in one day *(worked example)*.
+- **Send a decision run to the lane with the earliest estimated finish.** This refines the idle-lane rule above. Measure each
+  lane's rate with one reference job per job kind. A fast lane that frees soon can beat a slow free lane. Move a queued
+  decision run early, by the move order below. Move a started job only when its estimated finish on the new lane beats its
+  remaining time on the old lane. Record the lost run time in the job log when you restart it. A decision run on a lane three
+  times slower landed hours late *(worked example)*.
 - Keep one slot free on the only host that runs host-only work (CAD, circuit simulation, the case chain). Send the portable solver
   runs to the remote lanes first.
 - Check a new lane for the image and the job inputs before you send it work. Each miss fails a job within seconds. A sandbox
@@ -337,7 +342,8 @@ prove the host. The rules below keep the host safe and the jobs alive.
 - Read a queue spread over many hosts from the hosts themselves, in one view. A live runner with a start file is running. A live
   runner without one is queued. No runner is dead. The first such view found many jobs queued on one host beside idle ones.
 - Move a queued job in a fixed order. Stop its runner (SIGSTOP). Check that it has not started. Then kill the runner, mark the job
-  moved, and submit it on the new lane. A job that started in the gap gets SIGCONT and stays. A move then never loses progress.
+  moved, and submit it on the new lane. A job that started in the gap gets SIGCONT and stays. A queued move then never loses progress. A started job follows the
+  restart test of the earliest-finish rule above.
 - Strip the registry prefix before you compare image names. One container tool lists `docker.io/library/<name>`, another `<name>`.
 - Prune dangling images only. `docker image prune -a` deletes every tagged image that no container uses, the lane images too.
 - Stopping a local `ssh host 'bash -s' < script` does not stop the remote script. Kill the remote script before a rerun. Give each
@@ -490,6 +496,9 @@ audit, then change.
    heavy jobs in at most `jobs_max - 1` slots; `scripts/jobs.sh` has no reserve option. At a smaller pool, send long solver
    runs to a remote lane (§5.1). Two long jobs held two slots of a three-slot pool for hours. Load from outside the
    pool kept the load gate shut, so light writer checks queued for over an hour with one slot free *(worked example)*.
+   Before each start, the coordinator counts the writing agents with heavy work from the worktree list and the live agent
+   list. It starts a writer only below the cap. When a count finds one over the cap, pause the least urgent writer at its next
+   commit. Never stop a writer in the middle of a record edit. A fourth writer once slipped past a cap of three *(worked example)*.
 6. **Geometry engine — previews on the fast engine, geometry of record on the engine that passes the mesh gates.** The 2021.01 OpenSCAD release's CGAL
    kernel is slow (minutes per body). The snapshot build ships the Manifold backend, `--backend=Manifold`. `openscad --help` of a snapshot lists
    `--backend arg: 'CGAL' (old/slow) [default] or 'Manifold' (new/fast)` **[V, OpenSCAD manual, wikibooks "Using OpenSCAD in a command line

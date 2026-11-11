@@ -260,11 +260,13 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A merge set a constant that no decision row held. Check each constant a decision row names against the merged code — 2026-11-09 [agents/merge] (`agent-ops.md` §3).
 - A whole-tree fetch carried a killed job's partial folder over a live result. Fetch each job's own folder, and check the provenance of every landed result — 2026-11-10 [agents/lanes] (`agent-ops.md` §5.1).
 - A lane's disk check read a small network home, not the large local job folder. Read free disk on the resolved job folder — 2026-11-10 [agents/lanes] (`agent-ops.md` §5.1).
+- A long decision run on a lane three times slower landed hours late. Send it to the earliest estimated finish, and move it before it starts — 2026-11-11 [agents/lanes] (`agent-ops.md` §5.1).
 - A third job on a lane raised the sum a little and slowed every running job more. Measure both before you add a job — 2026-11-09 [agents/lanes] (`agent-ops.md` §5.1).
 - A copied solver runtime gave bitwise-equal results to its source machine. Prove a new lane with one byte-level compare — 2026-11-09 [agents/lanes] (`agent-ops.md` §5.1).
 - Two parallel writers took the same next section number in one record. Give each writer a lettered section — 2026-11-10 [agents/records] (`agent-ops.md` §3).
 - A dead session's worktree locks blocked a cleanup. Read the lock reason, check that its process is gone, then unlock — 2026-11-10 [agents/worktrees] (`agent-ops.md` §5.3).
 - Two long jobs held two of three pool slots, and load from outside the pool shut the load gate. Light checks queued with one slot free. Keep one slot for light checks — 2026-11-10 [agents/pool] (`agent-ops.md` §8).
+- A fourth writer slipped past a cap of three. The coordinator counts the writers before each start, and pauses the least urgent one at its next commit — 2026-11-11 [agents/pool] (`agent-ops.md` §8).
 - A reviewer model at full reasoning effort spent its whole output limit and returned nothing. Set the limit to cover reasoning and answer — 2026-11-10 [agents/review] (`agent-ops.md` §4).
 
 ## tooling / determinism
@@ -376,6 +378,7 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - Two chips that both number their pins counter-clockwise forced a USB pair to cross layers. Check the pin order before a one-layer rule — 2026-11-06 [layout/usb] (`pcb-layout-dfm.md` §4).
 - Heavy outer copper widened each via's free circle, and a dense board ran out of via sites under its dense parts. Count the via sites before placement — 2026-11-10 [layout/stackup] (`pcb-layout-dfm.md` §2).
 - A 40-minute autorouter limit tested one pass, not rip-up. Run the router until the unrouted count plateaus before you judge a stack-up — 2026-11-11 [layout/router] (`pcb-layout-dfm.md` §1.2).
+- Three packer variants barely moved the placement predictors. Such a packer leaves no rows of via sites. Place the dense bands by hand-guided rows — 2026-11-11 [layout/placement] (`pcb-layout-dfm.md` §1.1).
 
 ## si / high-speed (`references/high-speed-si.md` carries the rules; one line each here)
 - A requirement closed on a simplified twin reopened on the launch of record: the twin had a solid plane and no contact posts, and read 9 dB better than the real launch. Solve the layout of record with ports that see the quantity — 2026-11-01 [si/model].
@@ -442,6 +445,13 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - Two solvers agreed on the through path and differed by over 1 dB in return loss, because their port forms differed. Match or de-embed the ports before you compare RL — 2026-11-10 [si/solvers] (`high-speed-si.md` §6.3).
 - A flat p/n through-magnitude difference shrank with the cell size. Suspect a mesh artefact, and confirm it by refinement before a retune — 2026-11-10 [si/mesh] (`high-speed-si.md` §7.1).
 - A straight line in dB put a corner 1 dB too good. Extrapolate on the complex S-parameter, and keep a run as the value of record — 2026-11-11 [si/method] (`high-speed-si.md` §10.1).
+- A night of fast-host probes with several dB of estimated margin changed no verdict. Rank the queue by the complex estimate, and keep every required run — 2026-11-11 [si/method] (`high-speed-si.md` §10.1).
+- A correction term sized at one corner changed sign at the other. Carry it as a complex term, or size it again at the corner that binds now — 2026-11-11 [si/method] (`high-speed-si.md` §11).
+- A centring retune moved the pass window and left its width unchanged. Compute the width before and after, and list the levers that widen it — 2026-11-11 [si/method] (`high-speed-si.md` §10.1).
+- A yield headline near 100 % hid leave-one-out errors of a few dB and rank-deficient solves. Check terms against runs, the error and the condition number per loop — 2026-11-11 [si/yield] (`high-speed-si.md` §10).
+- A yield model drew registration and the laminate lot once per build. Registration is a panel term. Draw each term at the level where it is common — 2026-11-11 [si/yield] (`high-speed-si.md` §10).
+- A project set a flat limit for a fixture-class board before it read the published fixture limits. Read the governing fixture clause first — 2026-11-11 [si/standards] (`high-speed-si.md` §9.1).
+- An agent read a one-board result against a mated-pair mask, and the margin was optimistic. Cascade the second board and the connector first — 2026-11-11 [si/standards] (`high-speed-si.md` §9.1).
 
 ## silk / dfm
 - The fab's DFM grades a value EQUAL to its warning threshold as Warning: design strictly greater — thresholds JSON.
@@ -594,6 +604,7 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A comb stopped short of the deck edge and left a saddle the census read at 0.32. Run the fused feature to the outline — 2026-10-24 [case/census] (`dfm-printed-enclosure.md` §8.7).
 - A foot moved away from the cable end cut the cable-on moment ratio from 2.63 to 1.09. Rerun the stability row after every foot move — 2026-10-24 [case/stability] (`case-pipeline.md` §Stability).
 - A second preset missed two days of shared changes, and its rebuild found a sliver. Rebuild every preset that shares the edited code — 2026-10-24 [case/presets] (`case-pipeline.md`).
+- A sliver snap merged a collinear T-junction vertex and moved real geometry. Snap only near-coincident clusters to the first-sorted vertex, and keep the collinear sliver — 2026-11-11 [case/mesh] (`dfm-printed-enclosure.md` §7.2).
 - Pockets were cut for a Ø6.0 disc, and the discs were Ø6.35. Keep a bought part's dimensions in one yaml block — 2026-10-21 [case/parts] (`case-pipeline.md`).
 - A bulk-air rise rule asked for about twice the flow and hid the fin pressure drop. Size the fan from the case limit through the sink curve — 2026-11-03 [mech/thermal] (`schematic-phase.md` §6).
 - A sink-only thermal model read 4 W low. A bare-board read gave the side path beside the sink — 2026-11-03 [mech/thermal] (`schematic-phase.md` §6).

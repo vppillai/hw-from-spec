@@ -52,6 +52,8 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 
 1. **Write the limit table with its basis and its verification method** (§9.1, §13). Give each limit its standard clause or its design
    basis. Say how the bench or the coupon checks it. A limit that no fixture can resolve is an analysis requirement from the start.
+   For a fixture-class board, read the published fixture limits first (§9.1). Compare a one-board result only after the mated
+   cascade.
 2. **Read the fab stack-up, the fab tolerances and the mechanical envelope live** (§2, §3). Compute the exact widths at both edges of the
    impedance window. Check the pair gap at the worst etch. Read the housing heights over the routing from the STEP. Fix the pair geometry
    before any 3D work.
@@ -554,6 +556,23 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 - Group links by type (chip to chip, connector to chip, long reach). Each group gets its own expectation.
 - Write the limit table before the runs: IL, RL, NEXT, FEXT and impedance at Nyquist **[method]**. A limit fixed first cannot move to fit the
   result. Add a softer aim up to twice Nyquist; edges carry energy there.
+- **Read the published fixture limits for a fixture-class board** **[method]**. A fixture-class board is a test fixture, a
+  compliance board, or a loopback or breakout that a fixture mask judges. Read its fixture limits before you set a flat project
+  line. The source is the governing standard of the interface. The OIF CEI implementation agreements are one public example.
+  OIF-CEI-05.1 (2022-12-29) gives mated compliance-board limits in sections 13.4.1, 16.4.1 and 25.4.1
+  **[V, https://www.oiforum.com/wp-content/uploads/OIF-CEI-5.1.pdf, read 2026-11-11]**. The limits cover return loss, mode
+  conversion and integrated crosstalk noise. The same source states that these limits are not connector specifications for an
+  implemented design. Other interface families hold the same kind of limit in their own fixture annexes. Read the clause for
+  your interface type and lane rate live. Cite it beside each row of the limit table. A product channel takes its limits from
+  the channel clause of its interface, never from a fixture mask. When no published fixture limit exists, write that in the
+  basis column. The published conversion limit varies with frequency. A flat line can then be too tight at one end of the band
+  and too loose at the other.
+- **A fixture mask applies to a mated pair with its connector** **[method]**. Cascade the full mixed-mode multiport S-parameters
+  of both boards and the connector model. Join them at the reference planes of the connector model. Count each footprint once.
+  Take the second board from the fixture vendor's file, or from a reference trace with the published reference loss. Record
+  which one you used. Then compare the cascade with the mask. Prefer the cascade to a one-board budget. A split budget needs a
+  stated rule in linear magnitude: a voltage sum for the worst case, or a root-sum-square with its basis. Take the share of the
+  connector from its model. A one-board result against a mated-pair mask is optimistic. Never report it as a pass.
 - Draw the limit line on every plot. A PASS word in a text box hides a curve 1 dB from the limit.
 - Give a table of the worst value and its frequency per net. Name and highlight a failing net, so the layout fix stays local.
 - Plot the return loss from both ends. The ends differ when the launches differ.
@@ -670,6 +689,26 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
   track width. Model the edge the way it happens.
 - Choose the impedance window with the mode conversion, not only with the return loss **[physics]**. A side-entry launch converts more as the
   pair narrows.
+- **Validate a corner surrogate before you quote a yield** **[method]**. A surrogate is a fit over the corner runs that a Monte
+  Carlo then samples. Fit the complex S-parameter per frequency point, and convert to dB last (§10.1). Check each loop:
+  1. The fit has fewer terms than independent runs, by two or more. A fit with as many terms as runs has no leave-one-out error.
+  2. Report the rank and the condition number of the solve. A rank-deficient or near-singular solve gives no yield. Cut terms
+     or add runs. The project states its condition-number limit.
+  3. Take the worst absolute leave-one-out error at the frequency and corner that set the margin. Compare it with the loop's
+     margin to the limit at the quoted percentile. Quote no yield when the error reaches the margin.
+  4. Hold out one or more interior runs, such as nominal or a half-step. Report the error there. Corner runs alone cannot see
+     curvature.
+  5. State the fit domain. Sample only inside the corners that runs cover, and never extrapolate outside them. The surrogate
+     takes impedance only at solved corners, and the fine-mesh corner runs of §7.1 stay the verdict.
+
+  A yield headline near 100 % hid leave-one-out errors of a few dB and rank-deficient solves *(worked example)*.
+- **Draw each fab term at the level where it is common** **[fab capability]**. A laminate lot is common to the boards of one
+  lot. A build can use one lot or several. Layer registration is a panel term, because the fab aligns and drills each panel on its
+  own. Its scale and rotation part changes with the board position on the panel, so keep a position residual per board. Etch
+  and local thickness are partly common to a panel or lot. Only the part the fab does not hold per panel is a board
+  term. Ask the fab which terms it holds per lot and per panel. Report the yield per board, per
+  panel and per build. The mean yield per board does not change, but its spread over builds does. A build of one panel tends to
+  pass or fail as a whole.
 
 ### 10.1 Ranking layout options
 
@@ -693,6 +732,19 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
   same, and convert to dB last. Linearity holds for small steps only. A straight line in dB put one corner 1 dB too good. The
   complex line matched the run within 0.04 dB *(worked example; one case)*. An extrapolated value only ranks the run queue. The
   value of record is a run, and the §7.1 ban on interpolation across the impedance axis still holds.
+- **Rank the run queue by the estimate, and never drop a required run** **[method]**. Estimate each candidate run on the
+  complex S-parameter from the landed runs, as above. Trust the estimate only inside the step range that a landed run has
+  confirmed. A run outside that range has no estimate, so queue it on its own merit. Add the extrapolation error to the
+  uncertainty band of the estimate. The estimate orders the queue and decides which optional probes run. Run first the
+  probes whose band holds the limit. A probe with several dB of estimated margin decides nothing, so it waits. A run of
+  record that a sign-off rule needs still runs. Such runs are §0.2 steps 7 and 8, the worst stacked corner per lane and the
+  fine-mesh corner runs of §7.1. The value of record stays a run. A night of fast-host probes with such margins changed no verdict
+  *(worked example)*.
+- **To first order, a centring retune moves the pass window and does not widen it** **[physics]**. Take a fixed term a and a
+  corner term b·x, so the window is the set of x with |a + b·x| < L. A retune of the part of a in phase with b moves the window.
+  Removing the part of a in quadrature with b widens it, and so does a lower sensitivity |b|. Compute the window width before
+  and after each retune. Before you spend margin on centring, list the levers that widen the window, with the width each one
+  gives. A smaller spread of the cause is one such lever.
 
 ## 11. Margin rules
 
@@ -706,6 +758,10 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 - A waiver needs independent support: the channel-level result, an active margin on the same structure and a documented precedent. Confirm it
   again after any design change.
 - Give every known model bias its sign. A receiver model that terminates twice is pessimistic; a pass with it stands, with the note.
+- **Size each correction term again when the binding corner moves** **[method]**. A correction in dB holds only at the corner,
+  pair and frequency where you sized it (§7.1). The artefact adds as a complex term, so its sign in dB follows the relative
+  phase. Carry it as a complex term, or size it again at each corner that a verdict uses. A retune that moves the worst corner
+  is the common trigger. Size the mesh term of §7.1 and the port-form offset of §6.3 again at the new worst corner.
 - Hold the loss of the channel under a margin rule well inside the standard's budget **[owner choice]**.
 - Margins are owner decisions. An agent proposes the row with the number; the owner accepts it.
 - A margin within about 2 dB of its limit may rest on one solver class. Then it needs the independent solver of §6.3 first.
@@ -837,7 +893,10 @@ Give each reviewer the frozen study, the yaml, the scripts and this list. Give n
 51. Does a skew trim stand against an over-void imbalance? Is the conversion flat across the band, or nulled at one frequency?
 52. When the commercial solver was unavailable, which acceptance rule replaced it? Did the owner approve the rule?
 53. Does any matrix entry come from a fill (S22 = S11) or a reciprocity swap instead of its own drive run?
-54. Does each lane's tier (§0.0) hold for its rate, length and margin? Judge the lane by the evidence of its tier only. Items 3 to 53 apply to tier-3 lanes.
+54. Does each corner surrogate have fewer terms than runs, a stated condition number, a leave-one-out error under the margin and a stated fit domain?
+55. For a fixture-class board, is each fixture limit cited to its clause, and is it judged on the mated cascade, not on one board?
+56. Was each correction term sized again at the corner that binds now?
+57. Does each lane's tier (§0.0) hold for its rate, length and margin? Judge the lane by the evidence of its tier only. Items 3 to 56 apply to tier-3 lanes.
 
 ## 16. Records
 

@@ -1,6 +1,6 @@
 # CHANGELOG — hw-from-spec
 
-## Current state (0.12.5): read this instead of replaying the entries below
+## Current state (0.12.6): read this instead of replaying the entries below
 
 - **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
   thirteen batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
@@ -43,6 +43,37 @@
   address and public pull-request numbers excepted) — `scripts/generic_lint.py` reads the whole repo
   (CHANGELOG and docs included; history keeps its measured numbers), a fenced worked example keeps numbers and kinds but never a name, and the
   repo carries no project retro (a retro report is folded, then deleted).
+
+## 0.12.6 - 2026-11-11 - Runs ranked by estimate, surrogates checked before a yield, mated fixture limits, near-coincident snaps
+
+Source: the project log of 2026-11-11, after the 0.12.5 cut. The entry adds rules to four references and 11 lines to
+`references/pitfalls.md`. Nothing is removed. Two blind reviews of the draft and their fixes are folded in.
+
+### Added
+- `references/high-speed-si.md`:
+  - §0.2 step 1 and §9.1: for a fixture-class board, read the published fixture limits before a flat project line. The OIF
+    CEI implementation agreements are one public example, read live in OIF-CEI-05.1 (2022-12-29) at
+    https://www.oiforum.com/wp-content/uploads/OIF-CEI-5.1.pdf. A product channel takes the channel clause. Judge a
+    mated-pair mask on the full mixed-mode cascade, never on one board.
+  - §10: validate a corner surrogate per loop (terms against runs, condition number, worst leave-one-out error against the
+    margin, interior hold-outs, the fit domain). Draw each fab term at its own level: lot, panel or board.
+  - §10.1: the complex estimate ranks the run queue and decides which optional probes run. A required run still runs. To
+    first order, a centring retune moves the pass window and does not widen it.
+  - §11: a correction in dB holds only where it was sized. Size it again when the binding corner moves.
+  - §15: items 54 to 56 check the surrogate, the fixture-limit cascade and the corrections. The tier item is now 57.
+- `references/agent-ops.md`: §5.1 sends a decision run to the earliest estimated finish. A queued run moves early, and a
+  started run moves only when the new lane finishes first. §8 item 5: the coordinator counts the writers before each
+  start and pauses one at its next commit.
+- `references/pcb-layout-dfm.md` §1.1: a packer that places by area or wire length leaves no routing channels. Stop the
+  variants on a predictor test, then place the dense bands by hand-guided CSV rows.
+- `references/dfm-printed-enclosure.md` §7.2: a sliver snap merges near-coincident clusters only, to the first-sorted vertex.
+  A collinear T-junction sliver stays in the canonical file.
+- `references/pitfalls.md`: dated lines in si, layout, agents and mechanical / case.
+
+### Not done
+- The router plateau line of the same day is in 0.12.5 already.
+- No script changes. The near-coincident snap threshold is a project canonicaliser setting, so the skill gives the rule only.
+- The current-state summary needs no new line: no script, template folder or reference was added.
 
 ## 0.12.5 - 2026-11-11 - Fix-checks after every panel, matched ports before a solver compare, complex extrapolation, stock trends
 
