@@ -559,7 +559,7 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 - **Read the published fixture limits for a fixture-class board** **[method]**. A fixture-class board is a test fixture, a
   compliance board, or a loopback or breakout that a fixture mask judges. Read its fixture limits before you set a flat project
   line. The source is the governing standard of the interface. The OIF CEI implementation agreements are one public example.
-  OIF-CEI-05.1 (2022-12-29) gives mated compliance-board limits in sections 13.4.1.2, 16.4.1.1 and 25.4.1.2
+  OIF-CEI-05.1 (2022-12-29) gives mated compliance-board limits in sections 13.4.1, 16.4.1 and 25.4.1
   **[V, https://www.oiforum.com/wp-content/uploads/OIF-CEI-5.1.pdf, read 2026-11-11]**. The limits cover return loss, mode
   conversion and integrated crosstalk noise. The same source states that these limits are not connector specifications for an
   implemented design. Other interface families hold the same kind of limit in their own fixture annexes. Read the clause for
@@ -705,7 +705,8 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 - **Draw each fab term at the level where it is common** **[fab capability]**. A laminate lot is common to the boards of one
   lot. A build can use one lot or several. Layer registration is a panel term, because the fab aligns and drills each panel on its
   own. Its scale and rotation part changes with the board position on the panel, so keep a position residual per board. Etch
-  and local thickness are board terms. Ask the fab which terms it holds per lot and per panel. Report the yield per board, per
+  and local thickness are partly common to a panel or lot. Only the part the fab does not hold per panel is a board
+  term. Ask the fab which terms it holds per lot and per panel. Report the yield per board, per
   panel and per build. The mean yield per board does not change, but its spread over builds does. A build of one panel tends to
   pass or fail as a whole.
 
