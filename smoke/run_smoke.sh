@@ -276,7 +276,8 @@ cp "$SKILL/templates"/{project.yaml,CLAUDE.md} $K/; cp "$SKILL/templates"/10-spe
  echo "$out" | grep -q '^NOT GATE EVIDENCE' && [[ ! -e 90-log/TRACEABILITY.md ]] || { echo "FAIL (review 0.12.4): a --no-commands run must say it is not gate evidence and must not write the matrix of record"; exit 1; }
  for flags in "--no-commands" "--only D-02"; do rc=0; out=$("$PY" scripts/traceability.py --check $flags 2>&1) || rc=$?
   [[ $rc == 2 ]] && echo "$out" | grep -q '^REFUSED' || { echo "FAIL (review 0.12.4): traceability --check $flags must exit 2 with REFUSED (got rc $rc)"; exit 1; }; done
- echo "slots: fresh ee scaffold -> exit 1 with counts; trivially filled -> 0; kickoff --check: unfilled yaml names the slots, D-X rows FAIL, filled rows pass")
+ grep -q 'exec </dev/null' "$SKILL/templates/ci/Makefile" && grep -q 'stdin=subprocess.DEVNULL' "$SKILL/scripts/traceability.py" || { echo "FAIL (0.12.5): the record round and the traceability command runner must close stdin"; exit 1; }
+echo "slots: fresh ee scaffold -> exit 1 with counts; trivially filled -> 0; kickoff --check: unfilled yaml names the slots, D-X rows FAIL, filled rows pass")
 say "0b scope: A0 asked first, every scope scaffolds from ONE template set and gets its own gate rows"
 grep -q '^\*\*A0 Project scope' "$SKILL/references/kickoff-questionnaire.md" && grep -q '^| A0 | scope' "$SKILL/templates/10-spec/KICKOFF_ANSWERS.md" || { echo "FAIL: kickoff A0 (scope) missing"; exit 1; }
 grep -q '^## 1. Phase / gate model (per scope)' "$SKILL/SKILL.md" && grep -q '^## 6. Layout phase and the adopt rule \[ee, both\]' "$SKILL/SKILL.md" && grep -q '^## 8. Case pipeline and FEA \[mech, both\]' "$SKILL/SKILL.md" || { echo "FAIL: SKILL.md lost the scope model / heading tags"; exit 1; }

@@ -31,7 +31,7 @@ pdf:              ## PDF render of the documents whose source md5 changed, one h
 
 record-round:     ## the one-round record chain (references/release-and-cut.md §3.1), serialized: one lock on the machine, once per batch
 	@mkdir "$(LOCK)" 2>/dev/null || { echo "record round already running (lock $(LOCK))"; exit 1; }
-	@trap 'rmdir "$(LOCK)"' EXIT; set -e; \
+	@trap 'rmdir "$(LOCK)"' EXIT; set -e; exec </dev/null; \
 	$(PY) scripts/known_issues.py; \
 	if $(PY) scripts/project.py record | grep -q MISSING; then echo "skip: no record of record yet (collect_renders)"; else $(JOBS) --tag records -- $(PY) scripts/collect_renders.py; fi; \
 	$(PY) scripts/release_report.py; \

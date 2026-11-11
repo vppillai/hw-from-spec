@@ -36,8 +36,10 @@ the cage) is `locked: true` with the spec section in `note`. Placement is regene
 The routed board + the router's session file (Freerouting `.ses` with its `.dsn`, or the equivalent) are the artefacts of record; routing is
 never re-run to reproduce them (deterministic only with one thread and the same inputs). Re-import (`--import-ses`) is the replay. Keep-outs and
 net classes must be exported into the router input — grep the DSN for them after any flag change (`references/pitfalls.md` kicad).
-A short autorouter time limit tests one pass, not its rip-up. Give the router hours with the optimiser off before you judge a
-stack-up by its routed percentage.
+Judge a stack-up by its routed percentage only after the router has plateaued. Run it until the unrouted count stops falling
+over several passes, and read the pass log, not the clock. A 40-minute limit on one dense board tested one pass, not the
+rip-up *(worked example)*. Skip the optimiser pass, which adds no connections. A low routed percentage is a screen: confirm
+the bottleneck by hand before you change the stack-up.
 
 ### 1.3 The G2 review pack (`80-reviews/G2/`, generated, committed)
 | File | Produced by | Why the reviewer needs it |
@@ -61,9 +63,12 @@ stack-up by its routed percentage.
   minimum trace/space: JLC 0.15/0.15 at 2 oz vs 0.09/0.09 at 1 oz. It costs mask dam width: 0.20 vs 0.10. It also costs the fab's impedance
   calculator support: JLC's supports 1 oz only (2026-09-13). Inner copper default 0.5 oz **[fab capability]**; 1 oz inner changes prepreg/core
   thickness and therefore impedance geometry — pin one value in the spec before layout.
-- **Check the via-site density against the copper weight before placement** **[fab capability]**. Heavy outer copper widens the
-  free circle a via needs. On 2 oz outer copper a 0.80 mm via site needed a 1.42 mm free circle. One dense four-layer logic board then
-  routed no more than 51 % at any outline growth *(worked example)*.
+- **Check the via sites against the copper weight before placement** **[method]**. A via site is a spot where a via fits with
+  its clearance to all other copper. Its free circle is the via pad plus twice the copper-to-copper clearance at that copper
+  weight, plus any annular-ring growth the fab asks. Read the clearance from the fab's live table (§2.1). Count the vias the
+  netlist needs under each dense part's fan-out, and compare with the free circles that fit between its pads. Do it before the
+  copper weight is fixed. One dense four-layer logic board on 2 oz outer copper ran out of via sites under its dense parts, and
+  a larger outline did not help *(worked example)*.
 - Thickness tolerance ±10 % at ≥ 1.0 mm **[fab capability]** (1.6 → 1.44…1.76): a press-fit connector or a card-edge must accept the range.
 - Material grade / Tg is selected at order **[owner choice]** (JLC impedance profiles assume a TG155 laminate).
 - **Fab capabilities move** **[fab capability]**. Read the live capability page before a study recommends a stack. Worked example, JLC

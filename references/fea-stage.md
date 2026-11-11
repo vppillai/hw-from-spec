@@ -73,9 +73,10 @@ elasticity, heat) · pyamg (SA-AMG + CG for > 60k DOF) · trimesh/rtree/shapely 
   Planned reads (2026-10, written before the parts arrive). `A` is the exposed sink area the model reads. `q` is the pad power at
   the plateau. Four reads of 15 min: coupled hood off, coupled hood on, then the same unit free in both poses. Pass at the
   model's `h`, or at a measured factor written back into the yaml with the model rerun PASS.
-- Put a first-law assert in every thermal model's selftest. The heat that the air carries cannot exceed the heat put in. The
-  outlet rise cannot fall under the heat-capacity floor. One airflow model counted 2n fin faces for n-1 channels and read
-  under its own floor *(worked example)*.
+- Assert the energy balance in every thermal model's selftest, at steady state. The heat the air carries, ṁ·cp·ΔT_air, equals
+  the heat put in less the heat on every other modelled path, within a stated tolerance. Here ṁ is the air mass flow, cp its
+  specific heat and ΔT_air the outlet rise over the inlet. Also assert that the sink rise over the inlet is not under ΔT_air.
+  One airflow model counted 2n fin faces for n-1 channels. Its sink rise read under its air rise *(worked example)*.
 ## Cases that paid for themselves (worked examples)
 - Case torsion (two-hand twist): a single bottom dovetail is a hinge; two rail pairs ~17 mm apart gave ~2.5× stiffness.
 - Snap tab: the hand formula under-read peak stress by ~1.2× (slit-root concentration); peak ∝ deflection — reduce travel before thickening.

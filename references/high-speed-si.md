@@ -400,7 +400,7 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 - Correlate a thin margin with a solver of another class before it decides a gate **[method]**. Two open solvers can share a modelling
   choice. A commercial FEM solver, run on the same copper, puts a number on the model error.
 - Prove that both decks draw the same copper before you compare them. Compute the symmetric difference of the copper area, the void
-  holes and the barrels. It reads zero when the decks match.
+  holes and the barrels. It reads zero when the decks match. Compare the port form and the reference planes too.
 - Run the correlation cases first: the worst case as drawn, the case after the fix and a single-channel reference.
 - Name a solver of record only after two solvers agree within a stated band on those cases. When they disagree, find the cause
   before you trust either. Let the fast solver run the sweeps, and let it reproduce each result of record with the gap stated.
@@ -414,9 +414,11 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 - A fixed dielectric conductivity fitted at a high frequency gives a loss tangent far too high low in the band. A fit at 20 GHz
   read about 20 times too high at 1 GHz *(worked example)*. Both solvers carry it, so the cross-check stays fair. The absolute
   loss low in the band does not.
-- Two solvers can agree on the through path and still differ in return loss **[method]**. One pair agreed within 1 degree of
-  phase and differed by 1.0 to 1.6 dB in RL *(worked example)*. The port form decided it. A box port over the contact tail
-  added 17 to 20 fF against a sheet port at its middle. Read RL from the second solver before a margin under 1 dB closes.
+- Two solvers can agree on the through path and still differ in return loss **[method]**. A small shunt capacitance at a port
+  moves RL and leaves the through phase alone. One pair agreed within 1 degree of phase and differed by 1.0 to 1.6 dB in RL
+  *(worked example)*. A box port over the contact tail added 17 to 20 fF against a sheet port at its middle. Give both solvers
+  the same port form and reference plane, or de-embed the port capacitance, before you compare RL. Choose the form that matches
+  the physical feed (§8). Carry any residual difference as RL uncertainty against the margin.
 - **When the shared solver is busy, keep working under an agreed rule.** Run the commercial solver only when no other user waits
   for a licence or a host. When the cluster stays full, do not hold a gate for it. Agree an open-solver acceptance rule with the
   owner instead:
@@ -448,9 +450,9 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
   2 dB *(worked example)*. A near-limit verdict needs a fine-mesh run at each impedance corner.
 - A flat mode-conversion floor at low frequency is a static p/n imbalance **[method]**. Look for it in the model first: a missing
   contact tail, or a grid state that one pair width hits. Compare the per-port through magnitudes with a second solver. A floor
-  that no lever moves is not the lever's physics.
-- A frequency-flat leg split that follows the pair impedance and shrinks with the x-y cell is a mesh artefact **[method]**.
-  Check a fail that sits on that floor in a second solver before a geometry retune.
+  that no lever moves is not the lever's physics. A flat difference between the p and n through magnitudes that shrinks
+  with the x-y cell is at least partly a mesh artefact. Run a finer cell first, and extrapolate the difference to zero cell.
+  Then check a fail on that floor in a solver with another mesh kind (conformal against staircase) before a geometry retune.
 - Judge FDTD time convergence on the port tail, not only on the energy **[method]**. A baseband Gaussian excitation carries DC, and an absorbing face
   cannot remove a static field. The energy then stalls while every port voltage has died. A DC-free excitation (the derivative of a Gaussian)
   converges fast and gives the same S-parameters.
@@ -680,13 +682,17 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
   *(worked example)*. Build a trade map: each lever value against every stacked corner, with the value of record in each cell.
   When no setting passes every corner, give the owner the options with their values. Put the root-cause option beside them, even
   when it costs a new layout study.
+- **One-at-a-time corners do not bound a stacked corner** **[method]**. Two corner terms add when they are near in phase. An
+  impedance corner and a registration corner together gave a small fine-mesh fail that neither gave alone *(worked example)*.
+  The phase of a corner term depends on each lane's geometry. Never copy one lane's result to another lane, and run the worst
+  stacked corner per lane before sign-off.
 - Reversing the drive end mirrors a loop **[physics]**. The two registration corners along the mirror axis then swap values between
   SCD21 and SCD12. The worst value over the pair does not change. Read both corners before you call a direction change a new risk.
-- **Extrapolate mode conversion on the complex S-parameter, never on dB values** **[method]**. Phase matters when two terms
-  add. A straight line in dB put one corner 1 dB too good. The complex line matched the run within 0.04 dB *(worked example)*.
-- Two corner terms of the same sign stack **[method]**. One impedance corner and one registration corner together gave a small
-  fine-mesh fail that neither showed alone. A run-queue score that adds a fixed offset per corner term needs its sign per loop.
-  A fixed offset had the wrong sign on the outer loops *(worked example)*.
+- **Extrapolate mode conversion on the complex S-parameter, never on dB values** **[method]**. Extrapolate across one corner
+  parameter, such as a registration offset, at one mesh level and per frequency point. Keep the ports and reference planes the
+  same, and convert to dB last. Linearity holds for small steps only. A straight line in dB put one corner 1 dB too good. The
+  complex line matched the run within 0.04 dB *(worked example; one case)*. An extrapolated value only ranks the run queue. The
+  value of record is a run, and the §7.1 ban on interpolation across the impedance axis still holds.
 
 ## 11. Margin rules
 

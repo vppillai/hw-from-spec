@@ -44,32 +44,42 @@
   (CHANGELOG and docs included; history keeps its measured numbers), a fenced worked example keeps numbers and kinds but never a name, and the
   repo carries no project retro (a retro report is folded, then deleted).
 
-## 0.12.5 - 2026-11-11 - Fix-checks after every panel, solvers that differ at the port, complex extrapolation, stock trends
+## 0.12.5 - 2026-11-11 - Fix-checks after every panel, matched ports before a solver compare, complex extrapolation, stock trends
 
-Source: the project log of 2026-11-10 and 2026-11-11, after the 0.12.4 cut. The entry adds rules to eight references and 19 lines to
-`references/pitfalls.md`. Nothing is removed. No script changes.
+Source: the project log of 2026-11-10 and 2026-11-11, after the 0.12.4 cut. The entry adds rules to eight references and 18 lines to
+`references/pitfalls.md`. Nothing is removed. Two blind reviews of the draft and their fixes are folded in.
 
 ### Added
 - `references/agent-ops.md`:
-  - §4: always run a fix-check after a panel's fixes. After a rule change, walk one verdict through every verdict table. Run
-    every gate on a recommended value before you apply it. Budget the output of a reviewer model.
-  - §5.3: a lettered section per parallel writer. Check that a worktree's locking process is dead before you unlock. Batch
-    scripts take stdin from `/dev/null`.
-  - §8 item 5: keep one pool slot for light checks while long solver runs hold the rest.
+  - §3: a lettered section per parallel writer of one record.
+  - §4: a persona panel gets the fix-check round too. After a change to a judging rule, trace one case through every table the
+    rule feeds. Apply a recommended value in the worktree and run every gate before the commit. Set a reviewer model's output
+    limit to cover its reasoning and its answer.
+  - §5.3: read a worktree lock's reason and check its process before you unlock. Batch scripts take stdin from `/dev/null`.
+  - §8: item 3 keys a slice on the slicer version too. Item 5 keeps one slot for light checks when the pool is 3 or more.
 - `references/high-speed-si.md`:
-  - §6.3: two solvers can agree on the through path and differ in return loss. The port form decides it.
-  - §7.1: a frequency-flat leg split that shrinks with the cell is a mesh artefact.
-  - §10: extrapolate mode conversion on the complex S-parameter, never on dB. Same-sign corner terms stack; sign a queue offset per loop.
-- `references/release-and-cut.md` §3.1: run the anchored record checks before a status sweep.
-- `references/pcb-layout-dfm.md`: §1.2 an autorouter time limit long enough for rip-up. §2 via-site density against the copper weight.
-- `references/part-verification.md`: track the stock trend of every single-source part.
-- `references/schematic-phase.md` §7: an MCU's own reset can keep its GPIO pad state.
-- `references/fea-stage.md`: a first-law assert in every thermal model's selftest.
-- `references/fdm-print-optimisation.md` §5: re-slice the whole kit with one slicer version, and record it per plate.
+  - §6.3: compare the port form in the same-copper check. Match or de-embed the ports before two solvers compare return loss.
+  - §7.1: a flat p/n through-magnitude difference that shrinks with the cell is at least partly a mesh artefact.
+  - §10.1: one-at-a-time corners do not bound a stacked corner. Extrapolate mode conversion on the complex S-parameter across one
+    corner parameter; a run stays the value of record.
+- `references/release-and-cut.md` §3.1: run the anchored record checks after a status sweep edit, before its commit.
+- `references/pcb-layout-dfm.md`: §1.2 judge a stack-up only after the router plateaus. §2 count the via sites against the copper
+  weight before placement.
+- `references/part-verification.md` "Gates that catch the usual mistakes": project the stock of every single-source part to the
+  order date.
+- `references/schematic-phase.md` §7: an MCU's own reset can keep its GPIO pad state; read the reset table and fix it in hardware.
+- `references/fea-stage.md` "Thermal": assert the energy balance and the sink rise in every thermal model's selftest.
+- `references/print-kit.md` §4: pin the slicer version, and record it in each plate sidecar.
 - `references/pitfalls.md`: dated lines in process, agents, tooling, layout, si, sourcing, fea, software and review.
 
+### Changed
+- `templates/ci/Makefile` `record-round` reads stdin from `/dev/null`.
+- `scripts/traceability.py` runs each command row with stdin closed.
+- `smoke/run_smoke.sh` checks both.
+
 ### Not done
-- Nothing project-only came in this batch.
+- A CSS note about a sticky side menu stays in the project. It is too thin for a hardware skill.
+- The current-state summary needs no new line: no script, template folder or reference was added.
 
 ## 0.12.4 - 2026-11-10 - Gate evidence that hides nothing, landed results with provenance, virtual clocks, merges that keep their values
 

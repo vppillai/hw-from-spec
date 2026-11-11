@@ -85,6 +85,9 @@ README a repo path is allowed, every other class still fails); the run FAILS on 
   (print order within the kit, 1 = first). `filament_changes` is an int, or a mapping `{designed, counted, ok}` that the page reads as `counted`, else `designed`. A plate
   whose `.3mf` is missing, whose sidecar lacks the required keys or whose `stl_md5s` are not in `parts/` is listed as BROKEN. `scripts/now_pages.py` derives `00-now/WHAT_TO_PRINT.md` from these sidecars alone — a plate without a sidecar
   does not exist to the reader.
+- Pin the slicer version on the build host, and turn its self-update off. One update changed a base profile and turned arc
+  fitting off *(worked example)*. Slice the whole kit with one version. The sidecar records `slicer_version`, read from the
+  G-code header, and the slice cache key includes it (`agent-ops.md` §8 item 3).
 - Coupons and bracket variants carry their identifier and tested value as printed text on the part (dfm-printed-enclosure.md
   "Coupons are self-documenting"); START_HERE refers to them by that printed text, not by slicer object names.
 - **A fit slot on a coupon is open at one edge of the block**, not a closed pocket. The owner tries the coupon with the mating part at hand:
