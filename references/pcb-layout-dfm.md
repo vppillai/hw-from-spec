@@ -31,10 +31,13 @@ origin as origin and Y up. Rotation is in CCW degrees. `side` = top/bottom, `loc
 cluster (connectors, power, mcu, …). The
 generator refuses a refdes missing from the schematic or a part outside the outline; a part the spec pins (connector positions, mounting holes,
 the cage) is `locked: true` with the spec section in `note`. Placement is regenerated from the CSV — the CAD GUI is never the source.
-**An automatic packer places parts, not routing channels** **[method]**. It cannot leave rows of via sites through a dense fan-out or
-put the decoupling at the power pins. Track the placement predictors per variant: via sites, congestion and wire length. When
-they barely move across packer variants, stop the variants. Place the dense bands by hand-guided rows in the CSV: the rows of via sites
-first, then the decoupling at the pins. Then run the router again.
+**A packer that places by outline area or wire length does not leave routing channels** **[method]**. A packer here is a script
+that proposes placement CSV rows. Such a packer leaves no rows of via sites through a dense fan-out. It does not hold the
+decoupling at the power pins either. Track three placement predictors per variant: the via-site count (§2), the unrouted count
+after one fixed router pass, and the total wire length. Stop the variants when three in a row change each predictor by less
+than its run-to-run spread. Then place the dense bands by hand-guided rows. A dense band is a strip of fine-pitch parts and
+their fan-out. A hand-guided row is a CSV row whose position the designer chooses, with `locked: true`. Place the rows of
+via sites first, then the decoupling at the pins. Then run the router again.
 
 ### 1.2 Router session **[convention]**
 The routed board + the router's session file (Freerouting `.ses` with its `.dsn`, or the equivalent) are the artefacts of record; routing is

@@ -323,13 +323,17 @@ you call a hash "the geometry". The census gate, the vendor uploads and the prod
 signature** (volume, area, bbox, facet count, rounded to 1e-3). Two STLs that differ by a 1e-6 vertex jitter are "different geometry" to
 the md5 and identical to the signature. A flipped verdict on "identical" geometry is diagnosed in one line instead of a mesh diff.
 **Gate watertightness AFTER canonicalisation, on the file that is recorded**. A canonicaliser that drops zero-area slivers can open the mesh: a
-sliver of 1e-5 mm² can be the only face joining two near-coincident vertices. Snap the sliver's closest vertex pair first, then drop what
-collapsed. **Snap only a near-coincident pair**: closer than a fixed threshold far below the print resolution (1e-3 mm *(worked
-example)*). A collinear T-junction sliver has three distinct vertices. Snapping it moves real geometry, and the export order decides
-which vertex moves. Leave such a sliver in place. Prove the snap on two export orders of one body: the canonical bytes match.
+sliver of 1e-5 mm² can be the only face joining two near-coincident vertices. Snap the sliver's closest vertex pair first, then drop the faces
+that collapsed. Snap only a near-coincident pair. Set the threshold below the shortest real edge of the body and below the print
+resolution (1e-3 mm *(worked example)*). Merge a chain of near pairs as one cluster. The survivor is the cluster vertex that sorts
+first by coordinate, so the export order cannot choose it. A collinear T-junction sliver has three distinct vertices and zero area.
+It stays in the canonical file: dropping it opens the edge, and snapping it moves real geometry. The canonicaliser drops only a
+face that collapsed after a snap. Write a kept degenerate face with a zero normal. Record the count of kept degenerate faces in the
+signature row. After the snap, the signature (volume, area, bbox) stays the same at its rounding. Prove the snap on two orders of
+one body: export twice, or shuffle the triangles of one export. The canonical bytes match.
 A body without slivers keeps its bytes. Record the md5 of the canonical file, never of the raw export.
 **Every chain writes the canonical STL.** A chain that copies the raw OpenSCAD 2021.01 export moves its md5 on every re-run, because the triangle
-order changes. The first canonical pass of an old raw file can change bytes without changing shape, because it drops zero-area slivers. Prove that
+order changes. The first canonical pass of an old raw file can change bytes without changing shape, because it drops collapsed slivers. Prove that
 pass by triangle set, area and volume, then accept it once.
 **A tessellation change on a print aid is a baseline update, never a geometry change.** CGAL can triangulate a coplanar face differently across
 environments, with the same binary and fonts. Prove determinism first: two forced exports give identical bytes. Then record the new md5 and the

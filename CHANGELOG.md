@@ -44,31 +44,34 @@
   (CHANGELOG and docs included; history keeps its measured numbers), a fenced worked example keeps numbers and kinds but never a name, and the
   repo carries no project retro (a retro report is folded, then deleted).
 
-## 0.12.6 - 2026-11-11 - Runs that can decide, surrogates checked before a yield, mated fixture limits, near-coincident snaps
+## 0.12.6 - 2026-11-11 - Runs ranked by estimate, surrogates checked before a yield, mated fixture limits, near-coincident snaps
 
-Source: the project log of 2026-11-11, after the 0.12.5 cut. The entry adds rules to five references and 11 lines to
-`references/pitfalls.md`. Nothing is removed.
+Source: the project log of 2026-11-11, after the 0.12.5 cut. The entry adds rules to four references and 11 lines to
+`references/pitfalls.md`. Nothing is removed. Two blind reviews of the draft and their fixes are folded in.
 
 ### Added
 - `references/high-speed-si.md`:
-  - §0.2 step 1 and §9.1: read the published fixture limits (the OIF CEI implementation agreements) before a flat project
-    line. Compare a one-board result with a mated-pair mask only after you cascade the second board and the connector.
-  - §10: validate a corner surrogate by its leave-one-out error and rank per loop before a yield. Draw the panel-common
-    terms (registration, laminate lot) once per build.
-  - §10.1: estimate every candidate run on the complex value before it takes a lane. A centring retune moves the pass
-    window and does not widen it.
-  - §11: size each correction term again when the binding corner moves.
-- `references/agent-ops.md`: §5.1 match runs to lanes by speed, and move a misplaced decision run early. §8 item 5 counts
-  the live writers before each start.
-- `references/pcb-layout-dfm.md` §1.1: an automatic packer cannot leave rows of via sites or put decoupling at the pins. When the
-  predictors stop moving across variants, place the dense bands by hand-guided CSV rows.
-- `references/dfm-printed-enclosure.md` §7.2: a sliver snap merges near-coincident vertex pairs only. Prove it on two
-  export orders.
+  - §0.2 step 1 and §9.1: for a fixture-class board, read the published fixture limits before a flat project line. The OIF
+    CEI implementation agreements are one public example, read live in OIF-CEI-05.1 (2022-12-29) at
+    https://www.oiforum.com/wp-content/uploads/OIF-CEI-5.1.pdf. A product channel takes the channel clause. Judge a
+    mated-pair mask on the full mixed-mode cascade, never on one board.
+  - §10: validate a corner surrogate per loop (terms against runs, condition number, worst leave-one-out error against the
+    margin, interior hold-outs, the fit domain). Draw each fab term at its own level: lot, panel or board.
+  - §10.1: the complex estimate ranks the run queue and decides which optional probes run. A required run still runs. To
+    first order, a centring retune moves the pass window and does not widen it.
+  - §11: a correction in dB holds only where it was sized. Size it again when the binding corner moves.
+  - §15: items 54 to 56 check the surrogate, the fixture-limit cascade and the corrections. The tier item is now 57.
+- `references/agent-ops.md`: §5.1 sends a decision run to the earliest estimated finish. A queued run moves early, and a
+  started run moves only when the new lane finishes first. §8 item 5: the coordinator counts the writers before each
+  start and pauses one at its next commit.
+- `references/pcb-layout-dfm.md` §1.1: a packer that places by area or wire length leaves no routing channels. Stop the
+  variants on a predictor test, then place the dense bands by hand-guided CSV rows.
+- `references/dfm-printed-enclosure.md` §7.2: a sliver snap merges near-coincident clusters only, to the first-sorted vertex.
+  A collinear T-junction sliver stays in the canonical file.
 - `references/pitfalls.md`: dated lines in si, layout, agents and mechanical / case.
 
 ### Not done
 - The router plateau line of the same day is in 0.12.5 already.
-- The OIF clause numbers stay out. The rule names the document family and asks for a live read of the clause.
 - No script changes. The near-coincident snap threshold is a project canonicaliser setting, so the skill gives the rule only.
 - The current-state summary needs no new line: no script, template folder or reference was added.
 
