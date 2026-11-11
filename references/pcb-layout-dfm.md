@@ -65,7 +65,7 @@ the bottleneck by hand before you change the stack-up.
   thickness and therefore impedance geometry — pin one value in the spec before layout.
 - **Check the via sites against the copper weight before placement** **[method]**. A via site is a spot where a via fits with
   its clearance to all other copper. Its free circle is the via pad plus twice the copper-to-copper clearance at that copper
-  weight, plus any annular-ring growth the fab asks. Read the clearance from the fab's live table (§2.1). Count the vias the
+  weight, plus any annular-ring growth the fab asks. Read the clearance from the fab's live table (§4). Count the vias the
   netlist needs under each dense part's fan-out, and compare with the free circles that fit between its pads. Do it before the
   copper weight is fixed. One dense four-layer logic board on 2 oz outer copper ran out of via sites under its dense parts, and
   a larger outline did not help *(worked example)*.

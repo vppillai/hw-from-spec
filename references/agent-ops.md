@@ -401,7 +401,7 @@ A licensed solver on a shared cluster belongs to other people's work. Your job r
 - For a copied runtime, set `DYLD_FALLBACK_LIBRARY_PATH`, not `DYLD_LIBRARY_PATH`. The fallback acts only on a missing
   library, so a Python wheel keeps its own bundled libraries.
 - After a session restart, the dead session's worktree locks block a cleanup. Read the lock reason with
-  `git worktree list --porcelain`. If it names a process id, check that the process is gone (`kill -0 <pid>` fails). If it names
+  `git worktree list --porcelain`. If it names a process id, check that the process is gone (`ps -p <pid>` finds nothing). If it names
   none, check that no live session uses the path. Check the worktree for uncommitted and unmerged work, then unlock.
 - A batch script that runs tests takes stdin from `/dev/null`. A selftest that calls `input()` on an open pipe that never closes
   waits for ever at 0 % CPU. A selftest calls `input()` only when stdin is a terminal. The `record-round` target of
@@ -488,8 +488,8 @@ audit, then change.
    reviewers are unlimited but told not to re-slice or re-render. Use one worktree per writing agent (§2).
    When `host.jobs_max` is 3 or more, keep one slot for light checks only. The coordinator starts long solver runs and other
    heavy jobs in at most `jobs_max - 1` slots; `scripts/jobs.sh` has no reserve option. At a smaller pool, send long solver
-   runs to a remote lane (§5.1). Two long solver runs held two of three slots for hours, and light writer checks queued
-   behind the heavy jobs *(worked example)*.
+   runs to a remote lane (§5.1). Long jobs held every slot of a three-slot pool for hours, and light writer checks
+   queued behind them *(worked example)*.
 6. **Geometry engine — previews on the fast engine, geometry of record on the engine that passes the mesh gates.** The 2021.01 OpenSCAD release's CGAL
    kernel is slow (minutes per body). The snapshot build ships the Manifold backend, `--backend=Manifold`. `openscad --help` of a snapshot lists
    `--backend arg: 'CGAL' (old/slow) [default] or 'Manifold' (new/fast)` **[V, OpenSCAD manual, wikibooks "Using OpenSCAD in a command line
