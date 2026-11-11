@@ -1,6 +1,6 @@
 # CHANGELOG — hw-from-spec
 
-## Current state (0.12.4): read this instead of replaying the entries below
+## Current state (0.12.5): read this instead of replaying the entries below
 
 - **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
   thirteen batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
@@ -43,6 +43,43 @@
   address and public pull-request numbers excepted) — `scripts/generic_lint.py` reads the whole repo
   (CHANGELOG and docs included; history keeps its measured numbers), a fenced worked example keeps numbers and kinds but never a name, and the
   repo carries no project retro (a retro report is folded, then deleted).
+
+## 0.12.5 - 2026-11-11 - Fix-checks after every panel, matched ports before a solver compare, complex extrapolation, stock trends
+
+Source: the project log of 2026-11-10 and 2026-11-11, after the 0.12.4 cut. The entry adds rules to eight references and 18 lines to
+`references/pitfalls.md`. Nothing is removed. Two blind reviews of the draft and their fixes are folded in.
+
+### Added
+- `references/agent-ops.md`:
+  - §3: a lettered section per parallel writer of one record.
+  - §4: a persona panel gets the fix-check round too. After a change to a judging rule, trace one case through every table the
+    rule feeds. Apply a recommended value in the worktree and run every gate before the commit. Set a reviewer model's output
+    limit to cover its reasoning and its answer.
+  - §5.3: read a worktree lock's reason and check its process before you unlock. Batch scripts take stdin from `/dev/null`.
+  - §8: item 3 keys a slice on the slicer version too. Item 5 keeps one slot for light checks when the pool is 3 or more.
+- `references/high-speed-si.md`:
+  - §6.3: compare the port form in the same-copper check. Match or de-embed the ports before two solvers compare return loss.
+  - §7.1: a flat p/n through-magnitude difference that shrinks with the cell is at least partly a mesh artefact.
+  - §10.1: one-at-a-time corners do not bound a stacked corner. Extrapolate mode conversion on the complex S-parameter across one
+    corner parameter; a run stays the value of record.
+- `references/release-and-cut.md` §3.1: run the anchored record checks after a status sweep edit, before its commit.
+- `references/pcb-layout-dfm.md`: §1.2 judge a stack-up only after the router plateaus. §2 count the via sites against the copper
+  weight before placement.
+- `references/part-verification.md` "Gates that catch the usual mistakes": project the stock of every single-source part to the
+  order date.
+- `references/schematic-phase.md` §7: an MCU's own reset can keep its GPIO pad state; read the reset table and fix it in hardware.
+- `references/fea-stage.md` "Thermal": assert the energy balance and the sink rise in every thermal model's selftest.
+- `references/print-kit.md` §4: pin the slicer version, and record it in each plate sidecar.
+- `references/pitfalls.md`: dated lines in process, agents, tooling, layout, si, sourcing, fea, software and review.
+
+### Changed
+- `templates/ci/Makefile` `record-round` reads stdin from `/dev/null`.
+- `scripts/traceability.py` runs each command row with stdin closed.
+- `smoke/run_smoke.sh` checks both.
+
+### Not done
+- A CSS note about a sticky side menu stays in the project. It is too thin for a hardware skill.
+- The current-state summary needs no new line: no script, template folder or reference was added.
 
 ## 0.12.4 - 2026-11-10 - Gate evidence that hides nothing, landed results with provenance, virtual clocks, merges that keep their values
 

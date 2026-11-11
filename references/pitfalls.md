@@ -189,6 +189,7 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A `--no-commands` traceability run never fails a command row, and it hid real failures. Only the run with commands counts at a gate — 2026-11-10 [process/gates] (`release-and-cut.md` §3.1).
 - A checker cached a FAILED command result and replayed it, so a load flake stayed FAILED on every run. Never cache a failure — 2026-11-10 [process/gates] (`release-and-cut.md` §3.1).
 - PENDING rows hid 136 dead checks: moved paths, a retired tool, double-escaped regexes. Sweep PENDING rows at each milestone — 2026-11-10 [process/gates] (`release-and-cut.md` §3.1).
+- A status sweep gave a cell new leading words, and every check anchored on the old cell start broke. Run the record checks after the sweep edit, before its commit — 2026-11-10 [process/gates] (`release-and-cut.md` §3.1).
 - A selftest shim's cache key named only part of the code it ran, so a change elsewhere never reran it. Key on every file the command runs — 2026-11-09 [process/gates].
 - A power-mux comparator divider from a wide-range input could not hold both the switchover and the priority bound. Feed it from a regulated rail — 2026-11-09 [process/power] (`schematic-phase.md` §7).
 
@@ -261,6 +262,10 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A lane's disk check read a small network home, not the large local job folder. Read free disk on the resolved job folder — 2026-11-10 [agents/lanes] (`agent-ops.md` §5.1).
 - A third job on a lane raised the sum a little and slowed every running job more. Measure both before you add a job — 2026-11-09 [agents/lanes] (`agent-ops.md` §5.1).
 - A copied solver runtime gave bitwise-equal results to its source machine. Prove a new lane with one byte-level compare — 2026-11-09 [agents/lanes] (`agent-ops.md` §5.1).
+- Two parallel writers took the same next section number in one record. Give each writer a lettered section — 2026-11-10 [agents/records] (`agent-ops.md` §3).
+- A dead session's worktree locks blocked a cleanup. Read the lock reason, check that its process is gone, then unlock — 2026-11-10 [agents/worktrees] (`agent-ops.md` §5.3).
+- Two long jobs held two of three pool slots, and load from outside the pool shut the load gate. Light checks queued with one slot free. Keep one slot for light checks — 2026-11-10 [agents/pool] (`agent-ops.md` §8).
+- A reviewer model at full reasoning effort spent its whole output limit and returned nothing. Set the limit to cover reasoning and answer — 2026-11-10 [agents/review] (`agent-ops.md` §4).
 
 ## tooling / determinism
 - Bambu Studio CLI (02.08.x): `sparse_infill_density` 100 % is rejected (rc -18) — use top / bottom shell thickness for a solid column. A two-filament slice with a prime tower SEGFAULTS (rc -11 / 133, "no filament colors found in projects") unless each slot's filament JSON carries `filament_colour` (or `--filament-colour '#..;#..'`). Bisect on the temp inputs one variable per run — 2026-09-29 [tooling/bambu].
@@ -333,6 +338,8 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A case check copied a joint's numbers from another generator. Import the shared calculation from its generator of record — 2026-11-09 [tooling/generators].
 - YAML read an unquoted date as a date object, and a schema refused the whole file. Quote dates in a text field — 2026-11-09 [tooling/yaml].
 - A YAML plain scalar broke on a colon and space, and a flow mapping broke on a comma inside a part number. Quote both, and parse after each scripted edit — 2026-11-09 [tooling/yaml].
+- A selftest called `input()` on an open pipe and held a record round for 40 minutes. Batch scripts take stdin from `/dev/null` — 2026-11-11 [tooling/batch] (`agent-ops.md` §5.3).
+- The slicer updated itself and changed a base profile. Pin the version, slice the kit with it, and record it per plate — 2026-11-11 [tooling/slicer] (`print-kit.md` §4).
 ## kicad / drc / swig *(worked examples; the mechanism generalises to any CAD CLI)*
 - `kicad-cli pcb drc` honours ONLY explicit `netclass_assignments`, never `netclass_patterns`, and NO DRC exclusions. Emit per-net assignments from the generator, assert a canary rule fires exactly once. Accepted residue = a generated RULE (`enclosedByArea`, not `insideArea` which is an intersection test — prove with a negative construction in `--selftest`).
 - Enforcing net classes for the first time on a "DRC 0" board showed 202 errors. A class clearance larger than the fill's zone clearance is unenforceable by construction. Write the as-built geometry into scoped rules general → specific (later rule wins), log the relaxation.
@@ -367,6 +374,8 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A part count keyed on symbol units read 39 parts for 14 packages. Key a count on the reference designator — 2026-11-07 [layout/inventory] (`pcb-layout-dfm.md` §4).
 - A custom DRC rule with a wrong layer keyword passed in silence. Prove each rule with its own canary — 2026-11-06 [layout/drc] (`pcb-layout-dfm.md` §14).
 - Two chips that both number their pins counter-clockwise forced a USB pair to cross layers. Check the pin order before a one-layer rule — 2026-11-06 [layout/usb] (`pcb-layout-dfm.md` §4).
+- Heavy outer copper widened each via's free circle, and a dense board ran out of via sites under its dense parts. Count the via sites before placement — 2026-11-10 [layout/stackup] (`pcb-layout-dfm.md` §2).
+- A 40-minute autorouter limit tested one pass, not rip-up. Run the router until the unrouted count plateaus before you judge a stack-up — 2026-11-11 [layout/router] (`pcb-layout-dfm.md` §1.2).
 
 ## si / high-speed (`references/high-speed-si.md` carries the rules; one line each here)
 - A requirement closed on a simplified twin reopened on the launch of record: the twin had a solid plane and no contact posts, and read 9 dB better than the real launch. Solve the layout of record with ports that see the quantity — 2026-11-01 [si/model].
@@ -429,6 +438,10 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A fill (S22 = S11) hid a missing drive run. Raise on a missing run; never answer it from the reverse run — 2026-11-06 [si/tooling] (`high-speed-si.md` §9.1).
 - A null study default kept old runs as drawn and also reached new runs that omitted the key. Diff each new run's configuration against the record — 2026-11-09 [si/tooling] (`high-speed-si.md` §3.3).
 - A medium-to-fine mesh offset held for one pair only: 5 dB better on a narrow-gap pair, slightly worse on wider pairs. Measure it per pair — 2026-11-09 [si/mesh] (`high-speed-si.md` §7.1).
+- An impedance corner and a registration corner, each passing alone, failed together. Run the worst stacked corner per lane — 2026-11-10 [si/corners] (`high-speed-si.md` §10.1).
+- Two solvers agreed on the through path and differed by over 1 dB in return loss, because their port forms differed. Match or de-embed the ports before you compare RL — 2026-11-10 [si/solvers] (`high-speed-si.md` §6.3).
+- A flat p/n through-magnitude difference shrank with the cell size. Suspect a mesh artefact, and confirm it by refinement before a retune — 2026-11-10 [si/mesh] (`high-speed-si.md` §7.1).
+- A straight line in dB put a corner 1 dB too good. Extrapolate on the complex S-parameter, and keep a run as the value of record — 2026-11-11 [si/method] (`high-speed-si.md` §10.1).
 
 ## silk / dfm
 - The fab's DFM grades a value EQUAL to its warning threshold as Warning: design strictly greater — thresholds JSON.
@@ -493,6 +506,7 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A capacitor at the needed voltage existed only in a wider-drift dielectric in the fab's stock. Check the dielectric against the live catalogue before a decision names it — 2026-11-07 [sourcing/capacitors].
 - A spec named a large C0G value that the fab barely stocks. Check the stock before a spec names a dielectric and tolerance — 2026-11-06 [sourcing/capacitors].
 - A distributor API gave stock per package variation, and the top-level field read null. Read every variation — 2026-11-09 [sourcing/api] (`part-verification.md`).
+- A single-source part lost two thirds of its stock in 11 days. Project the stock to the order date from dated reads — 2026-11-10 [sourcing/stock] (`part-verification.md` gates).
 
 ## mechanical / case
 - A pluggable module is not a plain box (a cabled transceiver module: bottom open at the leading edge, latch recess on top, corners R 0.15..0.60). Anything that grips it bears on the faces the standard's drawing shows solid. A pocket corner radius comes from the drawing (R > 0.66 clips a legal module), not from a print rule of thumb — 2026-09-29 [mechanical/msa].
@@ -618,6 +632,7 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - `--only <subset>` wiped the other cases of the record and the report. A subset run never writes the report of record — 2026-10-10 [fea/records].
 - An FEA owner row with no test row stayed open across two gates. Write the arrival row the day the model reads FAIL: pose, instrument, reduction formula, pass number, record file, fail action. A brief named row ids that already existed; check the yaml first — 2026-10-11 [fea/owner-rows] (`fea-stage.md` §Thermal).
 - A von Mises peak at a hole edge beside a fixed annulus keeps rising with the mesh. Do not quote a peak that keeps rising. Read the stress at a set distance from the edge, or the quantities the limits use. Use Richardson extrapolation only where three meshes show convergence — 2026-10-31 [fea/mesh].
+- An airflow model counted the wrong number of fin faces, and its sink rise read under its air rise. Assert the energy balance in the selftest — 2026-11-10 [fea/thermal] (`fea-stage.md` Thermal).
 ## software
 - A fixed jig cap makes the WARN level unreachable when THROTTLE = min(alarm − margin, cap): make the interplay explicit and print both levels — software/thermal.
 - Manuals written before the software they describe: the "what you should see" lines go under an explicit banner naming the fake backend that produced them — 2026-09-22 [documentation].
@@ -677,6 +692,7 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A virtual clock broke checks that raced a real thread. Only the starting thread sleeps on it; timed events read the clock — 2026-11-09 [software/selftest] (`software-track.md` §2).
 - Two selftests took the same fixed lock name in the shared temp folder. Name each after its process id — 2026-11-10 [software/selftest] (`software-track.md` §2).
 - A copied phase list missed one new step. Derive a set from the table of record — 2026-11-09 [software/criteria] (`software-track.md` §5).
+- An MCU's watchdog reset kept the GPIO pad state, so a GPIO-driven reset line never pulsed. Read the reset-source table, and reset the peripheral from a supervisor or the reset pin — 2026-11-10 [software/firmware] (`schematic-phase.md` §7).
 
 ## documentation
 - Every mention of a retired string across live docs after a design change: grep, not memory; logs and reviews keep stale words on purpose.
@@ -780,3 +796,5 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A study filed a vendor drawing as BLOCKED. The file had sat in the reference folder for six weeks. Search the tree first — 2026-10-24 [records/blocked] (`part-verification.md`).
 - Four modules moved between three unmarked cases in one evening; only the identity read told them apart. Number every unit first — 2026-10-24 [records/units] (`software-track.md` §23).
 - The cost of each study was never written down and could not be rebuilt later. Start the cost, prediction and dead-end ledgers on day 1 — 2026-11-03 [records/ledgers] (SKILL §0 step 6).
+- A panel's fixes created a new MAJOR. Run the fix-check round, and trace one case through every table a changed rule feeds — 2026-11-10 [review/fix-check] (`agent-ops.md` §4).
+- A verifier's recommended value failed a gate the verifier did not run. Apply it in the worktree and run every gate before the commit — 2026-11-10 [review/verify] (`agent-ops.md` §4).

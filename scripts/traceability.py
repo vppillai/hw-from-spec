@@ -170,7 +170,7 @@ def run_check(c, ctx):
             if "sandbox" in c:
                 cmd = cmd.replace("{REPO}", ctx.sandbox(c["sandbox"]))
             if cmd not in ctx.cmd_cache:
-                r = subprocess.run(cmd, shell=True, cwd=ctx.root, capture_output=True, text=True, timeout=c.get("timeout", 600))
+                r = subprocess.run(cmd, shell=True, cwd=ctx.root, stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=c.get("timeout", 600))   # 0.12.5: a test never waits on the caller's stdin
                 ctx.cmd_cache[cmd] = (r.returncode, (r.stdout or "") + (r.stderr or ""))
             rc, out = ctx.cmd_cache[cmd]
             want = c.get("expect_rc", 0)

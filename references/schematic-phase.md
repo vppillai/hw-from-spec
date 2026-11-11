@@ -238,3 +238,8 @@ Run these before the spec fixes a target or a board split. A study of §6 cites 
   applies when the priority is fixed, not voltage-sensed. A divider from a wide-range input, such as USB VBUS, cannot hold both
   bounds. Feed it from a regulated rail. Check the window at both corners. The upper corner stays over the reference maximum.
   The lower corner stays under the priority minimum less the comparator offset.
+- **An MCU's own reset can keep its GPIO pad state.** On some MCU families a watchdog, panic or software restart resets the CPU
+  only, and the pads hold their state. Other families reset every pad. Read the datasheet's reset-source table for each reset
+  kind. A peripheral reset line that a GPIO drives can then stay where it was. Give the line a pull resistor that holds it while
+  the pads float. Where the peripheral must reset with the MCU, drive its reset from a supervisor or the MCU reset pin. Else
+  pulse the line from the first boot code, and accept that a warm restart then resets the peripheral too.
