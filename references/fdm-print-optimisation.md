@@ -112,3 +112,5 @@ Reader rules, each one learned from a wrong read **[K]**:
   direction.
 - Probe a rib away from other features. Neighbouring finger lines contaminated a tooth-tip probe.
 - The slicer preview is not the read. Three of nine teeth seamed at a corner for 14 layers; only the G-code showed it.
+- The slicer can update itself and change its base profiles. One update turned arc fitting off. Re-slice the whole kit with one
+  slicer version, and record that version in each plate sidecar.

@@ -56,6 +56,9 @@ copy-back with `git checkout` once its diff is timestamp-only.
   names a path, a tool or a pattern that no step of the tree produces. For each failing check under PENDING, grep the
   generators and the owner record templates for its path and its pattern. No hit in either means a dead check. One sweep cut the dead checks from 136 to 31
   *(worked example)*.
+- **Run the checks that anchor on a record before a status sweep.** A status cell that gets a new lead breaks every pattern
+  that anchors on the old cell start. Run `traceability.py` and `known_issues.py` first. Fix each anchored pattern and each
+  NOT-INCLUDED reason before the sweep commits.
 - **An owner row at an open gate** reads `PENDING(<text>)`, never a waiver. The entry's `pending:` text carries the owner's decision row
   id. In `scripts/traceability.py`, PENDING(text) is a known gap with a logged fix. The check table keeps its FAIL. The
   gate record reads PENDING on the owner's decision. The round then runs.

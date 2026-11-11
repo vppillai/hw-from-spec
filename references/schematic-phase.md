@@ -238,3 +238,6 @@ Run these before the spec fixes a target or a board split. A study of §6 cites 
   applies when the priority is fixed, not voltage-sensed. A divider from a wide-range input, such as USB VBUS, cannot hold both
   bounds. Feed it from a regulated rail. Check the window at both corners. The upper corner stays over the reference maximum.
   The lower corner stays under the priority minimum less the comparator offset.
+- **An MCU's own reset can keep its GPIO pad state**. On some MCUs a watchdog, panic or software restart resets the CPU
+  only, and the pads hold their state. A reset line that a GPIO drives then stays where it was. Pulse that line from the first
+  boot code.

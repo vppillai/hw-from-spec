@@ -414,6 +414,9 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 - A fixed dielectric conductivity fitted at a high frequency gives a loss tangent far too high low in the band. A fit at 20 GHz
   read about 20 times too high at 1 GHz *(worked example)*. Both solvers carry it, so the cross-check stays fair. The absolute
   loss low in the band does not.
+- Two solvers can agree on the through path and still differ in return loss **[method]**. One pair agreed within 1 degree of
+  phase and differed by 1.0 to 1.6 dB in RL *(worked example)*. The port form decided it. A box port over the contact tail
+  added 17 to 20 fF against a sheet port at its middle. Read RL from the second solver before a margin under 1 dB closes.
 - **When the shared solver is busy, keep working under an agreed rule.** Run the commercial solver only when no other user waits
   for a licence or a host. When the cluster stays full, do not hold a gate for it. Agree an open-solver acceptance rule with the
   owner instead:
@@ -446,6 +449,8 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 - A flat mode-conversion floor at low frequency is a static p/n imbalance **[method]**. Look for it in the model first: a missing
   contact tail, or a grid state that one pair width hits. Compare the per-port through magnitudes with a second solver. A floor
   that no lever moves is not the lever's physics.
+- A frequency-flat leg split that follows the pair impedance and shrinks with the x-y cell is a mesh artefact **[method]**.
+  Check a fail that sits on that floor in a second solver before a geometry retune.
 - Judge FDTD time convergence on the port tail, not only on the energy **[method]**. A baseband Gaussian excitation carries DC, and an absorbing face
   cannot remove a static field. The energy then stalls while every port voltage has died. A DC-free excitation (the derivative of a Gaussian)
   converges fast and gives the same S-parameters.
@@ -677,6 +682,11 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
   when it costs a new layout study.
 - Reversing the drive end mirrors a loop **[physics]**. The two registration corners along the mirror axis then swap values between
   SCD21 and SCD12. The worst value over the pair does not change. Read both corners before you call a direction change a new risk.
+- **Extrapolate mode conversion on the complex S-parameter, never on dB values** **[method]**. Phase matters when two terms
+  add. A straight line in dB put one corner 1 dB too good. The complex line matched the run within 0.04 dB *(worked example)*.
+- Two corner terms of the same sign stack **[method]**. One impedance corner and one registration corner together gave a small
+  fine-mesh fail that neither showed alone. A run-queue score that adds a fixed offset per corner term needs its sign per loop.
+  A fixed offset had the wrong sign on the outer loops *(worked example)*.
 
 ## 11. Margin rules
 

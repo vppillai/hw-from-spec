@@ -1,6 +1,6 @@
 # CHANGELOG — hw-from-spec
 
-## Current state (0.12.4): read this instead of replaying the entries below
+## Current state (0.12.5): read this instead of replaying the entries below
 
 - **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
   thirteen batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
@@ -43,6 +43,33 @@
   address and public pull-request numbers excepted) — `scripts/generic_lint.py` reads the whole repo
   (CHANGELOG and docs included; history keeps its measured numbers), a fenced worked example keeps numbers and kinds but never a name, and the
   repo carries no project retro (a retro report is folded, then deleted).
+
+## 0.12.5 - 2026-11-11 - Fix-checks after every panel, solvers that differ at the port, complex extrapolation, stock trends
+
+Source: the project log of 2026-11-10 and 2026-11-11, after the 0.12.4 cut. The entry adds rules to eight references and 19 lines to
+`references/pitfalls.md`. Nothing is removed. No script changes.
+
+### Added
+- `references/agent-ops.md`:
+  - §4: always run a fix-check after a panel's fixes. After a rule change, walk one verdict through every verdict table. Run
+    every gate on a recommended value before you apply it. Budget the output of a reviewer model.
+  - §5.3: a lettered section per parallel writer. Check that a worktree's locking process is dead before you unlock. Batch
+    scripts take stdin from `/dev/null`.
+  - §8 item 5: keep one pool slot for light checks while long solver runs hold the rest.
+- `references/high-speed-si.md`:
+  - §6.3: two solvers can agree on the through path and differ in return loss. The port form decides it.
+  - §7.1: a frequency-flat leg split that shrinks with the cell is a mesh artefact.
+  - §10: extrapolate mode conversion on the complex S-parameter, never on dB. Same-sign corner terms stack; sign a queue offset per loop.
+- `references/release-and-cut.md` §3.1: run the anchored record checks before a status sweep.
+- `references/pcb-layout-dfm.md`: §1.2 an autorouter time limit long enough for rip-up. §2 via-site density against the copper weight.
+- `references/part-verification.md`: track the stock trend of every single-source part.
+- `references/schematic-phase.md` §7: an MCU's own reset can keep its GPIO pad state.
+- `references/fea-stage.md`: a first-law assert in every thermal model's selftest.
+- `references/fdm-print-optimisation.md` §5: re-slice the whole kit with one slicer version, and record it per plate.
+- `references/pitfalls.md`: dated lines in process, agents, tooling, layout, si, sourcing, fea, software and review.
+
+### Not done
+- Nothing project-only came in this batch.
 
 ## 0.12.4 - 2026-11-10 - Gate evidence that hides nothing, landed results with provenance, virtual clocks, merges that keep their values
 

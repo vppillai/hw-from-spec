@@ -199,6 +199,13 @@ A vague brief costs a rework round. Brief every worker from `templates/AGENT_BRI
 - **A milestone gets a fresh double-blind round.** The round types, the roster cap and the fix-check stop rule are in the SKILL.md §5
   table. Merge into one disposition per discipline. Each row reads FIX, OWNER, CLOSED or REJECTED.
   Check every BLOCKER and MAJOR against the frozen package before its row is written. Bring the owner one recommended option per OWNER row.
+- **Always run a fix-check after a panel's fixes.** One large panel found no BLOCKER and about 27 MAJOR after verify. Its fixes
+  made one new MAJOR: a verdict row with no path guard *(worked example)*. After any rule change, walk one verdict through every
+  verdict table.
+- **Run every gate on a recommended value before you apply it.** A verifier's recommendation can fail a gate that the verifier
+  did not run. The writer runs the full gate set on the value, then applies it.
+- **Budget the output of a reviewer model.** A model at full reasoning effort can spend its whole output budget on reasoning and
+  return no answer. Set the output budget per call. Count a low-effort answer as a shallow cross-check only.
 
 ### 4.1 Persona panels
 A package and a checklist find what the checklist names. A persona finds what one kind of expert fears. Assign personas in every
@@ -388,6 +395,12 @@ A licensed solver on a shared cluster belongs to other people's work. Your job r
   `/usr/bin/nice`. Export such variables inside the job script, after the shell starts.
 - For a copied runtime, set `DYLD_FALLBACK_LIBRARY_PATH`, not `DYLD_LIBRARY_PATH`. The fallback acts only on a missing
   library, so a Python wheel keeps its own bundled libraries.
+- Give each parallel writer of one record a lettered section, never "the next number". Two agents took the same next number
+  in one file, and the merge had to renumber.
+- After a session restart, the dead session's worktree locks block a cleanup. Check that the locking process is dead before
+  you unlock a worktree.
+- A batch script that runs tests takes stdin from `/dev/null`. A selftest that calls `input()` on a stdin that is not a
+  terminal waits for ever at 0 % CPU.
 
 ## 6. Reporting
 - Every report, record and README follows `references/writing-style.md`: lead with the result, second person, active voice, present tense,
@@ -468,6 +481,8 @@ audit, then change.
    index and PDF steps are skipped when their `--check` passes.
 5. **Concurrency budget**: at most `host.jobs_max` writing agents with heavy work at once. The pool refuses the next job, not the agent. Read-only
    reviewers are unlimited but told not to re-slice or re-render. Use one worktree per writing agent (§2).
+   Keep one slot free for light checks while long solver runs hold the rest. Two long solver runs held two of three slots for
+   hours. Every light writer check queued behind them *(worked example)*.
 6. **Geometry engine — previews on the fast engine, geometry of record on the engine that passes the mesh gates.** The 2021.01 OpenSCAD release's CGAL
    kernel is slow (minutes per body). The snapshot build ships the Manifold backend, `--backend=Manifold`. `openscad --help` of a snapshot lists
    `--backend arg: 'CGAL' (old/slow) [default] or 'Manifold' (new/fast)` **[V, OpenSCAD manual, wikibooks "Using OpenSCAD in a command line

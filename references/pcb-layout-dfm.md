@@ -36,6 +36,8 @@ the cage) is `locked: true` with the spec section in `note`. Placement is regene
 The routed board + the router's session file (Freerouting `.ses` with its `.dsn`, or the equivalent) are the artefacts of record; routing is
 never re-run to reproduce them (deterministic only with one thread and the same inputs). Re-import (`--import-ses`) is the replay. Keep-outs and
 net classes must be exported into the router input — grep the DSN for them after any flag change (`references/pitfalls.md` kicad).
+A short autorouter time limit tests one pass, not its rip-up. Give the router hours with the optimiser off before you judge a
+stack-up by its routed percentage.
 
 ### 1.3 The G2 review pack (`80-reviews/G2/`, generated, committed)
 | File | Produced by | Why the reviewer needs it |
@@ -59,6 +61,9 @@ net classes must be exported into the router input — grep the DSN for them aft
   minimum trace/space: JLC 0.15/0.15 at 2 oz vs 0.09/0.09 at 1 oz. It costs mask dam width: 0.20 vs 0.10. It also costs the fab's impedance
   calculator support: JLC's supports 1 oz only (2026-09-13). Inner copper default 0.5 oz **[fab capability]**; 1 oz inner changes prepreg/core
   thickness and therefore impedance geometry — pin one value in the spec before layout.
+- **Check the via-site density against the copper weight before placement** **[fab capability]**. Heavy outer copper widens the
+  free circle a via needs. On 2 oz outer copper a 0.80 mm via site needed a 1.42 mm free circle. One dense four-layer logic board then
+  routed no more than 51 % at any outline growth *(worked example)*.
 - Thickness tolerance ±10 % at ≥ 1.0 mm **[fab capability]** (1.6 → 1.44…1.76): a press-fit connector or a card-edge must accept the range.
 - Material grade / Tg is selected at order **[owner choice]** (JLC impedance profiles assume a TG155 laminate).
 - **Fab capabilities move** **[fab capability]**. Read the live capability page before a study recommends a stack. Worked example, JLC

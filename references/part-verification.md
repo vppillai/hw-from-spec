@@ -59,6 +59,9 @@ Record every endpoint that answered in `90-log/ENV.md`; a fab that changes its A
 - **value ↔ MPN ↔ code**: the BOM groups by fab code; a value edited on the symbol does not change the ordered part. Decode the MPN (chip codes) and refuse a group with > 1 value or a Value ≠ decoded MPN.
 - **symbol MPN ↔ live MPN**: the fetched record's MPN must equal the symbol field.
 - **stock gate run-relative**: `min = ceil(qty_per_board × boards × 1.2)` for EVERY code; below it the package says "PCBA-complete: no — <code> stock N < min" under a STOCK SHORT banner. Owner-preferred absolute floors (for example ≥ 5000 for jellybeans) on top.
+- **stock trend on single-source parts**: one read is not enough. Read the stock of every single-source part at each milestone,
+  and record each read. Flag a fall rate that reaches the need before the order date. One single-source display fell from 1447
+  to 454 in 11 days *(worked example)*.
 - **DNP**: DNP parts excluded from BOM and CPL, marked on the symbol and the footprint; DNP does not imply exclude-from-BOM in the schematic tool — set both attributes explicitly.
 - **BOM ⊂ CPL** (fiducials, owner-supplied parts are CPL-only), every CPL row inside the outline, drill via count = board vias.
 - **CPL rotation**: offsets per footprint family from two independent rotation databases; only agreeing rows are `review: false`; a `+90` for 1×N headers is confirmed only by the fab's 3-D preview. The REVIEW worklist follows the rule (unverified offset), not the side.
