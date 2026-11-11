@@ -1,6 +1,6 @@
 # CHANGELOG — hw-from-spec
 
-## Current state (0.12.5): read this instead of replaying the entries below
+## Current state (0.12.6): read this instead of replaying the entries below
 
 - **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
   thirteen batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
@@ -43,6 +43,34 @@
   address and public pull-request numbers excepted) — `scripts/generic_lint.py` reads the whole repo
   (CHANGELOG and docs included; history keeps its measured numbers), a fenced worked example keeps numbers and kinds but never a name, and the
   repo carries no project retro (a retro report is folded, then deleted).
+
+## 0.12.6 - 2026-11-11 - Runs that can decide, surrogates checked before a yield, mated fixture limits, near-coincident snaps
+
+Source: the project log of 2026-11-11, after the 0.12.5 cut. The entry adds rules to five references and 11 lines to
+`references/pitfalls.md`. Nothing is removed.
+
+### Added
+- `references/high-speed-si.md`:
+  - §0.2 step 1 and §9.1: read the published fixture limits (the OIF CEI implementation agreements) before a flat project
+    line. Compare a one-board result with a mated-pair mask only after you cascade the second board and the connector.
+  - §10: validate a corner surrogate by its leave-one-out error and rank per loop before a yield. Draw the panel-common
+    terms (registration, laminate lot) once per build.
+  - §10.1: estimate every candidate run on the complex value before it takes a lane. A centring retune moves the pass
+    window and does not widen it.
+  - §11: size each correction term again when the binding corner moves.
+- `references/agent-ops.md`: §5.1 match runs to lanes by speed, and move a misplaced decision run early. §8 item 5 counts
+  the live writers before each start.
+- `references/pcb-layout-dfm.md` §1.1: an automatic packer cannot leave rows of via sites or put decoupling at the pins. When the
+  predictors stop moving across variants, place the dense bands by hand-guided CSV rows.
+- `references/dfm-printed-enclosure.md` §7.2: a sliver snap merges near-coincident vertex pairs only. Prove it on two
+  export orders.
+- `references/pitfalls.md`: dated lines in si, layout, agents and mechanical / case.
+
+### Not done
+- The router plateau line of the same day is in 0.12.5 already.
+- The OIF clause numbers stay out. The rule names the document family and asks for a live read of the clause.
+- No script changes. The near-coincident snap threshold is a project canonicaliser setting, so the skill gives the rule only.
+- The current-state summary needs no new line: no script, template folder or reference was added.
 
 ## 0.12.5 - 2026-11-11 - Fix-checks after every panel, matched ports before a solver compare, complex extrapolation, stock trends
 

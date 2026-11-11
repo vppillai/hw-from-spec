@@ -52,6 +52,7 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 
 1. **Write the limit table with its basis and its verification method** (§9.1, §13). Give each limit its standard clause or its design
    basis. Say how the bench or the coupon checks it. A limit that no fixture can resolve is an analysis requirement from the start.
+   Read the published fixture limits first, and compare a one-board result only after the mated cascade (§9.1).
 2. **Read the fab stack-up, the fab tolerances and the mechanical envelope live** (§2, §3). Compute the exact widths at both edges of the
    impedance window. Check the pair gap at the worst etch. Read the housing heights over the routing from the STEP. Fix the pair geometry
    before any 3D work.
@@ -554,6 +555,13 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 - Group links by type (chip to chip, connector to chip, long reach). Each group gets its own expectation.
 - Write the limit table before the runs: IL, RL, NEXT, FEXT and impedance at Nyquist **[method]**. A limit fixed first cannot move to fit the
   result. Add a softer aim up to twice Nyquist; edges carry energy there.
+- **Read the published fixture limits before you set a flat project line** **[method]**. The OIF CEI implementation agreements
+  are public documents. They hold test-fixture limits for terms such as mode conversion and crosstalk noise **[K]**. Read the
+  agreement for your lane rate live, and cite its clause beside each row of the limit table. A flat line set without that
+  read can be too tight at one end of the band and too loose at the other.
+- **A fixture mask applies to a mated pair with its connector** **[method]**. Cascade the second board and the connector model
+  with your one-board result, then compare with the mask. Or split the mask into a one-board budget, and record the split
+  and its basis. A one-board result read straight against a mated-pair mask gives a margin with no meaning.
 - Draw the limit line on every plot. A PASS word in a text box hides a curve 1 dB from the limit.
 - Give a table of the worst value and its frequency per net. Name and highlight a failing net, so the layout fix stays local.
 - Plot the return loss from both ends. The ends differ when the launches differ.
@@ -670,6 +678,13 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
   track width. Model the edge the way it happens.
 - Choose the impedance window with the mode conversion, not only with the return loss **[physics]**. A side-entry launch converts more as the
   pair narrows.
+- **Validate a corner surrogate before you quote a yield** **[method]**. A surrogate is a fit over the corner runs that a Monte
+  Carlo then samples. Report its leave-one-out error and the rank of its solve, per loop. A rank-deficient solve has more
+  terms than independent runs. Quote no yield from a loop whose leave-one-out error reaches its margin. A yield headline
+  near 100 % hid leave-one-out errors of a few dB and rank-deficient solves *(worked example)*.
+- **Model the panel-common terms once per build** **[physics]**. Layer registration and the laminate lot are common to the
+  boards of one panel and one build. Draw them once per build, and draw the local terms per board. A small build then
+  tends to pass or fail as a whole. Report the yield per build beside the yield per board.
 
 ### 10.1 Ranking layout options
 
@@ -693,6 +708,13 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
   same, and convert to dB last. Linearity holds for small steps only. A straight line in dB put one corner 1 dB too good. The
   complex line matched the run within 0.04 dB *(worked example; one case)*. An extrapolated value only ranks the run queue. The
   value of record is a run, and the §7.1 ban on interpolation across the impedance axis still holds.
+- **Estimate every candidate run before it takes a lane** **[method]**. Extrapolate its value on the complex S-parameter from
+  the landed runs, as above. Queue the run when its estimate falls inside the uncertainty band of its limit. Queue it also
+  when it tests the estimate itself. A run with several dB of estimated margin decides nothing. A night of fast-lane runs
+  with such margins changed no verdict *(worked example)*.
+- **A centring retune moves the pass window and does not widen it** **[method]**. A skew or length retune shifts which corner
+  binds and leaves the window width unchanged. Before you spend margin on centring, ask what widens the window. Two answers
+  are a smaller spread of the cause and a geometry that converts less. Give the window width before and after each lever.
 
 ## 11. Margin rules
 
@@ -706,6 +728,9 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 - A waiver needs independent support: the channel-level result, an active margin on the same structure and a documented precedent. Confirm it
   again after any design change.
 - Give every known model bias its sign. A receiver model that terminates twice is pessimistic; a pass with it stands, with the note.
+- **Size each correction term again when the binding corner moves** **[method]**. A correction (a mesh artefact of §7.1, a
+  port-form offset of §6.3) sized at one corner can change sign at another. After a retune moves the worst corner, size
+  every correction again at the new worst corner. A correction carried from the old corner can turn a fail into a pass.
 - Hold the loss of the channel under a margin rule well inside the standard's budget **[owner choice]**.
 - Margins are owner decisions. An agent proposes the row with the number; the owner accepts it.
 - A margin within about 2 dB of its limit may rest on one solver class. Then it needs the independent solver of §6.3 first.

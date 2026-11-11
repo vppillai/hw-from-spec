@@ -31,6 +31,10 @@ origin as origin and Y up. Rotation is in CCW degrees. `side` = top/bottom, `loc
 cluster (connectors, power, mcu, …). The
 generator refuses a refdes missing from the schematic or a part outside the outline; a part the spec pins (connector positions, mounting holes,
 the cage) is `locked: true` with the spec section in `note`. Placement is regenerated from the CSV — the CAD GUI is never the source.
+**An automatic packer places parts, not routing channels** **[method]**. It cannot leave rows of via sites through a dense fan-out or
+put the decoupling at the power pins. Track the placement predictors per variant: via sites, congestion and wire length. When
+they barely move across packer variants, stop the variants. Place the dense bands by hand-guided rows in the CSV: the rows of via sites
+first, then the decoupling at the pins. Then run the router again.
 
 ### 1.2 Router session **[convention]**
 The routed board + the router's session file (Freerouting `.ses` with its `.dsn`, or the equivalent) are the artefacts of record; routing is

@@ -323,6 +323,9 @@ prove the host. The rules below keep the host safe and the jobs alive.
   step that reads the result.
 - Send only portable job kinds to other hosts. Allow a list of container jobs known to run there; do not block a list of bad
   ones. A job with a host-only interpreter path or CAD tool fails elsewhere. Two such moves failed in one day *(worked example)*.
+- **Match each run to a lane by speed.** Measure each lane's rate on one reference job. Send a long decision run to the
+  fastest free lane, not to the first free one. When a decision run sits on a slow lane, move it early, before much of it
+  has run (the move order below). A decision run on a lane three times slower landed hours late *(worked example)*.
 - Keep one slot free on the only host that runs host-only work (CAD, circuit simulation, the case chain). Send the portable solver
   runs to the remote lanes first.
 - Check a new lane for the image and the job inputs before you send it work. Each miss fails a job within seconds. A sandbox
@@ -490,6 +493,8 @@ audit, then change.
    heavy jobs in at most `jobs_max - 1` slots; `scripts/jobs.sh` has no reserve option. At a smaller pool, send long solver
    runs to a remote lane (§5.1). Two long jobs held two slots of a three-slot pool for hours. Load from outside the
    pool kept the load gate shut, so light writer checks queued for over an hour with one slot free *(worked example)*.
+   Count the live writing agents before each start, and start one only below the cap. When a count finds one over the cap,
+   pause the least urgent writer at once. A fourth writer once slipped past a cap of three *(worked example)*.
 6. **Geometry engine — previews on the fast engine, geometry of record on the engine that passes the mesh gates.** The 2021.01 OpenSCAD release's CGAL
    kernel is slow (minutes per body). The snapshot build ships the Manifold backend, `--backend=Manifold`. `openscad --help` of a snapshot lists
    `--backend arg: 'CGAL' (old/slow) [default] or 'Manifold' (new/fast)` **[V, OpenSCAD manual, wikibooks "Using OpenSCAD in a command line
