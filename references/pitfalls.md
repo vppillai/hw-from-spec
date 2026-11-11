@@ -264,7 +264,7 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A copied solver runtime gave bitwise-equal results to its source machine. Prove a new lane with one byte-level compare — 2026-11-09 [agents/lanes] (`agent-ops.md` §5.1).
 - Two parallel writers took the same next section number in one record. Give each writer a lettered section — 2026-11-10 [agents/records] (`agent-ops.md` §3).
 - A dead session's worktree locks blocked a cleanup. Read the lock reason, check that its process is gone, then unlock — 2026-11-10 [agents/worktrees] (`agent-ops.md` §5.3).
-- Long jobs held every pool slot for hours, and light checks queued behind them. Keep one slot for light checks — 2026-11-10 [agents/pool] (`agent-ops.md` §8).
+- Two long jobs held two of three pool slots, and load from outside the pool shut the load gate. Light checks queued with one slot free. Keep one slot for light checks — 2026-11-10 [agents/pool] (`agent-ops.md` §8).
 - A reviewer model at full reasoning effort spent its whole output limit and returned nothing. Set the limit to cover reasoning and answer — 2026-11-10 [agents/review] (`agent-ops.md` §4).
 
 ## tooling / determinism

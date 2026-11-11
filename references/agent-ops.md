@@ -488,8 +488,8 @@ audit, then change.
    reviewers are unlimited but told not to re-slice or re-render. Use one worktree per writing agent (§2).
    When `host.jobs_max` is 3 or more, keep one slot for light checks only. The coordinator starts long solver runs and other
    heavy jobs in at most `jobs_max - 1` slots; `scripts/jobs.sh` has no reserve option. At a smaller pool, send long solver
-   runs to a remote lane (§5.1). Long jobs held every slot of a three-slot pool for hours, and light writer checks
-   queued behind them *(worked example)*.
+   runs to a remote lane (§5.1). Two long jobs held two slots of a three-slot pool for hours. Load from outside the
+   pool kept the load gate shut, so light writer checks queued for over an hour with one slot free *(worked example)*.
 6. **Geometry engine — previews on the fast engine, geometry of record on the engine that passes the mesh gates.** The 2021.01 OpenSCAD release's CGAL
    kernel is slow (minutes per body). The snapshot build ships the Manifold backend, `--backend=Manifold`. `openscad --help` of a snapshot lists
    `--backend arg: 'CGAL' (old/slow) [default] or 'Manifold' (new/fast)` **[V, OpenSCAD manual, wikibooks "Using OpenSCAD in a command line
