@@ -250,7 +250,8 @@ order. A WARN that is "known" is not a bar; it is either fixed or a dated, evide
      When the gates read correlated causes, the product is wrong. Measure the joint yield on the first lot.
   4. The value proven on the previous revision. When one exists, offer it as an option with what proved it and its known risk.
   5. A label on every number: simulated, calculated or measured (`references/writing-style.md` §3).
-  6. A limit that can converge. Before the verdict runs, state one uncertainty budget U and a guard-band rule, and freeze both.
+  6. A limit that can converge. Before the verdict runs, state one uncertainty budget U and a guard-band rule.
+     Freeze both.
      The guard band moves the accept line inward by U. When the estimate sits closer to the line than U, more runs cannot converge.
      Fix each pass line before its run. A line set with the estimate in hand is not a test.
      One qualified model of record plus U decides the verdict. A verdict on the worst of all methods only gets worse as methods grow.

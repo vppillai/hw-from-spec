@@ -64,7 +64,8 @@ It adds 11 lines to `references/pitfalls.md`. Two blind reviews of the draft and
 ### Changed
 - `SKILL.md` §3: "five checks" is now "six checks". §0 step 6: three ledgers are now four, with the compute ledger.
 - `references/high-speed-si.md` §11: a verdict no longer takes the worst of the method corners in hand. One model of record
-  plus U decides. U lists mesh, solver, boundary and fab, sized from the §6.3 correlation cases and frozen.
+  plus U decides. U lists mesh, solver, boundary and fab, each sized at its own source and frozen.
+- `references/high-speed-si.md` §0.3: a stop rule per tuning loop. §11: a margin under U is MARGINAL.
 - `references/high-speed-si.md` §6.3: the open-solver shift is the solver term of U, never added twice.
 - `references/high-speed-si.md` §9.2: the design-limit bullet points to the new dB-to-volts bullet for its basis.
 

@@ -91,6 +91,7 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 
 - A result that moves by more than its stated uncertainty between iterations stops the loop. Find the step of §0.2 that missed it
   before the next run.
+- Give each tuning loop its stop rule before it starts: a round count, or a least gain per round. Stop there and report.
 - A fix that holds at nominal only is half a fix. Rerun it at the bounds of step 8 before you report it.
 - A closure that rests on a twin, a stand-in contact or one solver goes to the owner with that note. It never reads MEETS.
 - Keep the inner loop cheap. Screen a variant on the medium mesh. Judge a margin on the fine mesh only (§7.1).
@@ -756,7 +757,7 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 
 - Set a margin in reflection magnitude, not only in dB **[owner choice]**. For example, a target of 15 dB return loss with 20 % of |Γ| to spare.
   Report the margin at the 99th percentile of the fab spread.
-- A margin smaller than the stated uncertainty (mesh, solver, fab) is MARGINAL, not MEETS.
+- A margin smaller than U (mesh, solver, boundary and fab; see the U rule below) is MARGINAL, not MEETS.
 - A margin whose last term rests on one solver says so in the record.
 - A per-block return-loss figure is an aim, not a sign-off limit **[physics]**. In the assembled channel a reflection makes a round trip
   through the line and drops by about twice the line loss. Judge a block that misses its aim at channel level.
@@ -772,8 +773,9 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 - Margins are owner decisions. An agent proposes the row with the number; the owner accepts it.
 - A margin within about 2 dB of its limit may rest on one solver class. Then it needs the independent solver of §6.3 first.
 - **One model of record plus one budget U decides a verdict** **[method]** (SKILL.md §3, check 6). The model of record is the
-  solver of record of §6.3, on the mesh level of record of §7.1. U lists its terms: mesh, solver, boundary and fab. Size each
-  term from the correlation cases of §6.3, before the verdict runs, and freeze U. The solver-agreement shift of §6.3 is the
+  solver of record of §6.3, on the mesh level of record of §7.1. U lists its terms: mesh, solver, boundary and fab. Size the
+  solver and boundary terms from the correlation cases of §6.3. Size the mesh term by §7.1 and the fab term from the fab
+  spread. Do this before the verdict runs. Then freeze U. The solver-agreement shift of §6.3 is the
   solver term of U. Never add it a second time. A method that lands outside U reopens U through a decision row. Until then
   it decides no verdict. Never take the worst of all qualified methods as the verdict. That verdict only gets worse as methods grow.
 

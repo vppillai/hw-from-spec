@@ -253,7 +253,7 @@ Defaults the questionnaire proposes:
   0603↔0603 0.25, chip↔QFN 1.0, QFN↔QFN 1.0, BGA↔BGA 2.0). In practice: ≥ 0.30 passives body-to-body, 0.50 where hand rework is expected,
   ≥ 1.5 mm around tall parts. Use symmetric pads and equal thermal mass on both ends of a chip part. One pad into a pour without relief
   tombstones the part. Courtyard overlap = DRC error, no exceptions.
-- **Copper under a cage or shell**: read the connector drawing before you advise on copper under its body. A drawing can mark a
+- **Copper under a cage or shell** **[convention]**: read the connector drawing before you advise on copper under its body. A drawing can mark a
   component keep-out that still allows traces. The drawing reversed advice to keep tracks clear of the cage walls *(worked example)*.
 
 ## 12. Creepage and clearance for the voltage class **[physics + owner choice]**

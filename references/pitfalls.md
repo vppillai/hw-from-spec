@@ -459,7 +459,7 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A project set a flat limit for a fixture-class board before it read the published fixture limits. Read the governing fixture clause first — 2026-11-11 [si/standards] (`high-speed-si.md` §9.1).
 - An agent read a one-board result against a mated-pair mask, and the margin was optimistic. Cascade the second board and the connector first — 2026-11-11 [si/standards] (`high-speed-si.md` §9.1).
 - A side-attached loop entry turned connector seating error into seating-dependent skew. Size the seating term before you tune the skew — 2026-11-11 [si/skew] (`high-speed-si.md` §4).
-- A mode-conversion line in dB hid the harm. Convert it to common-mode volts at the receiver, with a real module termination — 2026-11-12 [si/limits] (`high-speed-si.md` §9.2).
+- A mode-conversion line in dB hid the harm. Convert it to common-mode volts at the module input, with a real module termination — 2026-11-12 [si/limits] (`high-speed-si.md` §9.2).
 
 ## silk / dfm
 - The fab's DFM grades a value EQUAL to its warning threshold as Warning: design strictly greater — thresholds JSON.
@@ -652,7 +652,7 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - An FEA owner row with no test row stayed open across two gates. Write the arrival row the day the model reads FAIL: pose, instrument, reduction formula, pass number, record file, fail action. A brief named row ids that already existed; check the yaml first — 2026-10-11 [fea/owner-rows] (`fea-stage.md` §Thermal).
 - A von Mises peak at a hole edge beside a fixed annulus keeps rising with the mesh. Do not quote a peak that keeps rising. Read the stress at a set distance from the edge, or the quantities the limits use. Use Richardson extrapolation only where three meshes show convergence — 2026-10-31 [fea/mesh].
 - An airflow model counted the wrong number of fin faces, and its sink rise read under its air rise. Assert the energy balance in the selftest — 2026-11-10 [fea/thermal] (`fea-stage.md` Thermal).
-- A trace-width chart and a model with the plane differed 20 times. Define whether a limit means the local or the whole-board rise — 2026-11-11 [fea/thermal] (`fea-stage.md` Thermal).
+- A trace-width chart and a model with the plane differed by a factor of 20. Define whether a limit means the local or the whole-board rise — 2026-11-11 [fea/thermal] (`fea-stage.md` Thermal).
 ## software
 - A fixed jig cap makes the WARN level unreachable when THROTTLE = min(alarm − margin, cap): make the interplay explicit and print both levels — software/thermal.
 - Manuals written before the software they describe: the "what you should see" lines go under an explicit banner naming the fake backend that produced them — 2026-09-22 [documentation].
