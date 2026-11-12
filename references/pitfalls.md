@@ -195,6 +195,8 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A limit did not converge, because the estimate sat closer to the line than the model uncertainty. State one budget U and a guard-band rule first — 2026-11-12 [process/limits] (SKILL §3).
 - A verdict on the worst of all methods in hand got worse with each new method. Let one model of record plus U decide — 2026-11-12 [process/limits] (SKILL §3).
 - A pass line set with the estimate in hand tested nothing, and tuning ran on. Fix each line before its run, and give tuning a stop rule — 2026-11-12 [process/limits] (SKILL §3).
+- A relaxed limit moved the risk and left it unguarded. Ask what the old line protected, and guard that thing directly — 2026-11-12 [process/limits] (SKILL §3).
+- A relaxed limit left built margin open to later changes. Add a no-regression step against each value of record — 2026-11-12 [process/limits] (SKILL §3).
 
 ## agents / git
 - Agents die when the machine sleeps or on API 500s; resume by message with the MEASURED state; heartbeat monitors ~25 min; time-box every long task; parallel router JVMs SIGTERM each other — STATUS 09-18…21.
@@ -385,6 +387,7 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A 40-minute autorouter limit tested one pass, not rip-up. Run the router until the unrouted count plateaus before you judge a stack-up — 2026-11-11 [layout/router] (`pcb-layout-dfm.md` §1.2).
 - Three packer variants barely moved the placement predictors. Such a packer leaves no rows of via sites. Place the dense bands by hand-guided rows — 2026-11-11 [layout/placement] (`pcb-layout-dfm.md` §1.1).
 - Advice to keep tracks clear of a cage was reversed: the drawing allowed traces in the keep-out. Read the drawing before you advise — 2026-11-12 [layout/keep-out] (`pcb-layout-dfm.md` §11).
+- A wide gap in a via fence coupled the cavity in band. Keep each gap below the waveguide cut-off width — 2026-11-12 [layout/si] (`high-speed-si.md` §3).
 
 ## si / high-speed (`references/high-speed-si.md` carries the rules; one line each here)
 - A requirement closed on a simplified twin reopened on the launch of record: the twin had a solid plane and no contact posts, and read 9 dB better than the real launch. Solve the layout of record with ports that see the quantity — 2026-11-01 [si/model].
@@ -460,6 +463,10 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - An agent read a one-board result against a mated-pair mask, and the margin was optimistic. Cascade the second board and the connector first — 2026-11-11 [si/standards] (`high-speed-si.md` §9.1).
 - A side-attached loop entry turned connector seating error into seating-dependent skew. Size the seating term before you tune the skew — 2026-11-11 [si/skew] (`high-speed-si.md` §4).
 - A mode-conversion line in dB hid the harm. Convert it to common-mode volts at the module input, with a real module termination — 2026-11-12 [si/limits] (`high-speed-si.md` §9.2).
+- Stacked independent worst corners made every design look worse than any real board. Gate on predicted yield over the real spread — 2026-11-12 [si/limits] (`high-speed-si.md` §11).
+- An FDTD differential port launched a flat common-mode part and set an SCD21 floor. Remove it with a common-mode drive run — 2026-11-12 [si/method] (`high-speed-si.md` §8).
+- A common-mode voltage budget left out the driven-end reflection, which dominated. Include SCD11 and SCC11 / SCC22 — 2026-11-12 [si/limits] (`high-speed-si.md` §9.2).
+- A fix that gained 10 dB on one loop lost 7 dB on another. Probe a fix on the worst structure, never transfer by ratio — 2026-11-12 [si/method] (`high-speed-si.md` §10.1).
 
 ## silk / dfm
 - The fab's DFM grades a value EQUAL to its warning threshold as Warning: design strictly greater — thresholds JSON.

@@ -162,6 +162,9 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
   rise time in ps. Solve only the features above the threshold.
 - Two ground planes form a cavity **[physics]**. Stitch them near every discontinuity and around each connector. Write the stitch
   pitch as a layout rule. A perfect-conductor wall in the model is a convenience: run one case with the real stitching vias too.
+- A gap in a via fence or a ground ring acts as a waveguide **[physics]**. Its cut-off frequency is c / (2 w sqrt(εr)) for a
+  clear width w. Keep w below c / (2 f sqrt(εr)) at the highest frequency of interest. A wider gap couples the cavity in band.
+  The cut-off is a bound, not a margin. Below it the field still leaks, and it decays over the gap depth.
 - A connector pad longer than the contact foot acts as a stub **[physics]**. Cutting the pad to the foot is the strongest cure. It changes the
   vendor footprint, so it needs the vendor's word on solder-joint reliability.
 - A plane void under each signal pad raises the pad impedance **[physics]**. Reference the pad to the next plane down. Sweep the void margin.
@@ -539,6 +542,10 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
   terms.
 - Every fixture on a coupon is a copy of one 2x-thru half. Then one split removes all of them.
 - State the reference impedance of the mixed-mode conversion on every plot.
+- An FDTD differential port can launch a small common-mode part **[method]**. The part is often flat in frequency. It sets a
+  low-frequency floor on SCD21. Read the port's common-mode fraction k from its launched waves, or from a symmetric line with no true SCD21. Run a common-mode drive on the
+  same model to get SCC21. Subtract k times SCC21 from SCD21, as complex values. Never subtract a constant times SDD21: the
+  launched common mode travels on the common-mode path, not the differential one.
 
 ## 9. Figures of merit and how to read them
 
@@ -616,6 +623,9 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 - A mode-conversion line in dB does not show the harm **[method]**. Convert it to common-mode volts at the module input. Use the
   driver swing and a real module termination, not an ideal match. Compare those volts with the common-mode tolerance of the
   governing clause.
+- The converted common mode at a receiver depends on the common-mode reflection at both ends **[physics]**. SCD11 at the driven
+  end, re-reflected by a source that is not matched for common mode, can dominate the total. Put SCD11 and SCC11 / SCC22 in
+  every common-mode voltage budget, beside SCD21.
 
 ### 9.3 COM against the standard's reference
 
@@ -732,6 +742,8 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
   impedance corner and a registration corner together gave a small fine-mesh fail that neither gave alone *(worked example)*.
   The phase of a corner term depends on each lane's geometry. Never copy one lane's result to another lane, and run the worst
   stacked corner per lane before sign-off.
+- **Never carry a fix's gain from one structure to another by ratio** **[method]**. Probe the fix first on the worst structure.
+  An entry change gained 10 dB on one loop and lost 7 dB on another *(worked example)*.
 - Reversing the drive end mirrors a loop **[physics]**. The two registration corners along the mirror axis then swap values between
   SCD21 and SCD12. The worst value over the pair does not change. Read both corners before you call a direction change a new risk.
 - **Extrapolate mode conversion on the complex S-parameter, never on dB values** **[method]**. Extrapolate across one corner
@@ -778,6 +790,10 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
   spread. Do this before the verdict runs. Then freeze U. The solver-agreement shift of §6.3 is the
   solver term of U. Never add it a second time. A method that lands outside U reopens U through a decision row. Until then
   it decides no verdict. Never take the worst of all qualified methods as the verdict. That verdict only gets worse as methods grow.
+- **Gate on predicted yield, not on stacked worst corners** **[method]** (SKILL.md §3, check 2). Draw each term over its real
+  spread, at the level where it is common (§10). A stack of independent worst corners describes no real board. It makes every
+  design look worse than it is. Stack only the corners that occur together. Still run the worst stacked corner per lane
+  (§10.1); it finds the sensitive terms. Quote a yield only from a surrogate that passed the §10 checks.
 
 ### 11.1 Delegated SI decisions
 

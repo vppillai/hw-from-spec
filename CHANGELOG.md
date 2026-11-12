@@ -1,6 +1,6 @@
 # CHANGELOG — hw-from-spec
 
-## Current state (0.12.7): read this instead of replaying the entries below
+## Current state (0.12.8): read this instead of replaying the entries below
 
 - **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
   thirteen batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
@@ -43,6 +43,26 @@
   address and public pull-request numbers excepted) — `scripts/generic_lint.py` reads the whole repo
   (CHANGELOG and docs included; history keeps its measured numbers), a fenced worked example keeps numbers and kinds but never a name, and the
   repo carries no project retro (a retro report is folded, then deleted).
+
+## 0.12.8 - 2026-11-12 - Yield gates, guarded relaxations, common-mode budgets, fence gaps
+
+Source: the project log of 2026-11-12, after the 0.12.7 cut. The entry adds rules to SKILL.md and two references.
+It adds 7 lines to `references/pitfalls.md`.
+
+### Added
+- `SKILL.md` §3 check 2: gate on the predicted yield over the real spread, not on stacked independent worst corners.
+- `SKILL.md` §3 check 6: a relaxed limit moves the risk, so guard what the old line protected. Add a no-regression rule.
+- `references/high-speed-si.md` §3: a gap in a via fence acts as a waveguide. Keep it below the cut-off width.
+- `references/high-speed-si.md` §8: remove the common-mode part of an FDTD differential port with a common-mode drive run.
+- `references/high-speed-si.md` §9.2: a common-mode voltage budget includes SCD11 and SCC11 / SCC22.
+- `references/high-speed-si.md` §10.1: never carry a fix's gain to another structure by ratio.
+- `references/high-speed-si.md` §11: gate on predicted yield; the worst stacked corner run still finds the sensitive terms.
+- `references/pcb-layout-dfm.md` §3: a pointer to the fence-gap rule.
+- `references/pitfalls.md`: dated lines in process, layout and si.
+
+### Not done
+- No script changes. The rules need no new gate.
+- The current-state summary needs no new line: no script, template folder or reference was added.
 
 ## 0.12.7 - 2026-11-12 - Limits that can converge, a compute ledger, keep-outs read on the drawing
 
