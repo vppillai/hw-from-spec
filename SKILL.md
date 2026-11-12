@@ -247,7 +247,7 @@ order. A WARN that is "known" is not a bar; it is either fixed or a dated, evide
      Give the value at both corners for each option. Prefer a fix that narrows the spread of the cause, such as a part with both limits on its datasheet.
      Stack the corners that occur together. A fix can move the fail from one corner to the other (`references/high-speed-si.md` §10).
      For a performance limit, gate on the predicted yield when each term has a known spread (`references/high-speed-si.md` §11).
-     The owner sets the yield target before the run. A stack of many independent worst corners is far rarer than any target.
+     The owner sets the yield target before the run. A stack of many independent worst corners is far rarer than any one corner.
      Keep the worst case for a damage rating, a safety limit and a term with no known spread.
   3. Yields that multiply. Independent sort or inspection gates in series pass the product of their yields. State the product and size the order on it.
      When the gates read correlated causes, the product is wrong. Measure the joint yield on the first lot.

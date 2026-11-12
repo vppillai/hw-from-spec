@@ -164,7 +164,7 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 - Two ground planes form a cavity **[physics]**. Stitch them near every discontinuity and around each connector. Write the stitch
   pitch as a layout rule. A perfect-conductor wall in the model is a convenience: run one case with the real stitching vias too.
 - A gap in a via fence or a ground ring acts as a waveguide **[physics]**. Its cut-off frequency is c / (2 w sqrt(εr)) for a
-  clear width w. Keep w below c / (2 f sqrt(εr)) at the highest frequency of interest. A wider gap couples the cavity in band.
+  width w. Keep w below c / (2 f sqrt(εr)) at the highest frequency of interest. A wider gap couples the cavity in band.
   Take w as the centre spacing of the two vias. The cut-off is a bound, not a margin. Far below it, the field decays by about
   27 dB per gap width of depth. A fence is one via deep, so keep the gap well below the cut-off width. A common pitch rule is a
   tenth to a twentieth of the wavelength in the dielectric. An outer-layer slot has a lower effective εr, so the bound is safe there.
@@ -721,7 +721,7 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
   4. Hold out one or more interior runs, such as nominal or a half-step. Report the error there. Corner runs alone cannot see
      curvature.
   5. State the fit domain. Sample only inside the corners that runs cover, and never extrapolate outside them. The surrogate
-     takes impedance only at solved corners, and the fine-mesh corner runs of §7.1 stay the verdict.
+     takes impedance only at solved corners. The fine-mesh corner runs of §7.1 stay the value of record there. §11 names what gates.
 
   A yield headline near 100 % hid leave-one-out errors of a few dB and rank-deficient solves *(worked example)*.
 - **Draw each fab term at the level where it is common** **[fab capability]**. A laminate lot is common to the boards of one
@@ -935,7 +935,7 @@ Give each reviewer the frozen study, the yaml, the scripts and this list. Give n
 57. Is each fence or ring gap well below the cut-off width at the highest frequency of interest?
 58. Does each common-mode voltage budget hold SCD11, SCC11, SCC22, SCC21 and both common-mode terminations?
 59. Does each yield gate name its target, level and confidence before the run? Did its surrogate pass item 54?
-60. Was each fix run on every structure that takes it, not carried by ratio from another?
+60. Was each fix run on every structure that takes it, not carried by ratio or dB step from another?
 61. Does each lane's tier (§0.0) hold for its rate, length and margin? Judge the lane by the evidence of its tier only. Items 3 to 60 apply to tier-3 lanes.
 
 ## 16. Records

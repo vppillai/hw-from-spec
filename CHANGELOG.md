@@ -52,18 +52,19 @@ It adds 7 lines to `references/pitfalls.md`. Two blind reviews of the draft and 
 ### Added
 - `SKILL.md` §3 check 2: gate a performance limit on predicted yield when each term has a known spread. Keep the worst case for a damage or safety limit.
 - `SKILL.md` §3 check 6: relax a line only through a decision row. Guard what the old line protected. Add a no-regression rule.
-- `references/high-speed-si.md` §3: a gap in a via fence acts as a waveguide. Keep it below the cut-off width.
+- `references/high-speed-si.md` §3: a gap in a via fence acts as a waveguide. Keep it well below the cut-off width.
 - `references/high-speed-si.md` §8: remove the common-mode part of an FDTD differential port with a common-mode drive run.
 - `references/high-speed-si.md` §9.2: a common-mode voltage budget includes SCD11, SCC11, SCC22, SCC21 and both terminations.
-- `references/high-speed-si.md` §10.1: never carry a fix's gain to another structure by ratio.
+- `references/high-speed-si.md` §10.1: never carry a fix's gain to another structure by ratio or dB step. Run the fix on each structure.
 - `references/high-speed-si.md` §11: gate on predicted yield with an owner target. A stacked-corner fail with a passing yield is a stated risk.
 - `references/high-speed-si.md` §15: review items 57 to 60 for these rules.
+- `references/pcb-layout-dfm.md` §3: a pointer to the fence-gap rule.
+- `references/pitfalls.md`: dated lines in process, layout and si.
 
 ### Changed
 - `references/high-speed-si.md` §0.2 step 8: with a yield target and a qualified surrogate, the yield gates.
+- `references/high-speed-si.md` §10 surrogate check 5: corner runs are the value of record; §11 names what gates.
 - `references/high-speed-si.md` §15: the tier item is now item 61 and covers items 3 to 60.
-- `references/pcb-layout-dfm.md` §3: a pointer to the fence-gap rule.
-- `references/pitfalls.md`: dated lines in process, layout and si.
 
 ### Not done
 - No script changes. The rules need no new gate.
