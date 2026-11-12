@@ -41,7 +41,10 @@ via sites first, then the decoupling at the pins. Then run the router again.
 
 ### 1.2 Router session **[convention]**
 The routed board + the router's session file (Freerouting `.ses` with its `.dsn`, or the equivalent) are the artefacts of record; routing is
-never re-run to reproduce them (deterministic only with one thread and the same inputs). Re-import (`--import-ses`) is the replay. Keep-outs and
+never re-run to reproduce them. Re-import (`--import-ses`) is the replay.
+**Prove that the router repeats before one run judges a change** **[method]**. A multi-threaded pass or a time limit can give
+a different result for the same board. Run the same input twice and compare the unrouted counts. If they differ, judge a
+scripted change on several runs each side, and compare the spreads. The locked session of record stays the record. Keep-outs and
 net classes must be exported into the router input — grep the DSN for them after any flag change (`references/pitfalls.md` kicad).
 Judge a stack-up by its routed percentage only after the router has plateaued. Run it until the unrouted count stops falling
 over several passes, and read the pass log, not the clock. A 40-minute limit on one dense board tested one pass, not the
@@ -60,6 +63,19 @@ the bottleneck by hand before you change the stack-up.
 | `gerbers/`, `<board>.drl`, `pos.csv`, `bom_jlc.csv`, `cpl_jlc.csv`, `rotation_log.csv` | export | what the fab receives; rotation offsets applied per footprint listed for the reviewer |
 | `renders/` (top, bottom, iso, opaque background) + `tiles/` (≥ 40 px/mm) | render + tiler | the visual gates read images |
 | `EVIDENCE.md`, `REVIEW_NOTES.md` | generator / hand-written | md5 of every file above; what changed since the last round |
+
+### 1.4 Reach before room **[method]**
+A free channel helps only if the lines can get into it. Check reach before you count channels or change a line order.
+- **Before a line-order change at a window, trace each pad's free region on its layer.** Other lines, a power neck and a via
+  ring can close a pad in on all sides but one. Then no reorder frees that pad. Only a new via site or a moved part does.
+- **Before you free a strip for new lines, test reach from the source.** Per layer, find the free regions. Join two regions
+  of different layers where a via fits in both. Then check that the source pads and the strip are in one joined region.
+  A strip that joins only the target side adds no path.
+- **Draw each scripted supply feed before a channel count.** A feed that turns round a column of parts closes in every line
+  inside the turn. Count the channels with the feed drawn.
+- **Put a flow-through protection array between the source and the connector.** Its lines then pass straight through. With
+  the source and the connector on the same side of the array, each line goes out and comes back. That band then needs
+  about twice the width.
 
 ## 2. Stack-up and copper weight
 - **Stack-up = the fab's named template, copied into the CAD's physical stack-up** **[fab capability]**. The fab publishes templates per

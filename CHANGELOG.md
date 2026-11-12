@@ -1,6 +1,6 @@
 # CHANGELOG — hw-from-spec
 
-## Current state (0.12.8): read this instead of replaying the entries below
+## Current state (0.12.9): read this instead of replaying the entries below
 
 - **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
   thirteen batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
@@ -43,6 +43,19 @@
   address and public pull-request numbers excepted) — `scripts/generic_lint.py` reads the whole repo
   (CHANGELOG and docs included; history keeps its measured numbers), a fenced worked example keeps numbers and kinds but never a name, and the
   repo carries no project retro (a retro report is folded, then deleted).
+
+## 0.12.9 - 2026-11-12 - Reach before room, router repeat, worktree tool links
+
+Source: the project log of 2026-11-12, after the 0.12.8 cut. The entry adds rules to two references.
+It adds 6 lines to `references/pitfalls.md` and extends one.
+
+### Added
+- `references/pcb-layout-dfm.md` §1.4: trace each pad's free region before a line-order change at a window.
+- `references/pcb-layout-dfm.md` §1.4: test reach from the source before you free a strip for new lines.
+- `references/pcb-layout-dfm.md` §1.4: draw each scripted supply feed before a channel count.
+- `references/pcb-layout-dfm.md` §1.4: put a flow-through protection array between the source and the connector.
+- `references/pcb-layout-dfm.md` §1.2: prove that the router repeats before one run judges a change.
+- `references/agent-ops.md` §5.3: link the environment and ignored tool files into a fresh worktree.
 
 ## 0.12.8 - 2026-11-12 - Yield gates, guarded relaxations, common-mode budgets, fence gaps
 
