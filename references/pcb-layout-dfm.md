@@ -38,18 +38,25 @@ after one fixed router pass, and the total wire length. Stop the variants when t
 than its run-to-run spread. Then place the dense bands by hand-guided rows. A dense band is a strip of fine-pitch parts and
 their fan-out. A hand-guided row is a CSV row whose position the designer chooses, with `locked: true`. Place the rows of
 via sites first, then the decoupling at the pins. Then run the router again.
+**Put a flow-through protection array next to the connector, between the connector and the protected part** **[method]**.
+In a flow-through array, each line passes straight over its pad, with no stub. Then the lines pass straight through. With the
+connector and the protected part on one side of the array, each line goes out and comes back. That band then needs about twice
+the width. The out-and-back stub also adds inductance and weakens the clamp.
 
 ### 1.2 Router session **[convention]**
 The routed board + the router's session file (Freerouting `.ses` with its `.dsn`, or the equivalent) are the artefacts of record; routing is
-never re-run to reproduce them. Re-import (`--import-ses`) is the replay.
-**Prove that the router repeats before one run judges a change** **[method]**. A multi-threaded pass or a time limit can give
-a different result for the same board. Run the same input twice and compare the unrouted counts. If they differ, judge a
-scripted change on several runs each side, and compare the spreads. The locked session of record stays the record. Keep-outs and
+never re-run to reproduce them. Re-import (`--import-ses`) is the replay. Keep-outs and
 net classes must be exported into the router input — grep the DSN for them after any flag change (`references/pitfalls.md` kicad).
 Judge a stack-up by its routed percentage only after the router has plateaued. Run it until the unrouted count stops falling
 over several passes, and read the pass log, not the clock. A 40-minute limit on one dense board tested one pass, not the
 rip-up *(worked example)*. Skip the optimiser pass, which adds no connections. A low routed percentage is a screen: confirm
 the bottleneck by hand before you change the stack-up.
+
+**Check that the router repeats before you compare two runs** **[method]**. A multi-threaded pass or a time limit can give a
+different result for the same board. First run one thread with a pass limit, not a time limit (`agent-ops.md` §5). Run the
+same input twice. Compare the session-file hashes, not only the unrouted counts. If the hashes differ, run a scripted change
+three times or more on each side. The change counts only if the medians differ by more than the run-to-run spread. The
+session of record stays the record.
 
 ### 1.3 The G2 review pack (`80-reviews/G2/`, generated, committed)
 | File | Produced by | Why the reviewer needs it |
@@ -64,18 +71,21 @@ the bottleneck by hand before you change the stack-up.
 | `renders/` (top, bottom, iso, opaque background) + `tiles/` (≥ 40 px/mm) | render + tiler | the visual gates read images |
 | `EVIDENCE.md`, `REVIEW_NOTES.md` | generator / hand-written | md5 of every file above; what changed since the last round |
 
-### 1.4 Reach before room **[method]**
+### 1.4 Check reach before you count channels **[method]**
 A free channel helps only if the lines can get into it. Check reach before you count channels or change a line order.
-- **Before a line-order change at a window, trace each pad's free region on its layer.** Other lines, a power neck and a via
-  ring can close a pad in on all sides but one. Then no reorder frees that pad. Only a new via site or a moved part does.
-- **Before you free a strip for new lines, test reach from the source.** Per layer, find the free regions. Join two regions
-  of different layers where a via fits in both. Then check that the source pads and the strip are in one joined region.
-  A strip that joins only the target side adds no path.
-- **Draw each scripted supply feed before a channel count.** A feed that turns round a column of parts closes in every line
-  inside the turn. Count the channels with the feed drawn.
-- **Put a flow-through protection array between the source and the connector.** Its lines then pass straight through. With
-  the source and the connector on the same side of the array, each line goes out and comes back. That band then needs
-  about twice the width.
+Terms: a *window* is a gap in copper or parts that a group of lines must pass. A *strip* is a free band you plan to use for
+new lines. The *source* is the part where the lines start. A *free region* is the copper-free area on one layer. Shrink it
+by the clearance plus half the track width. A *power neck* is a narrow part of a power pour. A *supply feed* is a scripted
+power track.
+- **Before a line-order change at a window, trace each pad's free region on its layer.** Other lines, a power neck and a
+  ring of vias can block a pad on all sides but one. Then no reorder frees that pad. Only one of these frees it: a move of
+  the copper that blocks it, a new via site, or a moved part.
+- **Before you free a strip for new lines, test reach from the source.** Find the free regions on each layer. Join two
+  regions only at a via site (§2) that is free on every layer the via crosses. Then check that the source pads and the
+  strip are in one joined region. A strip that joins only the target side adds no path.
+- **Draw each scripted supply feed before a channel count.** A feed can turn round a column of parts. On that layer, it
+  then blocks every line inside the turn. Count the channels with the feed drawn.
+- A flow-through protection array is a placement rule (§1.1). It also sets the width of the band through it.
 
 ## 2. Stack-up and copper weight
 - **Stack-up = the fab's named template, copied into the CAD's physical stack-up** **[fab capability]**. The fab publishes templates per

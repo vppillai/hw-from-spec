@@ -44,18 +44,22 @@
   (CHANGELOG and docs included; history keeps its measured numbers), a fenced worked example keeps numbers and kinds but never a name, and the
   repo carries no project retro (a retro report is folded, then deleted).
 
-## 0.12.9 - 2026-11-12 - Reach before room, router repeat, worktree tool links
+## 0.12.9 - 2026-11-12 - Reach checks, router repeat, worktree tool links
 
 Source: the project log of 2026-11-12, after the 0.12.8 cut. The entry adds rules to two references.
 It adds 6 lines to `references/pitfalls.md` and extends one.
 
 ### Added
-- `references/pcb-layout-dfm.md` §1.4: trace each pad's free region before a line-order change at a window.
-- `references/pcb-layout-dfm.md` §1.4: test reach from the source before you free a strip for new lines.
+- `references/pcb-layout-dfm.md` §1.4: define the reach terms. Trace each pad's free region before a line-order change at a window.
+- `references/pcb-layout-dfm.md` §1.4: test reach from the source before you free a strip. Join layers only at free via sites.
 - `references/pcb-layout-dfm.md` §1.4: draw each scripted supply feed before a channel count.
-- `references/pcb-layout-dfm.md` §1.4: put a flow-through protection array between the source and the connector.
-- `references/pcb-layout-dfm.md` §1.2: prove that the router repeats before one run judges a change.
-- `references/agent-ops.md` §5.3: link the environment and ignored tool files into a fresh worktree.
+- `references/pcb-layout-dfm.md` §1.1: put a flow-through protection array next to the connector, between it and the protected part.
+- `references/pcb-layout-dfm.md` §1.2: check that the router repeats. Compare medians over three or more runs when it does not.
+- `references/agent-ops.md` §5.3: link the environment and ignored tool files into a fresh worktree. Regenerate generated files.
+
+### Changed
+- `references/pcb-layout-dfm.md` §1.2: the one-thread determinism clause moves into the new repeat rule, as its first step.
+- `references/pitfalls.md`: the router determinism line points to §1.2.
 
 ## 0.12.8 - 2026-11-12 - Yield gates, guarded relaxations, common-mode budgets, fence gaps
 
