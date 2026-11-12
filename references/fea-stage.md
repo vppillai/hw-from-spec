@@ -79,7 +79,7 @@ elasticity, heat) · pyamg (SA-AMG + CG for > 60k DOF) · trimesh/rtree/shapely 
   One airflow model counted 2n fin faces for n-1 channels. Its sink rise read under its air rise *(worked example)*.
 - Define which rise a current limit means: the local rise at the trace or the whole-board rise. A basic trace-width chart gives
   no credit for a nearby plane. State both rises. The larger one, against its own limit, decides. A chart and a layered model
-  with the plane differed by a factor of 20, and the whole-board rise governed *(worked example)*.
+  with the plane differed by a factor of 20 *(worked example)*. The whole-board rise governed.
 ## Cases that paid for themselves (worked examples)
 - Case torsion (two-hand twist): a single bottom dovetail is a hinge; two rail pairs ~17 mm apart gave ~2.5× stiffness.
 - Snap tab: the hand formula under-read peak stress by ~1.2× (slit-root concentration); peak ∝ deflection — reduce travel before thickening.
