@@ -64,8 +64,8 @@ reference when you reach that step, not before. Nothing here is specific to one 
    (DRAFT, record MISSING: correct before G1 / M1) → `$PY scripts/now_pages.py` (the five answers of `00-now/`; `--check` is in the day-1 gate list)
    → commit. Then `scripts/adopt_gates.sh` (day-1 list + clone gate) green → `$PY scripts/project.py kickoff --check` green. That check passes when
    every answered kickoff row has landed in project.yaml with a real D row. Then fill the
-   CC-001 evidence cell and the first STATUS paragraph → commit. Start three ledgers the same day. They hold the cost of each study,
-   each prediction against its measurement, and each dead end with its cost. A cost not written at the time cannot be recovered. Label each figure for a reader simulated, calculated or measured (`references/writing-style.md` §3). Only now read the spec. Fill 10-spec/SPEC.md / VERIFY / traceability. `scripts/project.py
+   CC-001 evidence cell and the first STATUS paragraph → commit. Start four ledgers the same day. They hold study costs,
+   predictions against measurements, dead ends with their costs, and compute jobs (`references/agent-ops.md` §5.1). A cost not written at the time cannot be recovered. Label each figure for a reader simulated, calculated or measured (`references/writing-style.md` §3). Only now read the spec. Fill 10-spec/SPEC.md / VERIFY / traceability. `scripts/project.py
    slots` reads 0 before the G0 ask (§1.1 says what happens at G0).
 7. **CI (optional, when the repo has a remote)**: `templates/ci/` holds pr-check / nightly / release workflows with `{{PROJECT_*}}` placeholders.
    Fill them with the recipe in `templates/ci/README.md`. The recipe copies `setup_linux.sh` / `nightly.sh` / `release_archive.sh` and writes
@@ -250,10 +250,12 @@ order. A WARN that is "known" is not a bar; it is either fixed or a dated, evide
      When the gates read correlated causes, the product is wrong. Measure the joint yield on the first lot.
   4. The value proven on the previous revision. When one exists, offer it as an option with what proved it and its known risk.
   5. A label on every number: simulated, calculated or measured (`references/writing-style.md` §3).
-  6. A limit that can converge. Before the runs, state one uncertainty budget U and a guard-band rule. A gate that resolves
-     less than U cannot converge. Fix each pass line before its run. A line set with the estimate in hand is not a test.
-     One model of record plus U decides the verdict. A verdict on the worst of all methods in hand only gets worse as methods grow.
-     Give each tuning loop a stop rule: the number of rounds, or the gain per round below which it stops.
+  6. A limit that can converge. Before the verdict runs, state one uncertainty budget U and a guard-band rule, and freeze both.
+     The guard band moves the accept line inward by U. When the estimate sits closer to the line than U, more runs cannot converge.
+     Fix each pass line before its run. A line set with the estimate in hand is not a test.
+     One qualified model of record plus U decides the verdict. A verdict on the worst of all methods only gets worse as methods grow.
+     A method that lands outside U decides nothing. It reopens U through a decision row.
+- Give each tuning loop a stop rule first: a round count, or a least gain per round (`references/high-speed-si.md` §0.3).
 - Open the cited page, slide or clause before a row quotes it. Copy its number and date from the source, never from memory or
   another record.
 - `90-log/KNOWN_ISSUES.md` is generated from the log: OPEN rows, rows mentioning OPEN, provisional rows, the nod section (KNOWN_ISSUES §2.1), blockers, the

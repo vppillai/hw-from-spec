@@ -192,7 +192,7 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A status sweep gave a cell new leading words, and every check anchored on the old cell start broke. Run the record checks after the sweep edit, before its commit — 2026-11-10 [process/gates] (`release-and-cut.md` §3.1).
 - A selftest shim's cache key named only part of the code it ran, so a change elsewhere never reran it. Key on every file the command runs — 2026-11-09 [process/gates].
 - A power-mux comparator divider from a wide-range input could not hold both the switchover and the priority bound. Feed it from a regulated rail — 2026-11-09 [process/power] (`schematic-phase.md` §7).
-- A limit did not converge, because its gate resolved less than the model uncertainty. State one budget U and a guard-band rule first — 2026-11-12 [process/limits] (SKILL §3).
+- A limit did not converge, because the estimate sat closer to the line than the model uncertainty. State one budget U and a guard-band rule first — 2026-11-12 [process/limits] (SKILL §3).
 - A verdict on the worst of all methods in hand got worse with each new method. Let one model of record plus U decide — 2026-11-12 [process/limits] (SKILL §3).
 - A pass line set with the estimate in hand tested nothing, and tuning ran on. Fix each line before its run, and give tuning a stop rule — 2026-11-12 [process/limits] (SKILL §3).
 
@@ -270,9 +270,9 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A dead session's worktree locks blocked a cleanup. Read the lock reason, check that its process is gone, then unlock — 2026-11-10 [agents/worktrees] (`agent-ops.md` §5.3).
 - Two long jobs held two of three pool slots, and load from outside the pool shut the load gate. Light checks queued with one slot free. Keep one slot for light checks — 2026-11-10 [agents/pool] (`agent-ops.md` §8).
 - A fourth writer slipped past a cap of three. The coordinator counts the writers before each start, and pauses the least urgent one at its next commit — 2026-11-11 [agents/pool] (`agent-ops.md` §8).
-- A queue reorder ran while the dispatcher submitted, and the dispatcher then deleted a different run. Edit the queue right after a submit — 2026-11-11 [agents/queue] (`agent-ops.md` §5.1).
-- 245 remote jobs were never fetched, and removed worktrees took their logs. Keep an append-only compute ledger from day one — 2026-11-12 [agents/compute] (`agent-ops.md` §5.1).
 - A reviewer model at full reasoning effort spent its whole output limit and returned nothing. Set the limit to cover reasoning and answer — 2026-11-10 [agents/review] (`agent-ops.md` §4).
+- A queue reorder ran while the dispatcher submitted, and the dispatcher then deleted a different run. Delete by run id, or stop the dispatcher first — 2026-11-11 [agents/queue] (`agent-ops.md` §5.1).
+- 245 remote jobs were never fetched, and removed worktrees took their logs. Keep an append-only compute ledger from day 1 — 2026-11-12 [agents/compute] (`agent-ops.md` §5.1).
 
 ## tooling / determinism
 - Bambu Studio CLI (02.08.x): `sparse_infill_density` 100 % is rejected (rc -18) — use top / bottom shell thickness for a solid column. A two-filament slice with a prime tower SEGFAULTS (rc -11 / 133, "no filament colors found in projects") unless each slot's filament JSON carries `filament_colour` (or `--filament-colour '#..;#..'`). Bisect on the temp inputs one variable per run — 2026-09-29 [tooling/bambu].
@@ -458,7 +458,7 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A yield model drew registration and the laminate lot once per build. Registration is a panel term. Draw each term at the level where it is common — 2026-11-11 [si/yield] (`high-speed-si.md` §10).
 - A project set a flat limit for a fixture-class board before it read the published fixture limits. Read the governing fixture clause first — 2026-11-11 [si/standards] (`high-speed-si.md` §9.1).
 - An agent read a one-board result against a mated-pair mask, and the margin was optimistic. Cascade the second board and the connector first — 2026-11-11 [si/standards] (`high-speed-si.md` §9.1).
-- A side-attached loop entry turned connector seating error into drawn skew. Size the seating term before you tune the skew — 2026-11-11 [si/skew] (`high-speed-si.md` §4).
+- A side-attached loop entry turned connector seating error into seating-dependent skew. Size the seating term before you tune the skew — 2026-11-11 [si/skew] (`high-speed-si.md` §4).
 - A mode-conversion line in dB hid the harm. Convert it to common-mode volts at the receiver, with a real module termination — 2026-11-12 [si/limits] (`high-speed-si.md` §9.2).
 
 ## silk / dfm

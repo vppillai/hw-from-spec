@@ -46,25 +46,27 @@
 
 ## 0.12.7 - 2026-11-12 - Limits that can converge, a compute ledger, keep-outs read on the drawing
 
-Source: the project log of 2026-11-11 and 2026-11-12, after the 0.12.6 cut. The entry adds rules to SKILL.md and five references,
-and 12 lines to `references/pitfalls.md`. Two blind reviews of the draft and their fixes are folded in.
+Source: the project log of 2026-11-11 and 2026-11-12, after the 0.12.6 cut. The entry adds rules to SKILL.md and four references.
+It adds 11 lines to `references/pitfalls.md`. Two blind reviews of the draft and their fixes are folded in.
 
 ### Added
 - `SKILL.md` §3:
-  - Check 6 on every owner option: a limit that can converge. State one budget U and a guard-band rule before the runs. Fix each
-    pass line before its run. One model of record plus U decides. Give each tuning loop a stop rule.
-  - Open the cited source before a row quotes it. Write `abs(x)`, never `|x|`, in a parsed table.
+  - Check 6 on every owner option: a limit that can converge. State and freeze one budget U and a guard-band rule before the
+    verdict runs. Fix each pass line before its run. One qualified model of record plus U decides. A method outside U reopens U.
+  - Give each tuning loop a stop rule. Open the cited source before a row quotes it. Write `abs(x)`, never `|x|`, in a parsed table.
 - `references/high-speed-si.md`: §4 a side-attached loop entry turns seating error into skew. §9.2 convert a mode-conversion
-  line in dB to common-mode volts at the receiver.
-- `references/agent-ops.md` §5.1: the dispatcher queue race, and an append-only compute ledger from day one.
+  line in dB to common-mode volts at the module input.
+- `references/agent-ops.md` §5.1: the dispatcher queue race, and an append-only compute ledger from day 1.
 - `references/fea-stage.md` "Thermal": define whether a limit means the local or the whole-board rise.
 - `references/pcb-layout-dfm.md` §11: read the connector drawing before you advise on copper under a cage or shell.
 - `references/pitfalls.md`: dated lines in process, agents, layout, si, fea and records.
 
 ### Changed
-- `SKILL.md` §3: "five checks" is now "six checks".
+- `SKILL.md` §3: "five checks" is now "six checks". §0 step 6: three ledgers are now four, with the compute ledger.
 - `references/high-speed-si.md` §11: a verdict no longer takes the worst of the method corners in hand. One model of record
-  plus U decides, and the method spread sizes U.
+  plus U decides. U lists mesh, solver, boundary and fab, sized from the §6.3 correlation cases and frozen.
+- `references/high-speed-si.md` §6.3: the open-solver shift is the solver term of U, never added twice.
+- `references/high-speed-si.md` §9.2: the design-limit bullet points to the new dB-to-volts bullet for its basis.
 
 ### Not done
 - No script changes. The rules need no new gate.

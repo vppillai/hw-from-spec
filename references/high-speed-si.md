@@ -298,7 +298,7 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
   balance. Give each step its cost at every corner.
 - A side-entry leg is the length compensation of its loop **[physics]**. Widening, narrowing or re-routing that leg trades the two
   registration corners against each other, by up to 9 dB *(worked example)*. Report such a lever only with its values at both corners.
-- A loop entry that attaches to one leg from the side turns connector seating error into drawn skew **[physics]**. The seating
+- A loop entry that attaches to one leg from the side turns connector seating error into seating-dependent skew **[physics]**. The seating
   depth then changes the path of one leg more than the other. Size the seating term at both seating limits before you tune the skew. A centring retune
   cannot remove it (§10.1).
 - Record the variants that failed beside the one adopted. They are the reason for the adopted form.
@@ -428,7 +428,8 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
   for a licence or a host. When the cluster stays full, do not hold a gate for it. Agree an open-solver acceptance rule with the
   owner instead:
   1. Move the pass line by the solver-agreement margin: the largest gap seen on loops where the two solvers agreed
-     *(worked example: 0.6 dB)*. A loop where the commercial solver read better keeps the plain line.
+     *(worked example: 0.6 dB)*. A loop where the commercial solver read better keeps the plain line. This shift is the
+     solver term of U (§11). Do not add it to U again.
   2. Give every loop within 1 dB of its line a fine-mesh run. The fine value is the value of record.
   3. Show by calculation that the fab spreads stay inside the corners of record.
   4. Rerun every loop on the routed copper at the layout gate. Add the commercial solver there only for a loop inside its margin.
@@ -610,10 +611,10 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
   ends is echo-limited. Loss can help it.
 - Crosstalk: report the integrated crosstalk noise (ICN) with one parameter set for every source. Compare the connector model's ICN with any
   measured report on the same set. Then give the COM cost of all crosstalk together.
-- A design limit that no standard clause sets is a design margin. Derive its basis (for example the common-mode voltage it puts at the module
-  input) and write it beside the limit.
-- A mode-conversion line in dB does not show the harm **[method]**. Convert it to common-mode volts at the receiver input. Use the
-  driver swing and a real module termination, not an ideal match. Judge the line on those volts.
+- A design limit that no standard clause sets is a design margin. Derive its basis and write it beside the limit.
+- A mode-conversion line in dB does not show the harm **[method]**. Convert it to common-mode volts at the module input. Use the
+  driver swing and a real module termination, not an ideal match. Compare those volts with the common-mode tolerance of the
+  governing clause.
 
 ### 9.3 COM against the standard's reference
 
@@ -770,8 +771,11 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 - Hold the loss of the channel under a margin rule well inside the standard's budget **[owner choice]**.
 - Margins are owner decisions. An agent proposes the row with the number; the owner accepts it.
 - A margin within about 2 dB of its limit may rest on one solver class. Then it needs the independent solver of §6.3 first.
-- One model of record plus one uncertainty budget U decides a verdict (SKILL.md §3, check 6). Size U from the method spread in
-  hand: mesh level, solver and boundary. Never judge on the worst of all methods. That verdict only gets worse as methods grow.
+- **One model of record plus one budget U decides a verdict** **[method]** (SKILL.md §3, check 6). The model of record is the
+  solver of record of §6.3, on the mesh level of record of §7.1. U lists its terms: mesh, solver, boundary and fab. Size each
+  term from the correlation cases of §6.3, before the verdict runs, and freeze U. The solver-agreement shift of §6.3 is the
+  solver term of U. Never add it a second time. A method that lands outside U reopens U through a decision row. Until then
+  it decides no verdict. Never take the worst of all qualified methods as the verdict. That verdict only gets worse as methods grow.
 
 ### 11.1 Delegated SI decisions
 
