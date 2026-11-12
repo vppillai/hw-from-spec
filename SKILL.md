@@ -1,6 +1,6 @@
 ---
 name: hw-from-spec
-version: 0.12.6
+version: 0.12.7
 description: Run a hardware project (a PCB, a printed or CNC enclosure, or both — scope chosen at kickoff; contract fab such as JLCPCB) from a written specification to a production cut with an owner-gated, generated-only, blind-reviewed workflow — a kickoff questionnaire that asks every owner decision up front with recommended answers, a zero-warning manufacturability bar, and a retro that folds each project's learnings back into the skill. Use this whenever someone starts a board or enclosure project from a spec, asks to set up gates, a decision log, generators, part verification, a fab DFM mirror, a case pipeline, FEA, blind reviews, a release report or a production cut for one, or resumes such a project, or wants the skill improved from a finished project — even if they only say "new KiCad board", "order this at JLC", "review the layout", "cut the release" or "what did we learn".
 ---
 
@@ -64,8 +64,8 @@ reference when you reach that step, not before. Nothing here is specific to one 
    (DRAFT, record MISSING: correct before G1 / M1) → `$PY scripts/now_pages.py` (the five answers of `00-now/`; `--check` is in the day-1 gate list)
    → commit. Then `scripts/adopt_gates.sh` (day-1 list + clone gate) green → `$PY scripts/project.py kickoff --check` green. That check passes when
    every answered kickoff row has landed in project.yaml with a real D row. Then fill the
-   CC-001 evidence cell and the first STATUS paragraph → commit. Start three ledgers the same day. They hold the cost of each study,
-   each prediction against its measurement, and each dead end with its cost. A cost not written at the time cannot be recovered. Label each figure for a reader simulated, calculated or measured (`references/writing-style.md` §3). Only now read the spec. Fill 10-spec/SPEC.md / VERIFY / traceability. `scripts/project.py
+   CC-001 evidence cell and the first STATUS paragraph → commit. Start four ledgers the same day. They hold study costs,
+   predictions against measurements, dead ends with their costs, and compute jobs (`references/agent-ops.md` §5.1). A cost not written at the time cannot be recovered. Label each figure for a reader simulated, calculated or measured (`references/writing-style.md` §3). Only now read the spec. Fill 10-spec/SPEC.md / VERIFY / traceability. `scripts/project.py
    slots` reads 0 before the G0 ask (§1.1 says what happens at G0).
 7. **CI (optional, when the repo has a remote)**: `templates/ci/` holds pr-check / nightly / release workflows with `{{PROJECT_*}}` placeholders.
    Fill them with the recipe in `templates/ci/README.md`. The recipe copies `setup_linux.sh` / `nightly.sh` / `release_archive.sh` and writes
@@ -237,7 +237,7 @@ order. A WARN that is "known" is not a bar; it is either fixed or a dated, evide
 - Rule 2: a value, part, topology or pin assignment named in the spec is never changed silently. Write the CC row (reason, options, recommendation),
   mark it OPEN, ask. Apply only after approval, or ship it behind an optional flag that warns when omitted so the code path is tested now
   (`references/pitfalls.md` process).
-- **Every option you give the owner passes five checks.** Apply them in a CC row and at a gate ask.
+- **Every option you give the owner passes six checks.** Apply them in a CC row and at a gate ask.
   1. No hardware gate below the part's real capability. A hardware protection trips below the damage rating of the part it protects.
      Its trip tolerance and response time stay inside that rating. Never set the hardware trip at a policy value.
      A policy limit (a power grant, a temperature mark, a timing margin) lives in firmware or software. It has a safe default and a lab override.
@@ -250,10 +250,20 @@ order. A WARN that is "known" is not a bar; it is either fixed or a dated, evide
      When the gates read correlated causes, the product is wrong. Measure the joint yield on the first lot.
   4. The value proven on the previous revision. When one exists, offer it as an option with what proved it and its known risk.
   5. A label on every number: simulated, calculated or measured (`references/writing-style.md` §3).
+  6. A limit that can converge. Before the verdict runs, state one uncertainty budget U and a guard-band rule.
+     Freeze both.
+     The guard band moves the accept line inward by U. When the estimate sits closer to the line than U, more runs cannot converge.
+     Fix each pass line before its run. A line set with the estimate in hand is not a test.
+     One qualified model of record plus U decides the verdict. A verdict on the worst of all methods only gets worse as methods grow.
+     A method that lands outside U decides nothing. It reopens U through a decision row.
+- Give each tuning loop a stop rule first: a round count, or a least gain per round (`references/high-speed-si.md` §0.3).
+- Open the cited page, slide or clause before a row quotes it. Copy its number and date from the source, never from memory or
+  another record.
 - `90-log/KNOWN_ISSUES.md` is generated from the log: OPEN rows, rows mentioning OPEN, provisional rows, the nod section (KNOWN_ISSUES §2.1), blockers, the
   test plan's UNVERIFIED markers. Section 1 is hand-curated between markers (`scripts/known_issues.py`). Describe the nod marker indirectly in
   status cells or the generator re-triggers on the description.
-- A literal `|` inside a cell is `\|`; the generator refuses a row with the wrong cell count. An ID is reserved only when its row is in HEAD:
+- A literal `|` inside a cell is `\|`; the generator refuses a row with the wrong cell count. Write an absolute value as `abs(x)`, never `|x|`,
+  in any table that a script parses. An ID is reserved only when its row is in HEAD:
   `grep -c '^| CC-nnn '` immediately before writing (CC rows; owner rows are bold in the template), hand numbers out with tasks (`references/agent-ops.md` §1).
 - One record row per agent task, appended after re-reading the file; commit it right away with the exact-edit staging recipe when other agents
   share the tree (`references/agent-ops.md` §2).
