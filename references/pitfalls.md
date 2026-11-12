@@ -192,6 +192,9 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A status sweep gave a cell new leading words, and every check anchored on the old cell start broke. Run the record checks after the sweep edit, before its commit — 2026-11-10 [process/gates] (`release-and-cut.md` §3.1).
 - A selftest shim's cache key named only part of the code it ran, so a change elsewhere never reran it. Key on every file the command runs — 2026-11-09 [process/gates].
 - A power-mux comparator divider from a wide-range input could not hold both the switchover and the priority bound. Feed it from a regulated rail — 2026-11-09 [process/power] (`schematic-phase.md` §7).
+- A limit did not converge, because its gate resolved less than the model uncertainty. State one budget U and a guard-band rule first — 2026-11-12 [process/limits] (SKILL §3).
+- A verdict on the worst of all methods in hand got worse with each new method. Let one model of record plus U decide — 2026-11-12 [process/limits] (SKILL §3).
+- A pass line set with the estimate in hand tested nothing, and tuning ran on. Fix each line before its run, and give tuning a stop rule — 2026-11-12 [process/limits] (SKILL §3).
 
 ## agents / git
 - Agents die when the machine sleeps or on API 500s; resume by message with the MEASURED state; heartbeat monitors ~25 min; time-box every long task; parallel router JVMs SIGTERM each other — STATUS 09-18…21.
@@ -267,6 +270,8 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A dead session's worktree locks blocked a cleanup. Read the lock reason, check that its process is gone, then unlock — 2026-11-10 [agents/worktrees] (`agent-ops.md` §5.3).
 - Two long jobs held two of three pool slots, and load from outside the pool shut the load gate. Light checks queued with one slot free. Keep one slot for light checks — 2026-11-10 [agents/pool] (`agent-ops.md` §8).
 - A fourth writer slipped past a cap of three. The coordinator counts the writers before each start, and pauses the least urgent one at its next commit — 2026-11-11 [agents/pool] (`agent-ops.md` §8).
+- A queue reorder ran while the dispatcher submitted, and the dispatcher then deleted a different run. Edit the queue right after a submit — 2026-11-11 [agents/queue] (`agent-ops.md` §5.1).
+- 245 remote jobs were never fetched, and removed worktrees took their logs. Keep an append-only compute ledger from day one — 2026-11-12 [agents/compute] (`agent-ops.md` §5.1).
 - A reviewer model at full reasoning effort spent its whole output limit and returned nothing. Set the limit to cover reasoning and answer — 2026-11-10 [agents/review] (`agent-ops.md` §4).
 
 ## tooling / determinism
@@ -379,6 +384,7 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - Heavy outer copper widened each via's free circle, and a dense board ran out of via sites under its dense parts. Count the via sites before placement — 2026-11-10 [layout/stackup] (`pcb-layout-dfm.md` §2).
 - A 40-minute autorouter limit tested one pass, not rip-up. Run the router until the unrouted count plateaus before you judge a stack-up — 2026-11-11 [layout/router] (`pcb-layout-dfm.md` §1.2).
 - Three packer variants barely moved the placement predictors. Such a packer leaves no rows of via sites. Place the dense bands by hand-guided rows — 2026-11-11 [layout/placement] (`pcb-layout-dfm.md` §1.1).
+- Advice to keep tracks clear of a cage was reversed: the drawing allowed traces in the keep-out. Read the drawing before you advise — 2026-11-12 [layout/keep-out] (`pcb-layout-dfm.md` §11).
 
 ## si / high-speed (`references/high-speed-si.md` carries the rules; one line each here)
 - A requirement closed on a simplified twin reopened on the launch of record: the twin had a solid plane and no contact posts, and read 9 dB better than the real launch. Solve the layout of record with ports that see the quantity — 2026-11-01 [si/model].
@@ -452,6 +458,8 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A yield model drew registration and the laminate lot once per build. Registration is a panel term. Draw each term at the level where it is common — 2026-11-11 [si/yield] (`high-speed-si.md` §10).
 - A project set a flat limit for a fixture-class board before it read the published fixture limits. Read the governing fixture clause first — 2026-11-11 [si/standards] (`high-speed-si.md` §9.1).
 - An agent read a one-board result against a mated-pair mask, and the margin was optimistic. Cascade the second board and the connector first — 2026-11-11 [si/standards] (`high-speed-si.md` §9.1).
+- A side-attached loop entry turned connector seating error into drawn skew. Size the seating term before you tune the skew — 2026-11-11 [si/skew] (`high-speed-si.md` §4).
+- A mode-conversion line in dB hid the harm. Convert it to common-mode volts at the receiver, with a real module termination — 2026-11-12 [si/limits] (`high-speed-si.md` §9.2).
 
 ## silk / dfm
 - The fab's DFM grades a value EQUAL to its warning threshold as Warning: design strictly greater — thresholds JSON.
@@ -644,6 +652,7 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - An FEA owner row with no test row stayed open across two gates. Write the arrival row the day the model reads FAIL: pose, instrument, reduction formula, pass number, record file, fail action. A brief named row ids that already existed; check the yaml first — 2026-10-11 [fea/owner-rows] (`fea-stage.md` §Thermal).
 - A von Mises peak at a hole edge beside a fixed annulus keeps rising with the mesh. Do not quote a peak that keeps rising. Read the stress at a set distance from the edge, or the quantities the limits use. Use Richardson extrapolation only where three meshes show convergence — 2026-10-31 [fea/mesh].
 - An airflow model counted the wrong number of fin faces, and its sink rise read under its air rise. Assert the energy balance in the selftest — 2026-11-10 [fea/thermal] (`fea-stage.md` Thermal).
+- A trace-width chart and a model with the plane differed 20 times. Define whether a limit means the local or the whole-board rise — 2026-11-11 [fea/thermal] (`fea-stage.md` Thermal).
 ## software
 - A fixed jig cap makes the WARN level unreachable when THROTTLE = min(alarm − margin, cap): make the interplay explicit and print both levels — software/thermal.
 - Manuals written before the software they describe: the "what you should see" lines go under an explicit banner naming the fake backend that produced them — 2026-09-22 [documentation].
@@ -809,3 +818,5 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - The cost of each study was never written down and could not be rebuilt later. Start the cost, prediction and dead-end ledgers on day 1 — 2026-11-03 [records/ledgers] (SKILL §0 step 6).
 - A panel's fixes created a new MAJOR. Run the fix-check round, and trace one case through every table a changed rule feeds — 2026-11-10 [review/fix-check] (`agent-ops.md` §4).
 - A verifier's recommended value failed a gate the verifier did not run. Apply it in the worktree and run every gate before the commit — 2026-11-10 [review/verify] (`agent-ops.md` §4).
+- A table cell wrote an absolute value as `|x|` and broke the parse of the record. Write `abs(x)` in every parsed table — 2026-11-12 [records/tables] (SKILL §3).
+- An approved decision row quoted a wrong slide number and a wrong deck date. Open the cited source before the row quotes it — 2026-11-12 [records/citation] (SKILL §3).

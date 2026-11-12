@@ -294,6 +294,11 @@ prove the host. The rules below keep the host safe and the jobs alive.
   each waiting runner process, then list the processes and the containers again.
 - Never rewrite a queue file that a `while read` runner is reading. The shell reads ahead, so the runner has already taken the
   removed line. Its offset then falls mid-line in the new file. Stop the runner and start a new one on a new file.
+- A dispatcher that deletes the first queue line after each submit has the same race. A reorder during a submit makes that line
+  a different run, and the dispatcher deletes it. Edit the queue right after a submit line in its log, while it sleeps.
+- **Start a compute ledger on day one.** Append one line per job at submit and at landing: job, lane, threads, start
+  and end. Keep the file append-only, outside every worktree. Removed worktrees took their job logs with them,
+  and 245 remote jobs were never fetched *(worked example)*.
 - **Give each job its own output folder on the host.** A shared remote checkout lets a later job overwrite an earlier job's
   result before the fetch. Otherwise, fetch each result before the next push.
 - **Fetch each job's own run folder, never a host's whole results tree.** A whole-tree fetch also carries a killed job's partial

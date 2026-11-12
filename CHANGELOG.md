@@ -1,6 +1,6 @@
 # CHANGELOG — hw-from-spec
 
-## Current state (0.12.6): read this instead of replaying the entries below
+## Current state (0.12.7): read this instead of replaying the entries below
 
 - **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
   thirteen batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
@@ -43,6 +43,32 @@
   address and public pull-request numbers excepted) — `scripts/generic_lint.py` reads the whole repo
   (CHANGELOG and docs included; history keeps its measured numbers), a fenced worked example keeps numbers and kinds but never a name, and the
   repo carries no project retro (a retro report is folded, then deleted).
+
+## 0.12.7 - 2026-11-12 - Limits that can converge, a compute ledger, keep-outs read on the drawing
+
+Source: the project log of 2026-11-11 and 2026-11-12, after the 0.12.6 cut. The entry adds rules to SKILL.md and five references,
+and 12 lines to `references/pitfalls.md`. Two blind reviews of the draft and their fixes are folded in.
+
+### Added
+- `SKILL.md` §3:
+  - Check 6 on every owner option: a limit that can converge. State one budget U and a guard-band rule before the runs. Fix each
+    pass line before its run. One model of record plus U decides. Give each tuning loop a stop rule.
+  - Open the cited source before a row quotes it. Write `abs(x)`, never `|x|`, in a parsed table.
+- `references/high-speed-si.md`: §4 a side-attached loop entry turns seating error into skew. §9.2 convert a mode-conversion
+  line in dB to common-mode volts at the receiver.
+- `references/agent-ops.md` §5.1: the dispatcher queue race, and an append-only compute ledger from day one.
+- `references/fea-stage.md` "Thermal": define whether a limit means the local or the whole-board rise.
+- `references/pcb-layout-dfm.md` §11: read the connector drawing before you advise on copper under a cage or shell.
+- `references/pitfalls.md`: dated lines in process, agents, layout, si, fea and records.
+
+### Changed
+- `SKILL.md` §3: "five checks" is now "six checks".
+- `references/high-speed-si.md` §11: a verdict no longer takes the worst of the method corners in hand. One model of record
+  plus U decides, and the method spread sizes U.
+
+### Not done
+- No script changes. The rules need no new gate.
+- The current-state summary needs no new line: no script, template folder or reference was added.
 
 ## 0.12.6 - 2026-11-11 - Runs ranked by estimate, surrogates checked before a yield, mated fixture limits, near-coincident snaps
 

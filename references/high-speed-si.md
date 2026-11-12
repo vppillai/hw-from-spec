@@ -298,6 +298,9 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
   balance. Give each step its cost at every corner.
 - A side-entry leg is the length compensation of its loop **[physics]**. Widening, narrowing or re-routing that leg trades the two
   registration corners against each other, by up to 9 dB *(worked example)*. Report such a lever only with its values at both corners.
+- A loop entry that attaches to one leg from the side turns connector seating error into drawn skew **[physics]**. The seating
+  depth then changes the path of one leg more than the other. Size the seating term at both seating limits before you tune the skew. A centring retune
+  cannot remove it (§10.1).
 - Record the variants that failed beside the one adopted. They are the reason for the adopted form.
 
 ## 5. Breakout and routing patterns
@@ -609,6 +612,8 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
   measured report on the same set. Then give the COM cost of all crosstalk together.
 - A design limit that no standard clause sets is a design margin. Derive its basis (for example the common-mode voltage it puts at the module
   input) and write it beside the limit.
+- A mode-conversion line in dB does not show the harm **[method]**. Convert it to common-mode volts at the receiver input. Use the
+  driver swing and a real module termination, not an ideal match. Judge the line on those volts.
 
 ### 9.3 COM against the standard's reference
 
@@ -765,7 +770,8 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 - Hold the loss of the channel under a margin rule well inside the standard's budget **[owner choice]**.
 - Margins are owner decisions. An agent proposes the row with the number; the owner accepts it.
 - A margin within about 2 dB of its limit may rest on one solver class. Then it needs the independent solver of §6.3 first.
-- Judge a verdict on the worse of the method corners in hand: mesh level, solver and boundary. Size the noise band from them.
+- One model of record plus one uncertainty budget U decides a verdict (SKILL.md §3, check 6). Size U from the method spread in
+  hand: mesh level, solver and boundary. Never judge on the worst of all methods. That verdict only gets worse as methods grow.
 
 ### 11.1 Delegated SI decisions
 
