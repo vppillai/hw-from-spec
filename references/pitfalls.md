@@ -363,7 +363,7 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - Zone fills without `BuildConnectivity` starve pours silently (island removal deletes pieces).
 - `kicad-cli pcb render` PNGs default transparent (black mask vanishes in dark viewers): `--background opaque`; name a view by what it shows, check each fixed view by eye once; `--rotate -45,0,45` put every legend upside down — renders.
 - A disputed clearance is one `GetEffectiveShape(layer).Collide(other, clearance)` bisection; a review number about copper carries the script that produced it — drc/measurement.
-- Freerouting: deterministic with one thread + same DSN + long enough timeout. Check it with two runs (`pcb-layout-dfm.md` §1.2). The routed board + SES are the record, regenerate by `--import-ses`. Planes in the DSN make it skip pads over same-net plane polygons. Keep-outs must be exported (grep the DSN). Its "violations" count is against its own class model — ENV Freerouting.
+- Freerouting: deterministic with one thread + same DSN + a pass limit, not a time limit. Check it with two runs (`pcb-layout-dfm.md` §1.2). The routed board + SES are the record, regenerate by `--import-ses`. Planes in the DSN make it skip pads over same-net plane polygons. Keep-outs must be exported (grep the DSN). Its "violations" count is against its own class model — ENV Freerouting.
 
 ## layout
 - A 0.62 via ring at 0.16 rules cannot sit on every other pin of a 0.5 mm pitch part; alternate in/out, GND to the pour *(worked example)* — 126.

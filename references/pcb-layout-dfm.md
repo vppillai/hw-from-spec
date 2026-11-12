@@ -38,8 +38,9 @@ after one fixed router pass, and the total wire length. Stop the variants when t
 than its run-to-run spread. Then place the dense bands by hand-guided rows. A dense band is a strip of fine-pitch parts and
 their fan-out. A hand-guided row is a CSV row whose position the designer chooses, with `locked: true`. Place the rows of
 via sites first, then the decoupling at the pins. Then run the router again.
+
 **Put a flow-through protection array next to the connector, between the connector and the protected part** **[method]**.
-In a flow-through array, each line passes straight over its pad, with no stub. Then the lines pass straight through. With the
+In a flow-through array, each line passes straight over its pad, with no stub. With the
 connector and the protected part on one side of the array, each line goes out and comes back. That band then needs about twice
 the width. The out-and-back stub also adds inductance and weakens the clamp.
 
@@ -78,8 +79,8 @@ new lines. The *source* is the part where the lines start. A *free region* is th
 by the clearance plus half the track width. A *power neck* is a narrow part of a power pour. A *supply feed* is a scripted
 power track.
 - **Before a line-order change at a window, trace each pad's free region on its layer.** Other lines, a power neck and a
-  ring of vias can block a pad on all sides but one. Then no reorder frees that pad. Only one of these frees it: a move of
-  the copper that blocks it, a new via site, or a moved part.
+  ring of vias can block a pad on all sides but one. Then no reorder frees that pad. Three changes can free it. One is a
+  move of the copper that blocks it. The others are a new via site and a moved part.
 - **Before you free a strip for new lines, test reach from the source.** Find the free regions on each layer. Join two
   regions only at a via site (§2) that is free on every layer the via crosses. Then check that the source pads and the
   strip are in one joined region. A strip that joins only the target side adds no path.

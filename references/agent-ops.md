@@ -397,8 +397,8 @@ A licensed solver on a shared cluster belongs to other people's work. Your job r
   runs it.
 - zsh does not split an unquoted variable into words. Write a loop that builds argument lists as a bash script.
 - A new worktree lacks the ignored inputs: the virtual environment, downloaded tools and generated contact files. It also lacks
-  the skill submodule until `git submodule update --init`. Link the environment and the ignored tool files (a router jar,
-  for example) from the main checkout. Ignore `.venv` first (§2). Regenerate generated files; do not link them. Then check
+  the skill submodule until `git submodule update --init`. Ignore `.venv` first (§2). Then link the environment and the
+  ignored tool files (a router jar, for example) from the main checkout. Regenerate generated files. Do not link them. Then check
   every input before a chain starts. A chain does not look for the jar at the start. Without it, the router step fails late
   with "Unable to access jarfile".
 - Two writers can share one file if each owns named sections and edits by exact replacement. Check the file's modification time
