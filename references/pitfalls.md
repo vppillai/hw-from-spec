@@ -275,6 +275,7 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A reviewer model at full reasoning effort spent its whole output limit and returned nothing. Set the limit to cover reasoning and answer — 2026-11-10 [agents/review] (`agent-ops.md` §4).
 - A queue reorder ran while the dispatcher submitted, and the dispatcher then deleted a different run. Delete by run id, or stop the dispatcher first — 2026-11-11 [agents/queue] (`agent-ops.md` §5.1).
 - 245 remote jobs were never fetched, and removed worktrees took their logs. Keep an append-only compute ledger from day 1 — 2026-11-12 [agents/compute] (`agent-ops.md` §5.1).
+- A chain in a fresh worktree failed at the router: "Unable to access jarfile". Link the environment and ignored tool files first — 2026-11-12 [agents/worktree] (`agent-ops.md` §5.3).
 
 ## tooling / determinism
 - Bambu Studio CLI (02.08.x): `sparse_infill_density` 100 % is rejected (rc -18) — use top / bottom shell thickness for a solid column. A two-filament slice with a prime tower SEGFAULTS (rc -11 / 133, "no filament colors found in projects") unless each slot's filament JSON carries `filament_colour` (or `--filament-colour '#..;#..'`). Bisect on the temp inputs one variable per run — 2026-09-29 [tooling/bambu].
@@ -362,7 +363,7 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - Zone fills without `BuildConnectivity` starve pours silently (island removal deletes pieces).
 - `kicad-cli pcb render` PNGs default transparent (black mask vanishes in dark viewers): `--background opaque`; name a view by what it shows, check each fixed view by eye once; `--rotate -45,0,45` put every legend upside down — renders.
 - A disputed clearance is one `GetEffectiveShape(layer).Collide(other, clearance)` bisection; a review number about copper carries the script that produced it — drc/measurement.
-- Freerouting: deterministic with one thread + same DSN + long enough timeout. The routed board + SES are the record, regenerate by `--import-ses`. Planes in the DSN make it skip pads over same-net plane polygons. Keep-outs must be exported (grep the DSN). Its "violations" count is against its own class model — ENV Freerouting.
+- Freerouting: deterministic with one thread + same DSN + a pass limit, not a time limit. Check it with two runs (`pcb-layout-dfm.md` §1.2). The routed board + SES are the record, regenerate by `--import-ses`. Planes in the DSN make it skip pads over same-net plane polygons. Keep-outs must be exported (grep the DSN). Its "violations" count is against its own class model — ENV Freerouting.
 
 ## layout
 - A 0.62 via ring at 0.16 rules cannot sit on every other pin of a 0.5 mm pitch part; alternate in/out, GND to the pour *(worked example)* — 126.
@@ -388,6 +389,11 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - Three packer variants barely moved the placement predictors. Such a packer leaves no rows of via sites. Place the dense bands by hand-guided rows — 2026-11-11 [layout/placement] (`pcb-layout-dfm.md` §1.1).
 - Advice to keep tracks clear of a cage was reversed: the drawing allowed traces in the keep-out. Read the drawing before you advise — 2026-11-12 [layout/keep-out] (`pcb-layout-dfm.md` §11).
 - A wide gap in a via fence coupled the cavity in band. Keep each gap well below the waveguide cut-off width — 2026-11-12 [layout/si] (`high-speed-si.md` §3).
+- A planned line reorder at a window could not work. Other copper blocked each pad on all sides but one. Trace each pad's region first — 2026-11-12 [layout/reach] (`pcb-layout-dfm.md` §1.4).
+- A flow-through protection array had the protected part and the connector on one side. Every line ran out and back. Place it between them — 2026-11-12 [layout/placement] (`pcb-layout-dfm.md` §1.1).
+- A multi-threaded router pass gave different results for the same board. One run could not judge a scripted change. Compare medians over several runs — 2026-11-12 [layout/router] (`pcb-layout-dfm.md` §1.2).
+- A strip was freed for new lines, but it joined only the target side. Test reach from the source before you free a strip — 2026-11-12 [layout/reach] (`pcb-layout-dfm.md` §1.4).
+- A scripted supply feed turned round a column of parts and blocked every line inside the turn on that layer. Draw feeds before a channel count — 2026-11-12 [layout/reach] (`pcb-layout-dfm.md` §1.4).
 
 ## si / high-speed (`references/high-speed-si.md` carries the rules; one line each here)
 - A requirement closed on a simplified twin reopened on the launch of record: the twin had a solid plane and no contact posts, and read 9 dB better than the real launch. Solve the layout of record with ports that see the quantity — 2026-11-01 [si/model].

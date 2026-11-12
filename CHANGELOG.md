@@ -1,6 +1,6 @@
 # CHANGELOG — hw-from-spec
 
-## Current state (0.12.8): read this instead of replaying the entries below
+## Current state (0.12.9): read this instead of replaying the entries below
 
 - **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
   thirteen batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
@@ -43,6 +43,23 @@
   address and public pull-request numbers excepted) — `scripts/generic_lint.py` reads the whole repo
   (CHANGELOG and docs included; history keeps its measured numbers), a fenced worked example keeps numbers and kinds but never a name, and the
   repo carries no project retro (a retro report is folded, then deleted).
+
+## 0.12.9 - 2026-11-12 - Reach checks, router repeat, worktree tool links
+
+Source: the project log of 2026-11-12, after the 0.12.8 cut. The entry adds rules to two references.
+It adds 6 lines to `references/pitfalls.md` and extends one.
+
+### Added
+- `references/pcb-layout-dfm.md` §1.4: define the reach terms. Trace each pad's free region before a line-order change at a window.
+- `references/pcb-layout-dfm.md` §1.4: test reach from the source before you free a strip. Join layers only at free via sites.
+- `references/pcb-layout-dfm.md` §1.4: draw each scripted supply feed before a channel count.
+- `references/pcb-layout-dfm.md` §1.1: put a flow-through protection array next to the connector, between it and the protected part.
+- `references/pcb-layout-dfm.md` §1.2: check that the router repeats. Compare medians over three or more runs when it does not.
+- `references/agent-ops.md` §5.3: link the environment and ignored tool files into a fresh worktree. Regenerate generated files.
+
+### Changed
+- `references/pcb-layout-dfm.md` §1.2: the one-thread determinism clause moves into the new repeat rule, as its first step.
+- `references/pitfalls.md`: the router determinism line points to §1.2.
 
 ## 0.12.8 - 2026-11-12 - Yield gates, guarded relaxations, common-mode budgets, fence gaps
 
