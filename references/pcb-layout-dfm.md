@@ -114,7 +114,7 @@ the bottleneck by hand before you change the stack-up.
   Model the whole launch with the live stack-up and the connector model: εr, copper, mask, reference and pour gap.
 - Multi-gigabit lanes take a tier first (`references/high-speed-si.md` §0.0). A short lane that follows its layout guide closes
   on the calculator row, the length and skew rules and the vendor checklist. A long, marginal or fast lane needs a field solve or the full chain.
-- **Gaps in a via fence or ground ring** **[physics]**: a gap acts as a waveguide. Keep its clear width below
+- **Gaps in a via fence or ground ring** **[physics]**: a gap acts as a waveguide. Keep its width well below
   c / (2 f sqrt(εr)) at the highest frequency of interest (`references/high-speed-si.md` §3).
 
 ## 4. Trace / space / via / annular / drill minimums vs the fab table

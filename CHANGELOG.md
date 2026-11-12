@@ -47,16 +47,21 @@
 ## 0.12.8 - 2026-11-12 - Yield gates, guarded relaxations, common-mode budgets, fence gaps
 
 Source: the project log of 2026-11-12, after the 0.12.7 cut. The entry adds rules to SKILL.md and two references.
-It adds 7 lines to `references/pitfalls.md`.
+It adds 7 lines to `references/pitfalls.md`. Two blind reviews of the draft and their fixes are folded in.
 
 ### Added
-- `SKILL.md` §3 check 2: gate on the predicted yield over the real spread, not on stacked independent worst corners.
-- `SKILL.md` §3 check 6: a relaxed limit moves the risk, so guard what the old line protected. Add a no-regression rule.
+- `SKILL.md` §3 check 2: gate a performance limit on predicted yield when each term has a known spread. Keep the worst case for a damage or safety limit.
+- `SKILL.md` §3 check 6: relax a line only through a decision row. Guard what the old line protected. Add a no-regression rule.
 - `references/high-speed-si.md` §3: a gap in a via fence acts as a waveguide. Keep it below the cut-off width.
 - `references/high-speed-si.md` §8: remove the common-mode part of an FDTD differential port with a common-mode drive run.
-- `references/high-speed-si.md` §9.2: a common-mode voltage budget includes SCD11 and SCC11 / SCC22.
+- `references/high-speed-si.md` §9.2: a common-mode voltage budget includes SCD11, SCC11, SCC22, SCC21 and both terminations.
 - `references/high-speed-si.md` §10.1: never carry a fix's gain to another structure by ratio.
-- `references/high-speed-si.md` §11: gate on predicted yield; the worst stacked corner run still finds the sensitive terms.
+- `references/high-speed-si.md` §11: gate on predicted yield with an owner target. A stacked-corner fail with a passing yield is a stated risk.
+- `references/high-speed-si.md` §15: review items 57 to 60 for these rules.
+
+### Changed
+- `references/high-speed-si.md` §0.2 step 8: with a yield target and a qualified surrogate, the yield gates.
+- `references/high-speed-si.md` §15: the tier item is now item 61 and covers items 3 to 60.
 - `references/pcb-layout-dfm.md` §3: a pointer to the fence-gap rule.
 - `references/pitfalls.md`: dated lines in process, layout and si.
 
