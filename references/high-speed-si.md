@@ -76,6 +76,7 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
    corners: the return-loss mask at one end and at both ends, and the slowest transmitter edge. Turn crosstalk on. Plot every metric to twice
    Nyquist.
    Stack the corners that occur together: an impedance edge with a registration extreme. Read every lever at every stacked corner (§10).
+   With a yield target and a qualified surrogate, the yield gates. A stacked-corner fail is then a stated risk (§11).
 9. **Cross-check every run in the time domain** (§4, §9.5). Measure the p/n delay at the 50 % crossings of the step response. Compare it
    with the delay that SCD21 implies. Agreement means a pure skew, and a length retune fixes it. Disagreement points at an impedance
    asymmetry first. Overlay the p and n TDR. Tune the skew on the measured delay.
@@ -162,6 +163,11 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
   rise time in ps. Solve only the features above the threshold.
 - Two ground planes form a cavity **[physics]**. Stitch them near every discontinuity and around each connector. Write the stitch
   pitch as a layout rule. A perfect-conductor wall in the model is a convenience: run one case with the real stitching vias too.
+- A gap in a via fence or a ground ring acts as a waveguide **[physics]**. Its cut-off frequency is c / (2 w sqrt(εr)) for a
+  width w. Keep w below c / (2 f sqrt(εr)) at the highest frequency of interest. A wider gap couples the cavity in band.
+  Take w as the centre spacing of the two vias. The cut-off is a bound, not a margin. Far below it, the field decays by about
+  27 dB per gap width of depth. A fence is one via deep, so keep the gap well below the cut-off width. A common pitch rule is a
+  tenth to a twentieth of the wavelength in the dielectric. An outer-layer slot has a lower effective εr, so the bound is safe there.
 - A connector pad longer than the contact foot acts as a stub **[physics]**. Cutting the pad to the foot is the strongest cure. It changes the
   vendor footprint, so it needs the vendor's word on solder-joint reliability.
 - A plane void under each signal pad raises the pad impedance **[physics]**. Reference the pad to the next plane down. Sweep the void margin.
@@ -539,6 +545,12 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
   terms.
 - Every fixture on a coupon is a copy of one 2x-thru half. Then one split removes all of them.
 - State the reference impedance of the mixed-mode conversion on every plot.
+- An FDTD differential port can launch a small common-mode part k **[method]**. It sets a low-frequency floor on SCD21.
+  To first order, the read SCD21 is the true SCD21 plus k times SCC21. Read k per frequency point, as a complex value.
+  Read it from the launched waves, or from a symmetric line with the same port and mesh. Run a common-mode drive on the
+  same model to get SCC21. Subtract k times SCC21 from SCD21, as complex values. For the launched part, never subtract a
+  constant times SDD21. That part travels on the common-mode path. A read error at the receive port is a separate term, and it
+  scales with SDD21.
 
 ## 9. Figures of merit and how to read them
 
@@ -616,6 +628,9 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 - A mode-conversion line in dB does not show the harm **[method]**. Convert it to common-mode volts at the module input. Use the
   driver swing and a real module termination, not an ideal match. Compare those volts with the common-mode tolerance of the
   governing clause.
+- The converted common mode at a receiver depends on the common-mode reflection at both ends **[physics]**. SCD11 at the driven
+  end can dominate the total. A source that is not matched for common mode reflects it back. That wave reaches the receiver through
+  SCC21. Put SCD11, SCC11, SCC22, SCC21 and both common-mode terminations in every common-mode voltage budget, beside SCD21 (§9.1).
 
 ### 9.3 COM against the standard's reference
 
@@ -706,7 +721,7 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
   4. Hold out one or more interior runs, such as nominal or a half-step. Report the error there. Corner runs alone cannot see
      curvature.
   5. State the fit domain. Sample only inside the corners that runs cover, and never extrapolate outside them. The surrogate
-     takes impedance only at solved corners, and the fine-mesh corner runs of §7.1 stay the verdict.
+     takes impedance only at solved corners. The fine-mesh corner runs of §7.1 stay the value of record there. §11 names what gates.
 
   A yield headline near 100 % hid leave-one-out errors of a few dB and rank-deficient solves *(worked example)*.
 - **Draw each fab term at the level where it is common** **[fab capability]**. A laminate lot is common to the boards of one
@@ -732,6 +747,9 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
   impedance corner and a registration corner together gave a small fine-mesh fail that neither gave alone *(worked example)*.
   The phase of a corner term depends on each lane's geometry. Never copy one lane's result to another lane, and run the worst
   stacked corner per lane before sign-off.
+- **Never carry a fix's gain from one structure to another, by ratio or by dB step** **[method]**. The gain follows each
+  structure's phase, as a corner term does. Run the fix on each structure that takes it before you adopt it. Start with the
+  worst one. An entry change gained 10 dB on one loop and lost 7 dB on another *(worked example)*.
 - Reversing the drive end mirrors a loop **[physics]**. The two registration corners along the mirror axis then swap values between
   SCD21 and SCD12. The worst value over the pair does not change. Read both corners before you call a direction change a new risk.
 - **Extrapolate mode conversion on the complex S-parameter, never on dB values** **[method]**. Extrapolate across one corner
@@ -778,6 +796,12 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
   spread. Do this before the verdict runs. Then freeze U. The solver-agreement shift of §6.3 is the
   solver term of U. Never add it a second time. A method that lands outside U reopens U through a decision row. Until then
   it decides no verdict. Never take the worst of all qualified methods as the verdict. That verdict only gets worse as methods grow.
+- **Gate on predicted yield, not on a stack of every worst corner** **[method]** (SKILL.md §3, check 2). The owner sets the
+  yield target, its level (board, panel or build) and its confidence before the run. Draw each term over its real spread, at the
+  level where it is common (§10). Move the accept line inward by U first. A stack of many independent worst corners is far rarer
+  than any one corner. Still run the worst stacked corner per lane (§10.1). It finds the sensitive terms and checks the surrogate
+  at its edge. At a solved corner, the run stays the value of record (§10, check 5). A fail there with a passing yield goes to the
+  owner as a stated risk. Quote a yield only from a surrogate that passed the §10 checks. Without one, the stacked corner gates.
 
 ### 11.1 Delegated SI decisions
 
@@ -908,7 +932,11 @@ Give each reviewer the frozen study, the yaml, the scripts and this list. Give n
 54. Does each corner surrogate have fewer terms than runs, a stated condition number, a leave-one-out error under the margin and a stated fit domain?
 55. For a fixture-class board, is each fixture limit cited to its clause, and is it judged on the mated cascade, not on one board?
 56. Was each correction term sized again at the corner that binds now?
-57. Does each lane's tier (§0.0) hold for its rate, length and margin? Judge the lane by the evidence of its tier only. Items 3 to 56 apply to tier-3 lanes.
+57. Is each fence or ring gap well below the cut-off width at the highest frequency of interest?
+58. Does each common-mode voltage budget hold SCD11, SCC11, SCC22, SCC21 and both common-mode terminations?
+59. Does each yield gate name its target, level and confidence before the run? Did its surrogate pass item 54?
+60. Was each fix run on every structure that takes it, not carried by ratio or dB step from another?
+61. Does each lane's tier (§0.0) hold for its rate, length and margin? Judge the lane by the evidence of its tier only. Items 3 to 60 apply to tier-3 lanes.
 
 ## 16. Records
 

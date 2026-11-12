@@ -1,6 +1,6 @@
 # CHANGELOG — hw-from-spec
 
-## Current state (0.12.7): read this instead of replaying the entries below
+## Current state (0.12.8): read this instead of replaying the entries below
 
 - **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
   thirteen batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
@@ -43,6 +43,32 @@
   address and public pull-request numbers excepted) — `scripts/generic_lint.py` reads the whole repo
   (CHANGELOG and docs included; history keeps its measured numbers), a fenced worked example keeps numbers and kinds but never a name, and the
   repo carries no project retro (a retro report is folded, then deleted).
+
+## 0.12.8 - 2026-11-12 - Yield gates, guarded relaxations, common-mode budgets, fence gaps
+
+Source: the project log of 2026-11-12, after the 0.12.7 cut. The entry adds rules to SKILL.md and two references.
+It adds 7 lines to `references/pitfalls.md`. Two blind reviews of the draft and their fixes are folded in.
+
+### Added
+- `SKILL.md` §3 check 2: gate a performance limit on predicted yield when each term has a known spread. Keep the worst case for a damage or safety limit.
+- `SKILL.md` §3 check 6: relax a line only through a decision row. Guard what the old line protected. Add a no-regression rule.
+- `references/high-speed-si.md` §3: a gap in a via fence acts as a waveguide. Keep it well below the cut-off width.
+- `references/high-speed-si.md` §8: remove the common-mode part of an FDTD differential port with a common-mode drive run.
+- `references/high-speed-si.md` §9.2: a common-mode voltage budget includes SCD11, SCC11, SCC22, SCC21 and both terminations.
+- `references/high-speed-si.md` §10.1: never carry a fix's gain to another structure by ratio or dB step. Run the fix on each structure.
+- `references/high-speed-si.md` §11: gate on predicted yield with an owner target. A stacked-corner fail with a passing yield is a stated risk.
+- `references/high-speed-si.md` §15: review items 57 to 60 for these rules.
+- `references/pcb-layout-dfm.md` §3: a pointer to the fence-gap rule.
+- `references/pitfalls.md`: dated lines in process, layout and si.
+
+### Changed
+- `references/high-speed-si.md` §0.2 step 8: with a yield target and a qualified surrogate, the yield gates.
+- `references/high-speed-si.md` §10 surrogate check 5: corner runs are the value of record; §11 names what gates.
+- `references/high-speed-si.md` §15: the tier item is now item 61 and covers items 3 to 60.
+
+### Not done
+- No script changes. The rules need no new gate.
+- The current-state summary needs no new line: no script, template folder or reference was added.
 
 ## 0.12.7 - 2026-11-12 - Limits that can converge, a compute ledger, keep-outs read on the drawing
 

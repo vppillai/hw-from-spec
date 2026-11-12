@@ -1,6 +1,6 @@
 ---
 name: hw-from-spec
-version: 0.12.7
+version: 0.12.8
 description: Run a hardware project (a PCB, a printed or CNC enclosure, or both — scope chosen at kickoff; contract fab such as JLCPCB) from a written specification to a production cut with an owner-gated, generated-only, blind-reviewed workflow — a kickoff questionnaire that asks every owner decision up front with recommended answers, a zero-warning manufacturability bar, and a retro that folds each project's learnings back into the skill. Use this whenever someone starts a board or enclosure project from a spec, asks to set up gates, a decision log, generators, part verification, a fab DFM mirror, a case pipeline, FEA, blind reviews, a release report or a production cut for one, or resumes such a project, or wants the skill improved from a finished project — even if they only say "new KiCad board", "order this at JLC", "review the layout", "cut the release" or "what did we learn".
 ---
 
@@ -246,6 +246,9 @@ order. A WARN that is "known" is not a bar; it is either fixed or a dated, evide
   2. Both bounds of every min / max window. A finding names one bound, and a fix that shifts the whole band can break the other bound.
      Give the value at both corners for each option. Prefer a fix that narrows the spread of the cause, such as a part with both limits on its datasheet.
      Stack the corners that occur together. A fix can move the fail from one corner to the other (`references/high-speed-si.md` §10).
+     For a performance limit, gate on the predicted yield when each term has a known spread (`references/high-speed-si.md` §11).
+     The owner sets the yield target before the run. A stack of many independent worst corners is far rarer than any one corner.
+     Keep the worst case for a damage rating, a safety limit and a term with no known spread.
   3. Yields that multiply. Independent sort or inspection gates in series pass the product of their yields. State the product and size the order on it.
      When the gates read correlated causes, the product is wrong. Measure the joint yield on the first lot.
   4. The value proven on the previous revision. When one exists, offer it as an option with what proved it and its known risk.
@@ -256,6 +259,11 @@ order. A WARN that is "known" is not a bar; it is either fixed or a dated, evide
      Fix each pass line before its run. A line set with the estimate in hand is not a test.
      One qualified model of record plus U decides the verdict. A verdict on the worst of all methods only gets worse as methods grow.
      A method that lands outside U decides nothing. It reopens U through a decision row.
+     Relaxing a limit moves the risk and does not remove it. Relax a line only through a decision row.
+     Name what the old line protected. Guard that thing directly.
+     Then add a no-regression rule. Hold each metric under the relaxed line within a stated step of its value of record.
+     Compare on the same model and settings. Make the step no smaller than the run-to-run repeat.
+     Then a later change cannot spend the built margin unseen.
 - Give each tuning loop a stop rule first: a round count, or a least gain per round (`references/high-speed-si.md` §0.3).
 - Open the cited page, slide or clause before a row quotes it. Copy its number and date from the source, never from memory or
   another record.
