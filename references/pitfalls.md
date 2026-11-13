@@ -476,6 +476,12 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A common-mode voltage budget left out the driven-end reflection, which dominated. Include SCD11, SCC11, SCC22, SCC21 and both terminations — 2026-11-12 [si/limits] (`high-speed-si.md` §9.2).
 - A fix that gained 10 dB on one loop lost 7 dB on another. Run a fix on each structure that takes it — 2026-11-12 [si/method] (`high-speed-si.md` §10.1).
 - A rerun of an old command modelled a different board after the design data moved. Pin each run's material and stack-up keys in its command file — 2026-11-12 [si/method] (`high-speed-si.md` §3.3).
+- Two runs of a pair differed by 0.15 dB, and their time-cut noise was 0.4 dB. Run the time-cut check before you read a sign — 2026-11-13 [si/method] (`high-speed-si.md` §10.2).
+- A fence gap above the cut-off width cost 0.5 mV or less of common-mode voltage. The cut-off rule is a screen; a pair decides — 2026-11-13 [layout/si] (`high-speed-si.md` §3).
+- A control "without the part" kept a default wall on another boundary type, so it changed two knobs. Read the defaults first — 2026-11-13 [si/method] (`high-speed-si.md` §10.2).
+- A control read 3.1 dB over its run of record because of the boundary type. The fence moved it 0.11 dB or less. Test the boundary first — 2026-11-13 [si/method] (`high-speed-si.md` §10.2).
+- A proposed re-trim outside the tested span needed an extrapolated fit. Put the proposed point at one end of the span — 2026-11-13 [si/method] (`high-speed-si.md` §10.2).
+- A re-trim step scaled from an old stack-up missed a loop that could not reach the limit. Take the slope from a pair on the stack-up in use — 2026-11-13 [si/method] (`high-speed-si.md` §10.2).
 
 ## silk / dfm
 - The fab's DFM grades a value EQUAL to its warning threshold as Warning: design strictly greater — thresholds JSON.

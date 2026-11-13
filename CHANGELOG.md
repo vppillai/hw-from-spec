@@ -1,6 +1,6 @@
 # CHANGELOG — hw-from-spec
 
-## Current state (0.12.10): read this instead of replaying the entries below
+## Current state (0.12.11): read this instead of replaying the entries below
 
 - **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
   thirteen batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
@@ -43,6 +43,28 @@
   address and public pull-request numbers excepted) — `scripts/generic_lint.py` reads the whole repo
   (CHANGELOG and docs included; history keeps its measured numbers), a fenced worked example keeps numbers and kinds but never a name, and the
   repo carries no project retro (a retro report is folded, then deleted).
+
+## 0.12.11 - 2026-11-13 - Paired runs: time-cut noise, controls, slopes
+
+Source: the project log of 2026-11-13, after the 0.12.10 cut. The entry adds rules to `references/high-speed-si.md`.
+It adds 6 lines to `references/pitfalls.md`. Two blind reviews of the draft, a fix-check and their fixes are folded in.
+
+### Added
+- `references/high-speed-si.md` §10.2: a new section on paired runs. Read a pair difference against the time-cut noise and
+  the mesh spread. Read the model defaults. Check each control against the run of record of its geometry. Test the boundary
+  type first on a control that differs. Take a re-trim slope on the stack-up in use, with the proposed point at one end of the span.
+  The boundary rule applies the one-knob controls of §0.3 to a control run. It does not repeat them.
+- `references/high-speed-si.md` §3: the fence-gap cut-off rule is a screen. A pair at the worst stacked corner judges a gap
+  above it. A kept gap is a recorded deviation.
+- `references/high-speed-si.md` §15 items 62 to 64: the paired-run checks.
+
+### Changed
+- `references/high-speed-si.md` §15 item 57 asks for a pair and a deviation record on each gap above the cut-off width.
+- `references/high-speed-si.md` §15: the tier item is now item 65 and covers items 3 to 64.
+
+### Not done
+- Two source lines report one event: a control 3.1 dB high from the boundary type. They are one pitfalls line.
+- No script changes. The rules need no new gate.
 
 ## 0.12.10 - 2026-11-13 - Closed-in supply pins, pinned run keys, damper copper
 

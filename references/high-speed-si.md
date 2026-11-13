@@ -168,6 +168,12 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
   Take w as the centre spacing of the two vias. The cut-off is a bound, not a margin. Far below it, the field decays by about
   27 dB per gap width of depth. A fence is one via deep, so keep the gap well below the cut-off width. A common pitch rule is a
   tenth to a twentieth of the wavelength in the dielectric. An outer-layer slot has a lower effective εr, so the bound is safe there.
+  The cut-off rule is a screen, not a verdict **[method]**. Close each gap by default. When a gap above the cut-off width is
+  hard to close, run a pair with and without it (§10.2). Draw the cavity and every neighbour behind the gap. Run the pair to
+  the highest frequency of interest, at the worst stacked corner. Read mode conversion, crosstalk and common-mode voltage.
+  One gap above the cut-off width cost 0.5 mV or less of common-mode voltage *(worked example; one study)*. That was a small
+  part of its budget. Record a kept
+  gap as a deviation, with its cost against each budget.
 - A connector pad longer than the contact foot acts as a stub **[physics]**. Cutting the pad to the foot is the strongest cure. It changes the
   vendor footprint, so it needs the vendor's word on solder-joint reliability.
 - A plane void under each signal pad raises the pad impedance **[physics]**. Reference the pad to the next plane down. Sweep the void margin.
@@ -775,6 +781,36 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
   and after each retune. Before you spend margin on centring, list the levers that widen the window, with the width each one
   gives. A smaller spread of the cause is one such lever.
 
+### 10.2 Paired runs: noise, controls and slopes
+
+A pair is two runs that differ in one knob. The knob is a part under test, a trim step or a boundary setting.
+These rules apply to every pair.
+
+- **A pair difference smaller than the time-cut noise has no sign** **[method]**. For a time-domain run, run the time-cut check
+  on both runs before you read the sign (§7.1). Cut both time records to the common length first (§6.2). Then cut each record to a stated fraction, for
+  example 80 %. Compute the S-parameters again. The change per frequency is the time-cut noise of that run. Use the sum of
+  the two values as the floor. For a frequency-domain run, use the change over the last adaptive pass (§7.2). Two runs differed by 0.15 dB, and their time-cut noise was 0.4 dB *(worked example)*. Report such a
+  pair as "no resolved change", with the noise value. The time-cut noise is a floor only. Keep the mesh lines the same in both
+  runs. Otherwise the difference must also exceed the mesh spread of §7.1.
+- **Read every default of the model before you name a control "without the part"** **[method]**. A default can change a second
+  knob. One set of runs without a fence kept a solid wall from the defaults, on another absorbing boundary type. The pair then
+  changed the wall and the boundary at once *(worked example)*. Diff the built configuration of the two runs (§3.3). Exactly
+  one knob may differ.
+- **Check the control of a pair against the run of record of the same geometry** **[method]**. That run came before the pair
+  set-up. The pair alone shows only the difference, so it cannot show a wrong control. One control read 3.1 dB over the run of
+  record *(worked example)*. Explain the difference before you read the pair.
+- **When a control differs from the run of record, test the boundary before the geometry** **[method]**. Apply the one-knob
+  controls of §0.3. Swap the absorbing boundary type first. It is the cheapest control. The 3.1 dB step above came from two
+  boundary types. The fence and its distance to the boundary moved the result by 0.11 dB or less *(worked example)*. Use one
+  boundary type in both runs of every pair. Record it. Keep each conductor clear of the boundary (§7.1).
+- **Take a re-trim slope from a pair on the stack-up in use** **[method]**. A re-trim is a length, skew or void step sized from
+  that slope. A step scaled from an old stack-up met the limit on three loops. A fourth loop could not reach the limit with any step
+  *(worked example)*. Run the pair on each loop that takes the re-trim (§10.1). Fit the slope on the complex S-parameter, per frequency
+  point (§10.1).
+- **Put the proposed re-trim at one end of the tested span** **[method]**. Size the step from a first pair. Then run the
+  proposed point, and make it one end of the span of record. The fit needs no extrapolation, and the value of record is a run. Two runs cannot show linearity. Add a mid-span run when the
+  step is large (§10.1).
+
 ## 11. Margin rules
 
 - Set a margin in reflection magnitude, not only in dB **[owner choice]**. For example, a target of 15 dB return loss with 20 % of |Γ| to spare.
@@ -936,12 +972,15 @@ Give each reviewer the frozen study, the yaml, the scripts and this list. Give n
 54. Does each corner surrogate have fewer terms than runs, a stated condition number, a leave-one-out error under the margin and a stated fit domain?
 55. For a fixture-class board, is each fixture limit cited to its clause, and is it judged on the mated cascade, not on one board?
 56. Was each correction term sized again at the corner that binds now?
-57. Is each fence or ring gap well below the cut-off width at the highest frequency of interest?
+57. Is each fence or ring gap well below the cut-off width at the highest frequency of interest? Is each gap above it a recorded deviation, judged by a pair at the worst stacked corner?
 58. Does each common-mode voltage budget hold SCD11, SCC11, SCC22, SCC21 and both common-mode terminations?
 59. Does each yield gate name its target, level and confidence before the run? Did its surrogate pass item 54?
 60. Was each fix run on every structure that takes it, not carried by ratio or dB step from another?
 61. Does each run's command file pin its material and stack-up values, or the hash of each file that holds them?
-62. Does each lane's tier (§0.0) hold for its rate, length and margin? Judge the lane by the evidence of its tier only. Items 3 to 61 apply to tier-3 lanes.
+62. Does each pair difference exceed the summed time-cut noise of its two runs? Where the mesh lines differ, does it exceed the mesh spread? Does the pair differ in one knob only?
+63. Does each control match the run of record of its geometry? Was the boundary type tested first on each control that did not?
+64. Does each re-trim slope come from a pair on the stack-up in use? Is the proposed point one run of that pair?
+65. Does each lane's tier (§0.0) hold for its rate, length and margin? Judge the lane by the evidence of its tier only. Items 3 to 64 apply to tier-3 lanes.
 
 ## 16. Records
 
