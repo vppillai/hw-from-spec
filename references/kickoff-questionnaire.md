@@ -32,8 +32,9 @@ question is skipped. A mech-only owner never sees via-in-pad, and an ee-only own
 | 10 software + reports | G1, G2, H1, H2 | all (G1–G2 ee/both) | the bring-up tool, the first release report |
 | 11 CI, retro, envelope, branding | H3, H4, I1, I2 | all | the spec is read |
 | 12 debug access, delegation, slicer optimisation, stability | I3, I4, C11, C12 | all (I3 ee/both, C11–C12 mech/both) | the spec is read |
+| 13 layout-forward budgets | B9–B11 | ee, both | the floorplan before the G0 ask (SKILL §1.3) |
 
-Thirteen batches (0–12), none above four questions; a batch whose questions are all out of scope is skipped.
+Fourteen batches (0–13), none above four questions; a batch whose questions are all out of scope is skipped.
 
 ## A0. Scope (asked first, alone)
 **A0 Project scope.** **RECOMMENDED: what the brief implies — `both` when a board is being designed AND will be housed** (today's full flow: G0 → G1 →
@@ -92,6 +93,20 @@ part** — the technician needs no drawing. *Alt:* probe on component pads — n
 when a side is narrower. Three fiducials per assembled side** — the fab's Standard tier needs rails and fiducials. V-cut only when copper is ≥ 0.40 mm
 from the line. *Alt:* panel by the fab — its rails land on the short edges (connector ends). *Alt:* no panel, Economic tier — only for top-only boards
 ≥ the tier's minimum size.
+**B9 Board size and layer budget, with the fallback** [ee, both]. **RECOMMENDED: a base outline and the B1 layer count, and a fallback
+order decided now: two more layers first, then a larger outline by a stated step, each with its cost** (`references/pcb-layout-dfm.md` §0.1).
+Placement, pin map and package come first, at no budget cost. No feature is cut for layout. I1 decides if the outline may grow;
+B9 sets the order and the step. A fixed I1 envelope removes the outline step. *Alt:* layers fixed, the outline grows — when cost per board
+rules; the I1 envelope must allow it. *Alt:* outline fixed, layers grow — when a mating part fixes the envelope (I1). *Alt:* both fixed — steps 4 and 5
+are removed; a row that still fails after steps 1 to 3 goes to the owner as a spec question.
+**B10 The routability gate at G1** [ee, both]. **RECOMMENDED: the defaults of `references/pcb-layout-dfm.md` §0.8.** Channel use is ≤ 70 % per cut and ≤ 85 % per layer.
+The escape ratio is ≥ 1.2 per pin row of a dense part. Region fill is ≤ 60 % per side, 45 % at 0.5 mm pitch or less. The schematic does not
+freeze until the gate passes. *Alt:* tighter: channel use per cut ≤ 60 % and escape ratio ≥ 1.5, the other limits stay — for an impedance-heavy board; a larger board or more layers.
+*Alt:* looser: channel use per cut ≤ 80 % and escape ratio ≥ 1.0, the other limits stay — for a sparse two-layer board; more router passes and a higher stall risk.
+**B11 Pin and part swaps for routability** [ee, both]. **RECOMMENDED: allowed inside one function group (two GPIOs, two lanes of one bus,
+connector pins of one class) and to a pin-compatible part, one CC row each, made before G1** — the swap list follows the floorplan, never the
+router. *Alt:* every swap is an owner row — slower; each gate failure waits on the owner. *Alt:* no swaps — the pin maps of the spec are fixed;
+step 2 of the fallback order is removed (`references/pcb-layout-dfm.md` §0.1).
 
 ## C. Enclosure architecture (`references/dfm-printed-enclosure.md`, `references/case-pipeline.md`)
 **C1 Pieces** [mech, both]. **RECOMMENDED: two pieces — tray + shell, one print orientation each, no supports on visible faces; a removable hood only if a
@@ -268,7 +283,7 @@ every action taken.
 |---|---|---|
 | A0 | `project.scope` | CLAUDE.md scope line, GATES.md rows (scaffold), KICKOFF_ANSWERS `n/a (scope)` rows |
 | A1–A4 | `kickoff.product_class`, `kickoff.quantity`, `kickoff.fab`, `print_targets.<t>` (vendor, process, material, rating) | SPEC §1, §8; D rows |
-| B1–B8 | `board.layers / thickness / copper / stackup_template / impedance / finish / mask / silk / min_package / link_parts / sides / test_points / panel` | SPEC §4–§6 (R-M01…), `20-design/<board>_board.yaml`, `20-design/dfm_thresholds.json` (source + date) |
+| B1–B11 | `board.layers / thickness / copper / stackup_template / impedance / finish / mask / silk / min_package / link_parts / sides / test_points / panel / budget / routability_gate / swaps` | SPEC §4–§6 (R-M01…), `20-design/<board>_board.yaml`, `20-design/dfm_thresholds.json` (source + date) |
 | C1–C12 | `kickoff.enclosure` (pieces, retention, coupling, feet, labelling, fan, light_pipe, targets, marks, kit_recipient, fit_decider, fit_result, optimise, stands_free); C8a `print_targets.<t>.dfm_process` | SPEC §8, `20-design/case.yaml` presets + `fits` knobs; START_HERE report-back recipient; the plate yaml `optimise:` block; ARRIVAL_CHECKLIST E-FIT |
 | D1–D3 | `fab_dfm.bar`, `print_targets.<t>.design_margin / tolerance / accepted` | GATES.md `{{D-BAR}}` row id, CLAUDE.md rule 9 |
 | E1–E4 | `kickoff.verification` (rounds, visual, fea), `kickoff.coupons.plan` (E3), `kickoff.coupons.hardware_measurer` (E3a) | GATES prerequisites, `workflows/` model list |

@@ -1,6 +1,6 @@
 # KICKOFF_ANSWERS.md — {{PROJECT}} — the owner's answers to `references/kickoff-questionnaire.md` ({{DATE}})
 
-Asked in up to thirteen batches (A0 first; batches outside the scope are skipped) with the recommended answer listed first. Every row below is an owner decision (D row quoted verbatim) written BEFORE any
+Asked in up to fourteen batches (A0 first; batches outside the scope are skipped) with the recommended answer listed first. Every row below is an owner decision (D row quoted verbatim) written BEFORE any
 CAD. `Answer` is the option chosen; `Rec.` = the recommended default was accepted (`yes`) or overridden (`no` — the owner's reason is in the D
 row). A deferred question is `OPEN` here and in the decision log and blocks the phase named in the questionnaire's batch table. Re-asking an
 answered question is a defect; changing an answer is a new D row that supersedes the old one and a new line here. A question outside the scope
@@ -22,6 +22,9 @@ answered question is a defect; changing an answer is a new D row that supersedes
 | B6 | assembly sides | {{top and bottom}} | yes | D-{{nn}} | `board.sides`; R-M03 | {{ee,both}}
 | B7 | test points + silk labels | {{per rail / bus, labelled}} | yes | D-{{nn}} | `board.test_points`; R-S01 | {{ee,both}}
 | B8 | panel + fiducials | {{customer panel long rails}} | yes | D-{{nn}} | `board.panel` | {{ee,both}}
+| B9 | size + layer budget, fallback | {{base outline + layers; +2 layers, then larger outline}} | yes | D-{{nn}} | `board.budget` | {{ee,both}}
+| B10 | routability gate at G1 | {{the defaults of pcb-layout-dfm §0.8}} | yes | D-{{nn}} | `board.routability_gate` | {{ee,both}}
+| B11 | pin + part swaps for routability | {{in function group, CC row each}} | yes | D-{{nn}} | `board.swaps` | {{ee,both}}
 | C1 | pieces | {{tray + shell}} | yes | D-{{nn}} | `kickoff.enclosure.pieces`; SPEC §8 | {{mech,both}}
 | C2 | retention | {{screws + inserts}} | yes | D-{{nn}} | `kickoff.enclosure.retention`; case.yaml | {{mech,both}}
 | C3 | coupling | {{none}} | yes | D-{{nn}} | `kickoff.enclosure.coupling` | {{mech,both}}
@@ -58,4 +61,4 @@ answered question is a defect; changing an answer is a new D row that supersedes
 | I3 | debug / service access | {{wire header + straps, hood off}} | yes | D-{{nn}} | `kickoff.debug_access` | {{ee,both}}
 | I4 | delegation while offline | {{recommended option below a named class}} | yes | D-{{nn}} | `kickoff.identity.delegation`; pause-point owner list |
 
-Batches asked: {{0–12 with date/time}}. Questions deferred: {{none}}. Owner's closing words: "{{QUOTE}}".
+Batches asked: {{0–13 with date/time}}. Questions deferred: {{none}}. Owner's closing words: "{{QUOTE}}".

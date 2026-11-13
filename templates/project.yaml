@@ -36,7 +36,7 @@ kickoff:                                      # the owner's kickoff answers, mac
   release: {reports: {{H1_REPORTS}}, cut: {{H2_CUT}}, ci: {{H3_CI}}, retro: {{H4_RETRO}}}   # H1–H4
   identity: {envelope: {{I1_ENVELOPE}}, branding: {{I2_BRANDING}}, delegation: {{I4_DELEGATION}}}   # I1 / I2 / I4
   debug_access: {{I3_DEBUG}}                  # I3 {{ee,both}}
-board:                                        # the PCB build from kickoff B1–B8 (references/pcb-layout-dfm.md); SPEC R-M01 cites these, never repeats them {{ee,both}}
+board:                                        # the PCB build from kickoff B1–B11 (references/pcb-layout-dfm.md); SPEC R-M01 cites these, never repeats them {{ee,both}}
   layers: {{B1_LAYERS}} {{ee,both}}
   thickness_mm: {{B1_THICKNESS}} {{ee,both}}
   stackup_template: {{B1_STACKUP}} {{ee,both}}
@@ -50,6 +50,9 @@ board:                                        # the PCB build from kickoff B1–
   sides: {{B6_SIDES}} {{ee,both}}
   test_points: {{B7_TEST_POINTS}} {{ee,both}}
   panel: {{B8_PANEL}} {{ee,both}}
+  budget: {{B9_BUDGET}}                       # base outline + layers and the fallback order (pcb-layout-dfm.md §0.1) {{ee,both}}
+  routability_gate: {{B10_ROUTABILITY}}       # G1 limits: channel use per cut / per layer, escape ratio, region fill (§0.8) {{ee,both}}
+  swaps: {{B11_SWAPS}}                        # pin and part swaps allowed for routability (§0.1) {{ee,both}}
 ids: {owner_prefix: D, agent_prefix: CC, blocker_prefix: B}
 reviews: {max_roster: 8, max_runs_per_gate: 32}   # the review load cap per gate: personas per round, reviewer runs incl. fix-checks, verifiers excluded (SKILL.md §5 table)
 markers:

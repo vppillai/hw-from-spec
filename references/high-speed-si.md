@@ -326,6 +326,9 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 - Route one pair per pin channel where the pitch allows. Keep the breakout short.
 - Single-ended routing inside a short breakout can give better loss than a forced coupled pair there **[physics]**.
 - The preferred breakout form changes with the data rate. Write the rate threshold into the rule, with its source.
+- Set the SI placement budgets before G1 (`references/pcb-layout-dfm.md` §0.6). Each shunt part on a fast line (a filter or
+  protection capacitor, a termination) gets a stub length budget from the model. Each launch, coupling capacitor and connector
+  pin order gets a placement row. The model of record runs at the budget values.
 - Use 45 degree mitres or arcs at bends. The outer trace at a bend is longer; count it in the skew budget. A solved
   compensation jog keeps its solved corners (§3.2).
 
@@ -981,6 +984,7 @@ Give each reviewer the frozen study, the yaml, the scripts and this list. Give n
 63. Does each control match the run of record of its geometry? Was the boundary type tested first on each control that did not?
 64. Does each re-trim slope come from a pair on the stack-up in use? Is the proposed point one run of that pair?
 65. Does each lane's tier (§0.0) hold for its rate, length and margin? Judge the lane by the evidence of its tier only. Items 3 to 64 apply to tier-3 lanes.
+66. Were the stub and placement budgets of each fast line set before G1 (§5)? Does the model of record run at those values? This item applies to every tier.
 
 ## 16. Records
 

@@ -396,6 +396,10 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A scripted supply feed turned round a column of parts and blocked every line inside the turn on that layer. Draw feeds before a channel count — 2026-11-12 [layout/reach] (`pcb-layout-dfm.md` §1.4).
 - Scripted lines closed a part in, and the router left its supply pins open on two fresh runs. Draw a supply feed with the lines — 2026-11-12 [layout/reach] (`pcb-layout-dfm.md` §1.4).
 - A damper branch with a 0 Ω link had tens of mΩ of copper. The budget was near 10 mΩ, and a pass became a fail. Model the branch copper at placement — 2026-11-13 [layout/power] (`pcb-layout-dfm.md` §1.1).
+- A dense 6-layer board stalled near 71 % routed after four scripted router tries. Five of its causes were set before layout. Plan the layout from kickoff and gate it at G1 — 2026-11-13 [layout/forward] (`pcb-layout-dfm.md` §0).
+- A buck controller had its gate pins on the side away from its FET pair. Only 5 of 16 gate pins had a legal via site. Count the escape per pin row before G1 — 2026-11-13 [layout/escape] (`pcb-layout-dfm.md` §0.4, §0.5).
+- Two common-mode filter capacitors on a USB pair sat on stubs of 15 and 26 mm against a 3 mm limit. Set a stub budget per shunt part before G1 — 2026-11-13 [layout/budget] (`pcb-layout-dfm.md` §0.6).
+- A pin re-assignment after placement gained no routed connections. Make the allowed swaps with the floorplan, before G1 — 2026-11-13 [layout/pinout] (`pcb-layout-dfm.md` §0.7).
 
 ## si / high-speed (`references/high-speed-si.md` carries the rules; one line each here)
 - A requirement closed on a simplified twin reopened on the launch of record: the twin had a solid plane and no contact posts, and read 9 dB better than the real launch. Solve the layout of record with ports that see the quantity — 2026-11-01 [si/model].

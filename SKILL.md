@@ -1,6 +1,6 @@
 ---
 name: hw-from-spec
-version: 0.12.11
+version: 0.13.0
 description: Run a hardware project (a PCB, a printed or CNC enclosure, or both — scope chosen at kickoff; contract fab such as JLCPCB) from a written specification to a production cut with an owner-gated, generated-only, blind-reviewed workflow — a kickoff questionnaire that asks every owner decision up front with recommended answers, a zero-warning manufacturability bar, and a retro that folds each project's learnings back into the skill. Use this whenever someone starts a board or enclosure project from a spec, asks to set up gates, a decision log, generators, part verification, a fab DFM mirror, a case pipeline, FEA, blind reviews, a release report or a production cut for one, or resumes such a project, or wants the skill improved from a finished project — even if they only say "new KiCad board", "order this at JLC", "review the layout", "cut the release" or "what did we learn".
 ---
 
@@ -89,9 +89,10 @@ reference when you reach that step, not before. Nothing here is specific to one 
 
 Before the spec is read and before any CAD, ask **A0 Scope** alone (`ee` / `mech` / `both`). RECOMMENDED = what the brief implies, `both` when a
 board is designed and housed; each option says what it skips. Then ask **every decision class that scope needs**, grouped by phase. Ask them in up
-to thirteen batches with the **`AskUserQuestion` tool** (≤ 4 questions per call, ≤ 4 options per question). "accept every recommended answer of this
+to fourteen batches with the **`AskUserQuestion` tool** (≤ 4 questions per call, ≤ 4 options per question). "accept every recommended answer of this
 batch" is the first option of the batch's first question. The classes are: product / process / material / quantity. PCB build [ee, both]:
-layers, copper, impedance, finish, min part size + link policy, assembly sides, test points, panel. Enclosure architecture [mech, both]: pieces,
+layers, copper, impedance, finish, min part size + link policy, assembly sides, test points, panel, the size and layer budget
+with its fallback, the routability gate limits, the swap policy (§1.3). Enclosure architecture [mech, both]: pieces,
 retention = screws + inserts / magnets / none, coupling, feet, labelling = deboss / plate / badge, fan, vents, light pipe, two targets, brand
 marks = ironed top-face feature / flush AMS colour body. The manufacturability bar per target and what may be waived (default: zero / zero /
 nothing). Verification: coupons, dummies, review rounds per gate, visual inspections, vendor API read before the order, FEA. Bought parts:
@@ -108,7 +109,7 @@ re-asked, and a later change is a superseding D row (rule 2).
 
 ## 1. Phase / gate model (per scope)
 
-- **ee**: **G0** spec approved → **G1** schematic approved → **G2** layout approved → **fab DFM** (§7) → **submission** (fab package, order =
+- **ee**: **G0** spec approved (with the floorplan, §1.3) → **G1** schematic approved (with the routability gate, §1.3) → **G2** layout approved → **fab DFM** (§7) → **submission** (fab package, order =
   owner's click) → **release cut** → **production cut**. No case gates, no print DFM.
 - **mech**: **G0** mechanical spec approved → **M1** geometry approved → **M2** first article / fit print approved → **case order** (owner's
   click) → **release cut** → **production cut**. G0 covers envelope, interfaces, materials, print / CNC target, and fit inputs: a board STEP /
@@ -192,6 +193,23 @@ same fileMd5) and six captures at 0 yellow / 0 red. Its line waits commented in 
 (a hand-edited record fails) and the rule-set version. `scripts/adopt_gates.sh` fails when a schematic / board / STL set exists and its gate line
 is missing or still commented out in `gates.adopt`. It also fails when a next-phase artefact exists and its gate has no cell and no `> delegated:` line. `templates/90-log/GATES.md` carries the bar as a prerequisite on G2, the board order and the case
 order. A WARN that is "known" is not a bar; it is either fixed or a dated, evidence-bearing acceptance the checker re-asserts every run.
+
+### 1.3 Layout-forward design, from kickoff to G1 [ee, both] (`references/pcb-layout-dfm.md` §0)
+Part choice, pin maps and the schematic set most of a board's routability. Plan the layout from kickoff, before parts and the
+schematic freeze. **Never cut a feature for layout.** Change the placement, a pin map, a package, the stack-up or the board size.
+A feature cut is a spec change under rule 2 (§3).
+1. **Kickoff** (B9 to B11): the board size and layer budget with its fallback order, the routability gate limits, the swap policy.
+2. **Before the G0 ask**: generate a floorplan with region areas, fill per side and keep-outs. Draw a placement template per
+   switching stage, with its hot, gate and sense loops and their budgets.
+3. **G0 to G1**: count the channels per cut and per layer against the nets that cross it. Count the escape ratio per pin row
+   of each dense part, from legal via sites. Write a budget row (distance, copper R and L) per decoupling, damper, filter and
+   protection part, and feed it into the power and SI models. Choose the pinouts for escape and pair order. Make the allowed swaps.
+4. **The routability gate at G1**: `80-reviews/G1/routability.md` meets the kickoff B10 limits. The defaults are channel use
+   ≤ 70 % per cut and ≤ 85 % per layer, an escape ratio ≥ 1.2 per pin row, and region fill ≤ 60 % per side (45 % at 0.5 mm
+   pitch or less). The full table is in the reference §0.8. The schematic does not freeze, and the G1 cell is not asked, until it passes.
+5. **A failed row** that still fails on two placement variants takes the next fallback step. The one order is in the reference §0.1:
+   placement, pin map, package, layers, outline. After the last step, ask the owner with the numbers.
+   At G2, a router that stalls after its plateau sends the work back to this gate, not to more router passes.
 
 ## 2. Generated only
 
@@ -638,6 +656,7 @@ row. The classifier is a keyword matcher: the report is the input to the change;
 | day 0: the kickoff questionnaire (every owner decision, recommended defaults, batches) | `references/kickoff-questionnaire.md`, `templates/10-spec/KICKOFF_ANSWERS.md` |
 | G0: SPEC / VERIFY skeletons, the spec review round | `templates/10-spec/SPEC.md`, `templates/20-design/VERIFY.md`, §5 |
 | G0→G1: design yaml shape, ERC gate (`erc_gate.py` + `20-design/erc_accept.yaml`), map checks, G1 pack, the studies before a next revision (§6) | `references/schematic-phase.md`, `templates/G1/` |
+| kickoff→G1: layout-forward design (floorplan, channel and escape counts, power-stage templates, placement budgets, pinouts, the routability gate) | `references/pcb-layout-dfm.md` §0, §1.3 here |
 | G1→G2: placement CSV, router session, G2 pack, PCB build rules (stack-up … panel), DRC census, route quality, parity, canary | `references/pcb-layout-dfm.md` |
 | multi-gigabit lanes: the day-1 SI convergence playbook (§0, run first), stack-up at the fab tolerance, launch and skew, the solver chain, meshing artefacts, mixed-mode plots, COM, corners, margins, coupons, the bench, the SI review checklist | `references/high-speed-si.md` |
 | part tags, verification table | `references/part-verification.md` |
