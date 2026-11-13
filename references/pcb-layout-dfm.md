@@ -48,7 +48,7 @@ the width. The out-and-back stub also adds inductance and weakens the clamp.
 series resistor and capacitor that damps a rail resonance. The power model is the rail's impedance or transient
 simulation. The branch node is the point where the branch joins the rail. The tap is the track from that node to the
 damper. With a 0 Ω link, the capacitor ESR is the only designed damping resistance. The tap copper, the vias and the
-link then add to it in series. Add their resistance at the hot corner to the model before you fix the tap width. Add the
+link then add to it in series. Model their resistance at the hot and the cold corner before you fix the tap width. Add the
 tap inductance too, because it narrows the band where the damper works. Size the damper site and its distance from the
 branch node at placement, not at routing. In one model, tens of mΩ of copper met a budget near 10 mΩ per branch. A pass
 became a fail *(worked example)*.
