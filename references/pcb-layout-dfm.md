@@ -44,6 +44,15 @@ In a flow-through array, each line passes straight over its pad, with no stub. W
 connector and the protected part on one side of the array, each line goes out and comes back. That band then needs about twice
 the width. The out-and-back stub also adds inductance and weakens the clamp.
 
+**Put the routed copper of each damper branch into the power model at placement** **[physics]**. A damper branch is a
+series resistor and capacitor that damps a rail resonance. The power model is the rail's impedance or transient
+simulation. The branch node is the point where the branch joins the rail. The tap is the track from that node to the
+damper. With a 0 Ω link, the capacitor ESR is the only designed damping resistance. The tap copper, the vias and the
+link then add to it in series. Model their resistance at the hot and the cold corner before you fix the tap width. Add the
+tap inductance too, because it narrows the band where the damper works. Size the damper site and its distance from the
+branch node at placement, not at routing. In one model, tens of mΩ of copper met a budget near 10 mΩ per branch. A pass
+became a fail *(worked example)*.
+
 ### 1.2 Router session **[convention]**
 The routed board + the router's session file (Freerouting `.ses` with its `.dsn`, or the equivalent) are the artefacts of record; routing is
 never re-run to reproduce them. Re-import (`--import-ses`) is the replay. Keep-outs and
@@ -86,6 +95,9 @@ power track.
   strip are in one joined region. A strip that joins only the target side adds no path.
 - **Draw each scripted supply feed before a channel count.** A feed can turn round a column of parts. On that layer, it
   then blocks every line inside the turn. Count the channels with the feed drawn.
+- **Draw a supply feed to each closed-in part.** Scripted lines can close in a part. It is closed in when no free
+  region joins its supply pads to the supply. The router can leave those pads open on repeated runs. Draw the feed with
+  the lines that close the part in. Then trace each supply pad's free region again (first bullet).
 - A flow-through protection array is a placement rule (§1.1). It also sets the width of the band through it.
 
 ## 2. Stack-up and copper weight
