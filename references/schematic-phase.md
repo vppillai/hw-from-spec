@@ -82,6 +82,7 @@ implement is a CC row (rule 2), not a silent omission.
 | `bom.csv`, `procurement.csv` | the project's BOM exporter | every fitted part with MPN / fab code / tag; DNP excluded |
 | `erc.json` + `20-design/erc_accept.yaml` | §2 | `scripts/erc_gate.py` green: zero errors, every warning accepted by a decision row |
 | `check_maps.md` | §3 | maps vs netlist |
+| `routability.md` | the floorplan yaml + the netlist (`references/pcb-layout-dfm.md` §0.8) | the routability gate: fill, channel use, escape ratios, templates, budget rows inside the kickoff B10 limits |
 | `EVIDENCE.md` | the generator | which yaml revision / commit produced the pack; md5 of every file above |
 | `REVIEW_NOTES.md` | hand-written, short | what changed since the last round, what the reviewers should weigh |
 
@@ -92,7 +93,7 @@ board as MISSING at G1 (no routed board yet) — that is expected and said in th
 ## 5. G0 → G1 in order
 
 1. G0 cell written by the owner → 2. `20-design/*.yaml` from SPEC (every spec value that must change → CC row OPEN first) → 3. `gen/build_sch.py`
-(`--check` green, ERC zero errors, netlist) → 4. map checks → 5. G1 pack → 6. `scripts/traceability.py` entries for every spec requirement now
+(`--check` green, ERC zero errors, netlist) → 4. map checks → 4a. the routability gate (`references/pcb-layout-dfm.md` §0.8; fix a failed row in the yaml, never with a feature cut) → 5. G1 pack → 6. `scripts/traceability.py` entries for every spec requirement now
 landing in the yaml (stage `schematic`). Its R-ID census fails on an R-xx with no entry, or with no T-nn row and no NOT-INCLUDED decision → 7. freeze, hand-off, blind round (SKILL §5), merged report `80-reviews/G1_merged.md` → 8. REQUIRED
 items applied, regenerate, re-run 3-6 → 9. ask for the G1 cell (SKILL §1.1). Layout CAD starts only after the cell exists.
 

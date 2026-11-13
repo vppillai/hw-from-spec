@@ -1,4 +1,4 @@
-# pcb-layout-dfm.md — G1 → G2: the PCB build rules, the layout chain and the adopt gate
+# pcb-layout-dfm.md — kickoff → G1: layout-forward design (§0); G1 → G2: the PCB build rules, the layout chain and the adopt gate
 
 Every quantitative rule below carries one of four tags, so a reader knows what moves it:
 
@@ -14,6 +14,125 @@ The worked example throughout is JLCPCB, numbers fetched **2026-09-13** from `jl
 capability page; they are the values that were live then — **fetch the current page before using any of them** (`references/fab-dfm.md` §7).
 The design margin rule for every fab number: **design strictly greater than the published minimum** (the viewer grades a value EQUAL to its
 warning threshold as Warning) — limit + 0.01 mm for copper rules, one full step for drills.
+
+## 0. Layout-forward design: kickoff → G0 → G1
+
+Part choice, pin maps and the schematic set most of a board's routability. A router cannot undo them. So plan the layout from
+kickoff, and gate it at G1 with numbers. SKILL §1.3 holds the step. This section holds the method.
+
+**Never cut a feature for layout** **[owner choice]**. Change the placement, a package, a pin map, the stack-up or the board
+size instead. A feature cut is a spec change: an OPEN decision row for the owner (SKILL §3, rule 2). It is never a layout fix.
+
+*Worked example.* One dense 6-layer board stalled near 71 % routed after four scripted router tries. Five causes were set
+before layout. A buck controller had its gate pins on the side away from its FET pair. Only 5 of its 16 gate pins had a
+legal via site. Two common-mode filter capacitors sat on stubs of 15 and 26 mm against a 3 mm limit. Damper copper of tens of
+mΩ broke a power model with a budget near 10 mΩ. Scripted supply feeds closed lines in. A protection array was not between
+the source and the connector. A late pin re-assignment gained nothing. Each subsection below catches one of these causes
+before G1.
+
+### 0.1 Budgets at kickoff (kickoff B9 to B11) **[owner choice]**
+- **Board size and layers.** Record a base outline and layer count. Record the fallback order with the cost of each step.
+  The recommended order is two more layers first, then a larger outline by a stated step. A feature cut is never a fallback.
+- **The routability gate thresholds.** Kickoff B10 sets them. The defaults are in the table of §0.8.
+- **The swap policy.** Kickoff B11 says if pin swaps and part swaps are allowed for routability. Each swap is a CC row.
+  A swap inside one function group (two GPIOs, two lanes of one bus) or to a pin-compatible part is the recommended scope.
+  A swap that changes a spec value still follows rule 2.
+- **The trigger.** Take the next fallback when the gate fails on two placement variants. More router passes do not fix a
+  cause that the floorplan set.
+
+### 0.2 The floorplan, before the G0 ask **[method]**
+- Generate the floorplan from a yaml (`20-design/<board>_floorplan.yaml`). Never draw it by hand in the CAD.
+- It holds the outline and the fixed parts: connectors, holes, a cage, anything the case or the spec pins.
+- It holds the keep-outs on each side and on each layer they cover: the case, the mounting hardware, the connector drawings,
+  isolation and creepage.
+- It holds one region per function block. Give each region an area and the parts it holds, with their courtyard sizes.
+- The fill of a region per side is the sum of its courtyard areas over its area. The recommended limit is 60 %. Use 45 %
+  for a region with a part of 0.5 mm pitch or less.
+- Place each region so that the pin rows of its dense parts face the regions they connect to.
+
+### 0.3 Channel count per region and per layer **[method]**
+- A *cut* is a line across the floorplan between two regions, or across the narrowest neck of a region.
+- List the nets that must cross each cut. Take them from the block diagram before the schematic and from the netlist after it.
+- Channels on one layer of a cut = the usable cut length divided by the routing pitch, rounded down.
+- The pitch is the track width plus the clearance of the net class. A differential pair takes 2 w + s plus one clearance
+  on each side.
+- The usable length leaves out the rows of vias, power necks and keep-outs on that layer. A reference-plane layer carries 0 signal
+  channels.
+- Draw each scripted supply feed and each power neck before the count (§1.4).
+- Channel use = the nets that cross over the channels available. Gate it per cut, over the layers the nets may use, and
+  per layer.
+
+### 0.4 Escape count per dense part **[method]**
+- A dense part has a pitch of 0.65 mm or less. A part whose pins must change layer next to the body is dense too. Power-stage
+  controllers and multi-row connectors are the usual cases.
+- For each pin row, count the pins that need a via inside the escape distance. These are the pins whose nets leave on
+  another layer.
+- Count the legal via sites inside the escape distance on the side of that row. A legal site is a free circle (§2), clear of
+  pads, rule areas and silk text.
+- The escape ratio of the row = legal sites over pins that need a via. In the worked example, the gate row had 5 sites for
+  16 pins, a ratio of 0.31.
+- Fix a low ratio in this order: rotate or move the part, change the pin map, choose a package with a wider pitch, add a
+  layer. Via-in-pad is a decision row (§5).
+
+### 0.5 Power-stage templates at G0 **[physics]**
+- Draw a placement template for each switching stage before the G0 ask. Take its numbers from the controller's layout guide.
+- The template holds the input capacitor, the switch pair, the inductor, the output capacitor, the controller or driver and
+  the sense parts.
+- Mark three loops on it. The *hot loop* runs from the input capacitor through both switches and back. The *gate loop* of
+  each switch runs from the driver pin to the gate and back from the source to the driver return. The *sense loop* runs
+  from the sense element to the amplifier pins as a Kelvin pair.
+- Write a length or area budget for each loop. Copy the number from the layout guide, or derive it in a calculation row.
+- Turn the controller so that its gate pins face their switch pair. Count the escape of the gate pins (§0.4).
+- When a template does not fit its region, change the region, the part or the stack-up before G0.
+
+### 0.6 Placement budgets that feed the models **[physics]**
+- Give a budget row to each part whose distance or copper changes a model result. Decoupling at power pins, damper branches,
+  filter parts, protection arrays, terminations, coupling capacitors and crystals are the usual parts.
+- A row holds the part, its node, the maximum distance in mm, and the maximum copper R in mΩ and L in nH. State R and L at the
+  hot and the cold corner. Name the model that reads the row and the source of each number.
+- The power model and the SI model take the budget values as their parasitics. A model pass at the budget values is the rule
+  that placement and routing then hold (§1.1, the damper bullet).
+- A shunt part on a fast line has a stub budget from the SI model (`high-speed-si.md` §5). In the worked example, the filter
+  stubs were 15 and 26 mm against 3 mm.
+- Put a flow-through protection array between the source and the connector (§1.1).
+
+### 0.7 Pinouts for escape and pair order **[method]**
+- Choose the connector pinouts and the dense-part pin maps with the floorplan open, between G0 and G1.
+- Order each pin row to match the order of the pins it faces. Each pair crossing needs a pair of vias in the budget.
+- Check the pin order around each package (§4) and count a connector map by position per row (§2.1).
+- Make the swaps that kickoff B11 allows before G1. After placement, a swap frees one window at best. In the worked example,
+  a late re-assignment gained nothing.
+
+### 0.8 The routability gate at G1 **[owner choice]**
+The schematic does not freeze until this gate passes. Do not ask for the G1 cell before it passes. Generate
+`80-reviews/G1/routability.md` from the floorplan yaml and the netlist. Kickoff B10 sets the limits. The defaults:
+
+| Row | Default limit |
+|---|---|
+| region fill per side | ≤ 60 %; ≤ 45 % with a part of 0.5 mm pitch or less |
+| channel use per cut, over the allowed layers | ≤ 70 % |
+| channel use per layer on a cut | ≤ 85 % |
+| escape ratio per pin row of a dense part | ≥ 1.2 |
+| power-stage templates | one per stage; each loop inside its budget |
+| placement budget rows | each inside its budget; each model passes at the budget values |
+| protection and filter order | source, protection, connector; each stub inside its budget |
+| supply feeds and power necks | drawn before the channel count |
+
+- Fix a failed row with placement, package, pin map, stack-up or size, in the fallback order of §0.1. Never fix it with a
+  feature cut.
+- When a row still fails after the last fallback, stop. Ask the owner with the numbers of each row.
+- At G2, a router that stalls after its plateau (§1.2) sends the work back to this table. A cause that was set before layout
+  needs a floorplan change, not more router passes.
+
+### 0.9 G1 review checklist: layout-forward
+1. Does the floorplan yaml hold every fixed part, every keep-out and every region with its fill per side?
+2. Does each cut list its crossing nets, with the channel count per layer and the feeds drawn?
+3. Does each pin row of each dense part show its escape ratio from legal sites?
+4. Does each switching stage have a template with its three loops and their budgets?
+5. Does each placement-critical part have a budget row, and does each model pass at the budget values?
+6. Is each protection array between the source and the connector?
+7. Were the allowed swaps made before G1, each with its CC row?
+8. Does each failed row name its fix, and is no fix a feature cut?
 
 ## 1. The G1 → G2 chain (inputs, outputs, gate, decider)
 

@@ -1,9 +1,10 @@
 # CHANGELOG — hw-from-spec
 
-## Current state (0.12.11): read this instead of replaying the entries below
+## Current state (0.13.0): read this instead of replaying the entries below
 
 - **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
-  thirteen batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
+  fourteen batches at most), layout-forward design from kickoff to G1 (floorplan, channel and escape counts, power-stage templates,
+  placement budgets fed into the models, a routability gate before the schematic freezes; never a feature cut for layout), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
   (zero errors / zero warnings / no waivers, enforced by scripts), generated-only, the decision log, parts tags [V] / [K] / [K owner-read] / [S],
   blind reviews with a record-reading verifier, layout + fab DFM mirror, the case pipeline with two PURE mesh gates (census margin, print-DFM
   floor), the stability row for anything that stands free (kickoff C12) and the three assembly-model rows (every placement det +1, a fit row per
@@ -43,6 +44,33 @@
   address and public pull-request numbers excepted) — `scripts/generic_lint.py` reads the whole repo
   (CHANGELOG and docs included; history keeps its measured numbers), a fenced worked example keeps numbers and kinds but never a name, and the
   repo carries no project retro (a retro report is folded, then deleted).
+
+## 0.13.0 - 2026-11-13 - Layout-forward design from kickoff to G1
+
+Source: the owner's direction of 2026-11-13 and the project log of the same day. Parts, design and schematic were done with no
+layout limits in mind. A dense board then stalled in routing. The skill now plans the layout from kickoff and gates it at G1.
+Features are never cut for layout. This is a minor bump: a new procedure step.
+
+### Added
+- `SKILL.md` §1.3: the layout-forward step from kickoff through G0 and G1 [ee, both]. It names the budgets at kickoff, the
+  floorplan and power-stage templates before the G0 ask, the counts and budget rows from G0 to G1, and the routability gate.
+- `references/pcb-layout-dfm.md` §0: the method. It covers the never-cut rule, the budgets with a fallback order (§0.1), the
+  floorplan (§0.2), the channel count (§0.3) and the escape count (§0.4). It also covers the power-stage templates (§0.5), the
+  placement budgets for the models (§0.6), the pinouts (§0.7), the gate table with defaults (§0.8) and a G1 checklist (§0.9).
+- `references/kickoff-questionnaire.md`: B9 (size and layer budget with the fallback), B10 (the routability gate limits) and
+  B11 (pin and part swaps). They form batch 13. The answers land in `board.budget`, `board.routability_gate` and `board.swaps`.
+- `references/high-speed-si.md` §5: set the SI placement and stub budgets before G1. §15 item 66 checks them.
+- `references/pitfalls.md`: 4 dated lines in the layout section.
+
+### Changed
+- `templates/90-log/GATES.md`: G0 asks for the floorplan and the power-stage templates. G1 asks for the routability gate.
+- `references/schematic-phase.md`: the G1 pack holds `routability.md`. The G0 → G1 order runs the gate as step 4a.
+- `templates/10-spec/KICKOFF_ANSWERS.md`, `templates/project.yaml`, `references/project-yaml.md`, `README.md` and the evals
+  text: fourteen batches and B1 to B11.
+
+### Not done
+- No script computes the gate. The project generates `routability.md`; the skill gives the rows and the defaults.
+- The damper, supply-feed and protection-array lessons were already in §1.1 and §1.4. Section 0 links them and does not repeat them.
 
 ## 0.12.11 - 2026-11-13 - Paired runs: time-cut noise, controls, slopes
 
