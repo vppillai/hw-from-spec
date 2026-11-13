@@ -45,10 +45,13 @@ connector and the protected part on one side of the array, each line goes out an
 the width. The out-and-back stub also adds inductance and weakens the clamp.
 
 **Put the routed copper of each damper branch into the power model at placement** **[physics]**. A damper branch is a
-series resistor and capacitor that damps a rail resonance. When its resistor is a 0 Ω link, nothing absorbs the path
-resistance. The branch copper then sets the damping. Add each branch's copper resistance to the model before you fix the
-tap width. Size the damper site and its distance from the branch node at placement, not at routing. Tens of mΩ of copper
-against a budget near 10 mΩ per branch turned a pass into a fail *(worked example)*.
+series resistor and capacitor that damps a rail resonance. The power model is the rail's impedance or transient
+simulation. The branch node is the point where the branch joins the rail. The tap is the track from that node to the
+damper. With a 0 Ω link, the capacitor ESR is the only designed damping resistance. The tap copper, the vias and the
+link then add to it in series. Add their resistance at the hot corner to the model before you fix the tap width. Add the
+tap inductance too, because it narrows the band where the damper works. Size the damper site and its distance from the
+branch node at placement, not at routing. In one model, tens of mΩ of copper met a budget near 10 mΩ per branch. A pass
+became a fail *(worked example)*.
 
 ### 1.2 Router session **[convention]**
 The routed board + the router's session file (Freerouting `.ses` with its `.dsn`, or the equivalent) are the artefacts of record; routing is
@@ -92,8 +95,9 @@ power track.
   strip are in one joined region. A strip that joins only the target side adds no path.
 - **Draw each scripted supply feed before a channel count.** A feed can turn round a column of parts. On that layer, it
   then blocks every line inside the turn. Count the channels with the feed drawn.
-- **Give a part's supply pins a scripted exit when scripted lines close the part in.** The router can leave those
-  supply pins open, run after run. Script the supply exit with the lines that close the part in.
+- **Draw a supply feed to each closed-in part.** Scripted lines can close in a part. It is closed in when no free
+  region joins its supply pads to the supply. The router can leave those pads open on repeated runs. Draw the feed with
+  the lines that close the part in. Then trace each supply pad's free region again (first bullet).
 - A flow-through protection array is a placement rule (§1.1). It also sets the width of the band through it.
 
 ## 2. Stack-up and copper weight

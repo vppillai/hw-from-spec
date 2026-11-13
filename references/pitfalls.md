@@ -394,8 +394,8 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A multi-threaded router pass gave different results for the same board. One run could not judge a scripted change. Compare medians over several runs — 2026-11-12 [layout/router] (`pcb-layout-dfm.md` §1.2).
 - A strip was freed for new lines, but it joined only the target side. Test reach from the source before you free a strip — 2026-11-12 [layout/reach] (`pcb-layout-dfm.md` §1.4).
 - A scripted supply feed turned round a column of parts and blocked every line inside the turn on that layer. Draw feeds before a channel count — 2026-11-12 [layout/reach] (`pcb-layout-dfm.md` §1.4).
-- Scripted lines closed a part in, and the router left its supply pins open on two fresh runs. Script a supply exit with the lines — 2026-11-12 [layout/router] (`pcb-layout-dfm.md` §1.4).
-- A damper branch with a 0 Ω link had tens of mΩ of copper against a budget near 10 mΩ. A pass became a fail. Model the branch copper at placement — 2026-11-13 [layout/power] (`pcb-layout-dfm.md` §1.1).
+- Scripted lines closed a part in, and the router left its supply pins open on two fresh runs. Draw a supply feed with the lines — 2026-11-12 [layout/reach] (`pcb-layout-dfm.md` §1.4).
+- A damper branch with a 0 Ω link had tens of mΩ of copper. The budget was near 10 mΩ, and a pass became a fail. Model the branch copper at placement — 2026-11-13 [layout/power] (`pcb-layout-dfm.md` §1.1).
 
 ## si / high-speed (`references/high-speed-si.md` carries the rules; one line each here)
 - A requirement closed on a simplified twin reopened on the launch of record: the twin had a solid plane and no contact posts, and read 9 dB better than the real launch. Solve the layout of record with ports that see the quantity — 2026-11-01 [si/model].

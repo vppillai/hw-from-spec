@@ -254,6 +254,8 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
   against the record, key by key, before a batch. Gate the dispatcher on that diff.
 - Pin every run's material and stack-up keys in its command file **[method]**. A run that reads them from the design data
   by default changes meaning when that data moves. A rerun of an old command then models a different board without warning.
+  Write the values, or the hash of the stack-up file, into the command file. Pinned values can go stale too. Before a new
+  batch, diff them against the design data, and stop on a difference.
 - Moving a loop away from a void edge can raise a new resonance in another band **[physics]**. One move cleared a peak near 12 GHz
   and raised one near 6 GHz *(worked example)*. Read the whole band after every move, not only the old peak.
 - Draw the contact tails of every pad row that the coupled model draws **[method]**. Pads with no tails on one row split the two legs
@@ -938,7 +940,8 @@ Give each reviewer the frozen study, the yaml, the scripts and this list. Give n
 58. Does each common-mode voltage budget hold SCD11, SCC11, SCC22, SCC21 and both common-mode terminations?
 59. Does each yield gate name its target, level and confidence before the run? Did its surrogate pass item 54?
 60. Was each fix run on every structure that takes it, not carried by ratio or dB step from another?
-61. Does each lane's tier (§0.0) hold for its rate, length and margin? Judge the lane by the evidence of its tier only. Items 3 to 60 apply to tier-3 lanes.
+61. Does each run's command file pin its material and stack-up values, or the hash of the stack-up file?
+62. Does each lane's tier (§0.0) hold for its rate, length and margin? Judge the lane by the evidence of its tier only. Items 3 to 61 apply to tier-3 lanes.
 
 ## 16. Records
 

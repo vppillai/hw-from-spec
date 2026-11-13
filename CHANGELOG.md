@@ -47,12 +47,20 @@
 ## 0.12.10 - 2026-11-13 - Closed-in supply pins, pinned run keys, damper copper
 
 Source: the project log of 2026-11-12 and 2026-11-13, after the 0.12.9 cut. The entry adds rules to two references.
-It adds 3 lines to `references/pitfalls.md`. One candidate rule (draw each scripted supply feed first) was already in §1.4, so it is not repeated.
+It adds 3 lines to `references/pitfalls.md`. Two blind reviews of the draft and their fixes are folded in.
 
 ### Added
-- `references/pcb-layout-dfm.md` §1.4: give a part's supply pins a scripted exit when scripted lines close the part in.
 - `references/pcb-layout-dfm.md` §1.1: put the routed copper of each damper branch into the power model at placement.
-- `references/high-speed-si.md` §3.3: pin every run's material and stack-up keys in its command file.
+- `references/pcb-layout-dfm.md` §1.4: draw a supply feed to each part that scripted lines close in, then trace its pads again.
+- `references/high-speed-si.md` §3.3: pin every run's material and stack-up keys in its command file. Diff them before a batch.
+- `references/high-speed-si.md` §15 item 61: does each command file pin its material and stack-up values?
+
+### Changed
+- `references/high-speed-si.md` §15: the tier item is now item 62 and covers items 3 to 61.
+
+### Not done
+- One candidate rule (draw each scripted supply feed before a channel count) is already in §1.4. It is not repeated.
+- No script changes. The rules need no new gate.
 
 ## 0.12.9 - 2026-11-12 - Reach checks, router repeat, worktree tool links
 
