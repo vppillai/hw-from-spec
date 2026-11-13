@@ -20,7 +20,7 @@ warning threshold as Warning) — limit + 0.01 mm for copper rules, one full ste
 Part choice, pin maps and the schematic set most of a board's routability. A router cannot undo them. So plan the layout from
 kickoff, and gate it at G1 with numbers. SKILL §1.3 holds the step. This section holds the method.
 
-**Never cut a feature for layout** **[owner choice]**. Change the placement, a package, a pin map, the stack-up or the board
+**Never cut a feature for layout** **[owner choice]**. Change the placement, a pin map, a package, the stack-up or the board
 size instead. A feature cut is a spec change: an OPEN decision row for the owner (SKILL §3, rule 2). It is never a layout fix.
 
 *Worked example.* One dense 6-layer board stalled near 71 % routed after four scripted router tries. Five causes were set
@@ -35,7 +35,7 @@ before G1.
 - **The fallback order.** This is the one list; other sections point here. Step 1 is placement. Step 2 is the pin map, inside
   the B11 swap policy. Step 3 is the package. Step 4 is more layers. Step 5 is a larger outline by a stated step.
   Steps 1 to 3 leave the B9 budget unchanged. B9 sets the order of steps 4 and 5; the recommended order is layers first.
-  A fixed envelope in kickoff I1 removes step 5. A feature cut is never a fallback.
+  A fixed envelope in kickoff I1 removes step 5. A B9 answer that fixes the layers removes step 4. A feature cut is never a fallback.
 - **The routability gate thresholds.** Kickoff B10 sets them. The defaults are in the table of §0.8.
 - **The swap policy.** Kickoff B11 says if pin swaps and part swaps are allowed for routability. Each swap is a CC row.
   A swap inside one function group (two GPIOs, two lanes of one bus) or to a pin-compatible part is the recommended scope.
@@ -66,8 +66,8 @@ before G1.
   per layer.
 
 ### 0.4 Escape count per dense part **[method]**
-- A dense part has a pitch of 0.65 mm or less. The fill limit of §0.2 uses a tighter pitch, 0.5 mm. A part whose pins must change layer next to the body is dense too. Power-stage
-  controllers and multi-row connectors are the usual cases.
+- A dense part has a pitch of 0.65 mm or less. A part whose pins must change layer next to the body is dense too.
+  Power-stage controllers and multi-row connectors are the usual cases. The fill limit of §0.2 uses a tighter pitch, 0.5 mm.
 - For each pin row, count the pins that need a via inside the escape distance. These are the pins whose nets leave on
   another layer. The escape distance is 3 pitches of the row from the pad edge, unless the floorplan yaml gives a value.
 - Count the legal via sites inside the escape distance on the side of that row. A legal site is a free circle (§2), clear of

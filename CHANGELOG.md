@@ -64,6 +64,8 @@ Features are never cut for layout. This is a minor bump: a new procedure step.
 - `references/pitfalls.md`: 4 dated lines in the layout section.
 
 ### Changed
+- `SKILL.md`: §0.1 lists the three new kickoff classes. The §1 ee gate line names the floorplan and the routability gate.
+  The "Where to look" table has a kickoff to G1 row.
 - `templates/90-log/GATES.md`: G0 asks for the floorplan and the power-stage templates. G1 asks for the routability gate.
 - `references/schematic-phase.md`: the G1 pack holds `routability.md`. The G0 → G1 order runs the gate as step 4a.
 - `templates/10-spec/KICKOFF_ANSWERS.md`, `templates/project.yaml`, `references/project-yaml.md` and `README.md`: fourteen

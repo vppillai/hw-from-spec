@@ -97,16 +97,16 @@ from the line. *Alt:* panel by the fab — its rails land on the short edges (co
 order decided now: two more layers first, then a larger outline by a stated step, each with its cost** (`references/pcb-layout-dfm.md` §0.1).
 Placement, pin map and package come first, at no budget cost. No feature is cut for layout. I1 decides if the outline may grow;
 B9 sets the order and the step. A fixed I1 envelope removes the outline step. *Alt:* layers fixed, the outline grows — when cost per board
-rules; the I1 envelope must allow it. *Alt:* outline fixed, layers grow — when a mating part fixes the envelope (I1). *Alt:* both fixed — every
-failed row comes back to the owner as a spec question.
+rules; the I1 envelope must allow it. *Alt:* outline fixed, layers grow — when a mating part fixes the envelope (I1). *Alt:* both fixed — steps 4 and 5
+are removed; a row that still fails after steps 1 to 3 goes to the owner as a spec question.
 **B10 The routability gate at G1** [ee, both]. **RECOMMENDED: the defaults of `references/pcb-layout-dfm.md` §0.8.** Channel use is ≤ 70 % per cut and ≤ 85 % per layer.
-The escape ratio is ≥ 1.2 per pin row of a dense part. Region fill is ≤ 60 % per side, 45 % with 0.5 mm pitch. The schematic does not
-freeze until the gate passes. *Alt:* tighter limits (60 % / 1.5) — for an impedance-heavy board; a larger board or more layers.
-*Alt:* looser limits (80 % / 1.0) — for a sparse two-layer board; more router passes and a higher stall risk.
+The escape ratio is ≥ 1.2 per pin row of a dense part. Region fill is ≤ 60 % per side, 45 % at 0.5 mm pitch or less. The schematic does not
+freeze until the gate passes. *Alt:* tighter: channel use per cut ≤ 60 % and escape ratio ≥ 1.5, the other limits stay — for an impedance-heavy board; a larger board or more layers.
+*Alt:* looser: channel use per cut ≤ 80 % and escape ratio ≥ 1.0, the other limits stay — for a sparse two-layer board; more router passes and a higher stall risk.
 **B11 Pin and part swaps for routability** [ee, both]. **RECOMMENDED: allowed inside one function group (two GPIOs, two lanes of one bus,
 connector pins of one class) and to a pin-compatible part, one CC row each, made before G1** — the swap list follows the floorplan, never the
-router. *Alt:* every swap is an owner row — slower; each gate failure waits on the owner. *Alt:* no swaps — the pin maps of the spec are fixed; a
-failed row takes the B9 fallback at once.
+router. *Alt:* every swap is an owner row — slower; each gate failure waits on the owner. *Alt:* no swaps — the pin maps of the spec are fixed;
+step 2 of the fallback order is removed (`references/pcb-layout-dfm.md` §0.1).
 
 ## C. Enclosure architecture (`references/dfm-printed-enclosure.md`, `references/case-pipeline.md`)
 **C1 Pieces** [mech, both]. **RECOMMENDED: two pieces — tray + shell, one print orientation each, no supports on visible faces; a removable hood only if a
