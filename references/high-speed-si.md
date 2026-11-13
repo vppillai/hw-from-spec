@@ -984,7 +984,7 @@ Give each reviewer the frozen study, the yaml, the scripts and this list. Give n
 63. Does each control match the run of record of its geometry? Was the boundary type tested first on each control that did not?
 64. Does each re-trim slope come from a pair on the stack-up in use? Is the proposed point one run of that pair?
 65. Does each lane's tier (§0.0) hold for its rate, length and margin? Judge the lane by the evidence of its tier only. Items 3 to 64 apply to tier-3 lanes.
-66. Were the stub and placement budgets of each fast line set before G1 (§5)? Does the model of record run at those values?
+66. Were the stub and placement budgets of each fast line set before G1 (§5)? Does the model of record run at those values? This item applies to every tier.
 
 ## 16. Records
 

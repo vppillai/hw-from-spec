@@ -4,7 +4,8 @@
 
 - **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
   fourteen batches at most), layout-forward design from kickoff to G1 (floorplan, channel and escape counts, power-stage templates,
-  placement budgets fed into the models, a routability gate before the schematic freezes; never a feature cut for layout), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
+  placement budgets fed into the models, a routability gate before the schematic freezes; never a feature cut for layout),
+  the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
   (zero errors / zero warnings / no waivers, enforced by scripts), generated-only, the decision log, parts tags [V] / [K] / [K owner-read] / [S],
   blind reviews with a record-reading verifier, layout + fab DFM mirror, the case pipeline with two PURE mesh gates (census margin, print-DFM
   floor), the stability row for anything that stands free (kickoff C12) and the three assembly-model rows (every placement det +1, a fit row per
@@ -65,12 +66,16 @@ Features are never cut for layout. This is a minor bump: a new procedure step.
 ### Changed
 - `templates/90-log/GATES.md`: G0 asks for the floorplan and the power-stage templates. G1 asks for the routability gate.
 - `references/schematic-phase.md`: the G1 pack holds `routability.md`. The G0 → G1 order runs the gate as step 4a.
-- `templates/10-spec/KICKOFF_ANSWERS.md`, `templates/project.yaml`, `references/project-yaml.md`, `README.md` and the evals
-  text: fourteen batches and B1 to B11.
+- `templates/10-spec/KICKOFF_ANSWERS.md`, `templates/project.yaml`, `references/project-yaml.md` and `README.md`: fourteen
+  batches and B1 to B11.
+- `evals/evals.json`: eval 8 says fourteen batches. Evals 11 and 12 say B1 to B11 in the expected output and the assertions.
+- `references/pcb-layout-dfm.md` §2: the via-site count points to the escape count of §0.4.
 
 ### Not done
 - No script computes the gate. The project generates `routability.md`; the skill gives the rows and the defaults.
-- The damper, supply-feed and protection-array lessons were already in §1.1 and §1.4. Section 0 links them and does not repeat them.
+- The damper, supply-feed and protection-array lessons were already in `references/pcb-layout-dfm.md` §1.1 and §1.4. Section 0
+  links them and does not repeat them.
+- No eval asserts the routability gate yet. Add one when a project runs the gate.
 
 ## 0.12.11 - 2026-11-13 - Paired runs: time-cut noise, controls, slopes
 

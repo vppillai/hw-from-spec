@@ -27,17 +27,20 @@ size instead. A feature cut is a spec change: an OPEN decision row for the owner
 before layout. A buck controller had its gate pins on the side away from its FET pair. Only 5 of its 16 gate pins had a
 legal via site. Two common-mode filter capacitors sat on stubs of 15 and 26 mm against a 3 mm limit. Damper copper of tens of
 mΩ broke a power model with a budget near 10 mΩ. Scripted supply feeds closed lines in. A protection array was not between
-the source and the connector. A late pin re-assignment gained nothing. Each subsection below catches one of these causes
+the connector and the protected part. A late pin re-assignment gained nothing. Each subsection below catches one of these causes
 before G1.
 
 ### 0.1 Budgets at kickoff (kickoff B9 to B11) **[owner choice]**
-- **Board size and layers.** Record a base outline and layer count. Record the fallback order with the cost of each step.
-  The recommended order is two more layers first, then a larger outline by a stated step. A feature cut is never a fallback.
+- **Board size and layers.** Record a base outline and layer count. Record the cost of each fallback step.
+- **The fallback order.** This is the one list; other sections point here. Step 1 is placement. Step 2 is the pin map, inside
+  the B11 swap policy. Step 3 is the package. Step 4 is more layers. Step 5 is a larger outline by a stated step.
+  Steps 1 to 3 leave the B9 budget unchanged. B9 sets the order of steps 4 and 5; the recommended order is layers first.
+  A fixed envelope in kickoff I1 removes step 5. A feature cut is never a fallback.
 - **The routability gate thresholds.** Kickoff B10 sets them. The defaults are in the table of §0.8.
 - **The swap policy.** Kickoff B11 says if pin swaps and part swaps are allowed for routability. Each swap is a CC row.
   A swap inside one function group (two GPIOs, two lanes of one bus) or to a pin-compatible part is the recommended scope.
   A swap that changes a spec value still follows rule 2.
-- **The trigger.** Take the next fallback when the gate fails on two placement variants. More router passes do not fix a
+- **The trigger.** A row that still fails on two placement variants takes the next fallback step. More router passes do not fix a
   cause that the floorplan set.
 
 ### 0.2 The floorplan, before the G0 ask **[method]**
@@ -63,16 +66,15 @@ before G1.
   per layer.
 
 ### 0.4 Escape count per dense part **[method]**
-- A dense part has a pitch of 0.65 mm or less. A part whose pins must change layer next to the body is dense too. Power-stage
+- A dense part has a pitch of 0.65 mm or less. The fill limit of §0.2 uses a tighter pitch, 0.5 mm. A part whose pins must change layer next to the body is dense too. Power-stage
   controllers and multi-row connectors are the usual cases.
 - For each pin row, count the pins that need a via inside the escape distance. These are the pins whose nets leave on
-  another layer.
+  another layer. The escape distance is 3 pitches of the row from the pad edge, unless the floorplan yaml gives a value.
 - Count the legal via sites inside the escape distance on the side of that row. A legal site is a free circle (§2), clear of
   pads, rule areas and silk text.
 - The escape ratio of the row = legal sites over pins that need a via. In the worked example, the gate row had 5 sites for
   16 pins, a ratio of 0.31.
-- Fix a low ratio in this order: rotate or move the part, change the pin map, choose a package with a wider pitch, add a
-  layer. Via-in-pad is a decision row (§5).
+- Fix a low ratio with the fallback order of §0.1. Rotating the part is part of step 1. Via-in-pad is a decision row (§5).
 
 ### 0.5 Power-stage templates at G0 **[physics]**
 - Draw a placement template for each switching stage before the G0 ask. Take its numbers from the controller's layout guide.
@@ -94,7 +96,7 @@ before G1.
   that placement and routing then hold (§1.1, the damper bullet).
 - A shunt part on a fast line has a stub budget from the SI model (`high-speed-si.md` §5). In the worked example, the filter
   stubs were 15 and 26 mm against 3 mm.
-- Put a flow-through protection array between the source and the connector (§1.1).
+- Put a flow-through protection array next to the connector, between the connector and the protected part (§1.1).
 
 ### 0.7 Pinouts for escape and pair order **[method]**
 - Choose the connector pinouts and the dense-part pin maps with the floorplan open, between G0 and G1.
@@ -115,11 +117,10 @@ The schematic does not freeze until this gate passes. Do not ask for the G1 cell
 | escape ratio per pin row of a dense part | ≥ 1.2 |
 | power-stage templates | one per stage; each loop inside its budget |
 | placement budget rows | each inside its budget; each model passes at the budget values |
-| protection and filter order | source, protection, connector; each stub inside its budget |
+| protection and filter order | connector, protection array, protected part; the array next to the connector; each stub inside its budget |
 | supply feeds and power necks | drawn before the channel count |
 
-- Fix a failed row with placement, package, pin map, stack-up or size, in the fallback order of §0.1. Never fix it with a
-  feature cut.
+- Fix a failed row with the fallback order of §0.1. Never fix it with a feature cut.
 - When a row still fails after the last fallback, stop. Ask the owner with the numbers of each row.
 - At G2, a router that stalls after its plateau (§1.2) sends the work back to this table. A cause that was set before layout
   needs a floorplan change, not more router passes.
@@ -130,7 +131,7 @@ The schematic does not freeze until this gate passes. Do not ask for the G1 cell
 3. Does each pin row of each dense part show its escape ratio from legal sites?
 4. Does each switching stage have a template with its three loops and their budgets?
 5. Does each placement-critical part have a budget row, and does each model pass at the budget values?
-6. Is each protection array between the source and the connector?
+6. Is each protection array next to the connector, between the connector and the protected part?
 7. Were the allowed swaps made before G1, each with its CC row?
 8. Does each failed row name its fix, and is no fix a feature cut?
 
@@ -233,7 +234,7 @@ power track.
   weight, plus any annular-ring growth the fab asks. Read the clearance from the fab's live table (§4). Count the vias the
   netlist needs under each dense part's fan-out, and compare with the free circles that fit between its pads. Do it before the
   copper weight is fixed. One dense four-layer logic board on 2 oz outer copper ran out of via sites under its dense parts, and
-  a larger outline did not help *(worked example)*.
+  a larger outline did not help *(worked example)*. §0.4 gates this count per pin row at G1.
 - Thickness tolerance ±10 % at ≥ 1.0 mm **[fab capability]** (1.6 → 1.44…1.76): a press-fit connector or a card-edge must accept the range.
 - Material grade / Tg is selected at order **[owner choice]** (JLC impedance profiles assume a TG155 laminate).
 - **Fab capabilities move** **[fab capability]**. Read the live capability page before a study recommends a stack. Worked example, JLC

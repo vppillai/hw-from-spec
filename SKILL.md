@@ -199,14 +199,16 @@ Part choice, pin maps and the schematic set most of a board's routability. Plan 
 schematic freeze. **Never cut a feature for layout.** Change the placement, a package, a pin map, the stack-up or the board size.
 A feature cut is a spec change under rule 2 (§3).
 1. **Kickoff** (B9 to B11): the board size and layer budget with its fallback order, the routability gate limits, the swap policy.
-2. **Before the G0 ask**: a generated floorplan with region areas, fill per side and keep-outs. A placement template per
+2. **Before the G0 ask**: generate a floorplan with region areas, fill per side and keep-outs. Draw a placement template per
    switching stage, with its hot, gate and sense loops and their budgets.
-3. **G0 to G1**: a channel count per cut and per layer against the nets that cross it. An escape ratio per pin row of each
-   dense part, from legal via sites. A budget row (distance, copper R and L) per decoupling, damper, filter and protection
-   part, fed into the power and SI models. Pinouts chosen for escape and pair order. The allowed swaps, made now.
+3. **G0 to G1**: count the channels per cut and per layer against the nets that cross it. Count the escape ratio per pin row
+   of each dense part, from legal via sites. Write a budget row (distance, copper R and L) per decoupling, damper, filter and
+   protection part, and feed it into the power and SI models. Choose the pinouts for escape and pair order. Make the allowed swaps.
 4. **The routability gate at G1**: `80-reviews/G1/routability.md` meets the kickoff B10 limits. The defaults are channel use
-   ≤ 70 % per cut and an escape ratio ≥ 1.2 per pin row. The schematic does not freeze, and the G1 cell is not asked, until it passes.
-5. **A failed row** takes the next fallback: placement, package, pin map, stack-up, then size. After the last fallback, ask the owner with the numbers.
+   ≤ 70 % per cut and ≤ 85 % per layer, an escape ratio ≥ 1.2 per pin row, and region fill ≤ 60 % per side (45 % at 0.5 mm
+   pitch). The full table is in the reference §0.8. The schematic does not freeze, and the G1 cell is not asked, until it passes.
+5. **A failed row** that still fails on two placement variants takes the next fallback step. The one order is in the reference §0.1:
+   placement, pin map, package, layers, outline. After the last step, ask the owner with the numbers.
    At G2, a router that stalls after its plateau sends the work back to this gate, not to more router passes.
 
 ## 2. Generated only

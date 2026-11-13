@@ -92,8 +92,8 @@ board as MISSING at G1 (no routed board yet) — that is expected and said in th
 
 ## 5. G0 → G1 in order
 
-1. G0 cell written by the owner → 2. `20-design/*.yaml` from SPEC (every spec value that must change → CC row OPEN first) → 3. `gen/build_sch.py`
-(`--check` green, ERC zero errors, netlist) → 4. map checks → 4a. the routability gate (`references/pcb-layout-dfm.md` §0.8; fix a failed row in the yaml, never with a feature cut) → 5. G1 pack → 6. `scripts/traceability.py` entries for every spec requirement now
+1. G0 cell written by the owner → 2. `20-design/*.yaml` from SPEC (every spec value that must change → CC row OPEN first; pin maps chosen with the floorplan open, `references/pcb-layout-dfm.md` §0.7) → 3. `gen/build_sch.py`
+(`--check` green, ERC zero errors, netlist) → 4. map checks → 4a. the routability gate (`references/pcb-layout-dfm.md` §0.8). Fix a failed row in the yaml. Never fix it with a feature cut → 5. G1 pack → 6. `scripts/traceability.py` entries for every spec requirement now
 landing in the yaml (stage `schematic`). Its R-ID census fails on an R-xx with no entry, or with no T-nn row and no NOT-INCLUDED decision → 7. freeze, hand-off, blind round (SKILL §5), merged report `80-reviews/G1_merged.md` → 8. REQUIRED
 items applied, regenerate, re-run 3-6 → 9. ask for the G1 cell (SKILL §1.1). Layout CAD starts only after the cell exists.
 

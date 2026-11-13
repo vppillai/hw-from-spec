@@ -95,7 +95,8 @@ from the line. *Alt:* panel by the fab — its rails land on the short edges (co
 ≥ the tier's minimum size.
 **B9 Board size and layer budget, with the fallback** [ee, both]. **RECOMMENDED: a base outline and the B1 layer count, and a fallback
 order decided now: two more layers first, then a larger outline by a stated step, each with its cost** (`references/pcb-layout-dfm.md` §0.1).
-A failed routability row takes the next step, and no feature is cut for layout. *Alt:* layers fixed, the outline grows — when cost per board
+Placement, pin map and package come first, at no budget cost. No feature is cut for layout. I1 decides if the outline may grow;
+B9 sets the order and the step. A fixed I1 envelope removes the outline step. *Alt:* layers fixed, the outline grows — when cost per board
 rules; the I1 envelope must allow it. *Alt:* outline fixed, layers grow — when a mating part fixes the envelope (I1). *Alt:* both fixed — every
 failed row comes back to the owner as a spec question.
 **B10 The routability gate at G1** [ee, both]. **RECOMMENDED: the defaults of `references/pcb-layout-dfm.md` §0.8.** Channel use is ≤ 70 % per cut and ≤ 85 % per layer.

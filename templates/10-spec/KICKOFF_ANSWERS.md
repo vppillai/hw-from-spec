@@ -23,7 +23,7 @@ answered question is a defect; changing an answer is a new D row that supersedes
 | B7 | test points + silk labels | {{per rail / bus, labelled}} | yes | D-{{nn}} | `board.test_points`; R-S01 | {{ee,both}}
 | B8 | panel + fiducials | {{customer panel long rails}} | yes | D-{{nn}} | `board.panel` | {{ee,both}}
 | B9 | size + layer budget, fallback | {{base outline + layers; +2 layers, then larger outline}} | yes | D-{{nn}} | `board.budget` | {{ee,both}}
-| B10 | routability gate at G1 | {{70 % per cut, 85 % per layer, escape 1.2}} | yes | D-{{nn}} | `board.routability_gate` | {{ee,both}}
+| B10 | routability gate at G1 | {{the defaults of pcb-layout-dfm §0.8}} | yes | D-{{nn}} | `board.routability_gate` | {{ee,both}}
 | B11 | pin + part swaps for routability | {{in function group, CC row each}} | yes | D-{{nn}} | `board.swaps` | {{ee,both}}
 | C1 | pieces | {{tray + shell}} | yes | D-{{nn}} | `kickoff.enclosure.pieces`; SPEC §8 | {{mech,both}}
 | C2 | retention | {{screws + inserts}} | yes | D-{{nn}} | `kickoff.enclosure.retention`; case.yaml | {{mech,both}}
@@ -61,4 +61,4 @@ answered question is a defect; changing an answer is a new D row that supersedes
 | I3 | debug / service access | {{wire header + straps, hood off}} | yes | D-{{nn}} | `kickoff.debug_access` | {{ee,both}}
 | I4 | delegation while offline | {{recommended option below a named class}} | yes | D-{{nn}} | `kickoff.identity.delegation`; pause-point owner list |
 
-Batches asked: {{0–12 with date/time}}. Questions deferred: {{none}}. Owner's closing words: "{{QUOTE}}".
+Batches asked: {{0–13 with date/time}}. Questions deferred: {{none}}. Owner's closing words: "{{QUOTE}}".
