@@ -252,6 +252,8 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 - A null default reaches new runs too **[method]**. A null that keeps older tagged runs as drawn also applies to every new run
   that omits the key. Several new runs drew an old void for days *(worked example)*. Diff each new run's built configuration
   against the record, key by key, before a batch. Gate the dispatcher on that diff.
+- Pin every run's material and stack-up keys in its command file **[method]**. A run that reads them from the design data
+  by default changes meaning when that data moves. A rerun of an old command then models a different board without warning.
 - Moving a loop away from a void edge can raise a new resonance in another band **[physics]**. One move cleared a peak near 12 GHz
   and raised one near 6 GHz *(worked example)*. Read the whole band after every move, not only the old peak.
 - Draw the contact tails of every pad row that the coupled model draws **[method]**. Pads with no tails on one row split the two legs

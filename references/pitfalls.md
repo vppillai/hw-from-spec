@@ -394,6 +394,8 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A multi-threaded router pass gave different results for the same board. One run could not judge a scripted change. Compare medians over several runs — 2026-11-12 [layout/router] (`pcb-layout-dfm.md` §1.2).
 - A strip was freed for new lines, but it joined only the target side. Test reach from the source before you free a strip — 2026-11-12 [layout/reach] (`pcb-layout-dfm.md` §1.4).
 - A scripted supply feed turned round a column of parts and blocked every line inside the turn on that layer. Draw feeds before a channel count — 2026-11-12 [layout/reach] (`pcb-layout-dfm.md` §1.4).
+- Scripted lines closed a part in, and the router left its supply pins open on two fresh runs. Script a supply exit with the lines — 2026-11-12 [layout/router] (`pcb-layout-dfm.md` §1.4).
+- A damper branch with a 0 Ω link had tens of mΩ of copper against a budget near 10 mΩ. A pass became a fail. Model the branch copper at placement — 2026-11-13 [layout/power] (`pcb-layout-dfm.md` §1.1).
 
 ## si / high-speed (`references/high-speed-si.md` carries the rules; one line each here)
 - A requirement closed on a simplified twin reopened on the launch of record: the twin had a solid plane and no contact posts, and read 9 dB better than the real launch. Solve the layout of record with ports that see the quantity — 2026-11-01 [si/model].
@@ -473,6 +475,7 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - An FDTD differential port launched a flat common-mode part and set an SCD21 floor. Remove it with a common-mode drive run — 2026-11-12 [si/method] (`high-speed-si.md` §8).
 - A common-mode voltage budget left out the driven-end reflection, which dominated. Include SCD11, SCC11, SCC22, SCC21 and both terminations — 2026-11-12 [si/limits] (`high-speed-si.md` §9.2).
 - A fix that gained 10 dB on one loop lost 7 dB on another. Run a fix on each structure that takes it — 2026-11-12 [si/method] (`high-speed-si.md` §10.1).
+- A rerun of an old command modelled a different board after the design data moved. Pin each run's material and stack-up keys in its command file — 2026-11-12 [si/method] (`high-speed-si.md` §3.3).
 
 ## silk / dfm
 - The fab's DFM grades a value EQUAL to its warning threshold as Warning: design strictly greater — thresholds JSON.

@@ -44,6 +44,12 @@ In a flow-through array, each line passes straight over its pad, with no stub. W
 connector and the protected part on one side of the array, each line goes out and comes back. That band then needs about twice
 the width. The out-and-back stub also adds inductance and weakens the clamp.
 
+**Put the routed copper of each damper branch into the power model at placement** **[physics]**. A damper branch is a
+series resistor and capacitor that damps a rail resonance. When its resistor is a 0 Ω link, nothing absorbs the path
+resistance. The branch copper then sets the damping. Add each branch's copper resistance to the model before you fix the
+tap width. Size the damper site and its distance from the branch node at placement, not at routing. Tens of mΩ of copper
+against a budget near 10 mΩ per branch turned a pass into a fail *(worked example)*.
+
 ### 1.2 Router session **[convention]**
 The routed board + the router's session file (Freerouting `.ses` with its `.dsn`, or the equivalent) are the artefacts of record; routing is
 never re-run to reproduce them. Re-import (`--import-ses`) is the replay. Keep-outs and
@@ -86,6 +92,8 @@ power track.
   strip are in one joined region. A strip that joins only the target side adds no path.
 - **Draw each scripted supply feed before a channel count.** A feed can turn round a column of parts. On that layer, it
   then blocks every line inside the turn. Count the channels with the feed drawn.
+- **Give a part's supply pins a scripted exit when scripted lines close the part in.** The router can leave those
+  supply pins open, run after run. Script the supply exit with the lines that close the part in.
 - A flow-through protection array is a placement rule (§1.1). It also sets the width of the band through it.
 
 ## 2. Stack-up and copper weight

@@ -1,6 +1,6 @@
 # CHANGELOG — hw-from-spec
 
-## Current state (0.12.9): read this instead of replaying the entries below
+## Current state (0.12.10): read this instead of replaying the entries below
 
 - **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
   thirteen batches at most), the gate model per scope (ee: G0 → G1 → G2 → order; mech: G0 → M1 → M2 → case order; both), the manufacturability bar
@@ -43,6 +43,16 @@
   address and public pull-request numbers excepted) — `scripts/generic_lint.py` reads the whole repo
   (CHANGELOG and docs included; history keeps its measured numbers), a fenced worked example keeps numbers and kinds but never a name, and the
   repo carries no project retro (a retro report is folded, then deleted).
+
+## 0.12.10 - 2026-11-13 - Closed-in supply pins, pinned run keys, damper copper
+
+Source: the project log of 2026-11-12 and 2026-11-13, after the 0.12.9 cut. The entry adds rules to two references.
+It adds 3 lines to `references/pitfalls.md`. One candidate rule (draw each scripted supply feed first) was already in §1.4, so it is not repeated.
+
+### Added
+- `references/pcb-layout-dfm.md` §1.4: give a part's supply pins a scripted exit when scripted lines close the part in.
+- `references/pcb-layout-dfm.md` §1.1: put the routed copper of each damper branch into the power model at placement.
+- `references/high-speed-si.md` §3.3: pin every run's material and stack-up keys in its command file.
 
 ## 0.12.9 - 2026-11-12 - Reach checks, router repeat, worktree tool links
 
