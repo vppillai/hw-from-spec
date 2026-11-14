@@ -1,6 +1,6 @@
 # CHANGELOG — hw-from-spec
 
-## Current state (0.13.0): read this instead of replaying the entries below
+## Current state (0.13.1): read this instead of replaying the entries below
 
 - **Procedure** `SKILL.md`: day-1 setup + the kickoff questionnaire (A0 scope, then every owner decision the scope needs, recommended answers,
   fourteen batches at most), layout-forward design from kickoff to G1 (floorplan, channel and escape counts, power-stage templates,
@@ -10,7 +10,7 @@
   blind reviews with a record-reading verifier, layout + fab DFM mirror, the case pipeline with two PURE mesh gates (census margin, print-DFM
   floor), the stability row for anything that stands free (kickoff C12) and the three assembly-model rows (every placement det +1, a fit row per
   mating pair, an orientation row per one-sided part type, a fit row pair per degree of freedom — renders are not evidence of buildability),
-  the double-blind drawing round at M1 of a printed part, the printed-case fit round (one short locating feature per parting line with its bind angle, seams in notches off the
+  the power-path proof on the routed copper before G2, the double-blind drawing round at M1 of a printed part, the printed-case fit round (one short locating feature per parting line with its bind angle, seams in notches off the
   contact faces, a fit coupon before the parts, G-code as the evidence for every print claim), the software track, release cut + production cut + the arrival checklist + spec errata, agent operations with a measured resource budget
   (measure → audit → change; previews on the fast engine, geometry of record on the engine that passes the mesh gates; caches as determinism checks), the retro,
   the next revision (one study per open area; a blind pass per discipline per gate), measurements that check their own counters,
@@ -45,6 +45,39 @@
   address and public pull-request numbers excepted) — `scripts/generic_lint.py` reads the whole repo
   (CHANGELOG and docs included; history keeps its measured numbers), a fenced worked example keeps numbers and kinds but never a name, and the
   repo carries no project retro (a retro report is folded, then deleted).
+
+## 0.13.1 - 2026-11-14 - Power-path proof, SI model checks, bench reads and remote polls
+
+Source: the project log of 2026-11-13 and 2026-11-14. A power path proved on assumed copper failed on the routed board.
+Several SI and remote-lane lessons came from the same loop. This is a patch bump: new rules in existing steps.
+
+### Added
+- `references/pcb-layout-dfm.md` §1.5: the power-path proof against the routed copper. It starts with the
+  resistor-network count and the proof end at the model node. The path-row check on routed copper comes next. The what-if plan through
+  the generator and the branch split at the capacitor node follow. Then come the budget-shape sweep, the same copper in the
+  transient model and the RSS at a fixed operating point. The set-point ceiling, the one-sided trim gate and the per-grant
+  release top close it. Seven G2 review rows follow.
+- `references/pcb-layout-dfm.md` §1.1: give each long exit track a row with a free exit. Turn a two-pad link to its branch.
+- `references/high-speed-si.md` §7.1: grow the box once before you trust an absorbing boundary. §15 item 67 checks it.
+- `references/high-speed-si.md` §3.1: check the board in two zones and prove the old mode on a changed model. Run each
+  hole pattern on its own loop. §15 items 68 to 70 check them.
+- `references/software-track.md` §18: a leakage read at a connector pin reads the whole node. Check every part on the
+  node before you pick a read voltage.
+- `references/agent-ops.md` §5.1: a job-list watcher ends on an empty list. Bound every remote poll with a hard time
+  limit. A volume prune keeps named volumes.
+- `references/pitfalls.md`: 19 dated lines in the layout, SI, software and agents sections.
+
+### Changed
+- `references/high-speed-si.md` §15 item 65: items 67 to 70 also apply to tier-3 lanes.
+- `SKILL.md` "Where to look": the G1 to G2 row names the power-path proof. The title of `references/pcb-layout-dfm.md`
+  names §1.5.
+- `evals/core_rules.yaml`: the §18 guard list holds the seven new bench sentences. `evals/core_rules_manifest.yaml` is
+  refreshed for that entry.
+- Version 0.13.1 in `SKILL.md`, `README.md` and "Current state".
+
+### Not done
+- No script solves the resistor network. The project builds it from its own board export.
+- No eval asserts the power-path rows yet.
 
 ## 0.13.0 - 2026-11-13 - Layout-forward design from kickoff to G1
 

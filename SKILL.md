@@ -1,6 +1,6 @@
 ---
 name: hw-from-spec
-version: 0.13.0
+version: 0.13.1
 description: Run a hardware project (a PCB, a printed or CNC enclosure, or both — scope chosen at kickoff; contract fab such as JLCPCB) from a written specification to a production cut with an owner-gated, generated-only, blind-reviewed workflow — a kickoff questionnaire that asks every owner decision up front with recommended answers, a zero-warning manufacturability bar, and a retro that folds each project's learnings back into the skill. Use this whenever someone starts a board or enclosure project from a spec, asks to set up gates, a decision log, generators, part verification, a fab DFM mirror, a case pipeline, FEA, blind reviews, a release report or a production cut for one, or resumes such a project, or wants the skill improved from a finished project — even if they only say "new KiCad board", "order this at JLC", "review the layout", "cut the release" or "what did we learn".
 ---
 
@@ -657,7 +657,7 @@ row. The classifier is a keyword matcher: the report is the input to the change;
 | G0: SPEC / VERIFY skeletons, the spec review round | `templates/10-spec/SPEC.md`, `templates/20-design/VERIFY.md`, §5 |
 | G0→G1: design yaml shape, ERC gate (`erc_gate.py` + `20-design/erc_accept.yaml`), map checks, G1 pack, the studies before a next revision (§6) | `references/schematic-phase.md`, `templates/G1/` |
 | kickoff→G1: layout-forward design (floorplan, channel and escape counts, power-stage templates, placement budgets, pinouts, the routability gate) | `references/pcb-layout-dfm.md` §0, §1.3 here |
-| G1→G2: placement CSV, router session, G2 pack, PCB build rules (stack-up … panel), DRC census, route quality, parity, canary | `references/pcb-layout-dfm.md` |
+| G1→G2: placement CSV, router session, G2 pack, PCB build rules (stack-up … panel), DRC census, route quality, parity, canary, power-path proof (§1.5) | `references/pcb-layout-dfm.md` |
 | multi-gigabit lanes: the day-1 SI convergence playbook (§0, run first), stack-up at the fab tolerance, launch and skew, the solver chain, meshing artefacts, mixed-mode plots, COM, corners, margins, coupons, the bench, the SI review checklist | `references/high-speed-si.md` |
 | part tags, verification table | `references/part-verification.md` |
 | fab rules, panel, quote form, DFM export | `references/fab-dfm.md` |
