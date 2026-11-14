@@ -220,6 +220,16 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 - State the TDR rise time and the de-embedded length with every TDR number **[method]**. A number without its rise time cannot be compared.
 - Show a TDR profile for every net from its driving end. Mark the far port on the time axis, or stop the window there. Past the far port
   the trace shows the port impedance, not the line.
+- Check the board against the SI model in two zones **[method]**. Zone one is inside the model box. Compare every plane, void and
+  anti-pad there. Zone two runs from the box edge out to the first copper that the model does not draw. A plane edge or a rail
+  pour there can sit close to the structure. In one check the planes matched inside the box but for a few anti-pads. A rail
+  edge began 1.3 mm behind the ring, outside the box *(worked example)*. Model that copper, or show that it is far enough away.
+- When a model limit blocks a question, change the model and prove the old mode first **[method]**. Run the new model in the mode
+  that the old model used. It must give the old result before you read the new question. One plane drawn as a sheet matched the
+  solid floor it replaced to −84 dB. Only then could the split plane in that sheet be trusted *(worked example)*.
+- Do not carry a small result to another hole pattern **[physics]**. A hole count, a hole size or a pad under the holes changes the
+  coupling. One hole near a signal pad moved a loop by 0.05 dB. Three holes near a power pad moved another loop by 0.87 dB
+  *(worked example)*. Run each pattern on the loop it touches (§10.1).
 
 ### 3.2 From the solved geometry to the layout
 
@@ -493,6 +503,9 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 - Keep every conductor clear of the absorbing boundary by at least the boundary depth in cells **[method]**. A via fence near an absorbing face can make the run
   diverge: field leaks between the fence vias into a thin strip that ends on the absorbing face. A solid wall in place of the fence is
   a simplification. Label it in the model, and check it once against the real fence.
+- Grow the box once before you trust an absorbing boundary **[method]**. Add margin between the copper and the boundary, and run
+  again. A value that moves is not converged. One outer loop moved 2.15 dB on a first-order absorbing boundary for 0.55 mm more
+  margin. On a PML it moved 0.07 dB *(worked example)*. Keep the boundary type that holds still, and use it in every pair (§10.2).
 - A 2x-thru for de-embedding reuses the DUT's mesh at its ports **[method]**. With its own mesh the thru reads a flat loss that the de-embedded
   part then shows as gain.
 
@@ -983,8 +996,12 @@ Give each reviewer the frozen study, the yaml, the scripts and this list. Give n
 62. Does each pair difference exceed the summed time-cut noise of its two runs? Where the mesh lines differ, does it exceed the mesh spread? Does the pair differ in one knob only?
 63. Does each control match the run of record of its geometry? Was the boundary type tested first on each control that did not?
 64. Does each re-trim slope come from a pair on the stack-up in use? Is the proposed point one run of that pair?
-65. Does each lane's tier (§0.0) hold for its rate, length and margin? Judge the lane by the evidence of its tier only. Items 3 to 64 apply to tier-3 lanes.
+65. Does each lane's tier (§0.0) hold for its rate, length and margin? Judge the lane by the evidence of its tier only. Items 3 to 64 and 67 to 70 apply to tier-3 lanes.
 66. Were the stub and placement budgets of each fast line set before G1 (§5)? Does the model of record run at those values? This item applies to every tier.
+67. Was the box grown once on each absorbing-boundary model, and did the value hold still?
+68. Was the board checked against the model in both zones: inside the box, and out to the first copper the model does not draw?
+69. Did each changed model reproduce the old mode before it answered the new question?
+70. Was each hole pattern run on its own loop, not carried from another pattern?
 
 ## 16. Records
 

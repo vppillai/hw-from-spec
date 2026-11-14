@@ -328,6 +328,12 @@ prove the host. The rules below keep the host safe and the jobs alive.
   overnight loop ran about 30 runs that way while the coordinator was offline *(worked example)*.
 - **A watcher re-arms after each landing.** A watcher that fires once and stops misses every later landing. Re-arm it in the same
   step that reads the result.
+- A watcher that waits on a job list ends when the list is empty. Start it after the first submit. Remove the line of a lost
+  job, or the watcher never ends.
+- **Bound every remote poll with a hard time limit.** An SSH connect timeout bounds the connect only. A host that accepts the
+  connection and then hangs stalls the poll. Wrap each poll in a wall-clock limit: `timeout` on Linux, `gtimeout` from
+  coreutils on macOS. Treat a lane that misses one poll as down, and move its queued work by the move order below. One
+  dead host held a dispatcher and a watcher for hours *(worked example)*.
 - Send only portable job kinds to other hosts. Allow a list of container jobs known to run there; do not block a list of bad
   ones. A job with a host-only interpreter path or CAD tool fails elsewhere. Two such moves failed in one day *(worked example)*.
 - **Send a decision run to the lane with the earliest estimated finish.** This refines the idle-lane rule above. Measure each
@@ -353,6 +359,8 @@ prove the host. The rules below keep the host safe and the jobs alive.
   restart test of the earliest-finish rule above.
 - Strip the registry prefix before you compare image names. One container tool lists `docker.io/library/<name>`, another `<name>`.
 - Prune dangling images only. `docker image prune -a` deletes every tagged image that no container uses, the lane images too.
+- On a macOS host, `docker system prune -af --volumes` can keep named volumes. List the volumes after a prune. Remove each one
+  by name with `docker volume rm`.
 - Stopping a local `ssh host 'bash -s' < script` does not stop the remote script. Kill the remote script before a rerun. Give each
   run's containers a unique name, so an old exit trap cannot remove the next run's containers.
 - A remote job runs with the runner copy of the checkout that sent it. Merge a runner fix into that checkout first.

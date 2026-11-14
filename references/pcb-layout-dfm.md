@@ -1,4 +1,4 @@
-# pcb-layout-dfm.md — kickoff → G1: layout-forward design (§0); G1 → G2: the PCB build rules, the layout chain and the adopt gate
+# pcb-layout-dfm.md — kickoff → G1: layout-forward design (§0); G1 → G2: the PCB build rules, the layout chain, the power-path proof (§1.5) and the adopt gate
 
 Every quantitative rule below carries one of four tags, so a reader knows what moves it:
 
@@ -173,6 +173,11 @@ tap inductance too, because it narrows the band where the damper works. Size the
 branch node at placement, not at routing. In one model, tens of mΩ of copper met a budget near 10 mΩ per branch. A pass
 became a fail *(worked example)*.
 
+**Give each long tap a row with a free exit** **[method]**. A tap here is a track that must leave a column of parts to
+reach its branch. Place the parts with long taps in rows whose exit side is free on the tap layer. Turn a two-pad link so
+that its tap pad faces its branch. Then the tap does not run round the part. Choose the row order for routing. It is not a
+fixed table.
+
 ### 1.2 Router session **[convention]**
 The routed board + the router's session file (Freerouting `.ses` with its `.dsn`, or the equivalent) are the artefacts of record; routing is
 never re-run to reproduce them. Re-import (`--import-ses`) is the replay. Keep-outs and
@@ -219,6 +224,49 @@ power track.
   region joins its supply pads to the supply. The router can leave those pads open on repeated runs. Draw the feed with
   the lines that close the part in. Then trace each supply pad's free region again (first bullet).
 - A flow-through protection array is a placement rule (§1.1). It also sets the width of the band through it.
+
+### 1.5 Power-path proof against the routed copper **[method]**
+A rail must stay inside its window at the load. The power model reads the copper resistance of each path from a record row.
+Terms: a *path row* gives the copper resistance from the source to one model node. The *static window* is the allowed band at
+a fixed load. The *transient window* is the allowed band during a load step. The *release top* is the peak after a load release.
+- **Count path resistance with a resistor network, not with squares.** Parallel vias, stubs and vias in pads make a squares
+  count wrong in both directions. Grid the copper of the supply net and its return net into resistors. Solve the node
+  voltages with a small linear solve. Read the resistance between the two ends of the path.
+- **End each path proof where the circuit model puts its node.** A proof to the pour edge leaves out the copper to the pin or
+  the capacitor. Include the return path and the copper temperature of the hot corner. One tap read 10 mΩ to the pour edge.
+  To the capacitor, with the return and the hot corner, it read 13 mΩ, and the model failed *(worked example)*.
+- **Check each path row against the routed copper as soon as copper exists.** A row that assumes a plane can hide the real
+  track. One rail row assumed a pour on an inner layer. The routed rail was five times that value, and the branch copper came on
+  top. The static window failed *(worked example)*.
+- **Build a what-if copper plan through the generator before you trust it.** Hand-drawn boxes hide necks and junctions. One
+  built plan lost about 1 mΩ on one branch to a narrow junction that the boxes did not show *(worked example)*.
+- **Split a branch resistor at the capacitor node before you judge an edge.** Copper before the node slows the dip. Copper
+  after the node adds to the pad drop. Read the split from the routed board, not from an estimate.
+- **Sweep the shape of a per-branch budget before you quote it.** A budget vector scaled as one unit can mislead. One model
+  failed with one heavy branch and two light branches. It passed with a uniform value of a similar total. The heavy branch set
+  the limit *(worked example)*.
+- **Give the transient model the same routed copper as the static window.** A transient run that keeps an old path row says
+  nothing about the board. One run passed with the old row. With the routed copper, it failed by tens of mV *(worked example)*.
+- **Hold the operating point constant in an RSS judgement.** Fix the load, the temperature and the set point. Combine only the
+  tolerance limits by RSS. Add the one-sided terms linearly on top. A carried budget can itself be a linear sum of terms.
+  Split it into those terms before the RSS.
+- **A trimmed set point has a ceiling.** The ceiling is the window top, less the reading error, less the release top. Check the
+  release top before you raise the set point for the static window. Check that the regulator's trim range reaches the new
+  point from its low raw corner.
+- **Make each gate around a trim target one-sided.** Accept readings from the target down to the lower limit only. A two-sided
+  gate lets a unit sit above the target, and that spends the top margin.
+- **A set point per load grant must hold the release top of every lower grant.** A load with a high grant can still draw at a
+  lower grant and release from there. A low-resistance path can give a higher release top than the nominal path. Run a
+  low-resistance path row before you trust a zero top margin.
+
+G2 review rows for the power path:
+1. Does each path row come from a resistor-network solve of the routed copper, with the return net?
+2. Does each path row end at the node that the circuit model uses?
+3. Do the static and the transient model read the same path rows of record?
+4. Is each branch resistor split at its capacitor node?
+5. Does each RSS hold the operating point fixed, and stack the one-sided terms linearly?
+6. Does each set point hold the release top of every lower grant, on a low-resistance path row too?
+7. Is each gate around a trim target one-sided?
 
 ## 2. Stack-up and copper weight
 - **Stack-up = the fab's named template, copied into the CAD's physical stack-up** **[fab capability]**. The fab publishes templates per
