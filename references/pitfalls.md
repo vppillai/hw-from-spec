@@ -276,7 +276,7 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A queue reorder ran while the dispatcher submitted, and the dispatcher then deleted a different run. Delete by run id, or stop the dispatcher first — 2026-11-11 [agents/queue] (`agent-ops.md` §5.1).
 - 245 remote jobs were never fetched, and removed worktrees took their logs. Keep an append-only compute ledger from day 1 — 2026-11-12 [agents/compute] (`agent-ops.md` §5.1).
 - A chain in a fresh worktree failed at the router: "Unable to access jarfile". Link the environment and ignored tool files first — 2026-11-12 [agents/worktree] (`agent-ops.md` §5.3).
-- A volume prune on a macOS container host kept the named volumes. Remove them by name — 2026-11-13 [agents/remote] (`agent-ops.md` §5.1).
+- A volume prune kept the named volumes; it removes anonymous volumes only. Remove named volumes by name — 2026-11-13 [agents/remote] (`agent-ops.md` §5.1).
 - A job-list watcher never ended: a lost job kept its line. Remove the line of a lost job — 2026-11-13 [agents/jobs] (`agent-ops.md` §5.1).
 - An SSH connect timeout did not bound a hung host, and two loops sat for hours. Bound every remote poll with a hard time limit — 2026-11-14 [agents/remote] (`agent-ops.md` §5.1).
 
@@ -404,14 +404,14 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - Two common-mode filter capacitors on a USB pair sat on stubs of 15 and 26 mm against a 3 mm limit. Set a stub budget per shunt part before G1 — 2026-11-13 [layout/budget] (`pcb-layout-dfm.md` §0.6).
 - A pin re-assignment after placement gained no routed connections. Make the allowed swaps with the floorplan, before G1 — 2026-11-13 [layout/pinout] (`pcb-layout-dfm.md` §0.7).
 - A squares count of a power path was wrong both ways: parallel vias, stubs and vias in pads. Solve a resistor network of the copper — 2026-11-13 [layout/power] (`pcb-layout-dfm.md` §1.5).
-- Long taps ran round their parts to leave a column. Give each long tap a row with a free exit, and turn a two-pad link so its tap pad faces its branch — 2026-11-13 [layout/placement] (`pcb-layout-dfm.md` §1.1).
+- Long exit tracks ran round their parts to leave a column. Give each one a row with a free exit — 2026-11-13 [layout/placement] (`pcb-layout-dfm.md` §1.1).
 - A per-branch budget scaled as one vector misled: a heavy branch failed where a uniform budget of a similar total passed. Sweep the shape — 2026-11-13 [layout/power] (`pcb-layout-dfm.md` §1.5).
-- A path proof to the pour edge passed; to the capacitor the model used, with the return at the hot corner, it failed. End the proof at the model node — 2026-11-13 [layout/power] (`pcb-layout-dfm.md` §1.5).
+- A path proof to the pour edge passed. To the model's capacitor node, at the hot corner, it failed. End the proof at the model node — 2026-11-13 [layout/power] (`pcb-layout-dfm.md` §1.5).
 - A path row that assumed an inner plane was five times too low, and the static window failed. Check each path row against the routed copper at once — 2026-11-13 [layout/power] (`pcb-layout-dfm.md` §1.5).
 - A what-if copper plan drawn as boxes hid a narrow junction. Build the plan through the generator before you trust it — 2026-11-13 [layout/power] (`pcb-layout-dfm.md` §1.5).
 - A carried budget that was itself a linear sum went into an RSS whole. Fix the operating point and split such a budget into its terms — 2026-11-13 [layout/power] (`pcb-layout-dfm.md` §1.5).
 - A transient run passed on an old path row and failed with the routed copper. Give the transient model the static window's copper — 2026-11-13 [layout/power] (`pcb-layout-dfm.md` §1.5).
-- A set point raised for the static window can break the transient window. Its ceiling is the window top less the reading error less the release top — 2026-11-13 [layout/power] (`pcb-layout-dfm.md` §1.5).
+- A set point raised for the static window can break the transient window. Check the release top before you raise it — 2026-11-13 [layout/power] (`pcb-layout-dfm.md` §1.5).
 - A per-grant set point showed a zero top margin on the nominal path only. Run a low-resistance path row for every lower grant — 2026-11-14 [layout/power] (`pcb-layout-dfm.md` §1.5).
 
 ## si / high-speed (`references/high-speed-si.md` carries the rules; one line each here)
@@ -499,9 +499,9 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A control read 3.1 dB over its run of record because of the boundary type. The fence moved it 0.11 dB or less. Test the boundary first — 2026-11-13 [si/method] (`high-speed-si.md` §10.2).
 - A proposed re-trim outside the tested span needed an extrapolated fit. Put the proposed point at one end of the span — 2026-11-13 [si/method] (`high-speed-si.md` §10.2).
 - A re-trim step scaled from an old stack-up missed a loop that could not reach the limit. Take the slope from a pair on the stack-up in use — 2026-11-13 [si/method] (`high-speed-si.md` §10.2).
-- One outer loop moved 2.15 dB on a first-order absorbing boundary for a little more margin; a PML moved 0.07 dB. Grow the box once — 2026-11-13 [si/method] (`high-speed-si.md` §7.1).
+- One loop moved 2.15 dB on a first-order absorbing boundary for a small margin step; a PML moved 0.07 dB. Grow the box once — 2026-11-13 [si/method] (`high-speed-si.md` §7.1).
 - The planes matched inside the model box, but a rail edge sat just outside it. Check the board in two zones — 2026-11-13 [si/layout] (`high-speed-si.md` §3.1).
-- A model limit blocked a question about a split plane. The new model reproduced the old mode first, and only then answered — 2026-11-14 [si/method] (`high-speed-si.md` §3.1).
+- A model limit blocked a question about a split plane. Change the model, and prove the old mode first — 2026-11-14 [si/method] (`high-speed-si.md` §3.1).
 - One hole near a signal pad was small; three holes near a power pad were not. Do not carry a result to another hole pattern — 2026-11-14 [si/layout] (`high-speed-si.md` §3.1).
 
 ## silk / dfm
@@ -745,8 +745,6 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - An emulated I2C target behind a bridge that cannot see a stretch must answer in time. Keep its TX FIFO full from an interrupt — 2026-11-03 [software/i2c] (`software-track.md` §13).
 - A stock board fit a debug header only after one extra ground pin joined its signal row. Put signals and a ground in one row — 2026-11-03 [software/debug].
 - A high-power log command looped for 60 s with no health poll and ran past the throttle limit. Put the hold stops inside the loop — 2026-11-03 [software/thermal] (`software-track.md` §18).
-- A leakage read at a connector pin read resistors and unpowered ICs, not only the protection diode. Judge the rise — 2026-11-13 [software/bench] (`software-track.md` §18).
-- A read voltage on a supply pin passed a power switch's lockout and powered the unit. Check every part on the node first — 2026-11-13 [software/bench] (`software-track.md` §18).
 - An optional control read back 0, which is also the default of an absent field. Write a non-zero value first — 2026-11-06 [software/registers] (`software-track.md` §8).
 - Four init reasons reached no table row, so a dead lane could end at PASS. Map every reason to a row — 2026-11-06 [software/verdict] (`software-track.md` §5).
 - A count gate on the reference floor threw away the power of an exact test. Let the exact test decide — 2026-11-06 [software/verdict] (`software-track.md` §5).
@@ -758,6 +756,8 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - Two selftests took the same fixed lock name in the shared temp folder. Name each after its process id — 2026-11-10 [software/selftest] (`software-track.md` §2).
 - A copied phase list missed one new step. Derive a set from the table of record — 2026-11-09 [software/criteria] (`software-track.md` §5).
 - An MCU's watchdog reset kept the GPIO pad state, so a GPIO-driven reset line never pulsed. Read the reset-source table, and reset the peripheral from a supervisor or the reset pin — 2026-11-10 [software/firmware] (`schematic-phase.md` §7).
+- A leakage read at a connector pin read resistors and unpowered ICs, not only the protection diode. Judge the rise — 2026-11-13 [software/bench] (`software-track.md` §18).
+- A read voltage on a supply pin passed a power switch's lockout and powered the unit. Check every part on the node first — 2026-11-13 [software/bench] (`software-track.md` §18).
 
 ## documentation
 - Every mention of a retired string across live docs after a design change: grep, not memory; logs and reviews keep stale words on purpose.

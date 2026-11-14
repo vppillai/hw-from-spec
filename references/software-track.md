@@ -271,7 +271,7 @@ reason and one worked example.
   bleeder; one board read 0.57 V. Check a rail "off" with every source connected. Trace every path that feeds the rail, and
   fix each one. On that board the feed was the signal lines, not the rail.
 - A leakage read at a connector pin reads the whole node, not only the protection diode. Resistors and unpowered ICs on the
-  same line add their own current. Read the pin before and after the stress, and judge the rise, not the absolute value.
+  same line add their own current. Read the pin before and after the stress. Judge the rise, not the absolute value.
 - Check every part on a node before you pick a read voltage. A voltage that passes a power switch's under-voltage lockout
   powers the unit through that pin. Stay under the lowest turn-on threshold on the node.
 - A laptop USB-C port may offer 1.5 A only. Read the source's current advertisement before you budget host power.

@@ -222,11 +222,12 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
   the trace shows the port impedance, not the line.
 - Check the board against the SI model in two zones **[method]**. Zone one is inside the model box. Compare every plane, void and
   anti-pad there. Zone two runs from the box edge out to the first copper that the model does not draw. A plane edge or a rail
-  pour there can sit close to the structure. In one check the planes matched inside the box but for a few anti-pads. A rail
-  edge began 1.3 mm behind the ring, outside the box *(worked example)*. Model that copper, or show that it is far enough away.
+  pour there can sit close to the structure. In one check the planes matched inside the box, except a few anti-pads. A rail
+  edge began 1.3 mm from the structure, outside the box *(worked example)*. Model that copper. If you do not model it, show that
+  it is far enough away.
 - When a model limit blocks a question, change the model and prove the old mode first **[method]**. Run the new model in the mode
   that the old model used. It must give the old result before you read the new question. One plane drawn as a sheet matched the
-  solid floor it replaced to −84 dB. Only then could the split plane in that sheet be trusted *(worked example)*.
+  solid floor it replaced to −84 dB. Only then did the split-plane result count *(worked example)*.
 - Do not carry a small result to another hole pattern **[physics]**. A hole count, a hole size or a pad under the holes changes the
   coupling. One hole near a signal pad moved a loop by 0.05 dB. Three holes near a power pad moved another loop by 0.87 dB
   *(worked example)*. Run each pattern on the loop it touches (§10.1).
@@ -503,9 +504,10 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
 - Keep every conductor clear of the absorbing boundary by at least the boundary depth in cells **[method]**. A via fence near an absorbing face can make the run
   diverge: field leaks between the fence vias into a thin strip that ends on the absorbing face. A solid wall in place of the fence is
   a simplification. Label it in the model, and check it once against the real fence.
-- Grow the box once before you trust an absorbing boundary **[method]**. Add margin between the copper and the boundary, and run
-  again. A value that moves is not converged. One outer loop moved 2.15 dB on a first-order absorbing boundary for 0.55 mm more
-  margin. On a PML it moved 0.07 dB *(worked example)*. Keep the boundary type that holds still, and use it in every pair (§10.2).
+- Grow the box once before you trust an absorbing boundary **[method]**. Add margin between the copper and the boundary. Run the
+  model again. A value that moves is not converged. One outer loop moved 2.15 dB on a first-order absorbing boundary for 0.55 mm
+  more margin. On a perfectly matched layer (PML) it moved 0.07 dB *(worked example)*. Keep the boundary type that holds still.
+  Use it in every pair (§10.2).
 - A 2x-thru for de-embedding reuses the DUT's mesh at its ports **[method]**. With its own mesh the thru reads a flat loss that the de-embedded
   part then shows as gain.
 
