@@ -227,7 +227,7 @@ screen, bounds and fixes, sign-off and review. The sections after this one hold 
   it is far enough away.
 - When a model limit blocks a question, change the model and prove the old mode first **[method]**. Run the new model in the mode
   that the old model used. It must give the old result before you read the new question. One plane drawn as a sheet matched the
-  solid floor it replaced to −84 dB. Only then did the split-plane result count *(worked example)*.
+  solid floor it replaced. The difference was −84 dB. Only then did the split-plane result count *(worked example)*.
 - Do not carry a small result to another hole pattern **[physics]**. A hole count, a hole size or a pad under the holes changes the
   coupling. One hole near a signal pad moved a loop by 0.05 dB. Three holes near a power pad moved another loop by 0.87 dB
   *(worked example)*. Run each pattern on the loop it touches (§10.1).

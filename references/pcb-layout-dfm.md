@@ -250,8 +250,8 @@ set point after a load release. A *grant* is the power level that the source all
 - **Give the transient model the same routed copper as the static window.** A transient run that keeps an old path row says
   nothing about the board. One run passed with the old row. With the routed copper, it failed by tens of mV *(worked example)*.
 - **Hold the operating point constant in an RSS judgement.** Fix the load, the temperature and the set point. Combine by RSS only
-  the tolerance limits that are independent. Add the correlated and the one-sided terms linearly on top. A carried budget can itself be a linear sum of terms.
-  Split it into those terms before the RSS.
+  the tolerance limits that are independent. Add the correlated and the one-sided terms linearly on top. A carried budget
+  can itself be a linear sum of terms. Split it into those terms before the RSS.
 - **A trimmed set point has a ceiling.** The ceiling is the window top, less the reading error, less the release top. Check the
   release top before you raise the set point for the static window. Check that the regulator's trim range reaches the new
   point from its low raw corner.

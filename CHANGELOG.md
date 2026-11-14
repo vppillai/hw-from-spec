@@ -52,8 +52,8 @@ Source: the project log of 2026-11-13 and 2026-11-14. A power path proved on ass
 Several SI and remote-lane lessons came from the same loop. This is a patch bump: new rules in existing steps.
 
 ### Added
-- `references/pcb-layout-dfm.md` §1.5: the power-path proof against the routed copper. Its first rules are the
-  resistor-network count, the proof end at the model node and the path-row check on routed copper. The what-if plan through
+- `references/pcb-layout-dfm.md` §1.5: the power-path proof against the routed copper. It starts with the
+  resistor-network count and the proof end at the model node. The path-row check on routed copper comes next. The what-if plan through
   the generator and the branch split at the capacitor node follow. Then come the budget-shape sweep, the same copper in the
   transient model and the RSS at a fixed operating point. The set-point ceiling, the one-sided trim gate and the per-grant
   release top close it. Seven G2 review rows follow.

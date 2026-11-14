@@ -499,7 +499,7 @@ that project's records and in CHANGELOG.md. The home-printer preset is called `h
 - A control read 3.1 dB over its run of record because of the boundary type. The fence moved it 0.11 dB or less. Test the boundary first — 2026-11-13 [si/method] (`high-speed-si.md` §10.2).
 - A proposed re-trim outside the tested span needed an extrapolated fit. Put the proposed point at one end of the span — 2026-11-13 [si/method] (`high-speed-si.md` §10.2).
 - A re-trim step scaled from an old stack-up missed a loop that could not reach the limit. Take the slope from a pair on the stack-up in use — 2026-11-13 [si/method] (`high-speed-si.md` §10.2).
-- One loop moved 2.15 dB on a first-order absorbing boundary for a small margin step; a PML moved 0.07 dB. Grow the box once — 2026-11-13 [si/method] (`high-speed-si.md` §7.1).
+- One loop moved 2.15 dB on a first-order absorbing boundary for a small margin step. A PML moved 0.07 dB. Grow the box once — 2026-11-13 [si/method] (`high-speed-si.md` §7.1).
 - The planes matched inside the model box, but a rail edge sat just outside it. Check the board in two zones — 2026-11-13 [si/layout] (`high-speed-si.md` §3.1).
 - A model limit blocked a question about a split plane. Change the model, and prove the old mode first — 2026-11-14 [si/method] (`high-speed-si.md` §3.1).
 - One hole near a signal pad was small; three holes near a power pad were not. Do not carry a result to another hole pattern — 2026-11-14 [si/layout] (`high-speed-si.md` §3.1).
